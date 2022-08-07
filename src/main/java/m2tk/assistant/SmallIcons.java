@@ -45,5 +45,19 @@ public final class SmallIcons
     public static final Icon FOLDER_PAGE = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_page.png"));
     public static final Icon USER = new ImageIcon(SmallIcons.class.getResource("/images/small/user.png"));
     public static final Icon STOP = new ImageIcon(SmallIcons.class.getResource("/images/small/stop.png"));
+    public static final Icon TABLE_CHART = new ImageIcon(SmallIcons.class.getResource("/images/small/table_chart.png"));
     public static final Icon CHART_BAR = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_bar.png"));
+    public static final Icon CHART_COLUMN = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_column.png"));
+    public static final Icon DOCUMENT_SIGNATURE = new ImageIcon(SmallIcons.class.getResource("/images/small/document_signature.png"));
+    public static final Icon CHIP_GOLD = new ImageIcon(SmallIcons.class.getResource("/images/small/chip_gold.png"));
+    public static final Icon SHIELD = new ImageIcon(SmallIcons.class.getResource("/images/small/shield.png"));
+    public static final Icon EDIT = new ImageIcon(SmallIcons.class.getResource("/images/small/edit.png"));
+    public static final Icon PENCIL = new ImageIcon(SmallIcons.class.getResource("/images/small/pencil.png"));
+    public static final Icon PAGE_EDIT = new ImageIcon(SmallIcons.class.getResource("/images/small/page_edit.png"));
+    public static final Icon PAGE_WHITE = new ImageIcon(SmallIcons.class.getResource("/images/small/page_white.png"));
+    public static final Icon COMPILE_WARNING = new ImageIcon(SmallIcons.class.getResource("/images/small/compile_warning.png"));
+    public static final Icon DECIMAL_MORE = new ImageIcon(SmallIcons.class.getResource("/images/small/decimal_more.png"));
+    public static final Icon BARCHART = new ImageIcon(SmallIcons.class.getResource("/images/small/barchart.png"));
+    public static final Icon KEY_U = new ImageIcon(SmallIcons.class.getResource("/images/small/key_u.png"));
+
 }

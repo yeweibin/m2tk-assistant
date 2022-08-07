@@ -3,19 +3,22 @@ package m2tk.assistant.dbi;
 import cn.hutool.core.lang.generator.SnowflakeGenerator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import m2tk.assistant.dbi.entity.ProgramEntity;
-import m2tk.assistant.dbi.entity.ProgramStreamMappingEntity;
-import m2tk.assistant.dbi.entity.SourceEntity;
-import m2tk.assistant.dbi.entity.StreamEntity;
+import m2tk.assistant.analyzer.domain.CASystemStream;
+import m2tk.assistant.dbi.entity.*;
+import m2tk.assistant.dbi.handler.CAStreamHandler;
 import m2tk.assistant.dbi.handler.ProgramHandler;
 import m2tk.assistant.dbi.handler.SourceHandler;
 import m2tk.assistant.dbi.handler.StreamHandler;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.h2.H2DatabasePlugin;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 public class DatabaseService
@@ -24,6 +27,7 @@ public class DatabaseService
     private final SourceHandler sourceHandler;
     private final StreamHandler streamHandler;
     private final ProgramHandler programHandler;
+    private final CAStreamHandler caSreamHandler;
 
     public DatabaseService()
     {
@@ -38,6 +42,7 @@ public class DatabaseService
         sourceHandler = new SourceHandler(generator);
         streamHandler = new StreamHandler(generator);
         programHandler = new ProgramHandler(generator);
+        caSreamHandler = new CAStreamHandler(generator);
     }
 
     public void initDatabase()
@@ -46,6 +51,7 @@ public class DatabaseService
             sourceHandler.initTable(handle);
             streamHandler.initTable(handle);
             programHandler.initTable(handle);
+            caSreamHandler.initTable(handle);
         });
     }
 
@@ -55,6 +61,7 @@ public class DatabaseService
             sourceHandler.resetTable(handle);
             streamHandler.resetTable(handle);
             programHandler.resetTable(handle);
+            caSreamHandler.resetTable(handle);
         });
     }
 
@@ -141,6 +148,11 @@ public class DatabaseService
         return dbi.withHandle(programHandler::listPrograms);
     }
 
+    public List<CAStreamEntity> getProgramECMStreams(int program)
+    {
+        return dbi.withHandle(handle -> caSreamHandler.listProgramECMStreams(handle, program));
+    }
+
     public List<ProgramStreamMappingEntity> getProgramStreamMappings(int program)
     {
         return dbi.withHandle(handle -> programHandler.listProgramStreamMappings(handle, program));
@@ -154,10 +166,29 @@ public class DatabaseService
             for (ProgramEntity program : programs)
             {
                 mappings.put(program,
-                             programHandler.listProgramStreamMappings(handle,
-                                                                      program.getProgramNumber()));
+                             programHandler.listProgramStreamMappings(handle, program.getProgramNumber()));
             }
             return mappings;
         });
+    }
+
+    public Map<Integer, List<CAStreamEntity>> listECMGroups()
+    {
+        return dbi.withHandle(caSreamHandler::listECMGroups);
+    }
+
+    public void addEMMStream(int systemId, int pid, byte[] privateData)
+    {
+        dbi.useHandle(handle -> caSreamHandler.addEMMStream(handle, systemId, pid, privateData));
+    }
+
+    public void addECMStream(int systemId, int pid, byte[] privateData, int programNumber, int esPid)
+    {
+        dbi.useHandle(handle -> caSreamHandler.addECMStream(handle, systemId, pid, privateData, programNumber, esPid));
+    }
+
+    public List<CAStreamEntity> listCAStreams()
+    {
+        return dbi.withHandle(caSreamHandler::listCAStreams);
     }
 }

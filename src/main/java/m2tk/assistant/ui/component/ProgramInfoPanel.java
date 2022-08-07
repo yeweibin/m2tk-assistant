@@ -18,19 +18,16 @@ package m2tk.assistant.ui.component;
 
 import cn.hutool.core.util.StrUtil;
 import m2tk.assistant.SmallIcons;
+import m2tk.assistant.analyzer.domain.CASystemStream;
 import m2tk.assistant.analyzer.domain.ElementaryStream;
 import m2tk.assistant.analyzer.domain.MPEGProgram;
-import m2tk.assistant.analyzer.presets.CASystems;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -61,10 +58,6 @@ public class ProgramInfoPanel extends JPanel
 
         setLayout(new BorderLayout());
         add(new JScrollPane(tree), BorderLayout.CENTER);
-
-        TitledBorder border = BorderFactory.createTitledBorder("节目信息");
-        border.setTitleJustification(TitledBorder.LEFT);
-        setBorder(border);
     }
 
     public void resetProgramList()
@@ -106,7 +99,8 @@ public class ProgramInfoPanel extends JPanel
 
             if (p1.getTransportStreamId() != p2.getTransportStreamId() ||
                 p1.getProgramNumber() != p2.getProgramNumber() ||
-                p1.getPmtVersion() != p2.getPmtVersion())
+                p1.getPmtVersion() != p2.getPmtVersion() ||
+                p1.getBandwidth() != p2.getBandwidth())
                 return false;
 
             if (p1.getEcmList().size() != p2.getEcmList().size() ||
@@ -116,8 +110,8 @@ public class ProgramInfoPanel extends JPanel
             int m = p1.getEcmList().size();
             for (int j = 0; j < m; j++)
             {
-                ElementaryStream ecm1 = p1.getEcmList().get(j);
-                ElementaryStream ecm2 = p2.getEcmList().get(j);
+                CASystemStream ecm1 = p1.getEcmList().get(j);
+                CASystemStream ecm2 = p2.getEcmList().get(j);
                 if (ecm1.getStreamPid() != ecm2.getStreamPid())
                     return false;
             }
@@ -127,7 +121,8 @@ public class ProgramInfoPanel extends JPanel
             {
                 ElementaryStream es1 = p1.getElementList().get(j);
                 ElementaryStream es2 = p2.getElementList().get(j);
-                if (es1.getStreamPid() != es2.getStreamPid())
+                if (es1.getStreamPid() != es2.getStreamPid() ||
+                    es1.getPacketCount() != es2.getPacketCount())
                     return false;
             }
         }
@@ -157,11 +152,11 @@ public class ProgramInfoPanel extends JPanel
         nodeBW.setUserObject(text);
         node.add(nodeBW);
 
-        for (ElementaryStream ecm : program.getEcmList())
+        for (CASystemStream ecm : program.getEcmList())
         {
             text = String.format("[ECM]PID：0x%04X，%s",
                                  ecm.getStreamPid(),
-                                 ecm.getDescription());
+                                 ecm.getStreamDescription());
 
             DefaultMutableTreeNode nodeECM = new DefaultMutableTreeNode();
             nodeECM.setUserObject(text);
@@ -244,7 +239,7 @@ public class ProgramInfoPanel extends JPanel
                 } else if (text.startsWith("[ECM]"))
                 {
                     text = text.substring("[ECM]".length());
-                    setIcon(SmallIcons.LICENSE);
+                    setIcon(SmallIcons.KEY);
                     setText(text);
                     setToolTipText(text);
                 } else if (text.startsWith("[V]"))
@@ -268,7 +263,7 @@ public class ProgramInfoPanel extends JPanel
                 } else if (text.startsWith("[U]"))
                 {
                     text = text.substring("[U]".length());
-                    setIcon(SmallIcons.USER);
+                    setIcon(SmallIcons.PAGE_WHITE);
                     setText(text);
                     setToolTipText(text);
                 } else

@@ -1,6 +1,8 @@
 package m2tk.assistant.analyzer.domain;
 
+import m2tk.assistant.analyzer.presets.CASystems;
 import m2tk.assistant.analyzer.util.ProgramStreamComparator;
+import m2tk.assistant.dbi.entity.CAStreamEntity;
 import m2tk.assistant.dbi.entity.ProgramEntity;
 import m2tk.assistant.dbi.entity.ProgramStreamMappingEntity;
 import m2tk.assistant.dbi.entity.StreamEntity;
@@ -17,14 +19,16 @@ public class MPEGProgram
     private final int pmtPid;
     private final int pcrPid;
     private final int pmtVersion;
-    private final List<ElementaryStream> ecmList;
+    private final List<CASystemStream> ecmList;
     private final List<ElementaryStream> elementList;
 
     public MPEGProgram(ProgramEntity program,
+                       List<CAStreamEntity> ecms,
                        List<ProgramStreamMappingEntity> mappings,
                        Map<Integer, StreamEntity> streams)
     {
         Objects.requireNonNull(program);
+        Objects.requireNonNull(ecms);
         Objects.requireNonNull(mappings);
         Objects.requireNonNull(streams);
 
@@ -39,6 +43,26 @@ public class MPEGProgram
         elementList = new ArrayList<>();
 
         int totalBitrate = 0;
+        for (CAStreamEntity ecm : ecms)
+        {
+            String vendor = CASystems.vendor(ecm.getSystemId());
+            int esPid = ecm.getElementaryStreamPid();
+            String description = String.format("ECM, 系统号：%04X", ecm.getSystemId());
+            if (!vendor.isEmpty())
+                description += "（" + vendor + "）";
+            if (esPid != 8191)
+                description += String.format("，目标ES：0x%X", esPid);
+
+            CASystemStream ecmStream = new CASystemStream(ecm.getSystemId(),
+                                                          ecm.getStreamPid(),
+                                                          "",
+                                                          description);
+            ecmList.add(ecmStream);
+
+            StreamEntity stream = streams.get(ecm.getStreamPid());
+            totalBitrate += (stream == null) ? 0 : stream.getBitrate();
+        }
+
         for (ProgramStreamMappingEntity mapping : mappings)
         {
             StreamEntity stream = streams.get(mapping.getStreamPid());
@@ -62,16 +86,11 @@ public class MPEGProgram
                                                          mapping.getStreamDescription(),
                                                          programNumber);
 
-            if (mapping.getStreamDescription().startsWith("ECM"))
-                ecmList.add(es);
-            else
-                elementList.add(es);
-
+            elementList.add(es);
             totalBitrate += es.getBitrate();
         }
 
         ProgramStreamComparator comparator = new ProgramStreamComparator();
-        ecmList.sort(comparator);
         elementList.sort(comparator);
 
         freeAccess = ecmList.isEmpty();
@@ -118,7 +137,7 @@ public class MPEGProgram
         return pcrPid;
     }
 
-    public List<ElementaryStream> getEcmList()
+    public List<CASystemStream> getEcmList()
     {
         return Collections.unmodifiableList(ecmList);
     }

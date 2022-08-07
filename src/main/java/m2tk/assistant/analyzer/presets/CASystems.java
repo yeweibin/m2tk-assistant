@@ -78,6 +78,9 @@ public class CASystems
             between(systemId, 0x4B00, 0x4B02))
             return "同方凌讯";
 
+        if (between(systemId, 0x4AF9, 0x4AFA))
+            return "腾锐视讯";
+
         if (between(systemId, 0x4B0A, 0x4B0B))
             return "数码视讯";
 

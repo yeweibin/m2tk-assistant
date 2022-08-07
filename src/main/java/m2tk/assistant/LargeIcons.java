@@ -28,4 +28,8 @@ public final class LargeIcons
     public static final Icon NET_MULTICAST = new ImageIcon(LargeIcons.class.getResource("/images/large/net_multicast.png"));
     public static final Icon NETWORK_FOLDER = new ImageIcon(LargeIcons.class.getResource("/images/large/network_folder.png"));
     public static final Icon STOP = new ImageIcon(LargeIcons.class.getResource("/images/large/stop.png"));
+    public static final Icon TRANSMIT = new ImageIcon(LargeIcons.class.getResource("/images/large/transmit.png"));
+    public static final Icon TRANSMIT_BLUE = new ImageIcon(LargeIcons.class.getResource("/images/large/transmit_blue.png"));
+    public static final Icon SATELLITE = new ImageIcon(LargeIcons.class.getResource("/images/large/satellite.png"));
+    public static final Icon EARTH_STATION = new ImageIcon(LargeIcons.class.getResource("/images/large/earth_station.png"));
 }

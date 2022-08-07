@@ -1,12 +1,10 @@
 package m2tk.assistant.analyzer;
 
+import m2tk.assistant.analyzer.domain.CASystemStream;
 import m2tk.assistant.analyzer.domain.ElementaryStream;
 import m2tk.assistant.analyzer.domain.MPEGProgram;
 import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.ProgramEntity;
-import m2tk.assistant.dbi.entity.ProgramStreamMappingEntity;
-import m2tk.assistant.dbi.entity.SourceEntity;
-import m2tk.assistant.dbi.entity.StreamEntity;
+import m2tk.assistant.dbi.entity.*;
 import m2tk.multiplex.DemuxStatus;
 
 import java.util.List;
@@ -61,17 +59,19 @@ public class ResultPrinter implements Consumer<DemuxStatus>
         List<ProgramEntity> programs = databaseService.listPrograms();
         for (ProgramEntity program : programs)
         {
+            List<CAStreamEntity> ecms = databaseService.getProgramECMStreams(program.getProgramNumber());
             List<ProgramStreamMappingEntity> mappings = databaseService.getProgramStreamMappings(program.getProgramNumber());
-            MPEGProgram p = new MPEGProgram(program, mappings, streamRegistry);
+            MPEGProgram p = new MPEGProgram(program, ecms, mappings, streamRegistry);
 
             System.out.printf("Program[%4d] %s%n", p.getProgramNumber(), p.getProgramName() == null ? "" : p.getProgramName());
             System.out.printf("   pmt pid : %4Xh (%4d)%n", p.getPmtPid(), p.getPmtPid());
             System.out.printf("   pcr pid : %4Xh (%4d)%n", p.getPcrPid(), p.getPcrPid());
             System.out.printf("   with ca : %s%n", p.isFreeAccess() ? "No" : "Yes");
-            for (ElementaryStream ecm : p.getEcmList())
+            for (CASystemStream ecm : p.getEcmList())
                 System.out.printf(" %s ECM     : 0x%04X (%4d)%n",
-                                  ecm.isPresent() ? " " : "*",
-                                  ecm.getStreamPid(), ecm.getStreamPid());
+                                  streamRegistry.containsKey(ecm.getStreamPid()) ? " " : "*",
+                                  ecm.getStreamPid(),
+                                  ecm.getStreamPid());
             for (ElementaryStream es : p.getElementList())
                 System.out.printf(" %s ES [%s]  : 0x%04X (%4d) %s%n",
                                   es.isPresent() ? " " : "*",

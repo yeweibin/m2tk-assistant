@@ -12,8 +12,6 @@ import m2tk.multiplex.TSDemuxPayload;
 import m2tk.multiplex.TSState;
 import m2tk.multiplex.TransportStatus;
 
-import java.util.Arrays;
-
 public class StreamRecorder
 {
     private final DatabaseService databaseService;
@@ -103,15 +101,9 @@ public class StreamRecorder
             stream.setScrambled(true);
 
         int cct = pkt.getContinuityCounter();
-        int prc = CCTs[pid] & 0xF;
-        if (pid != 0x1FFF && CCTs[pid] != -1 && cct != nextCCT(prc))
-        {
-            long pph = CCTs[pid] & 0xFFFFFFFFL;
-            long cph = pkt.getEncoding().readUINT32(0);
-            System.out.printf("CC error: prev header = %08X, curr header = %08X%n", pph, cph);
+        if (pid != 0x1FFF && CCTs[pid] != -1 && cct != nextCCT(CCTs[pid]))
             stream.setContinuityErrorCount(stream.getContinuityErrorCount() + 1);
-        }
-        CCTs[pid] = (int) pkt.getEncoding().readUINT32(0);
+        CCTs[pid] = cct;
 
         long currPcrValue = readPCR();
         long currPct = payload.getStartPacketCounter();
@@ -126,7 +118,6 @@ public class StreamRecorder
             } else if (pcrPid == pid)
             {
                 int bitrate = ProgramClockReference.bitrate(lastPcrValue, currPcrValue, currPct - lastPcrPct);
-//                avgBitrate = (avgBitrate == 0) ? bitrate : (avgBitrate + bitrate) / 2;
                 avgBitrate = (avgBitrate + bitrate) / 2;
                 lastPcrValue = currPcrValue;
                 lastPcrPct = currPct;

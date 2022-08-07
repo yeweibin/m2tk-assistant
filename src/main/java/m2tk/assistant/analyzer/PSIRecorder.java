@@ -139,11 +139,13 @@ public class PSIRecorder
             cad.attach(descriptor);
             int emm = cad.getConditionalAccessStreamPID();
             int casid = cad.getConditionalAccessSystemID();
+            byte[] privateData = cad.getPrivateDataBytes();
             String vendor = CASystems.vendor(casid);
             String description = String.format("EMM，系统号：%04X", casid);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
             databaseService.updateStreamUsage(emm, StreamTypes.CATEGORY_DATA, description);
+            databaseService.addEMMStream(casid, emm, privateData);
         });
     }
 
@@ -177,25 +179,27 @@ public class PSIRecorder
             cad.attach(encoding);
             int ecm = cad.getConditionalAccessStreamPID();
             int casid = cad.getConditionalAccessSystemID();
+            byte[] privateData = cad.getPrivateDataBytes();
             String vendor = CASystems.vendor(casid);
-            String ecmdesc = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), casid);
+            String description = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), casid);
             if (!vendor.isEmpty())
-                ecmdesc += "，提供商：" + vendor;
-            databaseService.updateStreamUsage(ecm, StreamTypes.CATEGORY_DATA, ecmdesc);
-            databaseService.addProgramStreamMapping(program.getProgramNumber(), ecm, 0x05, StreamTypes.CATEGORY_DATA, ecmdesc);
+                description += "，提供商：" + vendor;
+            databaseService.updateStreamUsage(ecm, StreamTypes.CATEGORY_DATA, description);
+            databaseService.addECMStream(casid, ecm, privateData, program.getProgramNumber(), 8191);
         });
 
         pmt.forEachProgramElement(encoding -> {
             element.attach(encoding);
             int esPid = element.getElementaryPID();
             int esType = element.getStreamType();
-            String description = String.format("%s（节目号：%d）", StreamTypes.description(esType), program.getProgramNumber());
-            databaseService.updateStreamUsage(esPid, StreamTypes.category(esType), description);
+            databaseService.updateStreamUsage(esPid, StreamTypes.category(esType),
+                                              StreamTypes.description(esType) +
+                                              String.format("（节目号：%d）", program.getProgramNumber()));
             databaseService.addProgramStreamMapping(program.getProgramNumber(),
                                                     esPid,
                                                     esType,
                                                     StreamTypes.category(esType),
-                                                    description);
+                                                    StreamTypes.description(esType));
 
             descloop.attach(element.getDescriptorLoop());
             descloop.forEach(cad::isAttachable, descriptor -> {
@@ -203,12 +207,16 @@ public class PSIRecorder
                 cad.attach(descriptor);
                 int ecm = cad.getConditionalAccessStreamPID();
                 int casid = cad.getConditionalAccessSystemID();
+                byte[] privateData = cad.getPrivateDataBytes();
                 String vendor = CASystems.vendor(casid);
-                String ecmdesc = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), casid);
+                String description = String.format("ECM（节目号：%d，目标ES：0x%X），系统号：%04X",
+                                                   program.getProgramNumber(),
+                                                   esPid,
+                                                   casid);
                 if (!vendor.isEmpty())
-                    ecmdesc += "，提供商：" + vendor;
-                databaseService.updateStreamUsage(ecm, StreamTypes.CATEGORY_DATA, ecmdesc);
-                databaseService.addProgramStreamMapping(program.getProgramNumber(), ecm, 0x05, StreamTypes.CATEGORY_DATA, ecmdesc);
+                    description += "，提供商：" + vendor;
+                databaseService.updateStreamUsage(ecm, StreamTypes.CATEGORY_DATA, description);
+                databaseService.addECMStream(casid, ecm, privateData, program.getProgramNumber(), esPid);
             });
         });
 

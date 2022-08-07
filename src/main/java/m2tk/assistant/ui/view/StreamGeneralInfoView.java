@@ -19,10 +19,8 @@ package m2tk.assistant.ui.view;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.MPEGProgram;
 import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.ProgramEntity;
-import m2tk.assistant.dbi.entity.ProgramStreamMappingEntity;
-import m2tk.assistant.dbi.entity.SourceEntity;
-import m2tk.assistant.dbi.entity.StreamEntity;
+import m2tk.assistant.dbi.entity.*;
+import m2tk.assistant.ui.component.CASystemInfoPanel;
 import m2tk.assistant.ui.component.ProgramInfoPanel;
 import m2tk.assistant.ui.component.SourceInfoPanel;
 import m2tk.assistant.ui.component.StreamInfoPanel;
@@ -31,17 +29,13 @@ import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
-import javax.swing.*;
 import javax.swing.Timer;
-import java.awt.*;
+import javax.swing.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import static java.util.stream.Collectors.toMap;
 
 public class StreamGeneralInfoView extends JPanel
 {
@@ -50,9 +44,11 @@ public class StreamGeneralInfoView extends JPanel
     private SourceInfoPanel sourceInfoPanel;
     private ProgramInfoPanel programInfoPanel;
     private StreamInfoPanel streamInfoPanel;
+    private CASystemInfoPanel casInfoPanel;
     private Timer timer1;
     private Timer timer2;
     private Timer timer3;
+    private Timer timer4;
 
     public StreamGeneralInfoView(FrameView view)
     {
@@ -63,24 +59,30 @@ public class StreamGeneralInfoView extends JPanel
 
     private void initUI()
     {
-        timer1 = new Timer(1000, actionMap.get("querySourceInfo"));
-        timer2 = new Timer(1000, actionMap.get("queryProgramInfo"));
-        timer3 = new Timer(1000, actionMap.get("queryStreamInfo"));
+        timer1 = new Timer(500, actionMap.get("querySourceInfo"));
+        timer2 = new Timer(500, actionMap.get("queryProgramInfo"));
+        timer3 = new Timer(500, actionMap.get("queryStreamInfo"));
+        timer4 = new Timer(500, actionMap.get("queryCASystemInfo"));
 
         sourceInfoPanel = new SourceInfoPanel();
         streamInfoPanel = new StreamInfoPanel();
         programInfoPanel = new ProgramInfoPanel();
+        casInfoPanel = new CASystemInfoPanel();
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.add("节目信息", programInfoPanel);
+        tabbedPane.add("条件接收信息", casInfoPanel);
 
         // 强行让programInfoPanel与sourceInfoPanel保持同宽
         // 实在不知道怎么在MigLayout布局器里设置，并且保持左边的宽度固定。
-        Dimension ds = sourceInfoPanel.getPreferredSize();
-        Dimension dp = programInfoPanel.getMaximumSize();
-        programInfoPanel.setMaximumSize(new Dimension(ds.width, dp.height));
+//        Dimension ds = sourceInfoPanel.getPreferredSize();
+//        Dimension dp = programInfoPanel.getMaximumSize();
+//        programInfoPanel.setMaximumSize(new Dimension(ds.width, dp.height));
 
-        setLayout(new MigLayout("", "[fill][grow]", "[fill][grow]"));
-        add(sourceInfoPanel);
-        add(streamInfoPanel, "span 1 2, grow, wrap");
-        add(programInfoPanel, "grow");
+        setLayout(new MigLayout("", "[grow][fill]", "[fill][grow]"));
+        add(streamInfoPanel, "span 1 2, grow");
+        add(sourceInfoPanel, "wrap");
+        add(tabbedPane, "grow");
 
         addComponentListener(new ComponentAdapter()
         {
@@ -90,6 +92,7 @@ public class StreamGeneralInfoView extends JPanel
                 timer1.start();
                 timer2.start();
                 timer3.start();
+                timer4.start();
             }
 
             @Override
@@ -98,6 +101,7 @@ public class StreamGeneralInfoView extends JPanel
                 timer1.stop();
                 timer2.stop();
                 timer3.stop();
+                timer4.stop();
             }
         });
     }
@@ -124,9 +128,14 @@ public class StreamGeneralInfoView extends JPanel
 
             List<MPEGProgram> programs = new ArrayList<>();
             Map<ProgramEntity, List<ProgramStreamMappingEntity>> mappings = databaseService.getProgramMappings();
+            Map<Integer, List<CAStreamEntity>> ecmGroups = databaseService.listECMGroups();
             for (ProgramEntity program : mappings.keySet())
             {
-                programs.add(new MPEGProgram(program, mappings.get(program), streamRegistry));
+                programs.add(new MPEGProgram(program,
+                                             ecmGroups.getOrDefault(program.getProgramNumber(),
+                                                                    Collections.emptyList()),
+                                             mappings.get(program),
+                                             streamRegistry));
             }
             programs.sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
             return programs;
@@ -152,10 +161,23 @@ public class StreamGeneralInfoView extends JPanel
         task.execute();
     }
 
+    @Action
+    public void queryCASystemInfo()
+    {
+        Supplier<List<CAStreamEntity>> query = () -> Global.getDatabaseService().listCAStreams();
+        Consumer<List<CAStreamEntity>> consumer = casInfoPanel::updateStreamList;
+
+        AsyncQueryTask<List<CAStreamEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
+                                                                         query,
+                                                                         consumer);
+        task.execute();
+    }
+
     public void reset()
     {
         programInfoPanel.resetProgramList();
         streamInfoPanel.resetStreamList();
         sourceInfoPanel.resetSourceInfo();
+        casInfoPanel.resetStreamList();
     }
 }
