@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="TextListLogAppender" class="m2tk.assistant.util.TextListLogAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <encoder>
+            <pattern>[%d] %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="FileAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${user.home}/m2tk/logs/assistant.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${user.home}/m2tk/logs/assistant.%d.%i.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <maxFileSize>10MB</maxFileSize>
+        </rollingPolicy>
+        <encoder>
+            <pattern>
+                %d %p (%file:%line\) %m%n
+            </pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+<!--    <root level="INFO">-->
+    <root>
+        <appender-ref ref="FileAppender"/>
+        <appender-ref ref="TextListLogAppender"/>
+    </root>
+    <logger name="m2tk.assistant.ui.MainViewController" level="INFO">
+        <appender-ref ref="TextListLogAppender" />
+    </logger>
+</configuration>
