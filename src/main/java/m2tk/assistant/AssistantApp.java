@@ -24,8 +24,8 @@ public final class AssistantApp extends SingleFrameApplication
         SingleFrameApplication.launch(AssistantApp.class, args);
     }
 
-    public static final String APP_NAME = "M2TK码流分析工具";
-    public static final String APP_VERSION = "1.0.0";
+    public static final String APP_NAME = "M2TK 码流分析";
+    public static final String APP_VERSION = "1.0.13";
     public static final String APP_VENDOR = "Ye Weibin";
     private MainViewController controller;
 

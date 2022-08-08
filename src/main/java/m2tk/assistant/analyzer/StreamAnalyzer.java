@@ -47,27 +47,27 @@ public class StreamAnalyzer
             return false;
         }
 
-        StreamRecorder streamRecorder = new StreamRecorder(databaseService);
-        PSIRecorder psiRecorder = new PSIRecorder(databaseService);
+        StreamTracer streamTracer = new StreamTracer(databaseService);
+        PSITracer psiTracer = new PSITracer(databaseService);
 
         demuxer.reset();
-        demuxer.registerEventListener(new EventFilter<>(TransportStatus.class, streamRecorder::processTransportStatus));
+        demuxer.registerEventListener(new EventFilter<>(TransportStatus.class, streamTracer::processTransportStatus));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
-        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, streamRecorder::processDemuxStatus));
+        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, streamTracer::processDemuxStatus));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxerStopped));
 //        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new ResultPrinter(databaseService)));
 
         TSDemux.Channel channel0 = demuxer.requestChannel(TSDemuxPayload.Type.RAW);
-        channel0.setPayloadHandler(streamRecorder::processTransportPacket);
+        channel0.setPayloadHandler(streamTracer::processTransportPacket);
         channel0.setStreamPID(TSDemux.Channel.ANY_PID);
         channel0.setEnabled(true);
 
         TSDemux.Channel channel1 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel1.setPayloadHandler(psiRecorder::processPAT);
+        channel1.setPayloadHandler(psiTracer::processPAT);
         channel1.setStreamPID(0x0000);
         channel1.setEnabled(true);
         TSDemux.Channel channel2 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel2.setPayloadHandler(psiRecorder::processCAT);
+        channel2.setPayloadHandler(psiTracer::processCAT);
         channel2.setStreamPID(0x0001);
         channel2.setEnabled(true);
 

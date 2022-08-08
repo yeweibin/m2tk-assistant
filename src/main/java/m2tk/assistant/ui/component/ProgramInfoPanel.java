@@ -99,8 +99,7 @@ public class ProgramInfoPanel extends JPanel
 
             if (p1.getTransportStreamId() != p2.getTransportStreamId() ||
                 p1.getProgramNumber() != p2.getProgramNumber() ||
-                p1.getPmtVersion() != p2.getPmtVersion() ||
-                p1.getBandwidth() != p2.getBandwidth())
+                p1.getPmtVersion() != p2.getPmtVersion())
                 return false;
 
             if (p1.getEcmList().size() != p2.getEcmList().size() ||

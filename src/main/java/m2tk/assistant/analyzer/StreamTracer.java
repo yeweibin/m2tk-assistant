@@ -12,7 +12,7 @@ import m2tk.multiplex.TSDemuxPayload;
 import m2tk.multiplex.TSState;
 import m2tk.multiplex.TransportStatus;
 
-public class StreamRecorder
+public class StreamTracer
 {
     private final DatabaseService databaseService;
     private final StreamEntity[] streams;
@@ -29,7 +29,7 @@ public class StreamRecorder
     private long t0;
     private SourceEntity source;
 
-    public StreamRecorder(DatabaseService service)
+    public StreamTracer(DatabaseService service)
     {
         databaseService = service;
         streams = new StreamEntity[8192];

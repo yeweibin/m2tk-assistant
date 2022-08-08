@@ -2,8 +2,6 @@ package m2tk.assistant.dbi.handler;
 
 import cn.hutool.core.lang.generator.Generator;
 import m2tk.assistant.dbi.entity.CAStreamEntity;
-import m2tk.assistant.dbi.entity.ProgramEntity;
-import m2tk.assistant.dbi.entity.ProgramStreamMappingEntity;
 import m2tk.assistant.dbi.mapper.CAStreamEntityMapper;
 import org.jdbi.v3.core.Handle;
 
@@ -32,8 +30,8 @@ public class CAStreamHandler
                        "`stream_type` INT NOT NULL," +
                        "`stream_pid` INT NOT NULL," +
                        "`stream_private_data` VARBINARY(255)," +
-                       "`program_number` INT DEFAULT 0," +
-                       "`es_pid` INT DEFAULT 8191" +
+                       "`program_number` INT," +
+                       "`es_pid` INT" +
                        ")");
     }
 

@@ -179,5 +179,25 @@ public class StreamGeneralInfoView extends JPanel
         streamInfoPanel.resetStreamList();
         sourceInfoPanel.resetSourceInfo();
         casInfoPanel.resetStreamList();
+        timer1.restart();
+        timer2.restart();
+        timer3.restart();
+        timer4.restart();
+    }
+
+    public void startRefreshing()
+    {
+        timer1.start();
+        timer2.start();
+        timer3.start();
+        timer4.start();
+    }
+
+    public void stopRefreshing()
+    {
+        timer1.stop();
+        timer2.stop();
+        timer3.stop();
+        timer4.stop();
     }
 }

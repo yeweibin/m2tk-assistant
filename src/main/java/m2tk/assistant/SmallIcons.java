@@ -46,6 +46,7 @@ public final class SmallIcons
     public static final Icon USER = new ImageIcon(SmallIcons.class.getResource("/images/small/user.png"));
     public static final Icon STOP = new ImageIcon(SmallIcons.class.getResource("/images/small/stop.png"));
     public static final Icon TABLE_CHART = new ImageIcon(SmallIcons.class.getResource("/images/small/table_chart.png"));
+    public static final Icon CHART_PIE = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_pie.png"));
     public static final Icon CHART_BAR = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_bar.png"));
     public static final Icon CHART_COLUMN = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_column.png"));
     public static final Icon DOCUMENT_SIGNATURE = new ImageIcon(SmallIcons.class.getResource("/images/small/document_signature.png"));
@@ -59,5 +60,10 @@ public final class SmallIcons
     public static final Icon DECIMAL_MORE = new ImageIcon(SmallIcons.class.getResource("/images/small/decimal_more.png"));
     public static final Icon BARCHART = new ImageIcon(SmallIcons.class.getResource("/images/small/barchart.png"));
     public static final Icon KEY_U = new ImageIcon(SmallIcons.class.getResource("/images/small/key_u.png"));
-
+    public static final Icon PLAY_SILVER = new ImageIcon(SmallIcons.class.getResource("/images/small/play_silver.png"));
+    public static final Icon PAUSE_SILVER = new ImageIcon(SmallIcons.class.getResource("/images/small/pause_silver.png"));
+    public static final Icon STOP_SILVER = new ImageIcon(SmallIcons.class.getResource("/images/small/stop_silver.png"));
+    public static final Icon PLAY_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/play_blue.png"));
+    public static final Icon PAUSE_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/pause_blue.png"));
+    public static final Icon STOP_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/stop_blue.png"));
 }

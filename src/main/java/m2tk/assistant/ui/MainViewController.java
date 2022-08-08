@@ -19,7 +19,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
-import java.net.InetAddress;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,6 +30,7 @@ public class MainViewController
     private final ActionMap actionMap;
     private DefaultListModel<String> logsModel;
     private StreamGeneralInfoView streamGeneralInfoView;
+    private JFileChooser fileChooser;
 
     public MainViewController(FrameView view)
     {
@@ -60,6 +60,8 @@ public class MainViewController
         sourceMenu.add(createMenuItem("openMulticast", "组播流", "读取组播流"));
         menuOps.add(sourceMenu);
         menuOps.add(createMenuItem("stopAnalyzer", "停止分析", "停止分析器"));
+        menuOps.add(createMenuItem("pauseRefreshing", "暂停刷新", "暂停刷新"));
+        menuOps.add(createMenuItem("startRefreshing", "继续刷新", "继续刷新"));
 
         JMenu menuLogs = new JMenu("日志");
         menuLogs.add(createMenuItem("clearLogs", "清空日志", "清空日志"));
@@ -91,11 +93,19 @@ public class MainViewController
         JButton btnStopAnalysing = createButton("stopAnalyzer", "停止分析");
         btnStopAnalysing.setIcon(resourceMap.getIcon("toolbar.stopAnalyzer.icon"));
         btnStopAnalysing.setText(null);
+        JButton btnPauseRefreshing = createButton("pauseRefreshing", "暂停刷新");
+        btnPauseRefreshing.setIcon(resourceMap.getIcon("toolbar.pauseRefreshing.icon"));
+        btnPauseRefreshing.setText(null);
+        JButton btnStartRefreshing = createButton("startRefreshing", "继续刷新");
+        btnStartRefreshing.setIcon(resourceMap.getIcon("toolbar.startRefreshing.icon"));
+        btnStartRefreshing.setText(null);
 
         toolBar.add(btnOpenFile);
         toolBar.add(btnOpenMulticast);
         toolBar.addSeparator();
         toolBar.add(btnStopAnalysing);
+        toolBar.add(btnPauseRefreshing);
+        toolBar.add(btnStartRefreshing);
 
         frameView.setToolBar(toolBar);
     }
@@ -128,7 +138,14 @@ public class MainViewController
     {
         frameView.getFrame().setTitle(AssistantApp.APP_NAME);
 
+        fileChooser = new JFileChooser();
+        fileChooser.setMultiSelectionEnabled(false);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.home")).toFile());
+
         actionMap.get("stopAnalyzer").setEnabled(false);
+        actionMap.get("pauseRefreshing").setEnabled(false);
+        actionMap.get("startRefreshing").setEnabled(false);
         ComponentUtil.setPreferSizeAndLocateToCenter(frameView.getFrame(), 0.5, 0.5);
     }
 
@@ -196,24 +213,24 @@ public class MainViewController
     @Action
     public void openFile()
     {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setMultiSelectionEnabled(false);
-        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        chooser.setCurrentDirectory(Paths.get(System.getProperty("user.home"), "Downloads", "TS").toFile());
-        int retCode = chooser.showOpenDialog(frameView.getFrame());
+        int retCode = fileChooser.showOpenDialog(frameView.getFrame());
 
         if (retCode == JFileChooser.APPROVE_OPTION)
         {
-            File file = chooser.getSelectedFile();
+            File file = fileChooser.getSelectedFile();
+            fileChooser.setCurrentDirectory(file.getParentFile());
             String uri = file.toURI().toASCIIString();
             if (!Global.getStreamAnalyser().start(uri, this::onAnalyzerStopped))
             {
                 JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
             } else
             {
+                streamGeneralInfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("stopAnalyzer").setEnabled(true);
+                actionMap.get("pauseRefreshing").setEnabled(true);
+                actionMap.get("startRefreshing").setEnabled(false);
             }
         }
     }
@@ -224,6 +241,8 @@ public class MainViewController
         String input = JOptionPane.showInputDialog(frameView.getFrame(),
                                                  "组播地址",
                                                  "udp://224.0.0.1:7890");
+        if (input == null)
+            return;
 
         if (!isCorrectMulticastAddress(input))
         {
@@ -243,6 +262,8 @@ public class MainViewController
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
+            actionMap.get("pauseRefreshing").setEnabled(true);
+            actionMap.get("startRefreshing").setEnabled(false);
         }
     }
 
@@ -252,15 +273,32 @@ public class MainViewController
         Global.getStreamAnalyser().stop();
     }
 
+    @Action
+    public void pauseRefreshing()
+    {
+        streamGeneralInfoView.stopRefreshing();
+        actionMap.get("pauseRefreshing").setEnabled(false);
+        actionMap.get("startRefreshing").setEnabled(true);
+    }
+    @Action
+    public void startRefreshing()
+    {
+        streamGeneralInfoView.startRefreshing();
+        actionMap.get("pauseRefreshing").setEnabled(true);
+        actionMap.get("startRefreshing").setEnabled(false);
+    }
+
     private void onAnalyzerStopped(DemuxStatus status)
     {
         if (status.isRunning())
             return;
 
-        JOptionPane.showMessageDialog(frameView.getFrame(), "分析终止。");
+        JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("openFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);
+        actionMap.get("pauseRefreshing").setEnabled(false);
+        actionMap.get("startRefreshing").setEnabled(false);
     }
 
     private boolean isCorrectMulticastAddress(String input)
