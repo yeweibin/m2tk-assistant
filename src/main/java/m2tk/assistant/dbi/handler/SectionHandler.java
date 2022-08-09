@@ -2,7 +2,6 @@ package m2tk.assistant.dbi.handler;
 
 import cn.hutool.core.lang.generator.Generator;
 import m2tk.assistant.dbi.mapper.SectionEntityMapper;
-import m2tk.assistant.dbi.mapper.ServiceEntityMapper;
 import org.jdbi.v3.core.Handle;
 
 public class SectionHandler

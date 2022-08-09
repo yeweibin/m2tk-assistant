@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.analyzer.domain;
+package m2tk.assistant.dbi.mapper;
 
-import lombok.Getter;
+import m2tk.assistant.dbi.entity.SIDateTimeEntity;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.core.statement.StatementContext;
 
-@Getter
-public class CASystemStream
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+
+public class SIDateTimeEntityMapper implements RowMapper<SIDateTimeEntity>
 {
-    private final int systemId;
-    private final int streamPid;
-    private final String streamPrivateData;
-    private final String streamDescription;
-
-    public CASystemStream(int casid, int pid, String privateData, String description)
+    @Override
+    public SIDateTimeEntity map(ResultSet rs, StatementContext ctx) throws SQLException
     {
-        systemId = casid;
-        streamPid = pid;
-        streamPrivateData = privateData;
-        streamDescription = description;
+        SIDateTimeEntity entity = new SIDateTimeEntity();
+        entity.setId(rs.getLong("id"));
+        entity.setTimepoint(rs.getLong("timepoint"));
+        return entity;
     }
 }

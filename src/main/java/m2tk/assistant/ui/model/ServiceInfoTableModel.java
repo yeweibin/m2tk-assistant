@@ -16,37 +16,35 @@
 
 package m2tk.assistant.ui.model;
 
-import m2tk.assistant.SmallIcons;
-import m2tk.assistant.dbi.entity.StreamEntity;
+import m2tk.assistant.analyzer.domain.SIService;
 
-import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
-public class StreamInfoTableModel extends AbstractTableModel
+public class ServiceInfoTableModel extends AbstractTableModel
 {
-    private final List<StreamEntity> data;
+    private final List<SIService> data;
     private static final String[] COLUMNS = {
-            "序号", "流状态", "加扰状态", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "连续计数错误"
+            "序号", "名称", "提供商", "业务类型", "业务号", "原始网络号", "传输流号"
     };
     private static final Class<?>[] COLUMN_CLASSES = {
-            Integer.class, Icon.class, Icon.class, String.class, String.class, String.class, String.class, String.class, String.class
+            Integer.class, String.class, String.class, String.class, Integer.class, Integer.class, Integer.class
     };
 
-    public StreamInfoTableModel()
+    public ServiceInfoTableModel()
     {
         data = new ArrayList<>();
     }
 
-    public void update(List<StreamEntity> streams)
+    public void update(List<SIService> services)
     {
-        if (isSame(data, streams))
+        if (isSame(data, services))
             return;
 
         data.clear();
-        data.addAll(streams);
+        data.addAll(services);
         fireTableDataChanged();
     }
 
@@ -77,48 +75,40 @@ public class StreamInfoTableModel extends AbstractTableModel
     @Override
     public Object getValueAt(int rowIndex, int columnIndex)
     {
-        StreamEntity entity = data.get(rowIndex);
+        SIService service = data.get(rowIndex);
         switch (columnIndex)
         {
             case 0:
                 return rowIndex + 1;
             case 1:
-                return entity.getContinuityErrorCount() == 0 ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
+                return service.getServiceName();
             case 2:
-                return entity.isScrambled() ? SmallIcons.LOCK : null;
+                return service.getServiceProvider();
             case 3:
-                return String.format("%d (0x%04X)", entity.getPid(), entity.getPid());
+                return service.getServiceType();
             case 4:
-                return String.format("%,.02f", entity.getBitrate() / 1000.0);
+                return service.getServiceId();
             case 5:
-                return String.format("%.02f%%", 100 * entity.getRatio());
+                return service.getOriginalNetworkId();
             case 6:
-                return entity.getDescription();
-            case 7:
-                return String.format("%,d", entity.getPacketCount());
-            case 8:
-                return String.format("%,d", entity.getContinuityErrorCount());
+                return service.getTransportStreamId();
             default:
                 return null;
         }
     }
 
-    private boolean isSame(List<StreamEntity> current, List<StreamEntity> incoming)
+    private boolean isSame(List<SIService> current, List<SIService> incoming)
     {
         if (current.size() != incoming.size())
             return false;
 
-        incoming.sort(Comparator.comparingInt(StreamEntity::getPid));
-
         int n = current.size();
-        for (int i = 0; i < n; i ++)
+        for (int i = 0; i < n; i++)
         {
-            StreamEntity s1 = current.get(i);
-            StreamEntity s2 = incoming.get(i);
+            SIService s1 = current.get(i);
+            SIService s2 = incoming.get(i);
 
-            if (s1.getId() != s2.getId() ||
-                s1.getPid() != s2.getPid() ||
-                s1.getPacketCount() != s2.getPacketCount())
+            if (!Objects.equals(s1, s2))
                 return false;
         }
 

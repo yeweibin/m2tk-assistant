@@ -34,7 +34,7 @@ public class SourceHandler
         handle.execute("TRUNCATE TABLE T_SOURCE");
     }
 
-    public SourceEntity addSource(Handle handle, String name)
+    public void addSource(Handle handle, String name)
     {
         SourceEntity entity = new SourceEntity();
         entity.setId(idGenerator.next());
@@ -50,7 +50,6 @@ public class SourceHandler
                        entity.getTransportStreamId(),
                        entity.getPacketCount(),
                        entity.getSourceName());
-        return entity;
     }
 
     public SourceEntity getLatestSource(Handle handle)

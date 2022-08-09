@@ -55,6 +55,7 @@ public final class AssistantApp extends SingleFrameApplication
     @Override
     protected void shutdown()
     {
+        controller.setWillQuit();
         Global.getStreamAnalyser().shutdown();
         super.shutdown();
     }

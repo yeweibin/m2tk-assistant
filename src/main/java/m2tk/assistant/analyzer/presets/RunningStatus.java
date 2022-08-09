@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.analyzer.domain;
+package m2tk.assistant.analyzer.presets;
 
-import lombok.Getter;
-
-@Getter
-public class CASystemStream
+public class RunningStatus
 {
-    private final int systemId;
-    private final int streamPid;
-    private final String streamPrivateData;
-    private final String streamDescription;
-
-    public CASystemStream(int casid, int pid, String privateData, String description)
+    public static String name(int status)
     {
-        systemId = casid;
-        streamPid = pid;
-        streamPrivateData = privateData;
-        streamDescription = description;
+        switch (status)
+        {
+            case 0x00:
+                return "未定义";
+            case 0x01:
+                return "未开始";
+            case 0x02:
+                return "即将开始";
+            case 0x03:
+                return "暂停中";
+            case 0x04:
+                return "进行中";
+            case 0x05:
+                return "已结束";
+            default:
+                return "保留";
+        }
     }
 }

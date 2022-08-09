@@ -1,5 +1,6 @@
 package m2tk.assistant.analyzer.domain;
 
+import lombok.Getter;
 import m2tk.assistant.analyzer.presets.CASystems;
 import m2tk.assistant.analyzer.util.ProgramStreamComparator;
 import m2tk.assistant.dbi.entity.CAStreamEntity;
@@ -7,8 +8,12 @@ import m2tk.assistant.dbi.entity.ProgramEntity;
 import m2tk.assistant.dbi.entity.ProgramStreamMappingEntity;
 import m2tk.assistant.dbi.entity.StreamEntity;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
+@Getter
 public class MPEGProgram
 {
     private final String programName;
@@ -95,55 +100,5 @@ public class MPEGProgram
 
         freeAccess = ecmList.isEmpty();
         bandwidth = totalBitrate;
-    }
-
-    public String getProgramName()
-    {
-        return programName;
-    }
-
-    public int getProgramNumber()
-    {
-        return programNumber;
-    }
-
-    public int getTransportStreamId()
-    {
-        return transportStreamId;
-    }
-
-    public boolean isFreeAccess()
-    {
-        return freeAccess;
-    }
-
-    public int getBandwidth()
-    {
-        return bandwidth;
-    }
-
-    public int getPmtVersion()
-    {
-        return pmtVersion;
-    }
-
-    public int getPmtPid()
-    {
-        return pmtPid;
-    }
-
-    public int getPcrPid()
-    {
-        return pcrPid;
-    }
-
-    public List<CASystemStream> getEcmList()
-    {
-        return Collections.unmodifiableList(ecmList);
-    }
-
-    public List<ElementaryStream> getElementList()
-    {
-        return Collections.unmodifiableList(elementList);
     }
 }

@@ -1,5 +1,6 @@
 package m2tk.assistant.analyzer;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.analyzer.presets.CASystems;
 import m2tk.assistant.analyzer.presets.StreamTypes;
 import m2tk.assistant.dbi.DatabaseService;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class PSITracer
 {
     private final DatabaseService databaseService;
@@ -66,13 +68,17 @@ public class PSITracer
             return;
 
         pat.attach(payload.getEncoding());
+        if (!pat.isChecksumCorrect())
+        {
+            log.warn("PAT校验错误。");
+            return;
+        }
+
         int version = pat.getVersionNumber();
         int secnum = pat.getSectionNumber();
         int total = pat.getLastSectionNumber() + 1;
         if (total == patSections.length && patSections[secnum] == version)
             return; // 已经处理过了。
-
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
 
         if (total != patSections.length)
         {
@@ -90,9 +96,14 @@ public class PSITracer
         }
 
         tsid = pat.getTransportStreamID();
-        patSections[secnum] = version;
-
         pat.forEachProgramAssociation((number, pmtpid) -> {
+            if (log.isDebugEnabled())
+            {
+                log.debug("[PAT] Program {}, PMT PID: {}",
+                          number,
+                          String.format("0x%04X", pmtpid));
+            }
+
             TSDemux demuxer = payload.getChannel().getHost();
 
             ProgramContext context = new ProgramContext();
@@ -109,6 +120,9 @@ public class PSITracer
         SourceEntity source = databaseService.getSource();
         source.setTransportStreamId(tsid);
         databaseService.updateSourceTransportId(source);
+
+        patSections[secnum] = version;
+        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
     }
 
     public void processCAT(TSDemuxPayload payload)
@@ -119,13 +133,17 @@ public class PSITracer
             return;
 
         cat.attach(payload.getEncoding());
+        if (!cat.isChecksumCorrect())
+        {
+            log.warn("CAT校验错误。");
+            return;
+        }
+
         int version = cat.getVersionNumber();
         int secnum = cat.getSectionNumber();
         int total = cat.getLastSectionNumber() + 1;
         if (total == catSections.length && catSections[secnum] == version)
             return; // 已经处理过了。
-
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
 
         if (total != catSections.length)
         {
@@ -133,7 +151,6 @@ public class PSITracer
             Arrays.fill(catSections, -1);
         }
 
-        catSections[secnum] = version;
         descloop.attach(cat.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, descriptor -> {
             cad.attach(descriptor);
@@ -147,6 +164,9 @@ public class PSITracer
             databaseService.updateStreamUsage(emm, StreamTypes.CATEGORY_DATA, description);
             databaseService.addEMMStream(casid, emm, privateData);
         });
+
+        catSections[secnum] = version;
+        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
     }
 
     public void processPMT(TSDemuxPayload payload)
@@ -157,21 +177,34 @@ public class PSITracer
             return;
 
         pmt.attach(payload.getEncoding());
+        if (!pmt.isChecksumCorrect())
+        {
+            log.warn("PMT校验错误。");
+            return;
+        }
+
         int version = pmt.getVersionNumber();
         int pmtpid = payload.getStreamPID();
 
         if (pmtVersions.get(pmtpid) == version)
             return;
 
-        pmtVersions.put(pmtpid, version);
-        ProgramEntity program = programs.get(pmt.getProgramNumber()).program;
+        ProgramContext context = programs.get(pmt.getProgramNumber());
+        if (context == null)
+        {
+            if (log.isDebugEnabled())
+            {
+                log.debug("[PID {}] 收到了节目{}的PMT，但是该节目未在PAT中描述。丢弃。",
+                          String.format("0x%04X", payload.getStreamPID()),
+                          pmt.getProgramNumber());
+            }
+            return;
+        }
+
+        ProgramEntity program = context.program;
         program.setPmtVersion(version);
         program.setPmtPid(pmtpid);
         program.setPcrPid(pmt.getProgramClockReferencePID());
-
-        databaseService.updateStreamUsage(pmtpid,
-                                          StreamTypes.CATEGORY_DATA,
-                                          String.format("PMT（节目号：%d）", program.getProgramNumber()));
 
         descloop.attach(pmt.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, encoding -> {
@@ -221,5 +254,10 @@ public class PSITracer
         });
 
         databaseService.updateProgram(program);
+
+        pmtVersions.put(pmtpid, version);
+        databaseService.updateStreamUsage(pmtpid,
+                                          StreamTypes.CATEGORY_DATA,
+                                          String.format("PMT（节目号：%d）", program.getProgramNumber()));
     }
 }

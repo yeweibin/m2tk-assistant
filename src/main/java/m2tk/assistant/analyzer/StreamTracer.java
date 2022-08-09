@@ -9,8 +9,6 @@ import m2tk.mpeg2.decoder.element.AdaptationFieldDecoder;
 import m2tk.mpeg2.decoder.element.ProgramClockReferenceDecoder;
 import m2tk.multiplex.DemuxStatus;
 import m2tk.multiplex.TSDemuxPayload;
-import m2tk.multiplex.TSState;
-import m2tk.multiplex.TransportStatus;
 
 public class StreamTracer
 {
@@ -42,16 +40,6 @@ public class StreamTracer
         frameSize = -1;
         avgBitrate = 0;
         t0 = System.currentTimeMillis();
-    }
-
-    public void processTransportStatus(TransportStatus status)
-    {
-        System.out.printf("status changed: %s -> %s%n",
-                          status.getPreviousState().name(),
-                          status.getCurrentState().name());
-        if (status.getCurrentState() == TSState.SYNC_BYTE_ERROR ||
-            status.getCurrentState() == TSState.SYNC_LOST)
-            System.out.println("sync error");
     }
 
     public void processDemuxStatus(DemuxStatus status)

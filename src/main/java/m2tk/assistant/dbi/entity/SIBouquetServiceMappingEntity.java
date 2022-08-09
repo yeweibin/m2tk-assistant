@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.analyzer.domain;
+package m2tk.assistant.dbi.entity;
 
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
-public class CASystemStream
+@Data
+public class SIBouquetServiceMappingEntity
 {
-    private final int systemId;
-    private final int streamPid;
-    private final String streamPrivateData;
-    private final String streamDescription;
-
-    public CASystemStream(int casid, int pid, String privateData, String description)
-    {
-        systemId = casid;
-        streamPid = pid;
-        streamPrivateData = privateData;
-        streamDescription = description;
-    }
+    private long id;
+    private int bouquetId;
+    private int transportStreamId;
+    private int originalNetworkId;
+    private int serviceId;
 }

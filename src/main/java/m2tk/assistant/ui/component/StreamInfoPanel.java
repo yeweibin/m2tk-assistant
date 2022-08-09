@@ -19,10 +19,12 @@ package m2tk.assistant.ui.component;
 import m2tk.assistant.dbi.entity.StreamEntity;
 import m2tk.assistant.ui.model.StreamInfoTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
+import m2tk.assistant.ui.util.ThreeStateRowSorterListener;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.List;
 public class StreamInfoPanel extends JPanel
 {
     private StreamInfoTableModel model;
+    private TableRowSorter<StreamInfoTableModel> rowSorter;
 
     public StreamInfoPanel()
     {
@@ -39,7 +42,12 @@ public class StreamInfoPanel extends JPanel
     private void initUI()
     {
         model = new StreamInfoTableModel();
-        JTable table = new JTable(model);
+        rowSorter = new TableRowSorter<>(model);
+        rowSorter.addRowSorterListener(new ThreeStateRowSorterListener(rowSorter));
+
+        JTable table = new JTable();
+        table.setModel(model);
+        table.setRowSorter(rowSorter);
         table.getTableHeader().setReorderingAllowed(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
@@ -51,15 +59,15 @@ public class StreamInfoPanel extends JPanel
         trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
 
         TableColumnModel columnModel = table.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false);
-        ComponentUtil.configTableColumn(columnModel, 1, 70, false);
-        ComponentUtil.configTableColumn(columnModel, 2, 70, false);
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, true);
-        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 100, true);
-        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, false);
-        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 400, true);
-        ComponentUtil.configTableColumn(columnModel, 7, trailingRenderer, 120, false);
-        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 120, false);
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false); // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, 70, false); // 流状态
+        ComponentUtil.configTableColumn(columnModel, 2, 70, false); // 加扰状态
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, true); // PID
+        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 100, true); // 平均Kbps
+        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, false); // 带宽占比
+        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 400, true); // 类型描述
+        ComponentUtil.configTableColumn(columnModel, 7, trailingRenderer, 120, false); // 包数量
+        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 120, false); // 连续计数错误
 
         setLayout(new BorderLayout());
         add(new JScrollPane(table), BorderLayout.CENTER);

@@ -89,19 +89,13 @@ public class StreamGeneralInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
-                timer1.start();
-                timer2.start();
-                timer3.start();
-                timer4.start();
+                startRefreshing();
             }
 
             @Override
             public void componentHidden(ComponentEvent e)
             {
-                timer1.stop();
-                timer2.stop();
-                timer3.stop();
-                timer4.stop();
+                stopRefreshing();
             }
         });
     }

@@ -5,6 +5,7 @@ import m2tk.assistant.Global;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ListModelOutputStream;
+import m2tk.assistant.ui.view.NetworkInfoView;
 import m2tk.assistant.ui.view.StreamGeneralInfoView;
 import m2tk.assistant.util.TextListLogAppender;
 import m2tk.multiplex.DemuxStatus;
@@ -30,7 +31,9 @@ public class MainViewController
     private final ActionMap actionMap;
     private DefaultListModel<String> logsModel;
     private StreamGeneralInfoView streamGeneralInfoView;
+    private NetworkInfoView networkInfoView;
     private JFileChooser fileChooser;
+    private volatile boolean willQuit;
 
     public MainViewController(FrameView view)
     {
@@ -58,6 +61,7 @@ public class MainViewController
         JMenu sourceMenu = new JMenu("选择输入源");
         sourceMenu.add(createMenuItem("openFile", "文件", "读取本地码流文件"));
         sourceMenu.add(createMenuItem("openMulticast", "组播流", "读取组播流"));
+        sourceMenu.add(createMenuItem("openThirdPartyInputSource", "扩展外设", "读取扩展输入设备"));
         menuOps.add(sourceMenu);
         menuOps.add(createMenuItem("stopAnalyzer", "停止分析", "停止分析器"));
         menuOps.add(createMenuItem("pauseRefreshing", "暂停刷新", "暂停刷新"));
@@ -123,10 +127,12 @@ public class MainViewController
         logsView.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         streamGeneralInfoView = new StreamGeneralInfoView(frameView);
+        networkInfoView = new NetworkInfoView(frameView);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.add("基本信息", streamGeneralInfoView);
+        tabbedPane.add("网络信息", networkInfoView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
@@ -177,6 +183,7 @@ public class MainViewController
     @Action
     public void exitApp()
     {
+        willQuit = true;
         frameView.getApplication().exit();
     }
 
@@ -226,8 +233,10 @@ public class MainViewController
             } else
             {
                 streamGeneralInfoView.reset();
+                networkInfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
+                actionMap.get("openThirdPartyInputSource").setEnabled(false);
                 actionMap.get("stopAnalyzer").setEnabled(true);
                 actionMap.get("pauseRefreshing").setEnabled(true);
                 actionMap.get("startRefreshing").setEnabled(false);
@@ -259,8 +268,35 @@ public class MainViewController
         } else
         {
             streamGeneralInfoView.reset();
+            networkInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
+            actionMap.get("openThirdPartyInputSource").setEnabled(false);
+            actionMap.get("stopAnalyzer").setEnabled(true);
+            actionMap.get("pauseRefreshing").setEnabled(true);
+            actionMap.get("startRefreshing").setEnabled(false);
+        }
+    }
+
+    @Action
+    public void openThirdPartyInputSource()
+    {
+        String input = JOptionPane.showInputDialog(frameView.getFrame(),
+                                                   "输入源地址",
+                                                   null);
+        if (input == null)
+            return;
+
+        if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
+        {
+            JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
+        } else
+        {
+            streamGeneralInfoView.reset();
+            networkInfoView.reset();
+            actionMap.get("openFile").setEnabled(false);
+            actionMap.get("openMulticast").setEnabled(false);
+            actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
@@ -277,6 +313,7 @@ public class MainViewController
     public void pauseRefreshing()
     {
         streamGeneralInfoView.stopRefreshing();
+        networkInfoView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -284,6 +321,7 @@ public class MainViewController
     public void startRefreshing()
     {
         streamGeneralInfoView.startRefreshing();
+        networkInfoView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }
@@ -293,10 +331,13 @@ public class MainViewController
         if (status.isRunning())
             return;
 
-        JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
+        if (!willQuit)
+            JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
+
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("openFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);
+        actionMap.get("openThirdPartyInputSource").setEnabled(true);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
     }
@@ -314,5 +355,10 @@ public class MainViewController
         {
             return false;
         }
+    }
+
+    public void setWillQuit()
+    {
+        willQuit = true;
     }
 }
