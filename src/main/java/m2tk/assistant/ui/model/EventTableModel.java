@@ -45,12 +45,13 @@ public class EventTableModel extends AbstractTableModel
                                .filter(e -> !e.isScheduleEvent() && !e.isPresentEvent())
                                .findFirst().orElse(EMPTY_FOLLOWING_EVENT);
 
-        events.removeIf(e -> !e.isScheduleEvent());
+        List<SIEvent> copy = new ArrayList<>(events);
+        copy.removeIf(e -> !e.isScheduleEvent());
 
         data.clear();
         data.add(pEvent);
         data.add(fEvent);
-        data.addAll(events);
+        data.addAll(copy);
         fireTableDataChanged();
     }
 

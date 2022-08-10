@@ -36,6 +36,7 @@ public class MainViewController
     private EPGInfoView epgInfoView;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
+    private String lastInput = null;
 
     public MainViewController(FrameView view)
     {
@@ -65,6 +66,7 @@ public class MainViewController
         sourceMenu.add(createMenuItem("openMulticast", "组播流", "读取组播流"));
         sourceMenu.add(createMenuItem("openThirdPartyInputSource", "扩展外设", "读取扩展输入设备"));
         menuOps.add(sourceMenu);
+        menuOps.add(createMenuItem("reopenLastInput", "重新分析", "重新分析当前输入"));
         menuOps.add(createMenuItem("stopAnalyzer", "停止分析", "停止分析器"));
         menuOps.add(createMenuItem("pauseRefreshing", "暂停刷新", "暂停刷新"));
         menuOps.add(createMenuItem("startRefreshing", "继续刷新", "继续刷新"));
@@ -96,6 +98,9 @@ public class MainViewController
         JButton btnOpenMulticast = createButton("openMulticast", "分析组播流");
         btnOpenMulticast.setIcon(resourceMap.getIcon("toolbar.openMulticast.icon"));
         btnOpenMulticast.setText(null);
+        JButton btnReopenLastInput = createButton("reopenLastInput", "重新分析");
+        btnReopenLastInput.setIcon(resourceMap.getIcon("toolbar.reopenLastInput.icon"));
+        btnReopenLastInput.setText(null);
         JButton btnStopAnalysing = createButton("stopAnalyzer", "停止分析");
         btnStopAnalysing.setIcon(resourceMap.getIcon("toolbar.stopAnalyzer.icon"));
         btnStopAnalysing.setText(null);
@@ -109,6 +114,7 @@ public class MainViewController
         toolBar.add(btnOpenFile);
         toolBar.add(btnOpenMulticast);
         toolBar.addSeparator();
+        toolBar.add(btnReopenLastInput);
         toolBar.add(btnStopAnalysing);
         toolBar.add(btnPauseRefreshing);
         toolBar.add(btnStartRefreshing);
@@ -153,6 +159,7 @@ public class MainViewController
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.home")).toFile());
 
+        actionMap.get("reopenLastInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
@@ -230,18 +237,22 @@ public class MainViewController
         {
             File file = fileChooser.getSelectedFile();
             fileChooser.setCurrentDirectory(file.getParentFile());
-            String uri = file.toURI().toASCIIString();
-            if (!Global.getStreamAnalyser().start(uri, this::onAnalyzerStopped))
+            String input = file.toURI().toASCIIString();
+            if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
             {
+                lastInput = null;
+                actionMap.get("reopenLastInput").setEnabled(false);
                 JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
             } else
             {
+                lastInput = input;
                 streamGeneralInfoView.reset();
                 networkInfoView.reset();
                 epgInfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
+                actionMap.get("reopenLastInput").setEnabled(false);
                 actionMap.get("stopAnalyzer").setEnabled(true);
                 actionMap.get("pauseRefreshing").setEnabled(true);
                 actionMap.get("startRefreshing").setEnabled(false);
@@ -253,8 +264,8 @@ public class MainViewController
     public void openMulticast()
     {
         String input = JOptionPane.showInputDialog(frameView.getFrame(),
-                                                 "组播地址",
-                                                 "udp://224.0.0.1:7890");
+                                                   "组播地址",
+                                                   "udp://224.0.0.1:7890");
         if (input == null)
             return;
 
@@ -269,15 +280,19 @@ public class MainViewController
 
         if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
         {
+            lastInput = null;
+            actionMap.get("reopenLastInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
+            lastInput = input;
             streamGeneralInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
+            actionMap.get("reopenLastInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
@@ -295,6 +310,36 @@ public class MainViewController
 
         if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
         {
+            lastInput = null;
+            actionMap.get("reopenLastInput").setEnabled(false);
+            JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
+        } else
+        {
+            lastInput = input;
+            streamGeneralInfoView.reset();
+            networkInfoView.reset();
+            epgInfoView.reset();
+            actionMap.get("openFile").setEnabled(false);
+            actionMap.get("openMulticast").setEnabled(false);
+            actionMap.get("openThirdPartyInputSource").setEnabled(false);
+            actionMap.get("reopenLastInput").setEnabled(false);
+            actionMap.get("stopAnalyzer").setEnabled(true);
+            actionMap.get("pauseRefreshing").setEnabled(true);
+            actionMap.get("startRefreshing").setEnabled(false);
+        }
+    }
+
+    @Action
+    public void reopenLastInput()
+    {
+        if (lastInput == null)
+        {
+            actionMap.get("reopenLastInput").setEnabled(false);
+            return;
+        }
+
+        if (!Global.getStreamAnalyser().start(lastInput, this::onAnalyzerStopped))
+        {
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
@@ -304,6 +349,7 @@ public class MainViewController
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
+            actionMap.get("reopenLastInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
@@ -325,6 +371,7 @@ public class MainViewController
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
+
     @Action
     public void startRefreshing()
     {
@@ -343,10 +390,11 @@ public class MainViewController
         if (!willQuit)
             JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
 
-        actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("openFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);
         actionMap.get("openThirdPartyInputSource").setEnabled(true);
+        actionMap.get("reopenLastInput").setEnabled(true);
+        actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
     }

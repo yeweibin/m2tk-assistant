@@ -228,7 +228,8 @@ public class ServiceEventGuidePanel extends JPanel
                 if (userObject instanceof String)
                 {
                     setText((String) userObject);
-                    setIcon(SmallIcons.TRANSMIT_BLUE);
+//                    setIcon(SmallIcons.ARROW_SWITCH);
+                    setIcon(SmallIcons.TRANSMIT);
                 }
                 if (userObject instanceof SIService)
                 {

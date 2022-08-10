@@ -3,11 +3,9 @@ package m2tk.assistant.dbi;
 import cn.hutool.core.lang.generator.SnowflakeGenerator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import m2tk.assistant.analyzer.TR290Tracer;
 import m2tk.assistant.dbi.entity.*;
-import m2tk.assistant.dbi.handler.PSIObjectHandler;
-import m2tk.assistant.dbi.handler.SIObjectHandler;
-import m2tk.assistant.dbi.handler.SourceHandler;
-import m2tk.assistant.dbi.handler.StreamHandler;
+import m2tk.assistant.dbi.handler.*;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.h2.H2DatabasePlugin;
 
@@ -25,6 +23,7 @@ public class DatabaseService
     private final StreamHandler streamHandler;
     private final PSIObjectHandler psiHandler;
     private final SIObjectHandler siHandler;
+    private final TR290EventHandler tr290Handler;
 
     public DatabaseService()
     {
@@ -40,6 +39,7 @@ public class DatabaseService
         streamHandler = new StreamHandler(generator);
         psiHandler = new PSIObjectHandler(generator);
         siHandler = new SIObjectHandler(generator);
+        tr290Handler = new TR290EventHandler(generator);
     }
 
     public void initDatabase()
@@ -317,5 +317,10 @@ public class DatabaseService
     public List<SIEventEntity> listEvents()
     {
         return dbi.withHandle(siHandler::listEvents);
+    }
+
+    public void addTR290Event(int level, String type, String description, long position, int pid)
+    {
+        dbi.useHandle(handle -> tr290Handler.addTR290Event(handle, level, type, description, position, pid));
     }
 }

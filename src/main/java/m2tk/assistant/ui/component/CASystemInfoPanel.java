@@ -191,7 +191,7 @@ public class CASystemInfoPanel extends JPanel
                 } else if (text.startsWith("[PD]"))
                 {
                     text = text.substring("[PD]".length());
-                    setIcon(SmallIcons.COMPILE_WARNING);
+                    setIcon(SmallIcons.COMPILE);
                     setText(text);
                     setToolTipText(text);
                 } else
