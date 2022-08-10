@@ -31,6 +31,7 @@ import org.jdesktop.application.FrameView;
 
 import javax.swing.Timer;
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;
@@ -70,14 +71,20 @@ public class StreamGeneralInfoView extends JPanel
         casInfoPanel = new CASystemInfoPanel();
 
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.add("节目信息", programInfoPanel);
-        tabbedPane.add("条件接收信息", casInfoPanel);
+        tabbedPane.add("节目", programInfoPanel);
+        tabbedPane.add("条件接收", casInfoPanel);
 
-        // 强行让programInfoPanel与sourceInfoPanel保持同宽
-        // 实在不知道怎么在MigLayout布局器里设置，并且保持左边的宽度固定。
-//        Dimension ds = sourceInfoPanel.getPreferredSize();
-//        Dimension dp = programInfoPanel.getMaximumSize();
-//        programInfoPanel.setMaximumSize(new Dimension(ds.width, dp.height));
+        TitledBorder border1 = BorderFactory.createTitledBorder("传输流信息");
+        border1.setTitleJustification(TitledBorder.LEFT);
+        streamInfoPanel.setBorder(border1);
+
+        TitledBorder border2 = BorderFactory.createTitledBorder("基本信息");
+        border2.setTitleJustification(TitledBorder.LEFT);
+        sourceInfoPanel.setBorder(border2);
+
+        TitledBorder border3 = BorderFactory.createTitledBorder("PSI信息");
+        border3.setTitleJustification(TitledBorder.LEFT);
+        tabbedPane.setBorder(border3);
 
         setLayout(new MigLayout("", "[grow][fill]", "[fill][grow]"));
         add(streamInfoPanel, "span 1 2, grow");

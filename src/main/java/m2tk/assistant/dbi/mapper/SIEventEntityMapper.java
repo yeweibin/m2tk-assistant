@@ -34,6 +34,7 @@ public class SIEventEntityMapper implements RowMapper<SIEventEntity>
         entity.setOriginalNetworkId(rs.getInt("onet_id"));
         entity.setServiceId(rs.getInt("srv_id"));
         entity.setEventId(rs.getInt("evt_id"));
+        entity.setEventType(rs.getString("evt_type"));
         entity.setEventName(rs.getString("evt_name"));
         entity.setEventDescription(rs.getString("evt_desc"));
         entity.setStartTime(rs.getString("start_time"));

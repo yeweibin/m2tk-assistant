@@ -22,7 +22,6 @@ import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ThreeStateRowSorterListener;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
@@ -93,10 +92,6 @@ public class ServiceInfoPanel extends JPanel
         tabbedPane.add("当前传输流", new JScrollPane(table1));
         tabbedPane.add("其他传输流", new JScrollPane(table2));
         add(tabbedPane, BorderLayout.CENTER);
-
-        TitledBorder border = BorderFactory.createTitledBorder("业务信息");
-        border.setTitleJustification(TitledBorder.LEFT);
-        setBorder(border);
     }
 
     public void updateActualTransportStreamServices(List<SIService> services)

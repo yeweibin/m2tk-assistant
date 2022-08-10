@@ -22,6 +22,7 @@ import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ThreeStateRowSorterListener;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;

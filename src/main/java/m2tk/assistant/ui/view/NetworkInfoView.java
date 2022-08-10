@@ -20,16 +20,21 @@ import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.SIMultiplex;
 import m2tk.assistant.analyzer.domain.SIService;
 import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.*;
+import m2tk.assistant.dbi.entity.SIDateTimeEntity;
+import m2tk.assistant.dbi.entity.SIMultiplexEntity;
+import m2tk.assistant.dbi.entity.SINetworkEntity;
+import m2tk.assistant.dbi.entity.SIServiceEntity;
 import m2tk.assistant.ui.component.MultiplexInfoPanel;
 import m2tk.assistant.ui.component.NetworkTimePanel;
 import m2tk.assistant.ui.component.ServiceInfoPanel;
 import m2tk.assistant.ui.task.AsyncQueryTask;
+import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
@@ -53,8 +58,6 @@ public class NetworkInfoView extends JPanel
     private Timer timer1;
     private Timer timer2;
     private Timer timer3;
-    private Timer timer4;
-    private Timer timer5;
 
     public NetworkInfoView(FrameView view)
     {
@@ -66,21 +69,21 @@ public class NetworkInfoView extends JPanel
     private void initUI()
     {
         timer1 = new Timer(500, actionMap.get("queryNetworks"));
-        timer2 = new Timer(500, actionMap.get("queryBouquets"));
-        timer3 = new Timer(500, actionMap.get("queryServices"));
-        timer4 = new Timer(500, actionMap.get("queryEvents"));
-        timer5 = new Timer(1000, actionMap.get("queryNetworkTime"));
+        timer2 = new Timer(500, actionMap.get("queryServices"));
+        timer3 = new Timer(1000, actionMap.get("queryNetworkTime"));
 
         networkTimePanel = new NetworkTimePanel();
         multiplexInfoPanel = new MultiplexInfoPanel();
         serviceInfoPanel = new ServiceInfoPanel();
 
-        setLayout(new MigLayout("", "[50%][50%]", "[40%][60%]"));
-        add(networkTimePanel, "north");
-        add(multiplexInfoPanel, "grow");
-        add(serviceInfoPanel, "grow, wrap");
+        ComponentUtil.setTitledBorder(networkTimePanel, "网络时间", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(multiplexInfoPanel, "传输流信息", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(serviceInfoPanel, "业务信息", TitledBorder.LEFT);
 
-        setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        setLayout(new MigLayout("fill", "[50%][50%]", "[][][grow]"));
+        add(networkTimePanel, "span 2, grow, wrap");
+        add(multiplexInfoPanel, "span 1 2, grow");
+        add(serviceInfoPanel, "span 1 2, grow, wrap");
 
         addComponentListener(new ComponentAdapter()
         {
@@ -154,11 +157,6 @@ public class NetworkInfoView extends JPanel
     }
 
     @Action
-    public void queryBouquets()
-    {
-    }
-
-    @Action
     public void queryServices()
     {
         List<SIService> srvActualTS = new ArrayList<>();
@@ -206,10 +204,6 @@ public class NetworkInfoView extends JPanel
         task.execute();
     }
 
-    public void queryEvents()
-    {
-    }
-
     @Action
     public void queryNetworkTime()
     {
@@ -228,8 +222,6 @@ public class NetworkInfoView extends JPanel
         timer1.restart();
         timer2.restart();
         timer3.restart();
-        timer4.restart();
-        timer5.restart();
     }
 
     public void startRefreshing()
@@ -237,8 +229,6 @@ public class NetworkInfoView extends JPanel
         timer1.start();
         timer2.start();
         timer3.start();
-        timer4.start();
-        timer5.start();
     }
 
     public void stopRefreshing()
@@ -246,7 +236,5 @@ public class NetworkInfoView extends JPanel
         timer1.stop();
         timer2.stop();
         timer3.stop();
-        timer4.stop();
-        timer5.stop();
     }
 }

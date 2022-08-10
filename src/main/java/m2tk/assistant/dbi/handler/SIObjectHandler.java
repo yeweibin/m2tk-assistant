@@ -497,6 +497,13 @@ public class SIObjectHandler
                        entity.getId());
     }
 
+    public List<SIEventEntity> listEvents(Handle handle)
+    {
+        return handle.select("SELECT * FROM T_SI_EVENT")
+                     .map(eventEntityMapper)
+                     .list();
+    }
+
     public List<SIEventEntity> listServiceEvents(Handle handle, int transportStreamId, int originalNetworkId,
                                                  int serviceId)
     {

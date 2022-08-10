@@ -327,9 +327,9 @@ public class SITracer
                                                                  originalNetworkId,
                                                                  serviceId,
                                                                  eventId,
-                                                                 runningStatus,
                                                                  startTime,
                                                                  duration,
+                                                                 runningStatus,
                                                                  isFreeCAMode,
                                                                  secnum == 0);
             } else

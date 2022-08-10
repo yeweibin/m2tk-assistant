@@ -313,4 +313,9 @@ public class DatabaseService
     {
         dbi.useHandle(handle -> siHandler.updateMultiplexDeliverySystemConfigure(handle, multiplex));
     }
+
+    public List<SIEventEntity> listEvents()
+    {
+        return dbi.withHandle(siHandler::listEvents);
+    }
 }

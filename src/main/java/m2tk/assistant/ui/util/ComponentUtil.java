@@ -1,6 +1,7 @@
 package m2tk.assistant.ui.util;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
@@ -118,5 +119,12 @@ public final class ComponentUtil
 
         if (cellRenderer != null)
             column.setCellRenderer(cellRenderer);
+    }
+
+    public static void setTitledBorder(JComponent c, String title, int titleJustification)
+    {
+        TitledBorder border = BorderFactory.createTitledBorder(title);
+        border.setTitleJustification(titleJustification);
+        c.setBorder(border);
     }
 }

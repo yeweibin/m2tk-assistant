@@ -65,13 +65,6 @@ public class SourceInfoPanel extends JPanel
         add(new JLabel("传输流号"), "left");
         add(fieldTransportStreamId, "span 2, grow, wrap");
 
-        TitledBorder border = BorderFactory.createTitledBorder("基本信息");
-        border.setTitleJustification(TitledBorder.LEFT);
-        setBorder(border);
-
-        setMinimumSize(getPreferredSize());
-        setMaximumSize(getPreferredSize());
-
         currentSourceEntity = null;
     }
 

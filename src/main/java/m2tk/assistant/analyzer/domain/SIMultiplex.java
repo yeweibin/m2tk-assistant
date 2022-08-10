@@ -23,6 +23,7 @@ import java.util.Objects;
 @Getter
 public class SIMultiplex
 {
+    private final String id;
     private final int transportStreamId;
     private final int originalNetworkId;
     private final String networkName;
@@ -32,6 +33,7 @@ public class SIMultiplex
 
     public SIMultiplex(int transportStreamId, int originalNetworkId, String networkName, String deliverySystemType, String transmitFrequency, int serviceCount)
     {
+        this.id = String.format("%05d.%05d", originalNetworkId, transportStreamId);
         this.transportStreamId = transportStreamId;
         this.originalNetworkId = originalNetworkId;
         this.networkName = networkName;
@@ -45,23 +47,13 @@ public class SIMultiplex
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        SIMultiplex that = (SIMultiplex) o;
-        return transportStreamId == that.transportStreamId &&
-               originalNetworkId == that.originalNetworkId &&
-               serviceCount == that.serviceCount &&
-               Objects.equals(networkName, that.networkName) &&
-               Objects.equals(deliverySystemType, that.deliverySystemType) &&
-               Objects.equals(transmitFrequency, that.transmitFrequency);
+        SIMultiplex multiplex = (SIMultiplex) o;
+        return serviceCount == multiplex.serviceCount && Objects.equals(id, multiplex.id) && Objects.equals(networkName, multiplex.networkName) && Objects.equals(deliverySystemType, multiplex.deliverySystemType) && Objects.equals(transmitFrequency, multiplex.transmitFrequency);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(transportStreamId,
-                            originalNetworkId,
-                            networkName,
-                            deliverySystemType,
-                            transmitFrequency,
-                            serviceCount);
+        return Objects.hash(id, networkName, deliverySystemType, transmitFrequency, serviceCount);
     }
 }

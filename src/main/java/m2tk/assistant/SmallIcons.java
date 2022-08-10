@@ -66,4 +66,10 @@ public final class SmallIcons
     public static final Icon PLAY_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/play_blue.png"));
     public static final Icon PAUSE_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/pause_blue.png"));
     public static final Icon STOP_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/stop_blue.png"));
+
+    public static final Icon TELEVISION = new ImageIcon(SmallIcons.class.getResource("/images/small/television.png"));
+    public static final Icon TRANSMIT = new ImageIcon(SmallIcons.class.getResource("/images/small/transmit.png"));
+    public static final Icon TRANSMIT_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/transmit_blue.png"));
+    public static final Icon EARTH_STATION = new ImageIcon(SmallIcons.class.getResource("/images/small/earth_station.png"));
+    public static final Icon SATELLITE = new ImageIcon(SmallIcons.class.getResource("/images/small/satellite.png"));
 }

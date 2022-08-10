@@ -20,7 +20,6 @@ import m2tk.assistant.dbi.entity.SIDateTimeEntity;
 import m2tk.dvb.DVB;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,10 +36,6 @@ public class NetworkTimePanel extends JPanel
         text.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
         setLayout(new BorderLayout());
         add(text, BorderLayout.CENTER);
-
-        TitledBorder border = BorderFactory.createTitledBorder("网络时间");
-        border.setTitleJustification(TitledBorder.LEFT);
-        setBorder(border);
     }
 
     public void updateTime(SIDateTimeEntity entity)

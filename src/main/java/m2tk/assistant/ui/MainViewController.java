@@ -5,6 +5,7 @@ import m2tk.assistant.Global;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ListModelOutputStream;
+import m2tk.assistant.ui.view.EPGInfoView;
 import m2tk.assistant.ui.view.NetworkInfoView;
 import m2tk.assistant.ui.view.StreamGeneralInfoView;
 import m2tk.assistant.util.TextListLogAppender;
@@ -32,6 +33,7 @@ public class MainViewController
     private DefaultListModel<String> logsModel;
     private StreamGeneralInfoView streamGeneralInfoView;
     private NetworkInfoView networkInfoView;
+    private EPGInfoView epgInfoView;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
 
@@ -128,11 +130,13 @@ public class MainViewController
 
         streamGeneralInfoView = new StreamGeneralInfoView(frameView);
         networkInfoView = new NetworkInfoView(frameView);
+        epgInfoView = new EPGInfoView(frameView);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.add("基本信息", streamGeneralInfoView);
         tabbedPane.add("网络信息", networkInfoView);
+        tabbedPane.add("EPG全览", epgInfoView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
@@ -234,6 +238,7 @@ public class MainViewController
             {
                 streamGeneralInfoView.reset();
                 networkInfoView.reset();
+                epgInfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -269,6 +274,7 @@ public class MainViewController
         {
             streamGeneralInfoView.reset();
             networkInfoView.reset();
+            epgInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -294,6 +300,7 @@ public class MainViewController
         {
             streamGeneralInfoView.reset();
             networkInfoView.reset();
+            epgInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -314,6 +321,7 @@ public class MainViewController
     {
         streamGeneralInfoView.stopRefreshing();
         networkInfoView.stopRefreshing();
+        epgInfoView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -322,6 +330,7 @@ public class MainViewController
     {
         streamGeneralInfoView.startRefreshing();
         networkInfoView.startRefreshing();
+        epgInfoView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }
