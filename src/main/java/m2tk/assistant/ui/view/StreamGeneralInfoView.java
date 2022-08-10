@@ -25,6 +25,7 @@ import m2tk.assistant.ui.component.ProgramInfoPanel;
 import m2tk.assistant.ui.component.SourceInfoPanel;
 import m2tk.assistant.ui.component.StreamInfoPanel;
 import m2tk.assistant.ui.task.AsyncQueryTask;
+import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
@@ -74,19 +75,11 @@ public class StreamGeneralInfoView extends JPanel
         tabbedPane.add("节目", programInfoPanel);
         tabbedPane.add("条件接收", casInfoPanel);
 
-        TitledBorder border1 = BorderFactory.createTitledBorder("传输流信息");
-        border1.setTitleJustification(TitledBorder.LEFT);
-        streamInfoPanel.setBorder(border1);
+        ComponentUtil.setTitledBorder(streamInfoPanel, "传输流信息", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(sourceInfoPanel, "基本信息", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(tabbedPane, "PSI信息", TitledBorder.LEFT);
 
-        TitledBorder border2 = BorderFactory.createTitledBorder("基本信息");
-        border2.setTitleJustification(TitledBorder.LEFT);
-        sourceInfoPanel.setBorder(border2);
-
-        TitledBorder border3 = BorderFactory.createTitledBorder("PSI信息");
-        border3.setTitleJustification(TitledBorder.LEFT);
-        tabbedPane.setBorder(border3);
-
-        setLayout(new MigLayout("", "[grow][fill]", "[fill][grow]"));
+        setLayout(new MigLayout("fill", "[grow][fill]", "[fill][grow]"));
         add(streamInfoPanel, "span 1 2, grow");
         add(sourceInfoPanel, "wrap");
         add(tabbedPane, "grow");
