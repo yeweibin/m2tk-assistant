@@ -90,8 +90,8 @@ public class ServiceEventGuidePanel extends JPanel
         TableColumnModel columnModel = eventTable.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 40, false); // 类型
         ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 80, false);  // 事件号
-        ComponentUtil.configTableColumn(columnModel, 2, leadingRenderer, 140, false);  // 开始时间
-        ComponentUtil.configTableColumn(columnModel, 3, leadingRenderer, 80, false);  // 持续时间
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 140, false);  // 开始时间
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 80, false);  // 持续时间
         ComponentUtil.configTableColumn(columnModel, 4, leadingRenderer, 160, true); // 标题
         ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 160, true); // 描述
         ComponentUtil.configTableColumn(columnModel, 6, centeredRenderer, 40, false); // 语言
