@@ -5,6 +5,7 @@ import m2tk.assistant.dbi.entity.TR290EventEntity;
 import m2tk.assistant.dbi.mapper.TR290EventEntityMapper;
 import org.jdbi.v3.core.Handle;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TR290EventHandler
@@ -23,11 +24,11 @@ public class TR290EventHandler
         handle.execute("DROP TABLE IF EXISTS `T_TR290_EVENT`");
         handle.execute("CREATE TABLE `T_TR290_EVENT` (" +
                        "`id` BIGINT PRIMARY KEY," +
-                       "`level` INT NOT NULL," +
                        "`type` VARCHAR(20) NOT NULL," +
                        "`description` VARCHAR(1000) NOT NULL," +
-                       "`stream_pid` INT," +
-                       "`position` BIGINT" +
+                       "`stream_pid` INT NOT NULL," +
+                       "`position` BIGINT NOT NULL," +
+                       "`timestamp` DATETIME NOT NULL" +
                        ")");
     }
 
@@ -37,15 +38,15 @@ public class TR290EventHandler
     }
 
     public void addTR290Event(Handle handle,
-                              int level,
+                              LocalDateTime timestamp,
                               String type,
                               String description,
                               long position,
                               int pid)
     {
-        handle.execute("INSERT INTO T_TR290_EVENT (`id`, `level`, `type`, `description`, `position`, `stream_pid`) " +
+        handle.execute("INSERT INTO T_TR290_EVENT (`id`, `timestamp`, `type`, `description`, `position`, `stream_pid`) " +
                        "VALUES (?,?,?,?,?,?)",
-                       idGenerator.next(), level, type, description, position, pid);
+                       idGenerator.next(), timestamp, type, description, position, pid);
     }
 
     public List<TR290EventEntity> listEvents(Handle handle, long start, int count)

@@ -2,15 +2,15 @@ package m2tk.assistant.dbi.entity;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class TR290EventEntity
 {
     public static final String TC_TS_SYNC_LOSS = "1.1";
     public static final String TC_SYNC_BYTE_ERROR = "1.2";
-    public static final String TC_PAT_ERROR = "1.3";
     public static final String TC_PAT_ERROR_2 = "1.3.a";
     public static final String TC_CONTINUITY_COUNT_ERROR = "1.4";
-    public static final String TC_PMT_ERROR = "1.5";
     public static final String TC_PMT_ERROR_2 = "1.5.a";
     public static final String TC_PID_ERROR = "1.6";
 
@@ -43,9 +43,9 @@ public class TR290EventEntity
     public static final String TC_DATA_DELAY_ERROR = "3.10";
 
     private long id;
-    private int level;
     private String type;
     private String description;
     private int streamPid;
     private long position;
+    private LocalDateTime timestamp;
 }

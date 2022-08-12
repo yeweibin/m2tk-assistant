@@ -32,6 +32,7 @@ public class StreamHandler
                        "`ratio` DOUBLE PRECISION DEFAULT 0.0," +
                        "`category` VARCHAR(3)," +
                        "`description` VARCHAR(100)," +
+                       "`marked` BOOLEAN DEFAULT FALSE," +
                        "`scrambled` BOOLEAN DEFAULT FALSE" +
                        ")");
 
@@ -50,6 +51,8 @@ public class StreamHandler
                            idGenerator.next(), pid, StreamTypes.CATEGORY_USER_PRIVATE, "私有数据");
         handle.execute("INSERT INTO T_STREAM (`id`, `pid`, `category`, `description`) VALUES (?, ?, ?, ?)",
                        idGenerator.next(), 8191, StreamTypes.CATEGORY_USER_PRIVATE, "空包");
+
+        handle.execute("UPDATE T_STREAM SET `marked` = TRUE WHERE `pid` = 0");
     }
 
     public StreamEntity getStream(Handle handle, int pid)
@@ -65,25 +68,12 @@ public class StreamHandler
                        "SET `ratio` = ?, " +
                        "    `bitrate` = ?, " +
                        "    `pkt_cnt` = ?, " +
-                       "    `cc_error_cnt` = ?, " +
                        "    `scrambled` = ? " +
                        "WHERE `pid` = ?",
                        entity.getRatio(),
                        entity.getBitrate(),
                        entity.getPacketCount(),
-                       entity.getContinuityErrorCount(),
                        entity.isScrambled(),
-                       entity.getPid());
-    }
-
-    public void updateStreamUsage(Handle handle, StreamEntity entity)
-    {
-        handle.execute("UPDATE T_STREAM " +
-                       "SET `category` = ?, " +
-                       "    `description` = ? " +
-                       "WHERE `pid` = ?",
-                       entity.getCategory(),
-                       entity.getDescription(),
                        entity.getPid());
     }
 
@@ -98,7 +88,17 @@ public class StreamHandler
                        pid);
     }
 
-    public List<StreamEntity> listStreams(Handle handle)
+    public void addStreamContinuityErrorCount(Handle handle, int pid, long count)
+    {
+        handle.execute("UPDATE T_STREAM SET `cc_error_cnt` = `cc_error_cnt` + ? WHERE `pid` = ?", count, pid);
+    }
+
+    public void setStreamMarked(Handle handle, int pid, boolean marked)
+    {
+        handle.execute("UPDATE T_STREAM SET `marked` = ? WHERE `pid` = ?", marked, pid);
+    }
+
+    public List<StreamEntity> listPresentStreams(Handle handle)
     {
         return handle.select("SELECT * FROM T_STREAM WHERE `pkt_cnt` > 0 ORDER BY `pid`")
                      .map(streamEntityMapper)

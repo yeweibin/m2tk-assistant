@@ -8,6 +8,7 @@ public class StreamEntity
 {
     private long id;
     private int pid;
+    private boolean marked;
     private long packetCount;
     private int continuityErrorCount;
     private int bitrate;
@@ -19,6 +20,7 @@ public class StreamEntity
     public StreamEntity()
     {
         pid = 0x1FFF;
+        marked = false;
         category = StreamTypes.CATEGORY_USER_PRIVATE;
         description = "空包";
     }

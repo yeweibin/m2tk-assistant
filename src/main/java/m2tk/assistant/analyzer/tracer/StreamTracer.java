@@ -1,4 +1,20 @@
-package m2tk.assistant.analyzer;
+/*
+ * Copyright (c) Ye Weibin. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package m2tk.assistant.analyzer.tracer;
 
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
@@ -8,13 +24,14 @@ import m2tk.mpeg2.decoder.TransportPacketDecoder;
 import m2tk.mpeg2.decoder.element.AdaptationFieldDecoder;
 import m2tk.mpeg2.decoder.element.ProgramClockReferenceDecoder;
 import m2tk.multiplex.DemuxStatus;
+import m2tk.multiplex.TSDemux;
+import m2tk.multiplex.TSDemuxEvent;
 import m2tk.multiplex.TSDemuxPayload;
 
-public class StreamTracer
+public class StreamTracer implements Tracer
 {
     private final DatabaseService databaseService;
     private final StreamEntity[] streams;
-    private final int[] CCTs;
     private final TransportPacketDecoder pkt;
     private final AdaptationFieldDecoder adpt;
     private final ProgramClockReferenceDecoder pcr;
@@ -31,7 +48,6 @@ public class StreamTracer
     {
         databaseService = service;
         streams = new StreamEntity[8192];
-        CCTs = new int[8192];
         pkt = new TransportPacketDecoder();
         adpt = new AdaptationFieldDecoder();
         pcr = new ProgramClockReferenceDecoder();
@@ -42,8 +58,19 @@ public class StreamTracer
         t0 = System.currentTimeMillis();
     }
 
-    public void processDemuxStatus(DemuxStatus status)
+    @Override
+    public void configureDemux(TSDemux demux)
     {
+        demux.registerEventListener(this::processDemuxStatus);
+        demux.registerRawChannel(this::processTransportPacket);
+    }
+
+    private void processDemuxStatus(TSDemuxEvent event)
+    {
+        if (!(event instanceof DemuxStatus))
+            return;
+
+        DemuxStatus status = (DemuxStatus) event;
         if (status.isRunning())
         {
             source = databaseService.getSource();
@@ -80,18 +107,12 @@ public class StreamTracer
         {
             stream = databaseService.getStream(pid);
             streams[pid] = stream;
-            CCTs[pid] = -1;
         }
 
         stream.setPacketCount(stream.getPacketCount() + 1);
 
         if (pkt.isScrambled())
             stream.setScrambled(true);
-
-        int cct = pkt.getContinuityCounter();
-        if (pid != 0x1FFF && CCTs[pid] != -1 && cct != nextCCT(CCTs[pid]))
-            stream.setContinuityErrorCount(stream.getContinuityErrorCount() + 1);
-        CCTs[pid] = cct;
 
         long currPcrValue = readPCR();
         long currPct = payload.getStartPacketCounter();
@@ -142,11 +163,6 @@ public class StreamTracer
         stream.setRatio(ratio);
         stream.setBitrate((int) (avgBitrate * ratio));
         databaseService.updateStreamStatistics(stream);
-    }
-
-    private int nextCCT(int cct)
-    {
-        return (cct + 1) & 0xF;
     }
 
     private long readPCR()

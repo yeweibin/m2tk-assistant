@@ -1,4 +1,20 @@
-package m2tk.assistant.analyzer;
+/*
+ * Copyright (c) Ye Weibin. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package m2tk.assistant.analyzer.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.analyzer.presets.CASystems;
@@ -20,7 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
-public class PSITracer
+public class PSITracer implements Tracer
 {
     private final DatabaseService databaseService;
 
@@ -60,7 +76,14 @@ public class PSITracer
         tsid = -1;
     }
 
-    public void processPAT(TSDemuxPayload payload)
+    @Override
+    public void configureDemux(TSDemux demux)
+    {
+        demux.registerSectionChannel(0x0000, this::processPAT);
+        demux.registerSectionChannel(0x0001, this::processCAT);
+    }
+
+    private void processPAT(TSDemuxPayload payload)
     {
         if (payload.getType() != TSDemuxPayload.Type.SECTION ||
             payload.getStreamPID() != 0x0000 ||
@@ -68,30 +91,26 @@ public class PSITracer
             return;
 
         pat.attach(payload.getEncoding());
-        if (!pat.isChecksumCorrect())
-        {
-            log.warn("PAT校验错误。");
-            return;
-        }
-
         int version = pat.getVersionNumber();
         int secnum = pat.getSectionNumber();
         int total = pat.getLastSectionNumber() + 1;
         if (total == patSections.length && patSections[secnum] == version)
             return; // 已经处理过了。
 
+        TSDemux demux = payload.getChannel().getHost();
+
         if (total != patSections.length)
         {
             patSections = new int[total];
             Arrays.fill(patSections, -1);
 
-            TSDemux demuxer = payload.getChannel().getHost();
             for (ProgramContext context : programs.values())
             {
-                demuxer.closeChannel(context.channel);
+                demux.closeChannel(context.channel);
                 databaseService.updateStreamUsage(context.program.getPmtPid(), StreamTypes.CATEGORY_USER_PRIVATE, "未知流");
             }
             pmtVersions.clear();
+            programs.clear();
             databaseService.clearPrograms();
         }
 
@@ -104,15 +123,10 @@ public class PSITracer
                           String.format("0x%04X", pmtpid));
             }
 
-            TSDemux demuxer = payload.getChannel().getHost();
-
             ProgramContext context = new ProgramContext();
             context.program = databaseService.addProgram(tsid, number, pmtpid);
             context.program.setPmtPid(pmtpid);
-            context.channel = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-            context.channel.setStreamPID(pmtpid);
-            context.channel.setPayloadHandler(this::processPMT);
-            context.channel.setEnabled(true);
+            context.channel = demux.registerSectionChannel(pmtpid, this::processPMT);
             programs.put(number, context);
             pmtVersions.put(pmtpid, -1);
         });
@@ -125,7 +139,7 @@ public class PSITracer
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
     }
 
-    public void processCAT(TSDemuxPayload payload)
+    private void processCAT(TSDemuxPayload payload)
     {
         if (payload.getType() != TSDemuxPayload.Type.SECTION ||
             payload.getStreamPID() != 0x0001 ||
@@ -133,12 +147,6 @@ public class PSITracer
             return;
 
         cat.attach(payload.getEncoding());
-        if (!cat.isChecksumCorrect())
-        {
-            log.warn("CAT校验错误。");
-            return;
-        }
-
         int version = cat.getVersionNumber();
         int secnum = cat.getSectionNumber();
         int total = cat.getLastSectionNumber() + 1;
@@ -169,7 +177,7 @@ public class PSITracer
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
     }
 
-    public void processPMT(TSDemuxPayload payload)
+    private void processPMT(TSDemuxPayload payload)
     {
         if (payload.getType() != TSDemuxPayload.Type.SECTION ||
             !pmtVersions.containsKey(payload.getStreamPID()) ||
@@ -177,12 +185,6 @@ public class PSITracer
             return;
 
         pmt.attach(payload.getEncoding());
-        if (!pmt.isChecksumCorrect())
-        {
-            log.warn("PMT校验错误。");
-            return;
-        }
-
         int version = pmt.getVersionNumber();
         int pmtpid = payload.getStreamPID();
 

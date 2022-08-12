@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.analyzer;
+package m2tk.assistant.analyzer.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.analyzer.presets.RunningStatus;
@@ -29,6 +29,8 @@ import m2tk.dvb.decoder.element.ServiceDescriptionDecoder;
 import m2tk.dvb.decoder.element.TransportStreamDescriptionDecoder;
 import m2tk.dvb.decoder.section.*;
 import m2tk.mpeg2.decoder.DescriptorLoopDecoder;
+import m2tk.mpeg2.decoder.SectionDecoder;
+import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxPayload;
 
 import java.time.LocalDateTime;
@@ -39,10 +41,11 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class SITracer
+public class SITracer implements Tracer
 {
     private final DatabaseService databaseService;
 
+    private final SectionDecoder sec;
     private final NITSectionDecoder nit;
     private final BATSectionDecoder bat;
     private final SDTSectionDecoder sdt;
@@ -64,6 +67,7 @@ public class SITracer
     public SITracer(DatabaseService service)
     {
         databaseService = service;
+        sec = new SectionDecoder();
         nit = new NITSectionDecoder();
         bat = new BATSectionDecoder();
         sdt = new SDTSectionDecoder();
@@ -83,13 +87,34 @@ public class SITracer
         tableVersions = new HashMap<>();
     }
 
-    public void processNIT(TSDemuxPayload payload)
+    @Override
+    public void configureDemux(TSDemux demux)
     {
-        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
-            payload.getStreamPID() != 0x0010 ||
-            !nit.isAttachable(payload.getEncoding()))
+        demux.registerSectionChannel(0x0010, this::processSection);
+        demux.registerSectionChannel(0x0011, this::processSection);
+        demux.registerSectionChannel(0x0012, this::processSection);
+        demux.registerSectionChannel(0x0014, this::processSection);
+    }
+
+    private void processSection(TSDemuxPayload payload)
+    {
+        if (payload.getType() != TSDemuxPayload.Type.SECTION || !sec.isAttachable(payload.getEncoding()))
             return;
 
+        if (payload.getStreamPID() == 0x0010 && nit.isAttachable(payload.getEncoding()))
+            processNIT(payload);
+        if (payload.getStreamPID() == 0x0011 && bat.isAttachable(payload.getEncoding()))
+            processBAT(payload);
+        if (payload.getStreamPID() == 0x0011 && sdt.isAttachable(payload.getEncoding()))
+            processSDT(payload);
+        if (payload.getStreamPID() == 0x0012 && eit.isAttachable(payload.getEncoding()))
+            processEIT(payload);
+        if (payload.getStreamPID() == 0x0014 && tdt.isAttachable(payload.getEncoding()))
+            processTDT(payload);
+    }
+
+    private void processNIT(TSDemuxPayload payload)
+    {
         nit.attach(payload.getEncoding());
         if (!nit.isChecksumCorrect())
         {
@@ -146,13 +171,8 @@ public class SITracer
         });
     }
 
-    public void processBAT(TSDemuxPayload payload)
+    private void processBAT(TSDemuxPayload payload)
     {
-        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
-            payload.getStreamPID() != 0x0011 ||
-            !bat.isAttachable(payload.getEncoding()))
-            return;
-
         bat.attach(payload.getEncoding());
         if (!bat.isChecksumCorrect())
         {
@@ -210,13 +230,8 @@ public class SITracer
         });
     }
 
-    public void processSDT(TSDemuxPayload payload)
+    private void processSDT(TSDemuxPayload payload)
     {
-        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
-            payload.getStreamPID() != 0x0011 ||
-            !sdt.isAttachable(payload.getEncoding()))
-            return;
-
         sdt.attach(payload.getEncoding());
         if (!sdt.isChecksumCorrect())
         {
@@ -272,13 +287,8 @@ public class SITracer
         });
     }
 
-    public void processEIT(TSDemuxPayload payload)
+    private void processEIT(TSDemuxPayload payload)
     {
-        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
-            payload.getStreamPID() != 0x0012 ||
-            !eit.isAttachable(payload.getEncoding()))
-            return;
-
         eit.attach(payload.getEncoding());
         if (!eit.isChecksumCorrect())
         {
@@ -356,13 +366,8 @@ public class SITracer
         });
     }
 
-    public void processTDT(TSDemuxPayload payload)
+    private void processTDT(TSDemuxPayload payload)
     {
-        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
-            payload.getStreamPID() != 0x0014 ||
-            !tdt.isAttachable(payload.getEncoding()))
-            return;
-
         tdt.attach(payload.getEncoding());
         databaseService.addDateTime(tdt.getUTCTime());
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");

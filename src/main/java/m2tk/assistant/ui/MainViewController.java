@@ -1,5 +1,6 @@
 package m2tk.assistant.ui;
 
+import cn.hutool.core.io.FileUtil;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
@@ -157,7 +158,8 @@ public class MainViewController
         fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(false);
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.home")).toFile());
+
+        initFileChooserCurrentDirectory(fileChooser);
 
         actionMap.get("reopenLastInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
@@ -245,6 +247,7 @@ public class MainViewController
                 JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
             } else
             {
+                saveRecentFile(file);
                 lastInput = input;
                 streamGeneralInfoView.reset();
                 networkInfoView.reset();
@@ -417,5 +420,33 @@ public class MainViewController
     public void setWillQuit()
     {
         willQuit = true;
+    }
+
+    private void initFileChooserCurrentDirectory(JFileChooser fileChooser)
+    {
+        try
+        {
+            Path pwd = Paths.get(System.getProperty("user.dir"));
+            Path recentCfg = pwd.resolve("recent.cfg");
+            String recentFile = FileUtil.readUtf8String(recentCfg.toFile());
+            fileChooser.setCurrentDirectory(Paths.get(recentFile).toFile());
+        } catch (Exception ex)
+        {
+            logger.debug("无法设置文件选择器起始路径：{}", ex.getMessage());
+        }
+    }
+
+    private void saveRecentFile(File file)
+    {
+        try
+        {
+            Path pwd = Paths.get(System.getProperty("user.dir"));
+            Path recentCfg = pwd.resolve("recent.cfg");
+
+            FileUtil.writeUtf8String(file.getAbsolutePath(), recentCfg.toFile());
+        } catch (Exception ex)
+        {
+            logger.debug("无法保存最近使用的文件：{}", ex.getMessage());
+        }
     }
 }
