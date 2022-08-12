@@ -2,14 +2,16 @@ package m2tk.assistant.analyzer;
 
 import cn.hutool.core.io.IoUtil;
 import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.analyzer.tracer.*;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.io.ProtocolManager;
 import m2tk.io.RxChannel;
 import m2tk.multiplex.DemuxStatus;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxEvent;
-import m2tk.multiplex.TSDemuxPayload;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,50 +50,19 @@ public class StreamAnalyzer
             return false;
         }
 
-        StreamTracer streamTracer = new StreamTracer(databaseService);
-        PSITracer psiTracer = new PSITracer(databaseService);
-        SITracer siTracer = new SITracer(databaseService);
-
         demuxer.reset();
+
+        List<Tracer> tracers = Arrays.asList(new StreamTracer(databaseService),
+                                             new PSITracer(databaseService),
+                                             new SITracer(databaseService),
+                                             new TR290Tracer1(databaseService),
+                                             new TR290Tracer2(databaseService)
+                                            );
+        tracers.forEach(tracer -> tracer.configureDemux(demuxer));
+
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
-        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, streamTracer::processDemuxStatus));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxerStopped));
-//        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new ResultPrinter(databaseService)));
-
-        TSDemux.Channel channel0 = demuxer.requestChannel(TSDemuxPayload.Type.RAW);
-        channel0.setPayloadHandler(streamTracer::processTransportPacket);
-        channel0.setStreamPID(TSDemux.Channel.ANY_PID);
-        channel0.setEnabled(true);
-
-        TSDemux.Channel channel1 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel1.setPayloadHandler(psiTracer::processPAT);
-        channel1.setStreamPID(0x0000);
-        channel1.setEnabled(true);
-        TSDemux.Channel channel2 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel2.setPayloadHandler(psiTracer::processCAT);
-        channel2.setStreamPID(0x0001);
-        channel2.setEnabled(true);
-
-        TSDemux.Channel channel3 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel3.setPayloadHandler(siTracer::processNIT);
-        channel3.setStreamPID(0x0010);
-        channel3.setEnabled(true);
-        TSDemux.Channel channel4 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel4.setPayloadHandler(siTracer::processBAT);
-        channel4.setStreamPID(0x0011);
-        channel4.setEnabled(true);
-        TSDemux.Channel channel5 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel5.setPayloadHandler(siTracer::processSDT);
-        channel5.setStreamPID(0x0011);
-        channel5.setEnabled(true);
-        TSDemux.Channel channel6 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel6.setPayloadHandler(siTracer::processEIT);
-        channel6.setStreamPID(0x0012);
-        channel6.setEnabled(true);
-        TSDemux.Channel channel7 = demuxer.requestChannel(TSDemuxPayload.Type.SECTION);
-        channel7.setPayloadHandler(siTracer::processTDT);
-        channel7.setStreamPID(0x0014);
-        channel7.setEnabled(true);
+        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new TR290Printer(databaseService)));
 
         demuxer.attach(input);
 

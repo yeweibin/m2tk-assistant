@@ -3,12 +3,12 @@ package m2tk.assistant.dbi;
 import cn.hutool.core.lang.generator.SnowflakeGenerator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import m2tk.assistant.analyzer.TR290Tracer;
 import m2tk.assistant.dbi.entity.*;
 import m2tk.assistant.dbi.handler.*;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.h2.H2DatabasePlugin;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +49,7 @@ public class DatabaseService
             streamHandler.initTable(handle);
             psiHandler.initTable(handle);
             siHandler.initTable(handle);
+            tr290Handler.initTable(handle);
         });
     }
 
@@ -59,6 +60,7 @@ public class DatabaseService
             streamHandler.resetTable(handle);
             psiHandler.resetTable(handle);
             siHandler.resetTable(handle);
+            tr290Handler.resetTable(handle);
         });
     }
 
@@ -72,6 +74,11 @@ public class DatabaseService
         dbi.useHandle(handle -> streamHandler.updateStreamStatistics(handle, stream));
     }
 
+    public void addStreamContinuityErrorCount(int pid, long count)
+    {
+        dbi.useHandle(handle -> streamHandler.addStreamContinuityErrorCount(handle, pid, count));
+    }
+
     public void updateStreamUsage(int pid, String category, String description)
     {
         dbi.useHandle(handle -> streamHandler.updateStreamUsage(handle, pid, category, description));
@@ -79,12 +86,12 @@ public class DatabaseService
 
     public List<StreamEntity> listStreams()
     {
-        return dbi.withHandle(streamHandler::listStreams);
+        return dbi.withHandle(streamHandler::listPresentStreams);
     }
 
     public Map<Integer, StreamEntity> getStreamRegistry()
     {
-        return dbi.withHandle(handle -> streamHandler.listStreams(handle)
+        return dbi.withHandle(handle -> streamHandler.listPresentStreams(handle)
                                                      .stream()
                                                      .collect(toMap(StreamEntity::getPid, Function.identity()))
                              );
@@ -319,8 +326,18 @@ public class DatabaseService
         return dbi.withHandle(siHandler::listEvents);
     }
 
-    public void addTR290Event(int level, String type, String description, long position, int pid)
+    public void addTR290Event(LocalDateTime timestamp, String type, String description, long position, int pid)
     {
-        dbi.useHandle(handle -> tr290Handler.addTR290Event(handle, level, type, description, position, pid));
+        dbi.useHandle(handle -> tr290Handler.addTR290Event(handle, timestamp, type, description, position, pid));
+    }
+
+    public void setStreamMarked(int pid, boolean marked)
+    {
+        dbi.useHandle(handle -> streamHandler.setStreamMarked(handle, pid, marked));
+    }
+
+    public List<TR290EventEntity> listTR290Events(long start, int count)
+    {
+        return dbi.withHandle(handle -> tr290Handler.listEvents(handle, start, count));
     }
 }

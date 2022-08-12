@@ -22,6 +22,7 @@ public class StreamEntityMapper implements RowMapper<StreamEntity>
         entity.setScrambled(rs.getBoolean("scrambled"));
         entity.setCategory(rs.getString("category"));
         entity.setDescription(rs.getString("description"));
+        entity.setMarked(rs.getBoolean("marked"));
         return entity;
     }
 }
