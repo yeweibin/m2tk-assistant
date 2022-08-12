@@ -86,4 +86,14 @@ public final class SmallIcons
 
     public static final Icon IP = new ImageIcon(SmallIcons.class.getResource("/images/small/ip.png"));
     public static final Icon IP_CLASS = new ImageIcon(SmallIcons.class.getResource("/images/small/ip_class.png"));
+
+    public static final Icon DOT_RED = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_red.png"));
+    public static final Icon DOT_GREEN = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_green.png"));
+    public static final Icon DOT_BLUE = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_blue.png"));
+    public static final Icon DOT_YELLOW = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_yellow.png"));
+    public static final Icon DOT_ORANGE = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_orange.png"));
+    public static final Icon DOT_PURPLE = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_purple.png"));
+    public static final Icon DOT_WHITE = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_white.png"));
+    public static final Icon DOT_LIGHT_GRAY = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_light_gray.png"));
+    public static final Icon DOT_DARK_GRAY = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_dark_gray.png"));
 }

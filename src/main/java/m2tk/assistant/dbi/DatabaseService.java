@@ -340,4 +340,9 @@ public class DatabaseService
     {
         return dbi.withHandle(handle -> tr290Handler.listEvents(handle, start, count));
     }
+
+    public List<TR290StatEntity> listTR290Stats()
+    {
+        return dbi.withHandle(tr290Handler::listStats);
+    }
 }

@@ -16,8 +16,8 @@
 
 package m2tk.assistant.analyzer.tracer;
 
+import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.TR290EventEntity;
 import m2tk.mpeg2.MPEG2;
 import m2tk.mpeg2.decoder.TransportPacketDecoder;
 import m2tk.multiplex.*;
@@ -91,7 +91,7 @@ public class TR290Tracer1 implements Tracer
                 case SYNC_BYTE_ERROR:
                 {
                     databaseService.addTR290Event(LocalDateTime.now(),
-                                                  TR290EventEntity.TC_SYNC_BYTE_ERROR,
+                                                  TR290ErrorTypes.SYNC_BYTE_ERROR,
                                                   "同步字节错误",
                                                   status.getPosition(),
                                                   status.getPid());
@@ -100,7 +100,7 @@ public class TR290Tracer1 implements Tracer
                 case SYNC_LOST:
                 {
                     databaseService.addTR290Event(LocalDateTime.now(),
-                                                  TR290EventEntity.TC_TS_SYNC_LOSS,
+                                                  TR290ErrorTypes.TS_SYNC_LOSS,
                                                   "同步丢失错误",
                                                   status.getPosition(),
                                                   status.getPid());
@@ -125,8 +125,8 @@ public class TR290Tracer1 implements Tracer
             if (TEFs[pid] == 0)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_TRANSPORT_ERROR,
-                                              "当前流指示传输错误",
+                                              TR290ErrorTypes.TRANSPORT_ERROR,
+                                              String.format("当前流指示传输错误（pid = %d）", pid),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
                 TEFs[pid] = 1; // 该流的传输错误已经通报过，就不再重复通报了。
@@ -160,8 +160,9 @@ public class TR290Tracer1 implements Tracer
             {
                 CETs[pid] += 1;
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CONTINUITY_COUNT_ERROR,
-                                              "连续计数错误",
+                                              TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
+                                              String.format("无负载时连续计数器发生变化（期望：%d，实际：%d，pid = %d）",
+                                                            CCTs[pid], curr_cct, pid),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -191,8 +192,8 @@ public class TR290Tracer1 implements Tracer
             {
                 CETs[pid] += 1;
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CONTINUITY_COUNT_ERROR,
-                                              "同样的包连续出现了两次以上",
+                                              TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
+                                              String.format("重复包连续出现了两次以上（pid = %d）", pid),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -202,8 +203,9 @@ public class TR290Tracer1 implements Tracer
         // 不是重复的包，则属于CCT错乱。
         CETs[pid] += 1;
         databaseService.addTR290Event(LocalDateTime.now(),
-                                      TR290EventEntity.TC_CONTINUITY_COUNT_ERROR,
-                                      "连续计数错误",
+                                      TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
+                                      String.format("连续计数错误（期望：%d，实际：%d，pid = %d）",
+                                                    exp_cct, curr_cct, pid),
                                       payload.getStartPacketCounter(),
                                       payload.getStreamPID());
 

@@ -39,4 +39,14 @@ public final class LargeIcons
     public static final Icon PLAY_BLUE = new ImageIcon(LargeIcons.class.getResource("/images/large/play_blue.png"));
     public static final Icon PAUSE_BLUE = new ImageIcon(LargeIcons.class.getResource("/images/large/pause_blue.png"));
     public static final Icon STOP_BLUE = new ImageIcon(LargeIcons.class.getResource("/images/large/stop_blue.png"));
+
+    public static final Icon DOT_RED = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_red.png"));
+    public static final Icon DOT_GREEN = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_green.png"));
+    public static final Icon DOT_BLUE = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_blue.png"));
+    public static final Icon DOT_YELLOW = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_yellow.png"));
+    public static final Icon DOT_ORANGE = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_orange.png"));
+    public static final Icon DOT_PURPLE = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_purple.png"));
+    public static final Icon DOT_WHITE = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_white.png"));
+    public static final Icon DOT_LIGHT_GRAY = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_light_gray.png"));
+    public static final Icon DOT_DARK_GRAY = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_dark_gray.png"));
 }

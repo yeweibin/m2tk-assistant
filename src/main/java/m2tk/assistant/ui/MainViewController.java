@@ -9,6 +9,7 @@ import m2tk.assistant.ui.util.ListModelOutputStream;
 import m2tk.assistant.ui.view.EPGInfoView;
 import m2tk.assistant.ui.view.NetworkInfoView;
 import m2tk.assistant.ui.view.StreamGeneralInfoView;
+import m2tk.assistant.ui.view.TR290InfoView;
 import m2tk.assistant.util.TextListLogAppender;
 import m2tk.multiplex.DemuxStatus;
 import org.jdesktop.application.Action;
@@ -35,6 +36,7 @@ public class MainViewController
     private StreamGeneralInfoView streamGeneralInfoView;
     private NetworkInfoView networkInfoView;
     private EPGInfoView epgInfoView;
+    private TR290InfoView tr290InfoView;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
     private String lastInput = null;
@@ -138,12 +140,14 @@ public class MainViewController
         streamGeneralInfoView = new StreamGeneralInfoView(frameView);
         networkInfoView = new NetworkInfoView(frameView);
         epgInfoView = new EPGInfoView(frameView);
+        tr290InfoView = new TR290InfoView(frameView);
 
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.add("基本信息", streamGeneralInfoView);
         tabbedPane.add("网络信息", networkInfoView);
-        tabbedPane.add("EPG全览", epgInfoView);
+        tabbedPane.add("EPG", epgInfoView);
+        tabbedPane.add("TR 290", tr290InfoView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
@@ -240,7 +244,8 @@ public class MainViewController
             File file = fileChooser.getSelectedFile();
             fileChooser.setCurrentDirectory(file.getParentFile());
             String input = file.toURI().toASCIIString();
-            if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
+            boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
+            if (!started)
             {
                 lastInput = null;
                 actionMap.get("reopenLastInput").setEnabled(false);
@@ -252,6 +257,7 @@ public class MainViewController
                 streamGeneralInfoView.reset();
                 networkInfoView.reset();
                 epgInfoView.reset();
+                tr290InfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -281,7 +287,8 @@ public class MainViewController
             return;
         }
 
-        if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
+        boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
+        if (!started)
         {
             lastInput = null;
             actionMap.get("reopenLastInput").setEnabled(false);
@@ -292,6 +299,7 @@ public class MainViewController
             streamGeneralInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
+            tr290InfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -311,7 +319,8 @@ public class MainViewController
         if (input == null)
             return;
 
-        if (!Global.getStreamAnalyser().start(input, this::onAnalyzerStopped))
+        boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
+        if (!started)
         {
             lastInput = null;
             actionMap.get("reopenLastInput").setEnabled(false);
@@ -322,6 +331,7 @@ public class MainViewController
             streamGeneralInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
+            tr290InfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -341,7 +351,8 @@ public class MainViewController
             return;
         }
 
-        if (!Global.getStreamAnalyser().start(lastInput, this::onAnalyzerStopped))
+        boolean started = Global.getStreamAnalyser().start(lastInput, this::onAnalyzerStopped);
+        if (!started)
         {
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
@@ -349,6 +360,7 @@ public class MainViewController
             streamGeneralInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
+            tr290InfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -371,6 +383,7 @@ public class MainViewController
         streamGeneralInfoView.stopRefreshing();
         networkInfoView.stopRefreshing();
         epgInfoView.stopRefreshing();
+        tr290InfoView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -381,6 +394,7 @@ public class MainViewController
         streamGeneralInfoView.startRefreshing();
         networkInfoView.startRefreshing();
         epgInfoView.startRefreshing();
+        tr290InfoView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }

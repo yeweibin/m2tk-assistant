@@ -119,6 +119,12 @@ public final class ComponentUtil
 
         if (cellRenderer != null)
             column.setCellRenderer(cellRenderer);
+
+        if (!resizable)
+        {
+            column.setMinWidth(width);
+            column.setMaxWidth(width);
+        }
     }
 
     public static void setTitledBorder(JComponent c, String title, int titleJustification)

@@ -16,8 +16,8 @@
 
 package m2tk.assistant.analyzer.tracer;
 
+import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.TR290EventEntity;
 import m2tk.dvb.decoder.section.*;
 import m2tk.mpeg2.ProgramClockReference;
 import m2tk.mpeg2.decoder.DescriptorLoopDecoder;
@@ -50,6 +50,7 @@ public class TR290Tracer2 implements Tracer
     private final BATSectionDecoder bat;
     private final SDTSectionDecoder sdt;
     private final EITSectionDecoder eit;
+    private final RSTSectionDecoder rst;
     private final TDTSectionDecoder tdt;
     private final DescriptorLoopDecoder descloop;
     private final ProgramElementDecoder element;
@@ -59,6 +60,14 @@ public class TR290Tracer2 implements Tracer
     private final Map<String, Context> tableContexts;
     private final Set<Integer> programNumbers;
 
+    private long lastNITActOccurTime;
+    private long lastNITActOccurPosition;
+    private long lastSDTActOccurTime;
+    private long lastSDTActOccurPosition;
+    private long lastEITActOccurTime;
+    private long lastEITActOccurPosition;
+    private long lastRSTOccurTime;
+    private long lastRSTOccurPosition;
     private long lastTDTOccurTime;
     private long lastTDTOccurPosition;
     private int pcrPid;
@@ -87,6 +96,7 @@ public class TR290Tracer2 implements Tracer
         bat = new BATSectionDecoder();
         sdt = new SDTSectionDecoder();
         eit = new EITSectionDecoder();
+        rst = new RSTSectionDecoder();
         tdt = new TDTSectionDecoder();
         descloop = new DescriptorLoopDecoder();
         cad = new CADescriptorDecoder();
@@ -98,6 +108,14 @@ public class TR290Tracer2 implements Tracer
 
         SPRFs = new int[8192];
 
+        lastNITActOccurTime = -1;
+        lastNITActOccurPosition = -1;
+        lastSDTActOccurTime = -1;
+        lastSDTActOccurPosition = -1;
+        lastEITActOccurTime = -1;
+        lastEITActOccurPosition = -1;
+        lastRSTOccurTime = -1;
+        lastRSTOccurPosition = -1;
         lastTDTOccurTime = -1;
         lastTDTOccurPosition = -1;
         pcrPid = -1;
@@ -148,7 +166,7 @@ public class TR290Tracer2 implements Tracer
         if (pid == 0x0000 && pkt.isScrambled() && SPRFs[pid] == 0)
         {
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_PAT_ERROR_2,
+                                          TR290ErrorTypes.PAT_ERROR_2,
                                           "PID=0的TS包加扰指示不等于0",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -158,7 +176,7 @@ public class TR290Tracer2 implements Tracer
         if (pmtChannels[pid] != null && pkt.isScrambled() && SPRFs[pid] == 0)
         {
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_PMT_ERROR_2,
+                                          TR290ErrorTypes.PMT_ERROR_2,
                                           "携带PMT的TS包加扰指示不等于0",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -183,8 +201,9 @@ public class TR290Tracer2 implements Tracer
             if (tableId != 0x00)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_PAT_ERROR_2,
-                                              "TableID不为0的段出现在PID=0的流里",
+                                              TR290ErrorTypes.PAT_ERROR_2,
+                                              String.format("TableID不为0的段出现在PID=0的流里（table_id = %02x）",
+                                                            tableId),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -198,8 +217,9 @@ public class TR290Tracer2 implements Tracer
             if (tableId != 0x01)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CAT_ERROR,
-                                              "TableID不为1的段出现在PID=1的流里",
+                                              TR290ErrorTypes.CAT_ERROR,
+                                              String.format("TableID不为1的段出现在PID=1的流里（table_id = %02x）",
+                                                            tableId),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -216,8 +236,9 @@ public class TR290Tracer2 implements Tracer
             if (tableId != 0x40 && tableId != 0x41 && tableId != 0x72)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_NIT_ACTUAL_ERROR,
-                                              "NIT或ST以外的表出现在PID=0x0010的流里",
+                                              TR290ErrorTypes.NIT_ACTUAL_ERROR,
+                                              String.format("NIT或ST以外的表出现在PID=0x0010的流里（table_id = %02x）",
+                                                            tableId),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -234,8 +255,9 @@ public class TR290Tracer2 implements Tracer
             if (tableId != 0x42 && tableId != 0x46 && tableId != 0x4A && tableId != 0x72)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_SDT_ACTUAL_ERROR,
-                                              "BAT或SDT或ST以外的表出现在PID=0x0011的流里",
+                                              TR290ErrorTypes.SDT_ACTUAL_ERROR,
+                                              String.format("BAT或SDT或ST以外的表出现在PID=0x0011的流里（table_id = %02x）",
+                                                            tableId),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -249,8 +271,25 @@ public class TR290Tracer2 implements Tracer
             if ((tableId < 0x4E || tableId > 0x6F) && tableId != 0x72)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_EIT_ACTUAL_ERROR,
-                                              "EIT或ST以外的表出现在PID=0x0012的流里",
+                                              TR290ErrorTypes.EIT_ACTUAL_ERROR,
+                                              String.format("EIT或ST以外的表出现在PID=0x0012的流里（table_id = %02x）",
+                                                            tableId),
+                                              payload.getStartPacketCounter(),
+                                              payload.getStreamPID());
+            }
+        }
+
+        if (pid == 0x0013)
+        {
+            if (rst.isAttachable(payload.getEncoding()))
+                processRST(payload);
+
+            if (tableId != 0x71 && tableId != 0x72)
+            {
+                databaseService.addTR290Event(LocalDateTime.now(),
+                                              TR290ErrorTypes.RST_ERROR,
+                                              String.format("RST或ST以外的表出现在PID=0x0013的流里（table_id = %02x）",
+                                                            tableId),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -264,8 +303,9 @@ public class TR290Tracer2 implements Tracer
             if (tableId != 0x70 && tableId != 0x72 && tableId != 0x73)
             {
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_TDT_ERROR,
-                                              "TDT或TOT或ST以外的表出现在PID=0x0014的流里",
+                                              TR290ErrorTypes.TDT_ERROR,
+                                              String.format("TDT或TOT或ST以外的表出现在PID=0x0014的流里（table_id = %02x）",
+                                                            tableId),
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
             }
@@ -285,7 +325,7 @@ public class TR290Tracer2 implements Tracer
             // 严格的相等。
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "PAT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -326,7 +366,7 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "PAT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -346,7 +386,7 @@ public class TR290Tracer2 implements Tracer
             // 严格的相等。
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "CAT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -368,7 +408,7 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "CAT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -393,7 +433,7 @@ public class TR290Tracer2 implements Tracer
             // 严格的相等。
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "PMT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -424,7 +464,7 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "PMT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -439,13 +479,33 @@ public class TR290Tracer2 implements Tracer
         int secnum = nit.getSectionNumber();
         long checksum = nit.getChecksum();
 
+        if (tableId == 0x40)
+        {
+            long currOccurPosition = payload.getStartPacketCounter();
+            long currOccurTime = System.currentTimeMillis();
+
+            long interval = computeInterval(lastNITActOccurPosition, currOccurPosition,
+                                            lastNITActOccurTime, currOccurTime);
+            if (interval < 25)
+            {
+                databaseService.addTR290Event(LocalDateTime.now(),
+                                              TR290ErrorTypes.NIT_ACTUAL_ERROR,
+                                              String.format("NIT_actual间隔小于25ms（实际：%dms）", interval),
+                                              payload.getStartPacketCounter(),
+                                              payload.getStreamPID());
+            }
+
+            lastNITActOccurPosition = currOccurPosition;
+            lastNITActOccurTime = currOccurTime;
+        }
+
         String uid = String.format("nit.%d.%d.%d", tableId, netId, secnum);
         Context ctx = tableContexts.get(uid);
         if (ctx != null && ctx.checksum == checksum)
         {
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "NIT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -462,7 +522,7 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "NIT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -482,7 +542,7 @@ public class TR290Tracer2 implements Tracer
         {
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "BAT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -499,7 +559,7 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "BAT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -515,13 +575,33 @@ public class TR290Tracer2 implements Tracer
         int secnum = sdt.getSectionNumber();
         long checksum = sdt.getChecksum();
 
+        if (tableId == 0x42)
+        {
+            long currOccurPosition = payload.getStartPacketCounter();
+            long currOccurTime = System.currentTimeMillis();
+
+            long interval = computeInterval(lastSDTActOccurPosition, currOccurPosition,
+                                            lastSDTActOccurTime, currOccurTime);
+            if (interval < 25)
+            {
+                databaseService.addTR290Event(LocalDateTime.now(),
+                                              TR290ErrorTypes.SDT_ACTUAL_ERROR,
+                                              String.format("SDT_actual间隔小于25ms（实际：%dms）", interval),
+                                              payload.getStartPacketCounter(),
+                                              payload.getStreamPID());
+            }
+
+            lastSDTActOccurPosition = currOccurPosition;
+            lastSDTActOccurTime = currOccurTime;
+        }
+
         String uid = String.format("sdt.%d.%d.%d.%d", tableId, onid, tsid, secnum);
         Context ctx = tableContexts.get(uid);
         if (ctx != null && ctx.checksum == checksum)
         {
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "SDT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -537,7 +617,7 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "SDT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
@@ -554,13 +634,33 @@ public class TR290Tracer2 implements Tracer
         int secnum = eit.getSectionNumber();
         long checksum = eit.getChecksum();
 
+        if (tableId == 0x4E)
+        {
+            long currOccurPosition = payload.getStartPacketCounter();
+            long currOccurTime = System.currentTimeMillis();
+
+            long interval = computeInterval(lastEITActOccurPosition, currOccurPosition,
+                                            lastEITActOccurTime, currOccurTime);
+            if (interval < 25)
+            {
+                databaseService.addTR290Event(LocalDateTime.now(),
+                                              TR290ErrorTypes.EIT_ACTUAL_ERROR,
+                                              String.format("EIT_actual间隔小于25ms（实际：%dms）", interval),
+                                              payload.getStartPacketCounter(),
+                                              payload.getStreamPID());
+            }
+
+            lastEITActOccurPosition = currOccurPosition;
+            lastEITActOccurTime = currOccurTime;
+        }
+
         String uid = String.format("eit.%d.%d.%d.%d.%d", tableId, onid, tsid, sid, secnum);
         Context ctx = tableContexts.get(uid);
         if (ctx != null && ctx.checksum == checksum)
         {
             if (!ctx.checksumCorrect)
                 databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290EventEntity.TC_CRC_ERROR,
+                                              TR290ErrorTypes.CRC_ERROR,
                                               "EIT表CRC32错误",
                                               payload.getStartPacketCounter(),
                                               payload.getStreamPID());
@@ -576,36 +676,61 @@ public class TR290Tracer2 implements Tracer
         {
             ctx.checksumCorrect = false;
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_CRC_ERROR,
+                                          TR290ErrorTypes.CRC_ERROR,
                                           "EIT表CRC32错误",
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
         }
     }
 
+    private void processRST(TSDemuxPayload payload)
+    {
+        long currOccurPosition = payload.getStartPacketCounter();
+        long currOccurTime = System.currentTimeMillis();
+
+        long interval = computeInterval(lastRSTOccurPosition, currOccurPosition,
+                                        lastRSTOccurTime, currOccurTime);
+        if (interval < 25)
+        {
+            databaseService.addTR290Event(LocalDateTime.now(),
+                                          TR290ErrorTypes.RST_ERROR,
+                                          String.format("RST间隔小于25ms（实际：%dms）", interval),
+                                          payload.getStartPacketCounter(),
+                                          payload.getStreamPID());
+        }
+
+        lastRSTOccurPosition = currOccurPosition;
+        lastRSTOccurTime = currOccurTime;
+    }
+
     private void processTDT(TSDemuxPayload payload)
     {
-        long interval;
-        if (avgBitrate > 0)
-        {
-            long pct = payload.getStartPacketCounter();
-            interval = (pct - lastTDTOccurPosition) * 188 * 8 * 1000 / avgBitrate;
-            lastTDTOccurPosition = pct;
-        } else
-        {
-            long t = System.currentTimeMillis();
-            interval = (lastTDTOccurTime > 0) ? t - lastTDTOccurTime : 25;
-            lastTDTOccurTime = t;
-        }
+        long currOccurPosition = payload.getStartPacketCounter();
+        long currOccurTime = System.currentTimeMillis();
+
+        long interval = computeInterval(lastTDTOccurPosition, currOccurPosition,
+                                        lastTDTOccurTime, currOccurTime);
 
         if (interval < 25)
         {
             databaseService.addTR290Event(LocalDateTime.now(),
-                                          TR290EventEntity.TC_TDT_ERROR,
-                                          "TDT间隔小于25ms",
+                                          TR290ErrorTypes.TDT_ERROR,
+                                          String.format("TDT间隔小于25ms（实际：%dms）", interval),
                                           payload.getStartPacketCounter(),
                                           payload.getStreamPID());
         }
+
+        lastTDTOccurPosition = currOccurPosition;
+        lastTDTOccurTime = currOccurTime;
+    }
+
+    private long computeInterval(long lastOccurPosition, long currOccurPosition,
+                                 long lastOccurTime, long currOccurTime)
+    {
+        if (avgBitrate > 0)
+           return (currOccurPosition - lastOccurPosition) * 188 * 8 * 1000 / avgBitrate;
+
+        return (lastOccurTime > 0) ? currOccurTime - lastOccurTime : 25;
     }
 
     private void removeTableContexts(String keyPrefix)

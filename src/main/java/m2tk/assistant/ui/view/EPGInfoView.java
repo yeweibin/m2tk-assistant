@@ -58,7 +58,7 @@ public class EPGInfoView extends JPanel
         timer = new Timer(1000, actionMap.get("queryServiceAndEvents"));
 
         serviceEventGuidePanel = new ServiceEventGuidePanel();
-        ComponentUtil.setTitledBorder(serviceEventGuidePanel, "EPG全览", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(serviceEventGuidePanel, "EPG", TitledBorder.LEFT);
 
         setLayout(new MigLayout("fill"));
         add(serviceEventGuidePanel, "center, grow");

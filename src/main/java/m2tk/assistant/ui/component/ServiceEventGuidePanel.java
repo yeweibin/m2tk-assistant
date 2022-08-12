@@ -88,13 +88,13 @@ public class ServiceEventGuidePanel extends JPanel
         trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
 
         TableColumnModel columnModel = eventTable.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 40, false); // 类型
-        ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 80, false);  // 事件号
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 140, false);  // 开始时间
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 80, false);  // 持续时间
-        ComponentUtil.configTableColumn(columnModel, 4, leadingRenderer, 160, true); // 标题
-        ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 160, true); // 描述
-        ComponentUtil.configTableColumn(columnModel, 6, centeredRenderer, 40, false); // 语言
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 70, false); // 类型
+        ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 70, false);  // 事件号
+        ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 150, false);  // 开始时间
+        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 90, false);  // 持续时间
+        ComponentUtil.configTableColumn(columnModel, 4, centeredRenderer, 60, false); // 语言
+        ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 160, true); // 标题
+        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 160, true); // 描述
 
         setLayout(new MigLayout("insets 2", "[360!][grow]", "grow"));
         add(new JScrollPane(serviceTree), "grow");
@@ -228,7 +228,6 @@ public class ServiceEventGuidePanel extends JPanel
                 if (userObject instanceof String)
                 {
                     setText((String) userObject);
-//                    setIcon(SmallIcons.ARROW_SWITCH);
                     setIcon(SmallIcons.TRANSMIT);
                 }
                 if (userObject instanceof SIService)

@@ -26,7 +26,7 @@ public class EventTableModel extends AbstractTableModel
 {
     private final List<SIEvent> data = new ArrayList<>();
     private final String[] COLUMNS = {
-            "类型", "事件号", "开始时间", "持续时间", "标题", "描述", "语言"
+            "类型", "事件号", "开始时间", "持续时间", "语言", "标题", "描述"
     };
     private final Class<?>[] COLUMN_CLASSES = {
             String.class, Integer.class, String.class, String.class, String.class, String.class, String.class
@@ -104,15 +104,15 @@ public class EventTableModel extends AbstractTableModel
             case 4:
                 return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                        ? null
-                       : event.getEventName();
+                       : event.getLanguageCode();
             case 5:
                 return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                        ? null
-                       : event.getEventDescription();
+                       : event.getEventName();
             case 6:
                 return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                        ? null
-                       : event.getLanguageCode();
+                       : event.getEventDescription();
             default:
                 return null;
         }
