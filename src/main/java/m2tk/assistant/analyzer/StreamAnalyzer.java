@@ -86,6 +86,7 @@ public class StreamAnalyzer
         if (!status.isRunning())
         {
             IoUtil.close(input);
+            log.info("停止分析");
         }
     }
 

@@ -16,6 +16,7 @@
 
 package m2tk.assistant.analyzer;
 
+import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.TR290EventEntity;
 import m2tk.multiplex.DemuxStatus;
@@ -43,7 +44,7 @@ public class TR290Printer implements Consumer<DemuxStatus>
         if (status.isRunning())
             return;
 
-        List<TR290EventEntity> events = databaseService.listTR290Events(0, 10000);
+        List<TR290EventEntity> events = databaseService.listTR290Events(TR290ErrorTypes.PAT_ERROR_2, 100);
         System.out.println("error count: " + events.size());
 
         for (TR290EventEntity event : events)

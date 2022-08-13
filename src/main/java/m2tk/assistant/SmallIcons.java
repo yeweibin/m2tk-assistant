@@ -32,9 +32,9 @@ public final class SmallIcons
     public static final Icon BARCODE = new ImageIcon(SmallIcons.class.getResource("/images/small/barcode.png"));
     public static final Icon TIME = new ImageIcon(SmallIcons.class.getResource("/images/small/time.png"));
     public static final Icon CLOCK = new ImageIcon(SmallIcons.class.getResource("/images/small/clock.png"));
-    public static final Icon CLOCK_SELECT = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_select.png"));
-    public static final Icon CLOCK_HISTORY = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_history.png"));
     public static final Icon CLOCK_PLAY = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_play.png"));
+    public static final Icon CLOCK_RANGE = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_range.png"));
+    public static final Icon CLOCK_SELECT = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_select.png"));
 
     public static final Icon KEY = new ImageIcon(SmallIcons.class.getResource("/images/small/key.png"));
     public static final Icon LICENSE = new ImageIcon(SmallIcons.class.getResource("/images/small/license.png"));

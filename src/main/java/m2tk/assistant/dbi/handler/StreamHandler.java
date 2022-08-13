@@ -27,6 +27,7 @@ public class StreamHandler
                        "`id` BIGINT PRIMARY KEY," +
                        "`pid` INT NOT NULL," +
                        "`pkt_cnt` BIGINT DEFAULT 0," +
+                       "`pcr_cnt` INT DEFAULT 0," +
                        "`cc_error_cnt` INT DEFAULT 0," +
                        "`bitrate` INT DEFAULT 0," +
                        "`ratio` DOUBLE PRECISION DEFAULT 0.0," +
@@ -68,11 +69,13 @@ public class StreamHandler
                        "SET `ratio` = ?, " +
                        "    `bitrate` = ?, " +
                        "    `pkt_cnt` = ?, " +
+                       "    `pcr_cnt` = ?, " +
                        "    `scrambled` = ? " +
                        "WHERE `pid` = ?",
                        entity.getRatio(),
                        entity.getBitrate(),
                        entity.getPacketCount(),
+                       entity.getPcrCount(),
                        entity.isScrambled(),
                        entity.getPid());
     }

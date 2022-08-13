@@ -8,7 +8,7 @@ import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ListModelOutputStream;
 import m2tk.assistant.ui.view.EPGInfoView;
 import m2tk.assistant.ui.view.NetworkInfoView;
-import m2tk.assistant.ui.view.StreamGeneralInfoView;
+import m2tk.assistant.ui.view.StreamInfoView;
 import m2tk.assistant.ui.view.TR290InfoView;
 import m2tk.assistant.util.TextListLogAppender;
 import m2tk.multiplex.DemuxStatus;
@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
@@ -33,10 +34,11 @@ public class MainViewController
     private final FrameView frameView;
     private final ActionMap actionMap;
     private DefaultListModel<String> logsModel;
-    private StreamGeneralInfoView streamGeneralInfoView;
+    private StreamInfoView streamInfoView;
     private NetworkInfoView networkInfoView;
     private EPGInfoView epgInfoView;
     private TR290InfoView tr290InfoView;
+    private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
     private String lastInput = null;
@@ -52,18 +54,19 @@ public class MainViewController
     {
         createAndSetupMenu();
         createAndSetupToolBar();
-        createAndSetupStatusBar();
         createAndSetupWorkspace();
         setupInitialStates();
     }
 
     private void createAndSetupMenu()
     {
-        JMenu menuSys = new JMenu("系统");
+        JMenu menuSys = new JMenu("系统(S)");
+        menuSys.setMnemonic(KeyEvent.VK_S);
         menuSys.add(createMenuItem("showSystemInfo", "系统信息", "查看运行时信息及系统环境变量"));
-        menuSys.add(createMenuItem("exitApp", "退出", "退出" + AssistantApp.APP_NAME));
+        menuSys.add(createMenuItem("exitApp", "退出(X)", "退出" + AssistantApp.APP_NAME, KeyEvent.VK_X));
 
-        JMenu menuOps = new JMenu("操作");
+        JMenu menuOps = new JMenu("操作(O)");
+        menuOps.setMnemonic(KeyEvent.VK_O);
         JMenu sourceMenu = new JMenu("选择输入源");
         sourceMenu.add(createMenuItem("openFile", "文件", "读取本地码流文件"));
         sourceMenu.add(createMenuItem("openMulticast", "组播流", "读取组播流"));
@@ -73,14 +76,21 @@ public class MainViewController
         menuOps.add(createMenuItem("stopAnalyzer", "停止分析", "停止分析器"));
         menuOps.add(createMenuItem("pauseRefreshing", "暂停刷新", "暂停刷新"));
         menuOps.add(createMenuItem("startRefreshing", "继续刷新", "继续刷新"));
+        menuOps.addSeparator();
+        menuOps.add(createMenuItem("showStreamInfo", "查看基本信息", "查看基本信息"));
+        menuOps.add(createMenuItem("showNetworkInfo", "查看网络信息", "查看网络信息"));
+        menuOps.add(createMenuItem("showEPGInfo", "查看EPG信息", "查看EPG信息"));
+        menuOps.add(createMenuItem("showTR290Info", "查看报警信息", "查看报警信息"));
 
-        JMenu menuLogs = new JMenu("日志");
+        JMenu menuLogs = new JMenu("日志(L)");
+        menuLogs.setMnemonic(KeyEvent.VK_L);
         menuLogs.add(createMenuItem("clearLogs", "清空日志", "清空日志"));
         menuLogs.add(createMenuItem("checkLogs", "查看历史日志", "查看历史日志"));
 
-        JMenu menuHelp = new JMenu("帮助");
+        JMenu menuHelp = new JMenu("帮助(H)");
+        menuHelp.setMnemonic(KeyEvent.VK_H);
         menuHelp.add(createMenuItem("showHelp", "帮助", "帮助"));
-        menuHelp.add(createMenuItem("showAbout", "关于", "关于 " + AssistantApp.APP_NAME));
+        menuHelp.add(createMenuItem("showAbout", "关于(A)", "关于 " + AssistantApp.APP_NAME, KeyEvent.VK_A));
 
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(menuSys);
@@ -125,10 +135,6 @@ public class MainViewController
         frameView.setToolBar(toolBar);
     }
 
-    private void createAndSetupStatusBar()
-    {
-    }
-
     private void createAndSetupWorkspace()
     {
         logsModel = new DefaultListModel<>();
@@ -137,14 +143,14 @@ public class MainViewController
         logsView.setDragEnabled(false);
         logsView.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        streamGeneralInfoView = new StreamGeneralInfoView(frameView);
+        streamInfoView = new StreamInfoView(frameView);
         networkInfoView = new NetworkInfoView(frameView);
         epgInfoView = new EPGInfoView(frameView);
         tr290InfoView = new TR290InfoView(frameView);
 
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
-        tabbedPane.add("基本信息", streamGeneralInfoView);
+        tabbedPane.add("基本信息", streamInfoView);
         tabbedPane.add("网络信息", networkInfoView);
         tabbedPane.add("EPG", epgInfoView);
         tabbedPane.add("TR 290", tr290InfoView);
@@ -181,6 +187,16 @@ public class MainViewController
         return item;
     }
 
+    private JMenuItem createMenuItem(String action, String text, String tooltip, int mnemonic)
+    {
+        JMenuItem item = new JMenuItem();
+        item.setAction(actionMap.get(action));
+        item.setText(text);
+        item.setToolTipText(tooltip);
+        item.setMnemonic(mnemonic);
+        return item;
+    }
+
     private JButton createButton(String action, String tooltip)
     {
         JButton button = new JButton();
@@ -202,6 +218,30 @@ public class MainViewController
     {
         willQuit = true;
         frameView.getApplication().exit();
+    }
+
+    @Action
+    public void showStreamInfo()
+    {
+        tabbedPane.setSelectedComponent(streamInfoView);
+    }
+
+    @Action
+    public void showNetworkInfo()
+    {
+        tabbedPane.setSelectedComponent(networkInfoView);
+    }
+
+    @Action
+    public void showEPGInfo()
+    {
+        tabbedPane.setSelectedComponent(epgInfoView);
+    }
+
+    @Action
+    public void showTR290Info()
+    {
+        tabbedPane.setSelectedComponent(tr290InfoView);
     }
 
     @Action
@@ -254,7 +294,7 @@ public class MainViewController
             {
                 saveRecentFile(file);
                 lastInput = input;
-                streamGeneralInfoView.reset();
+                streamInfoView.reset();
                 networkInfoView.reset();
                 epgInfoView.reset();
                 tr290InfoView.reset();
@@ -296,7 +336,7 @@ public class MainViewController
         } else
         {
             lastInput = input;
-            streamGeneralInfoView.reset();
+            streamInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
             tr290InfoView.reset();
@@ -328,7 +368,7 @@ public class MainViewController
         } else
         {
             lastInput = input;
-            streamGeneralInfoView.reset();
+            streamInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
             tr290InfoView.reset();
@@ -357,7 +397,7 @@ public class MainViewController
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
-            streamGeneralInfoView.reset();
+            streamInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
             tr290InfoView.reset();
@@ -380,7 +420,7 @@ public class MainViewController
     @Action
     public void pauseRefreshing()
     {
-        streamGeneralInfoView.stopRefreshing();
+        streamInfoView.stopRefreshing();
         networkInfoView.stopRefreshing();
         epgInfoView.stopRefreshing();
         tr290InfoView.stopRefreshing();
@@ -391,7 +431,7 @@ public class MainViewController
     @Action
     public void startRefreshing()
     {
-        streamGeneralInfoView.startRefreshing();
+        streamInfoView.startRefreshing();
         networkInfoView.startRefreshing();
         epgInfoView.startRefreshing();
         tr290InfoView.startRefreshing();

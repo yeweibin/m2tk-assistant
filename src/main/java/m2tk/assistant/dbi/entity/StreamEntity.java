@@ -10,6 +10,7 @@ public class StreamEntity
     private int pid;
     private boolean marked;
     private long packetCount;
+    private int pcrCount;
     private int continuityErrorCount;
     private int bitrate;
     private double ratio;

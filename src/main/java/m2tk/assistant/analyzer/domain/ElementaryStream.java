@@ -7,6 +7,7 @@ public class ElementaryStream
 {
     private final int streamPid;
     private final long packetCount;
+    private final int pcrCount;
     private final int continuityErrorCount;
     private final int bitrate;
     private final double ratio;
@@ -16,13 +17,14 @@ public class ElementaryStream
     private final String description;
     private final int associatedProgramNumber;
 
-    public ElementaryStream(int streamPid,
+    public  ElementaryStream(int streamPid,
                             int streamType,
                             String category,
                             String description,
                             int associatedProgramNumber)
     {
         this(streamPid,
+             0,
              0,
              0,
              0,
@@ -36,6 +38,7 @@ public class ElementaryStream
 
     public ElementaryStream(int streamPid,
                             long packetCount,
+                            int pcrCount,
                             int continuityErrorCount,
                             int bitrate,
                             double ratio,
@@ -47,6 +50,7 @@ public class ElementaryStream
     {
         this.streamPid = streamPid;
         this.packetCount = packetCount;
+        this.pcrCount = pcrCount;
         this.continuityErrorCount = continuityErrorCount;
         this.bitrate = bitrate;
         this.ratio = ratio;
@@ -60,5 +64,10 @@ public class ElementaryStream
     public boolean isPresent()
     {
         return packetCount > 0;
+    }
+
+    public boolean containsPCR()
+    {
+        return pcrCount > 0;
     }
 }

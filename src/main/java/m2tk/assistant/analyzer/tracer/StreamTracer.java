@@ -118,6 +118,8 @@ public class StreamTracer implements Tracer
         long currPct = payload.getStartPacketCounter();
         if (currPcrValue != -1)
         {
+            stream.setPcrCount(stream.getPcrCount() + 1);
+
             if (pcrPid == -1)
             {
                 // 遇到的第一个PCR

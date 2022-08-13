@@ -82,6 +82,7 @@ public class MPEGProgram
                                                          programNumber)
                                   : new ElementaryStream(mapping.getStreamPid(),
                                                          stream.getPacketCount(),
+                                                         stream.getPcrCount(),
                                                          stream.getContinuityErrorCount(),
                                                          stream.getBitrate(),
                                                          stream.getRatio(),

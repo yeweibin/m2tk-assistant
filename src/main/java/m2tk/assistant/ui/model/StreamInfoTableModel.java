@@ -29,10 +29,10 @@ public class StreamInfoTableModel extends AbstractTableModel
 {
     private final List<StreamEntity> data;
     private static final String[] COLUMNS = {
-            "序号", "流状态", "加扰状态", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "连续计数错误"
+            "序号", "状态", "加扰", "PCR", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "连续计数错误"
     };
     private static final Class<?>[] COLUMN_CLASSES = {
-            Integer.class, Icon.class, Icon.class, String.class, String.class, String.class, String.class, String.class, String.class
+            Integer.class, Icon.class, Icon.class, Icon.class, String.class, String.class, String.class, String.class, String.class, String.class
     };
 
     public StreamInfoTableModel()
@@ -77,27 +77,29 @@ public class StreamInfoTableModel extends AbstractTableModel
     @Override
     public Object getValueAt(int rowIndex, int columnIndex)
     {
-        StreamEntity entity = data.get(rowIndex);
+        StreamEntity stream = data.get(rowIndex);
         switch (columnIndex)
         {
             case 0:
                 return rowIndex + 1;
             case 1:
-                return entity.getContinuityErrorCount() == 0 ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
+                return stream.getContinuityErrorCount() == 0 ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
             case 2:
-                return entity.isScrambled() ? SmallIcons.LOCK : null;
+                return stream.isScrambled() ? SmallIcons.LOCK : null;
             case 3:
-                return String.format("%d (0x%04X)", entity.getPid(), entity.getPid());
+                return stream.getPcrCount() > 0 ? SmallIcons.CLOCK : null;
             case 4:
-                return String.format("%,.02f", entity.getBitrate() / 1000.0);
+                return String.format("%d (0x%04X)", stream.getPid(), stream.getPid());
             case 5:
-                return String.format("%.02f%%", 100 * entity.getRatio());
+                return String.format("%,.02f", stream.getBitrate() / 1000.0);
             case 6:
-                return entity.getDescription();
+                return String.format("%.02f%%", 100 * stream.getRatio());
             case 7:
-                return String.format("%,d", entity.getPacketCount());
+                return stream.getDescription();
             case 8:
-                return String.format("%,d", entity.getContinuityErrorCount());
+                return String.format("%,d", stream.getPacketCount());
+            case 9:
+                return String.format("%,d", stream.getContinuityErrorCount());
             default:
                 return null;
         }
@@ -116,8 +118,7 @@ public class StreamInfoTableModel extends AbstractTableModel
             StreamEntity s1 = current.get(i);
             StreamEntity s2 = incoming.get(i);
 
-            if (s1.getId() != s2.getId() ||
-                s1.getPid() != s2.getPid() ||
+            if (s1.getPid() != s2.getPid() ||
                 s1.getPacketCount() != s2.getPacketCount())
                 return false;
         }

@@ -341,6 +341,11 @@ public class DatabaseService
         return dbi.withHandle(handle -> tr290Handler.listEvents(handle, start, count));
     }
 
+    public List<TR290EventEntity> listTR290Events(String type, int count)
+    {
+        return dbi.withHandle(handle -> tr290Handler.listEvents(handle, type, count));
+    }
+
     public List<TR290StatEntity> listTR290Stats()
     {
         return dbi.withHandle(tr290Handler::listStats);

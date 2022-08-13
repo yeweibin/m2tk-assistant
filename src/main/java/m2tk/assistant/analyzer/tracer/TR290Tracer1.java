@@ -74,6 +74,13 @@ public class TR290Tracer1 implements Tracer
         demux.registerRawChannel(this::processTransportPacket);
     }
 
+    private void reportError(String errorType, String errorMessage, long position, int stream)
+    {
+        databaseService.addTR290Event(LocalDateTime.now(),
+                                      errorType, errorMessage,
+                                      position, stream);
+    }
+
     private void processDemuxEvent(TSDemuxEvent event)
     {
         if (event instanceof DemuxStatus)
@@ -90,20 +97,16 @@ public class TR290Tracer1 implements Tracer
             {
                 case SYNC_BYTE_ERROR:
                 {
-                    databaseService.addTR290Event(LocalDateTime.now(),
-                                                  TR290ErrorTypes.SYNC_BYTE_ERROR,
-                                                  "同步字节错误",
-                                                  status.getPosition(),
-                                                  status.getPid());
+                    reportError(TR290ErrorTypes.SYNC_BYTE_ERROR, "同步字节错误",
+                                status.getPosition(), status.getPid());
                     break;
                 }
                 case SYNC_LOST:
                 {
-                    databaseService.addTR290Event(LocalDateTime.now(),
-                                                  TR290ErrorTypes.TS_SYNC_LOSS,
-                                                  "同步丢失错误",
-                                                  status.getPosition(),
-                                                  status.getPid());
+                    Arrays.fill(CCTs, -1);
+                    Arrays.fill(DupCnts, 0);
+                    reportError(TR290ErrorTypes.TS_SYNC_LOSS, "同步丢失错误",
+                                status.getPosition(), status.getPid());
                     break;
                 }
             }
@@ -124,11 +127,9 @@ public class TR290Tracer1 implements Tracer
         {
             if (TEFs[pid] == 0)
             {
-                databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290ErrorTypes.TRANSPORT_ERROR,
-                                              String.format("当前流指示传输错误（pid = %d）", pid),
-                                              payload.getStartPacketCounter(),
-                                              payload.getStreamPID());
+                reportError(TR290ErrorTypes.TRANSPORT_ERROR,
+                            String.format("当前流指示传输错误（pid = %d）", pid),
+                            payload.getStartPacketCounter(), payload.getStreamPID());
                 TEFs[pid] = 1; // 该流的传输错误已经通报过，就不再重复通报了。
             }
 
@@ -159,12 +160,10 @@ public class TR290Tracer1 implements Tracer
             if (CCTs[pid] != curr_cct)
             {
                 CETs[pid] += 1;
-                databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
-                                              String.format("无负载时连续计数器发生变化（期望：%d，实际：%d，pid = %d）",
-                                                            CCTs[pid], curr_cct, pid),
-                                              payload.getStartPacketCounter(),
-                                              payload.getStreamPID());
+                reportError(TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
+                            String.format("无负载时连续计数器发生变化（期望：%d，实际：%d，pid = %d）",
+                                          CCTs[pid], curr_cct, pid),
+                            payload.getStartPacketCounter(), payload.getStreamPID());
             }
 
             // 没有负载则不算重复包，所以不用留存根。
@@ -191,23 +190,19 @@ public class TR290Tracer1 implements Tracer
             if (DupCnts[pid] > 1)
             {
                 CETs[pid] += 1;
-                databaseService.addTR290Event(LocalDateTime.now(),
-                                              TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
-                                              String.format("重复包连续出现了两次以上（pid = %d）", pid),
-                                              payload.getStartPacketCounter(),
-                                              payload.getStreamPID());
+                reportError(TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
+                            String.format("重复包连续出现了两次以上（pid = %d）", pid),
+                            payload.getStartPacketCounter(), payload.getStreamPID());
             }
             return;
         }
 
         // 不是重复的包，则属于CCT错乱。
         CETs[pid] += 1;
-        databaseService.addTR290Event(LocalDateTime.now(),
-                                      TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
-                                      String.format("连续计数错误（期望：%d，实际：%d，pid = %d）",
-                                                    exp_cct, curr_cct, pid),
-                                      payload.getStartPacketCounter(),
-                                      payload.getStreamPID());
+        reportError(TR290ErrorTypes.CONTINUITY_COUNT_ERROR,
+                    String.format("连续计数错误（期望：%d，实际：%d，pid = %d）",
+                                  exp_cct, curr_cct, pid),
+                    payload.getStartPacketCounter(), payload.getStreamPID());
 
         // 重置计数器，此时需要保留存根
         CCTs[pid] = curr_cct;

@@ -39,7 +39,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class StreamGeneralInfoView extends JPanel
+public class StreamInfoView extends JPanel
 {
     private final FrameView frameView;
     private final ActionMap actionMap;
@@ -52,7 +52,7 @@ public class StreamGeneralInfoView extends JPanel
     private Timer timer3;
     private Timer timer4;
 
-    public StreamGeneralInfoView(FrameView view)
+    public StreamInfoView(FrameView view)
     {
         frameView = view;
         actionMap = view.getContext().getActionMap(this);

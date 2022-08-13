@@ -62,6 +62,15 @@ public class TR290EventHandler
                      .list();
     }
 
+    public List<TR290EventEntity> listEvents(Handle handle, String type, int count)
+    {
+        return handle.select("SELECT * FROM T_TR290_EVENT WHERE `type` = ? ORDER BY `id` " +
+                             "FETCH FIRST ? ROWS ONLY",
+                             type, count)
+                     .map(eventEntityMapper)
+                     .list();
+    }
+
     public List<TR290StatEntity> listStats(Handle handle)
     {
         return handle.select("SELECT A.`id` AS `id`, " +
