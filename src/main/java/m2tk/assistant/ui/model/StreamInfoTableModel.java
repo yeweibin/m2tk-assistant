@@ -119,7 +119,8 @@ public class StreamInfoTableModel extends AbstractTableModel
             StreamEntity s2 = incoming.get(i);
 
             if (s1.getPid() != s2.getPid() ||
-                s1.getPacketCount() != s2.getPacketCount())
+                s1.getPacketCount() != s2.getPacketCount() ||
+                s1.getContinuityErrorCount() != s2.getContinuityErrorCount())
                 return false;
         }
 
