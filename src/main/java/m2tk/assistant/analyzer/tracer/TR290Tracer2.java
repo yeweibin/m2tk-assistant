@@ -66,6 +66,11 @@ public class TR290Tracer2 implements Tracer
     private final long[] streamOccurTimes;
     private final long[] streamOccurPositions;
 
+    private final int[] streamMarks;
+    private final int[] streamCounts;
+    private long lastUnreferencedStreamCheckTime;
+    private long lastUnreferencedStreamCheckPosition;
+
     private long lastPATOccurTime;
     private long lastPATOccurPosition;
     private long lastNITActOccurTime;
@@ -118,8 +123,8 @@ public class TR290Tracer2 implements Tracer
         element = new ProgramElementDecoder();
 
         pmtChannels = new TSDemux.Channel[8192];
-        pmtOccurPositions = new long[8192];
         pmtOccurTimes = new long[8192];
+        pmtOccurPositions = new long[8192];
 
         sectionContexts = new HashMap<>();
         programNumbers = new HashSet<>();
@@ -128,6 +133,11 @@ public class TR290Tracer2 implements Tracer
 
         streamOccurTimes = new long[8192];
         streamOccurPositions = new long[8192];
+
+        streamMarks = new int[8192];
+        streamCounts = new int[8192];
+        lastUnreferencedStreamCheckTime = -1;
+        lastUnreferencedStreamCheckPosition = -1;
 
         lastPATOccurTime = -1;
         lastPATOccurPosition = -1;
@@ -183,6 +193,8 @@ public class TR290Tracer2 implements Tracer
         streamOccurTimes[pid] = System.currentTimeMillis();
         streamOccurPositions[pid] = payload.getStartPacketCounter();
 
+        streamCounts[pid] += 1;
+
         calculateBitrate(payload);
         checkPATSectionOccurrenceInterval(payload);
         checkPMTSectionOccurrenceInterval(payload);
@@ -194,6 +206,8 @@ public class TR290Tracer2 implements Tracer
 
         checkUnexpectedScrambledPATStream(payload);
         checkUnexpectedScrambledPMTStream(payload);
+
+        checkUnreferencedStream(payload);
     }
 
     private void calculateBitrate(TSDemuxPayload payload)
@@ -434,6 +448,36 @@ public class TR290Tracer2 implements Tracer
         }
     }
 
+    private void checkUnreferencedStream(TSDemuxPayload payload)
+    {
+        if (pktcnt != 800)
+            return;
+
+        long currOccurPosition = payload.getStartPacketCounter();
+        long currOccurTime = System.currentTimeMillis();
+
+        long interval = calculateInterval(lastUnreferencedStreamCheckPosition, currOccurPosition,
+                                          lastUnreferencedStreamCheckTime, currOccurTime);
+        if (interval < 500)
+            return;
+
+        for (int i = 0x20; i < 0x1FFF; i++)
+        {
+            // 非空包，非PMT流，且未被PMT标记（ECM、ES）、未被CAT标记（EMM）的其他出现数据的流
+            if (pmtChannels[i] == null && streamMarks[i] == 0 && streamCounts[i] > 0)
+            {
+                reportError(TR290ErrorTypes.UNREFERENCED_PID,
+                            String.format("超过0.5s仍然存在未被PMT、CAT关联的流（pid = %d）", i),
+                            payload.getFinishPacketCounter(), payload.getStreamPID());
+
+                streamCounts[i] = 0;
+            }
+        }
+
+        lastUnreferencedStreamCheckPosition = currOccurPosition;
+        lastUnreferencedStreamCheckTime = currOccurTime;
+    }
+
     private void processSection(TSDemuxPayload payload)
     {
         if (payload.getType() != TSDemuxPayload.Type.SECTION || !sec.isAttachable(payload.getEncoding()))
@@ -596,7 +640,7 @@ public class TR290Tracer2 implements Tracer
                 if (channel != null)
                 {
                     demux.closeChannel(channel);
-                    databaseService.setStreamMarked(pid, false);
+                    streamMarks[pid] = 0;
                     pmtChannels[pid] = null;
                 }
             }
@@ -611,6 +655,7 @@ public class TR290Tracer2 implements Tracer
         pat.forEachProgramAssociation((number, pmtpid) -> {
             TSDemux.Channel channel = demux.registerSectionChannel(pmtpid, this::processPMT);
             pmtChannels[pmtpid] = channel;
+            streamMarks[pmtpid] = 1;
             programNumbers.add(number);
             programPmtPids.add(pmtpid);
         });
@@ -651,7 +696,7 @@ public class TR290Tracer2 implements Tracer
         descloop.attach(cat.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, descriptor -> {
             cad.attach(descriptor);
-            databaseService.setStreamMarked(cad.getConditionalAccessStreamPID(), true);
+            streamMarks[cad.getConditionalAccessStreamPID()] = 1; // 标记EMM
         });
 
         if (!cat.isChecksumCorrect())
@@ -660,8 +705,6 @@ public class TR290Tracer2 implements Tracer
             reportError(TR290ErrorTypes.CRC_ERROR, "CAT表CRC32错误",
                         payload.getFinishPacketCounter(), payload.getStreamPID());
         }
-
-        databaseService.setStreamMarked(0x0001, true);
     }
 
     private void processPMT(TSDemuxPayload payload)
@@ -692,11 +735,23 @@ public class TR290Tracer2 implements Tracer
         pmtOccurTimes[payload.getStreamPID()] = System.currentTimeMillis();
         pmtOccurPositions[payload.getStreamPID()] = payload.getFinishPacketCounter();
 
-        // PMT指定PID不包括ECM，所以不用解析描述符循环。
+        descloop.attach(pmt.getDescriptorLoop());
+        descloop.forEach(cad::isAttachable, descriptor -> {
+            cad.attach(descriptor);
+            streamMarks[cad.getConditionalAccessStreamPID()] = 1; // 标记ECM
+        });
+
         // 所有PMT基本流类型均一视同仁，判定时不作区分。
         pmt.forEachProgramElement(encoding -> {
             element.attach(encoding);
+            streamMarks[element.getElementaryPID()] = 1; // 标记ES
             pmtMappedStreams.add(element.getElementaryPID());
+
+            descloop.attach(element.getDescriptorLoop());
+            descloop.forEach(cad::isAttachable, descriptor -> {
+                cad.attach(descriptor);
+                streamMarks[cad.getConditionalAccessStreamPID()] = 1; // 标记ECM
+            });
         });
 
         if (!pmt.isChecksumCorrect())
