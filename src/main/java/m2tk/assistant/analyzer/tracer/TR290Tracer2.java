@@ -214,21 +214,24 @@ public class TR290Tracer2 implements Tracer
     {
         long currPcrValue = readPCR();
         long currPct = payload.getStartPacketCounter();
-        if (currPcrValue != -1)
+        if (currPcrValue == -1)
+            return; // 无PCR
+
+        if (pcrPid == -1)
         {
-            if (pcrPid == -1)
-            {
-                // 遇到的第一个PCR
-                pcrPid = payload.getStreamPID();
-                lastPcrValue = currPcrValue;
-                lastPcrPct = currPct;
-            } else if (pcrPid == payload.getStreamPID())
-            {
-                int bitrate = ProgramClockReference.bitrate(lastPcrValue, currPcrValue, currPct - lastPcrPct);
-                avgBitrate = (avgBitrate + bitrate) / 2;
-                lastPcrValue = currPcrValue;
-                lastPcrPct = currPct;
-            }
+            // 遇到的第一个PCR
+            pcrPid = payload.getStreamPID();
+            lastPcrValue = currPcrValue;
+            lastPcrPct = currPct;
+            return;
+        }
+
+        if (pcrPid == payload.getStreamPID())
+        {
+            int bitrate = ProgramClockReference.bitrate(lastPcrValue, currPcrValue, currPct - lastPcrPct);
+            avgBitrate = (avgBitrate == 0) ? bitrate : (avgBitrate + bitrate) / 2;
+            lastPcrValue = currPcrValue;
+            lastPcrPct = currPct;
         }
     }
 

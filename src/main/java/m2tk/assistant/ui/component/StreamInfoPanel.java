@@ -16,7 +16,6 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.analyzer.domain.ElementaryStream;
 import m2tk.assistant.dbi.entity.StreamEntity;
 import m2tk.assistant.ui.model.StreamInfoTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
@@ -69,7 +68,8 @@ public class StreamInfoPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false); // 带宽占比
         ComponentUtil.configTableColumn(columnModel, 7, leadingRenderer, 400, true); // 类型描述
         ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 120, false); // 包数量
-        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 120, false); // 连续计数错误
+        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 120, false); // 传输错误
+        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 120, false); // 连续计数错误
 
         setLayout(new BorderLayout());
         add(new JScrollPane(table), BorderLayout.CENTER);

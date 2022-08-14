@@ -142,7 +142,7 @@ public class StreamTracer implements Tracer
     private void saveToDatabase()
     {
         long t1 = System.currentTimeMillis();
-        if ((t1 - t0) >= 1000) // 超过1s才更新数据库
+        if ((t1 - t0) >= 200) // 超过200ms才更新数据库
         {
             source.setBitrate(avgBitrate);
             source.setFrameSize(frameSize);

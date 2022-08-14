@@ -28,7 +28,8 @@ public class StreamHandler
                        "`pid` INT NOT NULL," +
                        "`pkt_cnt` BIGINT DEFAULT 0," +
                        "`pcr_cnt` INT DEFAULT 0," +
-                       "`cc_error_cnt` INT DEFAULT 0," +
+                       "`trans_err_cnt` INT DEFAULT 0," +
+                       "`cc_err_cnt` INT DEFAULT 0," +
                        "`bitrate` INT DEFAULT 0," +
                        "`ratio` DOUBLE PRECISION DEFAULT 0.0," +
                        "`category` VARCHAR(3)," +
@@ -91,9 +92,13 @@ public class StreamHandler
                        pid);
     }
 
-    public void addStreamContinuityErrorCount(Handle handle, int pid, long count)
+    public void cumsumStreamErrorCounts(Handle handle, int pid, long transportErrors, long continuityErrors)
     {
-        handle.execute("UPDATE T_STREAM SET `cc_error_cnt` = `cc_error_cnt` + ? WHERE `pid` = ?", count, pid);
+        handle.execute("UPDATE T_STREAM " +
+                       "    SET `trans_err_cnt` = `trans_err_cnt` + ?, " +
+                       "        `cc_err_cnt` = `cc_err_cnt` + ? " +
+                       "WHERE `pid` = ?",
+                       transportErrors, continuityErrors, pid);
     }
 
     public void setStreamMarked(Handle handle, int pid, boolean marked)

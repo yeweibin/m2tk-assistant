@@ -38,6 +38,8 @@ public final class SmallIcons
 
     public static final Icon KEY = new ImageIcon(SmallIcons.class.getResource("/images/small/key.png"));
     public static final Icon LICENSE = new ImageIcon(SmallIcons.class.getResource("/images/small/license.png"));
+    public static final Icon CROSS = new ImageIcon(SmallIcons.class.getResource("/images/small/cross.png"));
+    public static final Icon TICK = new ImageIcon(SmallIcons.class.getResource("/images/small/tick.png"));
     public static final Icon CHECK = new ImageIcon(SmallIcons.class.getResource("/images/small/check.png"));
     public static final Icon EXCLAMATION = new ImageIcon(SmallIcons.class.getResource("/images/small/exclamation.png"));
     public static final Icon LOCK = new ImageIcon(SmallIcons.class.getResource("/images/small/lock.png"));
@@ -46,6 +48,7 @@ public final class SmallIcons
     public static final Icon MPEG = new ImageIcon(SmallIcons.class.getResource("/images/small/mpeg.png"));
     public static final Icon NETWORK_FOLDER = new ImageIcon(SmallIcons.class.getResource("/images/small/network_folder.png"));
     public static final Icon NETWORK_WIRELESS = new ImageIcon(SmallIcons.class.getResource("/images/small/network_wireless.png"));
+    public static final Icon FOLDER_OPEN = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_open.png"));
     public static final Icon FOLDER_PAGE = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_page.png"));
     public static final Icon FOLDER_SEARCH = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_search.png"));
     public static final Icon USER = new ImageIcon(SmallIcons.class.getResource("/images/small/user.png"));

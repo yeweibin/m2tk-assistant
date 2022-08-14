@@ -44,7 +44,7 @@ public class TR290Printer implements Consumer<DemuxStatus>
         if (status.isRunning())
             return;
 
-        List<TR290EventEntity> events = databaseService.listTR290Events(TR290ErrorTypes.PID_ERROR, 100);
+        List<TR290EventEntity> events = databaseService.listTR290Events(TR290ErrorTypes.PCR_ACCURACY_ERROR, 10000);
         System.out.println("error count: " + events.size());
 
         for (TR290EventEntity event : events)

@@ -29,10 +29,10 @@ public class StreamInfoTableModel extends AbstractTableModel
 {
     private final List<StreamEntity> data;
     private static final String[] COLUMNS = {
-            "序号", "状态", "加扰", "PCR", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "连续计数错误"
+            "序号", "状态", "加扰", "PCR", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "传输错误", "连续计数错误"
     };
     private static final Class<?>[] COLUMN_CLASSES = {
-            Integer.class, Icon.class, Icon.class, Icon.class, String.class, String.class, String.class, String.class, String.class, String.class
+            Integer.class, Icon.class, Icon.class, Icon.class, String.class, String.class, String.class, String.class, String.class, String.class, String.class
     };
 
     public StreamInfoTableModel()
@@ -83,7 +83,9 @@ public class StreamInfoTableModel extends AbstractTableModel
             case 0:
                 return rowIndex + 1;
             case 1:
-                return stream.getContinuityErrorCount() == 0 ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
+                return (stream.getTransportErrorCount() == 0 &&
+                        stream.getContinuityErrorCount() == 0)
+                       ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
             case 2:
                 return stream.isScrambled() ? SmallIcons.LOCK : null;
             case 3:
@@ -99,6 +101,8 @@ public class StreamInfoTableModel extends AbstractTableModel
             case 8:
                 return String.format("%,d", stream.getPacketCount());
             case 9:
+                return String.format("%,d", stream.getTransportErrorCount());
+            case 10:
                 return String.format("%,d", stream.getContinuityErrorCount());
             default:
                 return null;
@@ -120,6 +124,7 @@ public class StreamInfoTableModel extends AbstractTableModel
 
             if (s1.getPid() != s2.getPid() ||
                 s1.getPacketCount() != s2.getPacketCount() ||
+                s1.getTransportErrorCount() != s2.getTransportErrorCount() ||
                 s1.getContinuityErrorCount() != s2.getContinuityErrorCount())
                 return false;
         }

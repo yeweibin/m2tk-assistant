@@ -17,7 +17,8 @@ public class StreamEntityMapper implements RowMapper<StreamEntity>
         entity.setPid(rs.getInt("pid"));
         entity.setPacketCount(rs.getLong("pkt_cnt"));
         entity.setPcrCount(rs.getInt("pcr_cnt"));
-        entity.setContinuityErrorCount(rs.getInt("cc_error_cnt"));
+        entity.setTransportErrorCount(rs.getInt("trans_err_cnt"));
+        entity.setContinuityErrorCount(rs.getInt("cc_err_cnt"));
         entity.setBitrate(rs.getInt("bitrate"));
         entity.setRatio(rs.getDouble("ratio"));
         entity.setScrambled(rs.getBoolean("scrambled"));

@@ -74,9 +74,9 @@ public class DatabaseService
         dbi.useHandle(handle -> streamHandler.updateStreamStatistics(handle, stream));
     }
 
-    public void addStreamContinuityErrorCount(int pid, long count)
+    public void cumsumStreamErrorCounts(int pid, long transportErrors, long continuityErrors)
     {
-        dbi.useHandle(handle -> streamHandler.addStreamContinuityErrorCount(handle, pid, count));
+        dbi.useHandle(handle -> streamHandler.cumsumStreamErrorCounts(handle, pid, transportErrors, continuityErrors));
     }
 
     public void updateStreamUsage(int pid, String category, String description)
