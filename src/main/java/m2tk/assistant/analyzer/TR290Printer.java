@@ -18,6 +18,7 @@ package m2tk.assistant.analyzer;
 
 import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.DatabaseService;
+import m2tk.assistant.dbi.entity.PCRStatEntity;
 import m2tk.assistant.dbi.entity.TR290EventEntity;
 import m2tk.multiplex.DemuxStatus;
 
@@ -65,6 +66,25 @@ public class TR290Printer implements Consumer<DemuxStatus>
         for (String type : groupStat.keySet())
         {
             System.out.printf("%s: 总计 %d%n", type, groupStat.get(type));
+        }
+
+        System.out.println();
+        System.out.println("===========================================");
+        System.out.println();
+        List<PCRStatEntity> pcrStats = databaseService.listPCRStats();
+        for (PCRStatEntity stat : pcrStats)
+        {
+            System.out.printf("[PID %04x] PCR Cnt: %d%n", stat.getPid(), stat.getPcrCount());
+            System.out.printf("     Intervals: avg %d ms, min %d ms, max %d ms, errors %d%n",
+                              stat.getAvgInterval() / 1000000,
+                              stat.getMinInterval() / 1000000,
+                              stat.getMaxInterval() / 1000000,
+                              stat.getRepetitionErrors());
+            System.out.printf("     Accuracies: avg %d ns, min %d ns, max %d ns, errors %d%n",
+                              stat.getAvgAccuracy(),
+                              stat.getMinAccuracy(),
+                              stat.getMaxAccuracy(),
+                              stat.getAccuracyErrors());
         }
     }
 }

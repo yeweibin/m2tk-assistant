@@ -24,6 +24,7 @@ public class DatabaseService
     private final PSIObjectHandler psiHandler;
     private final SIObjectHandler siHandler;
     private final TR290EventHandler tr290Handler;
+    private final PCRHandler pcrHandler;
 
     public DatabaseService()
     {
@@ -40,6 +41,7 @@ public class DatabaseService
         psiHandler = new PSIObjectHandler(generator);
         siHandler = new SIObjectHandler(generator);
         tr290Handler = new TR290EventHandler(generator);
+        pcrHandler = new PCRHandler(generator);
     }
 
     public void initDatabase()
@@ -50,6 +52,7 @@ public class DatabaseService
             psiHandler.initTable(handle);
             siHandler.initTable(handle);
             tr290Handler.initTable(handle);
+            pcrHandler.initTable(handle);
         });
     }
 
@@ -61,6 +64,7 @@ public class DatabaseService
             psiHandler.resetTable(handle);
             siHandler.resetTable(handle);
             tr290Handler.resetTable(handle);
+            pcrHandler.resetTable(handle);
         });
     }
 
@@ -349,5 +353,27 @@ public class DatabaseService
     public List<TR290StatEntity> listTR290Stats()
     {
         return dbi.withHandle(tr290Handler::listStats);
+    }
+
+    public void addPCR(int pid, long position, long value)
+    {
+        dbi.useHandle(handle -> pcrHandler.addPCR(handle, pid, position, value));
+    }
+
+    public void addPCRCheck(int pid, long position, long interval, long diff, long accuracy,
+                            boolean repetitionCheckFailed,
+                            boolean discontinuityCheckFailed,
+                            boolean accuracyCheckFailed)
+    {
+        dbi.useHandle(handle -> pcrHandler.addPCRCheck(handle, pid, position,
+                                                       interval, diff, accuracy,
+                                                       repetitionCheckFailed,
+                                                       discontinuityCheckFailed,
+                                                       accuracyCheckFailed));
+    }
+
+    public List<PCRStatEntity> listPCRStats()
+    {
+        return dbi.withHandle(pcrHandler::listPCRStats);
     }
 }

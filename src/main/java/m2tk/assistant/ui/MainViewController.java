@@ -6,10 +6,7 @@ import m2tk.assistant.Global;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ListModelOutputStream;
-import m2tk.assistant.ui.view.EPGInfoView;
-import m2tk.assistant.ui.view.NetworkInfoView;
-import m2tk.assistant.ui.view.StreamInfoView;
-import m2tk.assistant.ui.view.TR290InfoView;
+import m2tk.assistant.ui.view.*;
 import m2tk.assistant.util.TextListLogAppender;
 import m2tk.multiplex.DemuxStatus;
 import org.jdesktop.application.Action;
@@ -38,6 +35,7 @@ public class MainViewController
     private NetworkInfoView networkInfoView;
     private EPGInfoView epgInfoView;
     private TR290InfoView tr290InfoView;
+    private PCRStatsView pcrStatsView;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
@@ -81,6 +79,7 @@ public class MainViewController
         menuOps.add(createMenuItem("showNetworkInfo", "查看网络信息", "查看网络信息"));
         menuOps.add(createMenuItem("showEPGInfo", "查看EPG信息", "查看EPG信息"));
         menuOps.add(createMenuItem("showTR290Info", "查看报警信息", "查看报警信息"));
+        menuOps.add(createMenuItem("showPCRInfo", "查看PCR信息", "查看PCR信息"));
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
@@ -147,6 +146,7 @@ public class MainViewController
         networkInfoView = new NetworkInfoView(frameView);
         epgInfoView = new EPGInfoView(frameView);
         tr290InfoView = new TR290InfoView(frameView);
+        pcrStatsView = new PCRStatsView(frameView);
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
@@ -154,6 +154,7 @@ public class MainViewController
         tabbedPane.add("网络信息", networkInfoView);
         tabbedPane.add("EPG", epgInfoView);
         tabbedPane.add("TR 290", tr290InfoView);
+        tabbedPane.add("PCR", pcrStatsView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
@@ -245,6 +246,12 @@ public class MainViewController
     }
 
     @Action
+    public void showPCRInfo()
+    {
+        tabbedPane.setSelectedComponent(pcrStatsView);
+    }
+
+    @Action
     public void checkLogs()
     {
         Path logsDir = Paths.get(System.getProperty("user.home"), "m2tk", "logs");
@@ -298,6 +305,7 @@ public class MainViewController
                 networkInfoView.reset();
                 epgInfoView.reset();
                 tr290InfoView.reset();
+                pcrStatsView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -340,6 +348,7 @@ public class MainViewController
             networkInfoView.reset();
             epgInfoView.reset();
             tr290InfoView.reset();
+            pcrStatsView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -372,6 +381,7 @@ public class MainViewController
             networkInfoView.reset();
             epgInfoView.reset();
             tr290InfoView.reset();
+            pcrStatsView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -401,6 +411,7 @@ public class MainViewController
             networkInfoView.reset();
             epgInfoView.reset();
             tr290InfoView.reset();
+            pcrStatsView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -424,6 +435,7 @@ public class MainViewController
         networkInfoView.stopRefreshing();
         epgInfoView.stopRefreshing();
         tr290InfoView.stopRefreshing();
+        pcrStatsView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -435,6 +447,7 @@ public class MainViewController
         networkInfoView.startRefreshing();
         epgInfoView.startRefreshing();
         tr290InfoView.startRefreshing();
+        pcrStatsView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }
