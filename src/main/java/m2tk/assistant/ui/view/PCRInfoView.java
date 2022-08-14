@@ -17,14 +17,8 @@
 package m2tk.assistant.ui.view;
 
 import m2tk.assistant.Global;
-import m2tk.assistant.analyzer.domain.SIEvent;
-import m2tk.assistant.analyzer.domain.SIService;
-import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.PCRStatEntity;
-import m2tk.assistant.dbi.entity.SIEventEntity;
-import m2tk.assistant.dbi.entity.SIServiceEntity;
 import m2tk.assistant.ui.component.PCRStatsPanel;
-import m2tk.assistant.ui.component.ServiceEventGuidePanel;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -35,20 +29,18 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class PCRStatsView extends JPanel
+public class PCRInfoView extends JPanel
 {
     private final FrameView frameView;
     private final ActionMap actionMap;
     private PCRStatsPanel pcrStatsPanel;
     private Timer timer;
 
-    public PCRStatsView(FrameView view)
+    public PCRInfoView(FrameView view)
     {
         frameView = view;
         actionMap = view.getContext().getActionMap(this);
@@ -60,7 +52,7 @@ public class PCRStatsView extends JPanel
         timer = new Timer(500, actionMap.get("queryPCRStats"));
 
         pcrStatsPanel = new PCRStatsPanel();
-        ComponentUtil.setTitledBorder(pcrStatsPanel, "PCR统计", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(pcrStatsPanel, "PCR", TitledBorder.LEFT);
 
         setLayout(new MigLayout("fill"));
         add(pcrStatsPanel, "center, grow");

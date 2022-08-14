@@ -57,7 +57,7 @@ public class TR290InfoView extends JPanel
         timer = new Timer(1000, actionMap.get("queryTR290Events"));
 
         tr290StatsPanel = new TR290StatsPanel();
-        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 290", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101 290", TitledBorder.LEFT);
 
         setLayout(new MigLayout("fill"));
         add(tr290StatsPanel, "center, grow");

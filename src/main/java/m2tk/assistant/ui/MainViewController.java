@@ -35,7 +35,7 @@ public class MainViewController
     private NetworkInfoView networkInfoView;
     private EPGInfoView epgInfoView;
     private TR290InfoView tr290InfoView;
-    private PCRStatsView pcrStatsView;
+    private PCRInfoView pcrStatsView;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
@@ -146,14 +146,14 @@ public class MainViewController
         networkInfoView = new NetworkInfoView(frameView);
         epgInfoView = new EPGInfoView(frameView);
         tr290InfoView = new TR290InfoView(frameView);
-        pcrStatsView = new PCRStatsView(frameView);
+        pcrStatsView = new PCRInfoView(frameView);
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.add("基本信息", streamInfoView);
         tabbedPane.add("网络信息", networkInfoView);
         tabbedPane.add("EPG", epgInfoView);
-        tabbedPane.add("TR 290", tr290InfoView);
+        tabbedPane.add("TR 101 290", tr290InfoView);
         tabbedPane.add("PCR", pcrStatsView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
