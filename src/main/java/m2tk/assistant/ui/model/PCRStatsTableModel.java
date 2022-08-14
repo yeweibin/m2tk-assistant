@@ -74,7 +74,7 @@ public class PCRStatsTableModel extends AbstractTableModel
             case 0:
                 return (stat.getRepetitionErrors() + stat.getDiscontinuityErrors() + stat.getAccuracyErrors()) > 0
                        ? SmallIcons.EXCLAMATION
-                       : null;
+                       : SmallIcons.CHECK;
             case 1:
                 return String.format("0x%04X", stat.getPid());
             case 2:
