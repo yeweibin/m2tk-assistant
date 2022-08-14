@@ -18,6 +18,7 @@ package m2tk.assistant;
 
 import javax.swing.*;
 
+@SuppressWarnings("ConstantConditions")
 public final class SmallIcons
 {
     private SmallIcons()
