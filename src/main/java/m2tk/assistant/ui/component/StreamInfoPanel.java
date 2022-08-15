@@ -67,9 +67,9 @@ public class StreamInfoPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, true); // 平均Kbps
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false); // 带宽占比
         ComponentUtil.configTableColumn(columnModel, 7, leadingRenderer, 400, true); // 类型描述
-        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 120, false); // 包数量
-        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 120, false); // 传输错误
-        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 120, false); // 连续计数错误
+        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 100, false); // 包数量
+        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 100, false); // 传输错误
+        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 100, false); // 连续计数错误
 
         setLayout(new BorderLayout());
         add(new JScrollPane(table), BorderLayout.CENTER);

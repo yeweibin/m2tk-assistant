@@ -31,7 +31,11 @@ public class PCRCheckEntityMapper implements RowMapper<PCRCheckEntity>
         PCRCheckEntity entity = new PCRCheckEntity();
         entity.setId(rs.getLong("id"));
         entity.setPid(rs.getInt("pid"));
-        entity.setPosition(rs.getLong("pct"));
+        entity.setPreviousValue(rs.getLong("prev_pcr"));
+        entity.setPreviousPosition(rs.getLong("prev_pct"));
+        entity.setCurrentValue(rs.getLong("curr_pcr"));
+        entity.setCurrentPosition(rs.getLong("curr_pct"));
+        entity.setBitrate(rs.getLong("bitrate"));
         entity.setIntervalNanos(rs.getLong("interval_ns"));
         entity.setDiffNanos(rs.getLong("diff_ns"));
         entity.setAccuracyNanos(rs.getLong("accuracy_ns"));

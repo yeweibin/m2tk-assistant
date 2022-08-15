@@ -311,9 +311,6 @@ public class TR290Tracer1 implements Tracer
         boolean discontinuityCheckFailed = adpt.getDiscontinuityIndicator() == 0 && deltaTpcr > 100_000_000;
         boolean accuracyCheckFailed = Math.abs(pcrAccuracy) > 500;
 
-        PCRs[pid] = currPcr;
-        PCRPcts[pid] = currPct;
-
         if (repetitionCheckFailed)
         {
             reportError(TR290ErrorTypes.PCR_REPETITION_ERROR,
@@ -335,11 +332,17 @@ public class TR290Tracer1 implements Tracer
                         payload.getStartPacketCounter(), payload.getStreamPID());
         }
 
-        databaseService.addPCRCheck(pid, currPct,
+        databaseService.addPCRCheck(pid,
+                                    PCRs[pid], PCRPcts[pid],
+                                    currPcr, currPct,
+                                    bitrate,
                                     deltaTb, deltaTpcr, pcrAccuracy,
                                     repetitionCheckFailed,
                                     discontinuityCheckFailed,
                                     accuracyCheckFailed);
+
+        PCRs[pid] = currPcr;
+        PCRPcts[pid] = currPct;
     }
 
     private long readPCR()

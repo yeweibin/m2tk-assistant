@@ -17,7 +17,11 @@
 package m2tk.assistant.ui.view;
 
 import m2tk.assistant.Global;
+import m2tk.assistant.dbi.DatabaseService;
+import m2tk.assistant.dbi.entity.PCRCheckEntity;
+import m2tk.assistant.dbi.entity.PCREntity;
 import m2tk.assistant.dbi.entity.PCRStatEntity;
+import m2tk.assistant.ui.component.PCRChartPanel;
 import m2tk.assistant.ui.component.PCRStatsPanel;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
@@ -33,12 +37,16 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@SuppressWarnings("unchecked")
 public class PCRInfoView extends JPanel
 {
     private final FrameView frameView;
     private final ActionMap actionMap;
     private PCRStatsPanel pcrStatsPanel;
+    private PCRChartPanel pcrChartPanel;
+    private JSplitPane splitPane;
     private Timer timer;
+    private PCRStatEntity selectedPCRStat;
 
     public PCRInfoView(FrameView view)
     {
@@ -52,10 +60,29 @@ public class PCRInfoView extends JPanel
         timer = new Timer(500, actionMap.get("queryPCRStats"));
 
         pcrStatsPanel = new PCRStatsPanel();
-        ComponentUtil.setTitledBorder(pcrStatsPanel, "PCR", TitledBorder.LEFT);
+        pcrStatsPanel.addPCRStatConsumer(stat -> {
+            if (stat == null)
+            {
+                pcrChartPanel.setVisible(false);
+            } else
+            {
+                selectedPCRStat = stat;
+                actionMap.get("queryPCRRecords").actionPerformed(null);
+            }
+        });
+
+        pcrChartPanel = new PCRChartPanel();
+
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.add(pcrStatsPanel, JSplitPane.TOP);
+        splitPane.add(pcrChartPanel, JSplitPane.BOTTOM);
+        ComponentUtil.setTitledBorder(splitPane, "PCR", TitledBorder.LEFT);
 
         setLayout(new MigLayout("fill"));
-        add(pcrStatsPanel, "center, grow");
+        add(splitPane, "center, grow");
+
+        pcrChartPanel.setVisible(false);
 
         addComponentListener(new ComponentAdapter()
         {
@@ -76,6 +103,7 @@ public class PCRInfoView extends JPanel
     public void reset()
     {
         pcrStatsPanel.reset();
+        pcrChartPanel.reset();
         timer.restart();
     }
 
@@ -89,6 +117,14 @@ public class PCRInfoView extends JPanel
         timer.stop();
     }
 
+
+    private void updatePCRChart(List<PCREntity> records, List<PCRCheckEntity> checks)
+    {
+        pcrChartPanel.setVisible(true);
+        pcrChartPanel.update(records, checks);
+        splitPane.setDividerLocation(0.25);
+    }
+
     @Action
     public void queryPCRStats()
     {
@@ -98,6 +134,27 @@ public class PCRInfoView extends JPanel
         AsyncQueryTask<List<PCRStatEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
                                                                         query,
                                                                         consumer);
+        task.execute();
+    }
+
+    @Action
+    public void queryPCRRecords()
+    {
+        PCRStatEntity target = selectedPCRStat;
+        if (target == null)
+            return;
+
+        Supplier<List<?>[]> query = () -> {
+            List<?>[] result = new List[2];
+            DatabaseService databaseService = Global.getDatabaseService();
+            result[0] = databaseService.getRecentPCRs(target.getPid(), 5000);
+            result[1] = databaseService.getRecentPCRChecks(target.getPid(), 5000);
+            return result;
+        };
+        Consumer<List<?>[]> consumer = result -> updatePCRChart((List<PCREntity>) result[0], (List<PCRCheckEntity>) result[1]);
+        AsyncQueryTask<List<?>[]> task = new AsyncQueryTask<>(frameView.getApplication(),
+                                                              query,
+                                                              consumer);
         task.execute();
     }
 }

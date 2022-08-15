@@ -56,7 +56,11 @@ public class PCRHandler
         handle.execute("CREATE TABLE `T_PCR_CHECK` (" +
                        "`id` BIGINT PRIMARY KEY," +
                        "`pid` INT NOT NULL," +
-                       "`pct` BIGINT DEFAULT 0," +
+                       "`prev_pcr` BIGINT DEFAULT 0," +
+                       "`prev_pct` BIGINT DEFAULT 0," +
+                       "`curr_pcr` BIGINT DEFAULT 0," +
+                       "`curr_pct` BIGINT DEFAULT 0," +
+                       "`bitrate` BIGINT DEFAULT 0," +
                        "`interval_ns` BIGINT DEFAULT 0," +
                        "`diff_ns` BIGINT DEFAULT 0," +
                        "`accuracy_ns` BIGINT DEFAULT 0," +
@@ -78,33 +82,46 @@ public class PCRHandler
                        idGenerator.next(), pid, position, value);
     }
 
-    public void addPCRCheck(Handle handle, int pid, long position,
+    public void addPCRCheck(Handle handle, int pid,
+                            long prevValue, long prevPosition,
+                            long currValue, long currPosition,
+                            long bitrate,
                             long interval, long diff, long accuracy,
                             boolean repetitionCheckFailed,
                             boolean discontinuityCheckFailed,
                             boolean accuracyCheckFailed)
     {
-        handle.execute("INSERT INTO T_PCR_CHECK(`id`, `pid`, `pct`, " +
+        handle.execute("INSERT INTO T_PCR_CHECK(`id`, `pid`, " +
+                       "`prev_pcr`, `prev_pct`, `curr_pcr`, `curr_pct`, `bitrate`, " +
                        "`interval_ns`, `diff_ns`, `accuracy_ns`, " +
                        "`repetition_check_failed`, `discontinuity_check_failed`, `accuracy_check_failed`) " +
-                       "VALUES (?,?,?,?,?,?,?,?,?)",
-                       idGenerator.next(), pid, position,
+                       "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                       idGenerator.next(),
+                       pid,
+                       prevValue, prevPosition, currValue, currPosition, bitrate,
                        interval, diff, accuracy,
                        repetitionCheckFailed,
                        discontinuityCheckFailed,
                        accuracyCheckFailed);
     }
 
-    public List<PCREntity> listPCRs(Handle handle, int pid)
+    public List<PCREntity> listRecentPCRs(Handle handle, int pid, int limit)
     {
-        return handle.select("SELECT * FROM T_PCR WHERE `pid` = ? ORDER BY `pid`", pid)
+        return handle.select("SELECT * FROM " +
+                             "  (SELECT * FROM T_PCR WHERE `pid` = ? ORDER BY `id` DESC FETCH FIRST ? ROWS ONLY) " +
+                             "ORDER BY `id` ASC",
+                             pid, limit)
                      .map(pcrEntityMapper)
                      .list();
     }
 
-    public List<PCRCheckEntity> listPCRChecks(Handle handle, int pid)
+
+    public List<PCRCheckEntity> listRecentPCRChecks(Handle handle, int pid, int limit)
     {
-        return handle.select("SELECT * FROM T_PCR_CHECK WHERE `pid` = ? ORDER BY `pid`", pid)
+        return handle.select("SELECT * FROM " +
+                             "  (SELECT * FROM T_PCR_CHECK WHERE `pid` = ? ORDER BY `id` DESC FETCH FIRST ? ROWS ONLY) " +
+                             "ORDER BY `id` ASC",
+                             pid, limit)
                      .map(checkEntityMapper)
                      .list();
     }
@@ -115,6 +132,7 @@ public class PCRHandler
                              "  (SELECT `pid`, COUNT(`id`) AS `pcr_count` FROM T_PCR GROUP BY `pid`) A " +
                              "LEFT JOIN " +
                              "  (SELECT `pid`, " +
+                             "      AVG(`bitrate`) AS `avg_bitrate`, " +
                              "      MAX(`interval_ns`) AS `max_interval`, " +
                              "      MIN(`interval_ns`) AS `min_interval`, " +
                              "      AVG(`interval_ns`) AS `avg_interval`, " +

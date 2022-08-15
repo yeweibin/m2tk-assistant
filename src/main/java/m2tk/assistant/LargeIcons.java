@@ -32,7 +32,7 @@ public final class LargeIcons
     public static final Icon TRANSMIT = new ImageIcon(LargeIcons.class.getResource("/images/large/transmit.png"));
     public static final Icon TRANSMIT_BLUE = new ImageIcon(LargeIcons.class.getResource("/images/large/transmit_blue.png"));
     public static final Icon SATELLITE = new ImageIcon(LargeIcons.class.getResource("/images/large/satellite.png"));
-    public static final Icon EARTH_STATION = new ImageIcon(LargeIcons.class.getResource("/images/large/earth_station.png"));
+    public static final Icon SATELLITE_GROUND_STATION = new ImageIcon(LargeIcons.class.getResource("/images/large/satellite_ground_station.png"));
     public static final Icon PENCIL = new ImageIcon(LargeIcons.class.getResource("/images/large/pencil.png"));
     public static final Icon PLAY_SILVER = new ImageIcon(LargeIcons.class.getResource("/images/large/play_silver.png"));
     public static final Icon PAUSE_SILVER = new ImageIcon(LargeIcons.class.getResource("/images/large/pause_silver.png"));

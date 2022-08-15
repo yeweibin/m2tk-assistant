@@ -28,7 +28,7 @@ public class PCRStatsTableModel extends AbstractTableModel
 {
     private final List<PCRStatEntity> data = new ArrayList<>();
     private static final String[] COLUMNS = {
-            "", "PID", "PCR总数", "平均间隔", "最小间隔", "最大间隔", "间隔越界", "平均精度", "最小精度", "最大精度", "精度越界", ""
+            "", "PID", "PCR总数", "平均码率", "平均间隔", "最小间隔", "最大间隔", "间隔越界", "平均精度", "最小精度", "最大精度", "精度越界", ""
     };
 
     public void update(List<PCRStatEntity> stats)
@@ -39,6 +39,17 @@ public class PCRStatsTableModel extends AbstractTableModel
         data.clear();
         data.addAll(stats);
         fireTableDataChanged();
+    }
+
+    public PCRStatEntity getStatAtRow(int row)
+    {
+        try
+        {
+            return (row == -1) ? null : data.get(row);
+        } catch (Exception ex)
+        {
+            return null;
+        }
     }
 
     @Override
@@ -80,20 +91,22 @@ public class PCRStatsTableModel extends AbstractTableModel
             case 2:
                 return String.format("%,d", stat.getPcrCount());
             case 3:
-                return String.format("%,d ms", stat.getAvgInterval() / 1000000);
+                return String.format("%,d bps", stat.getAvgBitrate());
             case 4:
-                return String.format("%,d ms", stat.getMinInterval() / 1000000);
+                return String.format("%,d ms", stat.getAvgInterval() / 1000000);
             case 5:
-                return String.format("%,d ms", stat.getMaxInterval() / 1000000);
+                return String.format("%,d ms", stat.getMinInterval() / 1000000);
             case 6:
-                return String.format("%,d", stat.getRepetitionErrors());
+                return String.format("%,d ms", stat.getMaxInterval() / 1000000);
             case 7:
-                return String.format("%,d ns", stat.getAvgAccuracy());
+                return String.format("%,d", stat.getRepetitionErrors());
             case 8:
-                return String.format("%,d ns", stat.getMinAccuracy());
+                return String.format("%,d ns", stat.getAvgAccuracy());
             case 9:
-                return String.format("%,d ns", stat.getMaxAccuracy());
+                return String.format("%,d ns", stat.getMinAccuracy());
             case 10:
+                return String.format("%,d ns", stat.getMaxAccuracy());
+            case 11:
                 return String.format("%,d", stat.getAccuracyErrors());
             default:
                 return null;

@@ -23,6 +23,7 @@ public class PCRStatEntity
 {
     private int pid;
     private long pcrCount;
+    private long avgBitrate;
     private long avgInterval;
     private long minInterval;
     private long maxInterval;

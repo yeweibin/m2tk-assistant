@@ -32,7 +32,7 @@ public class PCREntityMapper implements RowMapper<PCREntity>
         entity.setId(rs.getLong("id"));
         entity.setPid(rs.getInt("pid"));
         entity.setPosition(rs.getLong("pct"));
-        entity.setValue(rs.getInt("value"));
+        entity.setValue(rs.getLong("value"));
         return entity;
     }
 }

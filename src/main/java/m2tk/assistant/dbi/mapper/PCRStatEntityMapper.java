@@ -31,6 +31,7 @@ public class PCRStatEntityMapper implements RowMapper<PCRStatEntity>
         PCRStatEntity entity = new PCRStatEntity();
         entity.setPid(rs.getInt("pid"));
         entity.setPcrCount(rs.getLong("pcr_count"));
+        entity.setAvgBitrate(rs.getLong("avg_bitrate"));
         entity.setAvgInterval(rs.getLong("avg_interval"));
         entity.setMinInterval(rs.getLong("min_interval"));
         entity.setMaxInterval(rs.getLong("max_interval"));

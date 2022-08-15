@@ -77,9 +77,9 @@ public class MainViewController
         menuOps.addSeparator();
         menuOps.add(createMenuItem("showStreamInfo", "查看基本信息", "查看基本信息"));
         menuOps.add(createMenuItem("showNetworkInfo", "查看网络信息", "查看网络信息"));
-        menuOps.add(createMenuItem("showEPGInfo", "查看EPG信息", "查看EPG信息"));
         menuOps.add(createMenuItem("showTR290Info", "查看报警信息", "查看报警信息"));
         menuOps.add(createMenuItem("showPCRInfo", "查看PCR信息", "查看PCR信息"));
+        menuOps.add(createMenuItem("showEPGInfo", "查看EPG信息", "查看EPG信息"));
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
@@ -152,9 +152,9 @@ public class MainViewController
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.add("基本信息", streamInfoView);
         tabbedPane.add("网络信息", networkInfoView);
-        tabbedPane.add("EPG", epgInfoView);
         tabbedPane.add("TR 101 290", tr290InfoView);
         tabbedPane.add("PCR", pcrStatsView);
+        tabbedPane.add("EPG", epgInfoView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
 

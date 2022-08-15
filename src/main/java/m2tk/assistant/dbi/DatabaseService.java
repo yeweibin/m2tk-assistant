@@ -335,11 +335,6 @@ public class DatabaseService
         dbi.useHandle(handle -> tr290Handler.addTR290Event(handle, timestamp, type, description, position, pid));
     }
 
-    public void setStreamMarked(int pid, boolean marked)
-    {
-        dbi.useHandle(handle -> streamHandler.setStreamMarked(handle, pid, marked));
-    }
-
     public List<TR290EventEntity> listTR290Events(long start, int count)
     {
         return dbi.withHandle(handle -> tr290Handler.listEvents(handle, start, count));
@@ -360,12 +355,20 @@ public class DatabaseService
         dbi.useHandle(handle -> pcrHandler.addPCR(handle, pid, position, value));
     }
 
-    public void addPCRCheck(int pid, long position, long interval, long diff, long accuracy,
+    public void addPCRCheck(int pid,
+                            long prevValue, long prevPosition,
+                            long currValue, long currPosition,
+                            long bitrate,
+                            long interval, long diff, long accuracy,
                             boolean repetitionCheckFailed,
                             boolean discontinuityCheckFailed,
                             boolean accuracyCheckFailed)
     {
-        dbi.useHandle(handle -> pcrHandler.addPCRCheck(handle, pid, position,
+        dbi.useHandle(handle -> pcrHandler.addPCRCheck(handle,
+                                                       pid,
+                                                       prevValue, prevPosition,
+                                                       currValue, currPosition,
+                                                       bitrate,
                                                        interval, diff, accuracy,
                                                        repetitionCheckFailed,
                                                        discontinuityCheckFailed,
@@ -375,5 +378,15 @@ public class DatabaseService
     public List<PCRStatEntity> listPCRStats()
     {
         return dbi.withHandle(pcrHandler::listPCRStats);
+    }
+
+    public List<PCREntity> getRecentPCRs(int pid, int limit)
+    {
+        return dbi.withHandle(handle -> pcrHandler.listRecentPCRs(handle, pid, limit));
+    }
+
+    public List<PCRCheckEntity> getRecentPCRChecks(int pid, int limit)
+    {
+        return dbi.withHandle(handle -> pcrHandler.listRecentPCRChecks(handle, pid, limit));
     }
 }

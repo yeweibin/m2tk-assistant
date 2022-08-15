@@ -23,7 +23,10 @@ public class PCRCheckEntity
 {
     private long id;
     private int pid;
-    private long position;
+    private long previousValue;
+    private long previousPosition;
+    private long currentValue;
+    private long currentPosition;
     private long bitrate;
     private long intervalNanos;
     private long diffNanos;
