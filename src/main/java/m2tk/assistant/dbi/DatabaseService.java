@@ -123,7 +123,7 @@ public class DatabaseService
 
     public void clearPrograms()
     {
-        dbi.useHandle(psiHandler::resetTable);
+        dbi.useHandle(psiHandler::clearProgramAndMappingStreams);
     }
 
     public ProgramEntity addProgram(int tsid, int number, int pmtpid)

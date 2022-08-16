@@ -92,6 +92,13 @@ public class PSIObjectHandler
         handle.execute("TRUNCATE TABLE T_CA_STREAM");
     }
 
+    public void clearProgramAndMappingStreams(Handle handle)
+    {
+        handle.execute("TRUNCATE TABLE T_PROGRAM");
+        handle.execute("TRUNCATE TABLE T_PROGRAM_STREAM_MAPPING");
+        handle.execute("DELETE FROM T_CA_STREAM WHERE `stream_type` = ?", CAStreamEntity.TYPE_ECM);
+    }
+
     public ProgramEntity addProgram(Handle handle, int tsid, int number, int pmtpid)
     {
         ProgramEntity entity = new ProgramEntity();
