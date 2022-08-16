@@ -66,6 +66,7 @@ public class TR290Tracer2 implements Tracer
     private final long[] streamOccurTimes;
     private final long[] streamOccurPositions;
 
+    private final int[] scrambledFlags;
     private final int[] streamMarks;
     private final int[] streamCounts;
     private long lastUnreferencedStreamCheckTime;
@@ -73,6 +74,8 @@ public class TR290Tracer2 implements Tracer
 
     private long lastPATOccurTime;
     private long lastPATOccurPosition;
+    private long lastCATOccurTime;
+    private long lastCATOccurPosition;
     private long lastNITActOccurTime;
     private long lastNITActOccurPosition;
     private long lastSDTActOccurTime;
@@ -134,6 +137,7 @@ public class TR290Tracer2 implements Tracer
         streamOccurTimes = new long[8192];
         streamOccurPositions = new long[8192];
 
+        scrambledFlags = new int[8192];
         streamMarks = new int[8192];
         streamCounts = new int[8192];
         lastUnreferencedStreamCheckTime = -1;
@@ -141,6 +145,8 @@ public class TR290Tracer2 implements Tracer
 
         lastPATOccurTime = -1;
         lastPATOccurPosition = -1;
+        lastCATOccurTime = -1;
+        lastCATOccurPosition = -1;
 
         lastNITActOccurTime = -1;
         lastNITActOccurPosition = -1;
@@ -194,9 +200,11 @@ public class TR290Tracer2 implements Tracer
         streamOccurPositions[pid] = payload.getStartPacketCounter();
 
         streamCounts[pid] += 1;
+        scrambledFlags[pid] = pkt.isScrambled() ? 1 : 0;
 
         calculateBitrate(payload);
         checkPATSectionOccurrenceInterval(payload);
+        checkCATSectionOccurrenceInterval(payload);
         checkPMTSectionOccurrenceInterval(payload);
         checkNITSectionOccurrenceInterval(payload);
         checkSDTSectionOccurrenceInterval(payload);
@@ -280,6 +288,38 @@ public class TR290Tracer2 implements Tracer
             // 重置位置以待下一轮检查
             lastPATOccurPosition = currOccurPosition;
             lastPATOccurTime = currOccurTime;
+        }
+    }
+
+    private void checkCATSectionOccurrenceInterval(TSDemuxPayload payload)
+    {
+        if (pktcnt != 100)
+            return;
+
+        long currOccurPosition = payload.getStartPacketCounter();
+        long currOccurTime = System.currentTimeMillis();
+
+        long interval = calculateInterval(lastCATOccurPosition, currOccurPosition,
+                                          lastCATOccurTime, currOccurTime);
+
+        if (interval > 500)
+        {
+            boolean hasScrambledStream = false;
+            for (int flag : scrambledFlags)
+            {
+                if (flag == 1)
+                {
+                    hasScrambledStream = true;
+                    break;
+                }
+            }
+            if (hasScrambledStream)
+                reportError(TR290ErrorTypes.CAT_ERROR, "存在加扰流，但超过0.5s未收到CAT分段",
+                            payload.getStartPacketCounter(), payload.getStreamPID());
+
+            // 重置位置以待下一轮检查
+            lastCATOccurPosition = currOccurPosition;
+            lastCATOccurTime = currOccurTime;
         }
     }
 
@@ -677,6 +717,10 @@ public class TR290Tracer2 implements Tracer
             return;
 
         cat.attach(payload.getEncoding());
+
+        lastCATOccurTime = System.currentTimeMillis();
+        lastCATOccurPosition = payload.getFinishPacketCounter();
+
         int secnum = cat.getSectionNumber();
         long checksum = cat.getChecksum();
 
