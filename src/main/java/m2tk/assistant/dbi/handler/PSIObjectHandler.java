@@ -129,6 +129,12 @@ public class PSIObjectHandler
                        entity.getId());
     }
 
+    public void updateProgramName(Handle handle, int programNumber, int transportStreamId, String programName)
+    {
+        handle.execute("UPDATE T_PROGRAM SET `prg_name` = ? WHERE `prg_num` = ? AND `ts_id` = ?",
+                       programName, programNumber, transportStreamId);
+    }
+
     public void addProgramStreamMapping(Handle handle, int program, int pid, int type, String category, String description)
     {
         handle.execute("INSERT INTO T_PROGRAM_STREAM_MAPPING (`id`, `prg_num`, `es_pid`, `es_type`, `es_cate`, `es_desc`) " +

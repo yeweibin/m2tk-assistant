@@ -283,6 +283,7 @@ public class SITracer implements Tracer
                         service.setServiceName(sd.getServiceName());
                         service.setServiceProvider(sd.getServiceProviderName());
                         databaseService.updateServiceDetails(service);
+                        databaseService.updateProgramName(service.getServiceId(), service.getTransportStreamId(), service.getServiceName());
                     });
         });
     }
@@ -382,11 +383,11 @@ public class SITracer implements Tracer
     private String translateDuration(int duration)
     {
         int seconds = DVB.decodeDuration(duration);
-        int hrs = seconds / 3600;
+        int hh = seconds / 3600;
         seconds = seconds % 3600;
-        int min = seconds / 60;
-        int sec = seconds % 60;
+        int mm = seconds / 60;
+        int ss = seconds % 60;
 
-        return String.format("%02d:%02d:%02d", hrs, min, sec);
+        return String.format("%02d:%02d:%02d", hh, mm, ss);
     }
 }

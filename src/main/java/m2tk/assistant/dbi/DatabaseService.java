@@ -136,6 +136,11 @@ public class DatabaseService
         dbi.useHandle(handle -> psiHandler.updateProgram(handle, program));
     }
 
+    public void updateProgramName(int number, int tsid, String name)
+    {
+        dbi.useHandle(handle -> psiHandler.updateProgramName(handle, number, tsid, name));
+    }
+
     public void addProgramStreamMapping(int program, int pid, int type, String category, String description)
     {
         dbi.useHandle(handle -> psiHandler.addProgramStreamMapping(handle, program, pid, type, category, description));
