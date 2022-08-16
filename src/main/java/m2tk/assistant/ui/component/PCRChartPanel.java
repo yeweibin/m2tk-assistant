@@ -23,16 +23,17 @@ import net.miginfocom.swing.MigLayout;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.block.BlockBorder;
+import org.jfree.chart.axis.SymbolAxis;
 import org.jfree.chart.labels.ItemLabelAnchor;
 import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardXYItemLabelGenerator;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.chart.renderer.xy.XYDotRenderer;
-import org.jfree.chart.title.TextTitle;
+import org.jfree.chart.ui.Layer;
 import org.jfree.chart.ui.TextAnchor;
 import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
@@ -73,14 +74,16 @@ public class PCRChartPanel extends JPanel
     {
         XYDotRenderer renderer = new XYDotRenderer();
         renderer.setSeriesPaint(0, Color.BLUE);
-        renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+        renderer.setSeriesStroke(0, new BasicStroke(4.0f));
 
         NumberAxis xAxis = new NumberAxis("PCR位置");
         xAxis.setAutoRange(true);
         xAxis.setAutoRangeIncludesZero(false);
+        xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         NumberAxis yAxis = new NumberAxis("PCR时间点");
         yAxis.setAutoRange(true);
         yAxis.setAutoRangeIncludesZero(false);
+        yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         XYPlot plot = new XYPlot(pcrValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
@@ -88,25 +91,22 @@ public class PCRChartPanel extends JPanel
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
-        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
-        chart.setAntiAlias(true);
-        chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("PCR轨迹", new Font(Font.DIALOG, Font.BOLD, 18)));
-
-        return chart;
+        return new JFreeChart("PCR轨迹", new Font(Font.DIALOG, Font.BOLD, 18), plot, false);
     }
 
     private JFreeChart createBitrateChart()
     {
         XYDotRenderer renderer = new XYDotRenderer();
         renderer.setSeriesPaint(0, Color.RED);
-        renderer.setSeriesStroke(0, new BasicStroke(2.0f));
+        renderer.setSeriesStroke(0, new BasicStroke(4.0f));
 
         NumberAxis xAxis = new NumberAxis("PCR位置");
         xAxis.setAutoRange(true);
         xAxis.setAutoRangeIncludesZero(false);
+        xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         NumberAxis yAxis = new NumberAxis("瞬时码率（Mb/s）");
-        yAxis.setRange(new Range(0, 40));
+        yAxis.setRange(new Range(-5, 40));
+        yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         XYPlot plot = new XYPlot(bitrateValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
@@ -114,20 +114,13 @@ public class PCRChartPanel extends JPanel
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
-        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
-        chart.setAntiAlias(true);
-        chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("码率轨迹", new Font(Font.DIALOG, Font.BOLD, 18)));
-
-        return chart;
+        return new JFreeChart("码率轨迹", new Font(Font.DIALOG, Font.BOLD, 18), plot, false);
     }
 
     private JFreeChart createPCRAccuracyChart()
     {
         XYBarRenderer renderer = new XYBarRenderer();
         renderer.setSeriesPaint(0, Color.MAGENTA);
-        renderer.setDrawBarOutline(true);
-        renderer.setDefaultOutlinePaint(Color.BLACK);
         renderer.setBarPainter(new StandardXYBarPainter());
         renderer.setShadowVisible(false);
         renderer.setDefaultItemLabelsVisible(true);
@@ -135,33 +128,33 @@ public class PCRChartPanel extends JPanel
         renderer.setDefaultItemLabelGenerator(new StandardXYItemLabelGenerator());
         renderer.setDefaultPositiveItemLabelPosition(new ItemLabelPosition(ItemLabelAnchor.INSIDE12, TextAnchor.TOP_CENTER));
 
-        NumberAxis xAxis = new NumberAxis("PCR精度区间");
-        xAxis.setRange(Range.shift(new Range(0, 11), -5.5));
-        xAxis.setAutoTickUnitSelection(false);
+        SymbolAxis xAxis = new SymbolAxis("PCR精度区间（单位：ns）",
+                                          new String[] {"-∞", "-800", "-500", "-300", "-150", "-50",
+                                                        "50", "150", "300", "500", "800", "+∞"});
+        xAxis.setRange(new Range(0, 11));
+        xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+        xAxis.setGridBandsVisible(false);
         NumberAxis yAxis = new NumberAxis("PCR点数");
         yAxis.setAutoRange(true);
         yAxis.setAutoRangeStickyZero(true);
         yAxis.setAutoRangeIncludesZero(true);
+        yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         XYPlot plot = new XYPlot(accuracyValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
         plot.setBackgroundPaint(Color.WHITE);
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
+        plot.addDomainMarker(0, new ValueMarker(2, Color.ORANGE, new BasicStroke(2.0f)), Layer.FOREGROUND);
+        plot.addDomainMarker(0, new ValueMarker(9, Color.ORANGE, new BasicStroke(2.0f)), Layer.FOREGROUND);
 
-        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
-        chart.setAntiAlias(true);
-        chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("PCR精度统计", new Font(Font.DIALOG, Font.BOLD, 18)));
-        return chart;
+        return new JFreeChart("PCR精度统计", new Font(Font.DIALOG, Font.BOLD, 18), plot, false);
     }
 
     private JFreeChart createPCRIntervalChart()
     {
         XYBarRenderer renderer = new XYBarRenderer();
         renderer.setSeriesPaint(0, Color.MAGENTA);
-        renderer.setDrawBarOutline(true);
-        renderer.setDefaultOutlinePaint(Color.BLACK);
         renderer.setBarPainter(new StandardXYBarPainter());
         renderer.setShadowVisible(false);
         renderer.setDefaultItemLabelsVisible(true);
@@ -169,25 +162,26 @@ public class PCRChartPanel extends JPanel
         renderer.setDefaultItemLabelGenerator(new StandardXYItemLabelGenerator());
         renderer.setDefaultPositiveItemLabelPosition(new ItemLabelPosition(ItemLabelAnchor.INSIDE12, TextAnchor.TOP_CENTER));
 
-        NumberAxis xAxis = new NumberAxis("PCR间隔区间");
+        SymbolAxis xAxis = new SymbolAxis("PCR间隔区间（单位：ms）",
+                                          new String[]{"0", "8", "16", "24", "32", "40", "48", "56", "64", "72", "80", "+∞"});
         xAxis.setRange(0, 11);
-        xAxis.setAutoTickUnitSelection(false);
+        xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
+        xAxis.setGridBandsVisible(false);
         NumberAxis yAxis = new NumberAxis("PCR点数");
         yAxis.setAutoRange(true);
         yAxis.setAutoRangeStickyZero(true);
         yAxis.setAutoRangeIncludesZero(true);
+        yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         XYPlot plot = new XYPlot(intervalValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
         plot.setBackgroundPaint(Color.WHITE);
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
+        plot.setDomainCrosshairVisible(false);
+        plot.addDomainMarker(0, new ValueMarker(5, Color.ORANGE, new BasicStroke(2.0f)), Layer.FOREGROUND);
 
-        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
-        chart.setAntiAlias(true);
-        chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("PCR间隔统计", new Font(Font.DIALOG, Font.BOLD, 18)));
-        return chart;
+        return new JFreeChart("PCR间隔统计", new Font(Font.DIALOG, Font.BOLD, 18), plot, false);
     }
 
     public void update(List<PCREntity> records, List<PCRCheckEntity> checks)
@@ -200,10 +194,10 @@ public class PCRChartPanel extends JPanel
         if (!records.isEmpty())
         {
             XYSeries series = new XYSeries("PCR");
-            for (PCREntity record : records)
+            for (PCREntity pcr : records)
             {
-                series.add(record.getPosition(),
-                           ProgramClockReference.toTimepoint(record.getValue()));
+                series.add(pcr.getPosition(),
+                           ProgramClockReference.toTimepoint(pcr.getValue()));
             }
             pcrValues.addSeries(series);
         }
@@ -230,7 +224,8 @@ public class PCRChartPanel extends JPanel
 
             for (int i = 0; i < 11; i++)
             {
-                series2.add(i - 5, accuracyGroups[i]);
+                // 加0.5是为了把柱图画在分格的中间。一个格是1.0个单位（0.5就是中间值）
+                series2.add(i + 0.5, accuracyGroups[i]);
                 series3.add(i + 0.5, intervalGroups[i]);
             }
 
