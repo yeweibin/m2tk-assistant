@@ -102,4 +102,7 @@ public final class SmallIcons
     public static final Icon DOT_WHITE = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_white.png"));
     public static final Icon DOT_LIGHT_GRAY = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_light_gray.png"));
     public static final Icon DOT_DARK_GRAY = new ImageIcon(SmallIcons.class.getResource("/images/small/dot_dark_gray.png"));
+
+    public static final Icon TERMINAL_OSX = new ImageIcon(SmallIcons.class.getResource("/images/small/terminal_osx.png"));
+    public static final Icon TERMINAL_WIN = new ImageIcon(SmallIcons.class.getResource("/images/small/terminal_win.png"));
 }

@@ -80,6 +80,10 @@ public class MainViewController
         menuOps.add(createMenuItem("showTR290Info", "查看报警信息", "查看报警信息"));
         menuOps.add(createMenuItem("showPCRInfo", "查看PCR信息", "查看PCR信息"));
         menuOps.add(createMenuItem("showEPGInfo", "查看EPG信息", "查看EPG信息"));
+        menuOps.addSeparator();
+        menuOps.add(createMenuItem("openTerminal", "打开命令行", "打开命令行程序"));
+        menuOps.add(createMenuItem("openCalc", "打开计算器", "打开计算器程序"));
+        menuOps.add(createMenuItem("openNotepad", "打开记事本", "打开记事本程序"));
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
@@ -122,6 +126,9 @@ public class MainViewController
         JButton btnStartRefreshing = createButton("startRefreshing", "继续刷新");
         btnStartRefreshing.setIcon(resourceMap.getIcon("toolbar.startRefreshing.icon"));
         btnStartRefreshing.setText(null);
+        JButton btnOpenTerminal = createButton("openTerminal", "打开命令行");
+        btnOpenTerminal.setIcon(resourceMap.getIcon("toolbar.openTerminal.icon"));
+        btnOpenTerminal.setText(null);
         JButton btnOpenCalc = createButton("openCalc", "打开计算器");
         btnOpenCalc.setIcon(resourceMap.getIcon("toolbar.openCalc.icon"));
         btnOpenCalc.setText(null);
@@ -137,6 +144,7 @@ public class MainViewController
         toolBar.add(btnPauseRefreshing);
         toolBar.add(btnStartRefreshing);
         toolBar.addSeparator();
+        toolBar.add(btnOpenTerminal);
         toolBar.add(btnOpenCalc);
         toolBar.add(btnOpenNotepad);
 
@@ -459,6 +467,20 @@ public class MainViewController
         pcrStatsView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
+    }
+
+    @Action
+    public void openTerminal()
+    {
+        try
+        {
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("cmd", "/c", "start", "cmd.exe")
+                   .start();
+        } catch (IOException ex)
+        {
+            logger.warn("打开命令行程序异常：{}", ex.getMessage());
+        }
     }
 
     @Action

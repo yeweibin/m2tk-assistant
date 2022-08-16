@@ -52,4 +52,7 @@ public final class LargeIcons
     public static final Icon DOT_WHITE = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_white.png"));
     public static final Icon DOT_LIGHT_GRAY = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_light_gray.png"));
     public static final Icon DOT_DARK_GRAY = new ImageIcon(LargeIcons.class.getResource("/images/large/dot_dark_gray.png"));
+
+    public static final Icon TERMINAL_OSX = new ImageIcon(LargeIcons.class.getResource("/images/large/terminal_osx.png"));
+    public static final Icon TERMINAL_WIN = new ImageIcon(LargeIcons.class.getResource("/images/large/terminal_win.png"));
 }
