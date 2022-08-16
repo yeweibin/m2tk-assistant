@@ -122,6 +122,12 @@ public class MainViewController
         JButton btnStartRefreshing = createButton("startRefreshing", "继续刷新");
         btnStartRefreshing.setIcon(resourceMap.getIcon("toolbar.startRefreshing.icon"));
         btnStartRefreshing.setText(null);
+        JButton btnOpenCalc = createButton("openCalc", "打开计算器");
+        btnOpenCalc.setIcon(resourceMap.getIcon("toolbar.openCalc.icon"));
+        btnOpenCalc.setText(null);
+        JButton btnOpenNotepad = createButton("openNotepad", "打开记事本");
+        btnOpenNotepad.setIcon(resourceMap.getIcon("toolbar.openNotepad.icon"));
+        btnOpenNotepad.setText(null);
 
         toolBar.add(btnOpenFile);
         toolBar.add(btnOpenMulticast);
@@ -130,6 +136,9 @@ public class MainViewController
         toolBar.add(btnStopAnalysing);
         toolBar.add(btnPauseRefreshing);
         toolBar.add(btnStartRefreshing);
+        toolBar.addSeparator();
+        toolBar.add(btnOpenCalc);
+        toolBar.add(btnOpenNotepad);
 
         frameView.setToolBar(toolBar);
     }
@@ -450,6 +459,32 @@ public class MainViewController
         pcrStatsView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
+    }
+
+    @Action
+    public void openCalc()
+    {
+        try
+        {
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("calc.exe").start();
+        } catch (IOException ex)
+        {
+            logger.warn("打开计算器程序异常：{}", ex.getMessage());
+        }
+    }
+
+    @Action
+    public void openNotepad()
+    {
+        try
+        {
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command("notepad.exe").start();
+        } catch (IOException ex)
+        {
+            logger.warn("打开记事本程序异常：{}", ex.getMessage());
+        }
     }
 
     private void onAnalyzerStopped(DemuxStatus status)

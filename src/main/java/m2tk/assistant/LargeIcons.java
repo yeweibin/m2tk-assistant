@@ -23,9 +23,11 @@ public final class LargeIcons
 {
     private LargeIcons() {}
 
+    public static final Icon CALCULATOR = new ImageIcon(LargeIcons.class.getResource("/images/large/calculator.png"));
     public static final Icon FOLDER_PAGE = new ImageIcon(LargeIcons.class.getResource("/images/large/folder_page.png"));
     public static final Icon FOLDER_OPEN = new ImageIcon(LargeIcons.class.getResource("/images/large/folder_open.png"));
     public static final Icon FOLDER_OPEN_MAGNIFIER = new ImageIcon(LargeIcons.class.getResource("/images/large/folder_open_magnifier.png"));
+    public static final Icon FOLDER_EXPLORE = new ImageIcon(LargeIcons.class.getResource("/images/large/folder_explore.png"));
     public static final Icon NET_MULTICAST = new ImageIcon(LargeIcons.class.getResource("/images/large/net_multicast.png"));
     public static final Icon NETWORK_FOLDER = new ImageIcon(LargeIcons.class.getResource("/images/large/network_folder.png"));
     public static final Icon STOP = new ImageIcon(LargeIcons.class.getResource("/images/large/stop.png"));

@@ -32,6 +32,7 @@ public final class SmallIcons
     public static final Icon TEXT = new ImageIcon(SmallIcons.class.getResource("/images/small/text.png"));
     public static final Icon BARCODE = new ImageIcon(SmallIcons.class.getResource("/images/small/barcode.png"));
     public static final Icon TIME = new ImageIcon(SmallIcons.class.getResource("/images/small/time.png"));
+    public static final Icon CALCULATOR = new ImageIcon(SmallIcons.class.getResource("/images/small/calculator.png"));
     public static final Icon CLOCK = new ImageIcon(SmallIcons.class.getResource("/images/small/clock.png"));
     public static final Icon CLOCK_PLAY = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_play.png"));
     public static final Icon CLOCK_RANGE = new ImageIcon(SmallIcons.class.getResource("/images/small/clock_range.png"));
@@ -52,6 +53,7 @@ public final class SmallIcons
     public static final Icon FOLDER_OPEN = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_open.png"));
     public static final Icon FOLDER_PAGE = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_page.png"));
     public static final Icon FOLDER_SEARCH = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_search.png"));
+    public static final Icon FOLDER_EXPLORE = new ImageIcon(SmallIcons.class.getResource("/images/small/folder_explore.png"));
     public static final Icon USER = new ImageIcon(SmallIcons.class.getResource("/images/small/user.png"));
     public static final Icon STOP = new ImageIcon(SmallIcons.class.getResource("/images/small/stop.png"));
     public static final Icon TABLE_CHART = new ImageIcon(SmallIcons.class.getResource("/images/small/table_chart.png"));

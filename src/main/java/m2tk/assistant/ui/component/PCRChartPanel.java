@@ -88,10 +88,10 @@ public class PCRChartPanel extends JPanel
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
-        JFreeChart chart = new JFreeChart("", new Font("SimHei", Font.PLAIN, 14), plot, true);
+        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
         chart.setAntiAlias(true);
         chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("PCR轨迹", new Font("SimSum", Font.BOLD, 18)));
+        chart.setTitle(new TextTitle("PCR轨迹", new Font(Font.DIALOG, Font.BOLD, 18)));
 
         return chart;
     }
@@ -114,10 +114,10 @@ public class PCRChartPanel extends JPanel
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
-        JFreeChart chart = new JFreeChart("", new Font("SimHei", Font.PLAIN, 14), plot, true);
+        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
         chart.setAntiAlias(true);
         chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("码率轨迹", new Font("SimSum", Font.BOLD, 18)));
+        chart.setTitle(new TextTitle("码率轨迹", new Font(Font.DIALOG, Font.BOLD, 18)));
 
         return chart;
     }
@@ -149,10 +149,10 @@ public class PCRChartPanel extends JPanel
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
-        JFreeChart chart = new JFreeChart("", new Font("SimHei", Font.PLAIN, 14), plot, true);
-        chart.setAntiAlias(false);
+        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
+        chart.setAntiAlias(true);
         chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("PCR精度统计", new Font("SimSum", Font.BOLD, 18)));
+        chart.setTitle(new TextTitle("PCR精度统计", new Font(Font.DIALOG, Font.BOLD, 18)));
         return chart;
     }
 
@@ -183,10 +183,10 @@ public class PCRChartPanel extends JPanel
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
-        JFreeChart chart = new JFreeChart("", new Font("SimHei", Font.PLAIN, 14), plot, true);
-        chart.setAntiAlias(false);
+        JFreeChart chart = new JFreeChart("", new Font(Font.SANS_SERIF, Font.PLAIN, 14), plot, true);
+        chart.setAntiAlias(true);
         chart.getLegend().setFrame(BlockBorder.NONE);
-        chart.setTitle(new TextTitle("PCR间隔统计", new Font("SimSum", Font.BOLD, 18)));
+        chart.setTitle(new TextTitle("PCR间隔统计", new Font(Font.DIALOG, Font.BOLD, 18)));
         return chart;
     }
 
