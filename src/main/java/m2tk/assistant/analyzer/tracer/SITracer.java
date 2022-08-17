@@ -283,7 +283,6 @@ public class SITracer implements Tracer
                         service.setServiceName(sd.getServiceName());
                         service.setServiceProvider(sd.getServiceProviderName());
                         databaseService.updateServiceDetails(service);
-                        databaseService.updateProgramName(service.getServiceId(), service.getTransportStreamId(), service.getServiceName());
                     });
         });
     }

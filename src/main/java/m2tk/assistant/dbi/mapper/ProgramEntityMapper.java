@@ -14,7 +14,6 @@ public class ProgramEntityMapper implements RowMapper<ProgramEntity>
     {
         ProgramEntity entity = new ProgramEntity();
         entity.setId(rs.getLong("id"));
-        entity.setProgramName(rs.getString("prg_name"));
         entity.setProgramNumber(rs.getInt("prg_num"));
         entity.setTransportStreamId(rs.getInt("ts_id"));
         entity.setPmtPid(rs.getInt("pmt_pid"));

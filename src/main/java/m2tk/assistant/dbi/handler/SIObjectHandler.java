@@ -369,14 +369,10 @@ public class SIObjectHandler
                      .list();
     }
 
-    public List<SIServiceEntity> listServices(Handle handle,
-                                              int transportStreamId,
-                                              int originalNetworkId)
+    public List<SIServiceEntity> listServices(Handle handle, int transportStreamId)
     {
-        return handle.select("SELECT * FROM T_SI_SERVICE " +
-                             "WHERE `ts_id` = ? AND `onet_id` = ? " +
-                             "ORDER BY `srv_id`",
-                             transportStreamId, originalNetworkId)
+        return handle.select("SELECT * FROM T_SI_SERVICE WHERE `ts_id` = ? ORDER BY `srv_id`",
+                             transportStreamId)
                      .map(serviceEntityMapper)
                      .list();
     }

@@ -27,7 +27,8 @@ public class MPEGProgram
     private final List<CASystemStream> ecmList;
     private final List<ElementaryStream> elementList;
 
-    public MPEGProgram(ProgramEntity program,
+    public MPEGProgram(String name,
+                       ProgramEntity program,
                        List<CAStreamEntity> ecms,
                        List<ProgramStreamMappingEntity> mappings,
                        Map<Integer, StreamEntity> streams)
@@ -37,7 +38,7 @@ public class MPEGProgram
         Objects.requireNonNull(mappings);
         Objects.requireNonNull(streams);
 
-        programName = program.getProgramName();
+        programName = name;
         programNumber = program.getProgramNumber();
         transportStreamId = program.getTransportStreamId();
         pmtPid = program.getPmtPid();

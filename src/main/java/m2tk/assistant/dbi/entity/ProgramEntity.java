@@ -12,7 +12,6 @@ public class ProgramEntity
     private int pcrPid;
     private int pmtVersion;
     private boolean freeAccess;
-    private String programName;
 
     public ProgramEntity()
     {

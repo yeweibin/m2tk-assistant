@@ -59,8 +59,7 @@ public class PSIObjectHandler
                        "`pmt_pid` INT NOT NULL," +
                        "`pcr_pid` INT DEFAULT 8191 NOT NULL," +
                        "`pmt_version` INT DEFAULT -1 NOT NULL," +
-                       "`free_access` BOOLEAN DEFAULT TRUE NOT NULL," +
-                       "`prg_name` VARCHAR(100)" +
+                       "`free_access` BOOLEAN DEFAULT TRUE NOT NULL" +
                        ")");
 
         handle.execute("DROP TABLE IF EXISTS `T_PROGRAM_STREAM_MAPPING`");
@@ -126,20 +125,12 @@ public class PSIObjectHandler
         handle.execute("UPDATE T_PROGRAM " +
                        "SET `pcr_pid` = ?, " +
                        "    `pmt_version` = ?, " +
-                       "    `free_access` = ?, " +
-                       "    `prg_name` = ? " +
+                       "    `free_access` = ? " +
                        "WHERE `id` = ?",
                        entity.getPcrPid(),
                        entity.getPmtVersion(),
                        entity.isFreeAccess(),
-                       entity.getProgramName(),
                        entity.getId());
-    }
-
-    public void updateProgramName(Handle handle, int programNumber, int transportStreamId, String programName)
-    {
-        handle.execute("UPDATE T_PROGRAM SET `prg_name` = ? WHERE `prg_num` = ? AND `ts_id` = ?",
-                       programName, programNumber, transportStreamId);
     }
 
     public void addProgramStreamMapping(Handle handle, int program, int pid, int type, String category, String description)

@@ -31,6 +31,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public class ProgramInfoPanel extends JPanel
 {
@@ -69,7 +70,7 @@ public class ProgramInfoPanel extends JPanel
 
     public void updateProgramList(List<MPEGProgram> programs)
     {
-        if (programs == null || programs.isEmpty() || isSame(currentPrograms, programs))
+        if (isSame(currentPrograms, programs))
             return;
 
         root.removeAllChildren();
@@ -99,7 +100,8 @@ public class ProgramInfoPanel extends JPanel
 
             if (p1.getTransportStreamId() != p2.getTransportStreamId() ||
                 p1.getProgramNumber() != p2.getProgramNumber() ||
-                p1.getPmtVersion() != p2.getPmtVersion())
+                p1.getPmtVersion() != p2.getPmtVersion() ||
+                !Objects.equals(p1.getProgramName(), p2.getProgramName()))
                 return false;
 
             if (p1.getEcmList().size() != p2.getEcmList().size() ||

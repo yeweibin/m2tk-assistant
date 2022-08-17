@@ -30,7 +30,7 @@ public class DatabaseService
     {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.h2.Driver");
-        config.setJdbcUrl("jdbc:h2:mem:m2tk");
+        config.setJdbcUrl("jdbc:h2:tcp://localhost/~/m2tk/db"); //config.setJdbcUrl("jdbc:h2:mem:m2tk");
 
         dbi = Jdbi.create(new HikariDataSource(config)).installPlugin(new H2DatabasePlugin());
 
@@ -134,11 +134,6 @@ public class DatabaseService
     public void updateProgram(ProgramEntity program)
     {
         dbi.useHandle(handle -> psiHandler.updateProgram(handle, program));
-    }
-
-    public void updateProgramName(int number, int tsid, String name)
-    {
-        dbi.useHandle(handle -> psiHandler.updateProgramName(handle, number, tsid, name));
     }
 
     public void addProgramStreamMapping(int program, int pid, int type, String category, String description)
@@ -318,6 +313,11 @@ public class DatabaseService
     public List<SIServiceEntity> listServices()
     {
         return dbi.withHandle(siHandler::listServices);
+    }
+
+    public List<SIServiceEntity> listServices(int tsid)
+    {
+        return dbi.withHandle(handle -> siHandler.listServices(handle, tsid));
     }
 
     public List<SIMultiplexServiceCountView> listMultiplexServiceCounts()
