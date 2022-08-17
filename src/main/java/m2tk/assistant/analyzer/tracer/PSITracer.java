@@ -17,6 +17,7 @@
 package m2tk.assistant.analyzer.tracer;
 
 import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.presets.CASystems;
 import m2tk.assistant.analyzer.presets.StreamTypes;
 import m2tk.assistant.dbi.DatabaseService;
@@ -49,6 +50,8 @@ public class PSITracer implements Tracer
     private final Map<Integer, Integer> pmtVersions;
     private final Map<Integer, ProgramContext> programs;
 
+    private final int[] emmCounts;
+
     private int[] patSections;
     private int[] catSections;
     private int tsid;
@@ -71,6 +74,8 @@ public class PSITracer implements Tracer
         element = new ProgramElementDecoder();
         programs = new HashMap<>();
         pmtVersions = new HashMap<>();
+
+        emmCounts = new int[8192];
         patSections = new int[0];
         catSections = new int[0];
         tsid = -1;
@@ -137,6 +142,10 @@ public class PSITracer implements Tracer
 
         patSections[secnum] = version;
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
+        databaseService.addSection("PAT",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
     }
 
     private void processCAT(TSDemuxPayload payload)
@@ -157,8 +166,10 @@ public class PSITracer implements Tracer
         {
             catSections = new int[total];
             Arrays.fill(catSections, -1);
+            Arrays.fill(emmCounts, 0);
         }
 
+        TSDemux demux = payload.getChannel().getHost();
         descloop.attach(cat.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, descriptor -> {
             cad.attach(descriptor);
@@ -171,10 +182,16 @@ public class PSITracer implements Tracer
                 description += "，提供商：" + vendor;
             databaseService.updateStreamUsage(emm, StreamTypes.CATEGORY_DATA, description);
             databaseService.addEMMStream(casid, emm, privateData);
+
+            demux.registerSectionChannel(emm, this::processEMM);
         });
 
         catSections[secnum] = version;
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
+        databaseService.addSection("CAT",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
     }
 
     private void processPMT(TSDemuxPayload payload)
@@ -261,5 +278,25 @@ public class PSITracer implements Tracer
         databaseService.updateStreamUsage(pmtpid,
                                           StreamTypes.CATEGORY_DATA,
                                           String.format("PMT（节目号：%d）", program.getProgramNumber()));
+        databaseService.addSection("PMT",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
+    }
+
+    private void processEMM(TSDemuxPayload payload)
+    {
+        if (payload.getType() != TSDemuxPayload.Type.SECTION)
+            return;
+
+        int pid = payload.getStreamPID();
+        if (emmCounts[pid] < Global.getPrivateSectionFilteringLimit())
+        {
+            databaseService.addSection("EMM",
+                                       payload.getStreamPID(),
+                                       payload.getFinishPacketCounter(),
+                                       payload.getEncoding().getBytes());
+            emmCounts[pid] += 1;
+        }
     }
 }

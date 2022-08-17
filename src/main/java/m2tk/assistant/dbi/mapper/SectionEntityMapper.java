@@ -14,11 +14,10 @@ public class SectionEntityMapper implements RowMapper<SectionEntity>
     {
         SectionEntity entity = new SectionEntity();
         entity.setId(rs.getLong("id"));
-        entity.setEncoding(rs.getBytes("encoding"));
-        entity.setStreamPid(rs.getInt("stream_pid"));
+        entity.setTag(rs.getString("tag"));
+        entity.setStream(rs.getInt("stream"));
         entity.setPosition(rs.getLong("position"));
-        entity.setTableId(rs.getInt("table_id"));
-        entity.setName(rs.getString("name"));
+        entity.setEncoding(rs.getBytes("encoding"));
         return entity;
     }
 }

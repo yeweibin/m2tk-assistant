@@ -1,8 +1,11 @@
 package m2tk.assistant.dbi.handler;
 
 import cn.hutool.core.lang.generator.Generator;
+import m2tk.assistant.dbi.entity.SectionEntity;
 import m2tk.assistant.dbi.mapper.SectionEntityMapper;
 import org.jdbi.v3.core.Handle;
+
+import java.util.List;
 
 public class SectionHandler
 {
@@ -21,15 +24,28 @@ public class SectionHandler
         handle.execute("CREATE TABLE `T_SECTION` (" +
                        "`id` BIGINT PRIMARY KEY," +
                        "`encoding` VARBINARY(4096)," +
-                       "`stream_pid` INT," +
+                       "`stream` INT," +
                        "`position` BIGINT," +
-                       "`table_id` INT," +
-                       "`name` VARCHAR(100)" +
+                       "`tag` VARCHAR(100)" +
                        ")");
     }
 
     public void resetTable(Handle handle)
     {
         handle.execute("TRUNCATE TABLE T_SECTION");
+    }
+
+    public void addSection(Handle handle, String tag, int pid, long position, byte[] encoding)
+    {
+        handle.execute("INSERT INTO T_SECTION (`id`, `tag`, `stream`, `position`, `encoding`) " +
+                       "VALUES (?,?,?,?,?)",
+                       idGenerator.next(), tag, pid, position, encoding);
+    }
+
+    public List<SectionEntity> getSections(Handle handle, String tagPrefix)
+    {
+        return handle.select("SELECT * FROM T_SECTION WHERE `tag` like CONCAT(?, '%')", tagPrefix)
+                     .map(sectionEntityMapper)
+                     .list();
     }
 }

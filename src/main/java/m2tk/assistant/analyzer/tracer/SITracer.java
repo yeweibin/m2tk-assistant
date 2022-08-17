@@ -142,6 +142,10 @@ public class SITracer implements Tracer
             return; // 已经处理过了。
 
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "NIT");
+        databaseService.addSection(tableId == 0x40 ? "NIT_Actual" : "NIT_Other",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
         SINetworkEntity network = databaseService.addNetwork(nit.getNetworkID(), tableId == 0x40);
@@ -200,6 +204,10 @@ public class SITracer implements Tracer
             return; // 已经处理过了。
 
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
+        databaseService.addSection("BAT",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
         SIBouquetEntity bouquet = databaseService.addBouquet(bouquetId);
@@ -261,6 +269,10 @@ public class SITracer implements Tracer
             return; // 已经处理过了。
 
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
+        databaseService.addSection(tableId == 0x42 ? "SDT_Actual" : "SDT_Other",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
         sdt.forEachServiceDescription(encoding -> {
@@ -321,6 +333,10 @@ public class SITracer implements Tracer
             return; // 已经处理过了。
 
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "EIT");
+        databaseService.addSection(getEITTag(tableId),
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
         eit.forEachEventDescription(encoding -> {
@@ -366,11 +382,27 @@ public class SITracer implements Tracer
         });
     }
 
+    private String getEITTag(int tableId)
+    {
+        if (tableId == 0x4E)
+            return "EIT_PF_Actual";
+        else if (tableId == 0x4F)
+            return "EIT_PF_Other";
+        else if (tableId >= 0x50 && tableId <= 0x5F)
+            return "EIT_Schedule_Actual";
+        else
+            return "EIT_Schedule_Other";
+    }
+
     private void processTDT(TSDemuxPayload payload)
     {
         tdt.attach(payload.getEncoding());
         databaseService.addDateTime(tdt.getUTCTime());
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
+        databaseService.addSection("TDT",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
     }
 
     private String translateStartTime(long startTime)

@@ -2,6 +2,7 @@ package m2tk.assistant.analyzer;
 
 import cn.hutool.core.io.IoUtil;
 import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.tracer.*;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.io.ProtocolManager;
@@ -56,13 +57,16 @@ public class StreamAnalyzer
                                              new PSITracer(databaseService),
                                              new SITracer(databaseService),
                                              new TR290Tracer1(databaseService),
-                                             new TR290Tracer2(databaseService)
+                                             new TR290Tracer2(databaseService),
+                                             new UserPrivateSectionTracer(databaseService,
+                                                                          Global.getUserPrivateSectionStreamList(),
+                                                                          Global.getPrivateSectionFilteringLimit())
                                             );
         tracers.forEach(tracer -> tracer.configureDemux(demuxer));
 
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxerStopped));
-//        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new TR290Printer(databaseService)));
+        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
 
         demuxer.attach(input);
 

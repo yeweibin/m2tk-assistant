@@ -25,6 +25,7 @@ public class DatabaseService
     private final SIObjectHandler siHandler;
     private final TR290EventHandler tr290Handler;
     private final PCRHandler pcrHandler;
+    private final SectionHandler sectionHandler;
 
     public DatabaseService()
     {
@@ -42,6 +43,7 @@ public class DatabaseService
         siHandler = new SIObjectHandler(generator);
         tr290Handler = new TR290EventHandler(generator);
         pcrHandler = new PCRHandler(generator);
+        sectionHandler = new SectionHandler(generator);
     }
 
     public void initDatabase()
@@ -53,6 +55,7 @@ public class DatabaseService
             siHandler.initTable(handle);
             tr290Handler.initTable(handle);
             pcrHandler.initTable(handle);
+            sectionHandler.initTable(handle);
         });
     }
 
@@ -65,6 +68,7 @@ public class DatabaseService
             siHandler.resetTable(handle);
             tr290Handler.resetTable(handle);
             pcrHandler.resetTable(handle);
+            sectionHandler.resetTable(handle);
         });
     }
 
@@ -393,5 +397,15 @@ public class DatabaseService
     public List<PCRCheckEntity> getRecentPCRChecks(int pid, int limit)
     {
         return dbi.withHandle(handle -> pcrHandler.listRecentPCRChecks(handle, pid, limit));
+    }
+
+    public void addSection(String tag, int pid, long position, byte[] encoding)
+    {
+        dbi.useHandle(handle -> sectionHandler.addSection(handle, tag, pid, position, encoding));
+    }
+
+    public List<SectionEntity> getSections(String tagPrefix)
+    {
+        return dbi.withHandle(handle -> sectionHandler.getSections(handle, tagPrefix));
     }
 }
