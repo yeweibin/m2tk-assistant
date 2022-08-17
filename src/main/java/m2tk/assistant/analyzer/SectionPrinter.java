@@ -49,7 +49,7 @@ public class SectionPrinter implements Consumer<DemuxStatus>
     {
         Map<Integer, List<SectionEntity>> sectionGroups = databaseService.getSections(name)
                                                                          .stream()
-                                                                         .collect(groupingBy(s -> s.getStream(),
+                                                                         .collect(groupingBy(SectionEntity::getStream,
                                                                                              toList()));
         List<Integer> pids = new ArrayList<>(sectionGroups.keySet());
         pids.sort(Integer::compare);
