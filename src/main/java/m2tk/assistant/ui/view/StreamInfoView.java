@@ -39,9 +39,11 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.util.stream.Collectors.toMap;
+
 public class StreamInfoView extends JPanel
 {
-    private final FrameView frameView;
+    private final transient FrameView frameView;
     private final ActionMap actionMap;
     private SourceInfoPanel sourceInfoPanel;
     private ProgramInfoPanel programInfoPanel;
@@ -121,16 +123,31 @@ public class StreamInfoView extends JPanel
             Map<Integer, StreamEntity> streamRegistry = databaseService.getStreamRegistry();
 
             List<MPEGProgram> programs = new ArrayList<>();
+            Map<String, SIServiceEntity> serviceMap = databaseService.listServices()
+                                                                     .stream()
+                                                                     .collect(toMap(service -> String.format("%d.%d",
+                                                                                                             service.getTransportStreamId(),
+                                                                                                             service.getServiceId()),
+                                                                                    service -> service));
             Map<ProgramEntity, List<ProgramStreamMappingEntity>> mappings = databaseService.getProgramMappings();
             Map<Integer, List<CAStreamEntity>> ecmGroups = databaseService.listECMGroups();
-            for (ProgramEntity program : mappings.keySet())
+            for (Map.Entry<ProgramEntity, List<ProgramStreamMappingEntity>> mapping : mappings.entrySet())
             {
-                programs.add(new MPEGProgram(program,
+                ProgramEntity program = mapping.getKey();
+                List<ProgramStreamMappingEntity> mappedStreams = mapping.getValue();
+                String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
+                String programName = Optional.ofNullable(serviceMap.get(key))
+                                             .map(SIServiceEntity::getServiceName)
+                                             .orElse(null);
+
+                programs.add(new MPEGProgram(programName,
+                                             program,
                                              ecmGroups.getOrDefault(program.getProgramNumber(),
                                                                     Collections.emptyList()),
-                                             mappings.get(program),
+                                             mappedStreams,
                                              streamRegistry));
             }
+
             programs.sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
             return programs;
         };
