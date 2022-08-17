@@ -30,7 +30,7 @@ public class DatabaseService
     {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.h2.Driver");
-        config.setJdbcUrl("jdbc:h2:tcp://localhost/~/m2tk/db"); //config.setJdbcUrl("jdbc:h2:mem:m2tk");
+        config.setJdbcUrl("jdbc:h2:mem:m2tk");
 
         dbi = Jdbi.create(new HikariDataSource(config)).installPlugin(new H2DatabasePlugin());
 
