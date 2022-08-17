@@ -75,15 +75,17 @@ public class MainViewController
         menuOps.add(createMenuItem("pauseRefreshing", "暂停刷新", "暂停刷新"));
         menuOps.add(createMenuItem("startRefreshing", "继续刷新", "继续刷新"));
         menuOps.addSeparator();
-        menuOps.add(createMenuItem("showStreamInfo", "查看基本信息", "查看基本信息"));
-        menuOps.add(createMenuItem("showNetworkInfo", "查看网络信息", "查看网络信息"));
-        menuOps.add(createMenuItem("showTR290Info", "查看报警信息", "查看报警信息"));
-        menuOps.add(createMenuItem("showPCRInfo", "查看PCR信息", "查看PCR信息"));
-        menuOps.add(createMenuItem("showEPGInfo", "查看EPG信息", "查看EPG信息"));
-        menuOps.addSeparator();
         menuOps.add(createMenuItem("openTerminal", "打开命令行", "打开命令行程序"));
         menuOps.add(createMenuItem("openCalc", "打开计算器", "打开计算器程序"));
         menuOps.add(createMenuItem("openNotepad", "打开记事本", "打开记事本程序"));
+
+        JMenu menuViews = new JMenu("查看(V)");
+        menuViews.setMnemonic(KeyEvent.VK_V);
+        menuViews.add(createMenuItem("showStreamInfo", "基本信息", "查看基本信息"));
+        menuViews.add(createMenuItem("showNetworkInfo", "网络信息", "查看网络信息"));
+        menuViews.add(createMenuItem("showTR290Info", "报警信息", "查看报警信息"));
+        menuViews.add(createMenuItem("showPCRInfo", "PCR信息", "查看PCR信息"));
+        menuViews.add(createMenuItem("showEPGInfo", "EPG信息", "查看EPG信息"));
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
@@ -98,6 +100,7 @@ public class MainViewController
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(menuSys);
         menuBar.add(menuOps);
+        menuBar.add(menuViews);
         menuBar.add(menuLogs);
         menuBar.add(menuHelp);
         frameView.setMenuBar(menuBar);
