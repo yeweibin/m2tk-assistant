@@ -105,7 +105,7 @@ public class PCRChartPanel extends JPanel
         xAxis.setAutoRangeIncludesZero(false);
         xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         NumberAxis yAxis = new NumberAxis("瞬时码率（Mb/s）");
-        yAxis.setRange(new Range(-5, 40));
+        yAxis.setRange(new Range(0, 50));
         yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         XYPlot plot = new XYPlot(bitrateValues, xAxis, yAxis, renderer);
