@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 @SuppressWarnings("unchecked")
 public class PCRInfoView extends JPanel
 {
-    private final FrameView frameView;
+    private final transient FrameView frameView;
     private final ActionMap actionMap;
     private PCRStatsPanel pcrStatsPanel;
     private PCRChartPanel pcrChartPanel;

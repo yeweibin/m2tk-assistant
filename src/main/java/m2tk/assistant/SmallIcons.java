@@ -105,4 +105,11 @@ public final class SmallIcons
 
     public static final Icon TERMINAL_OSX = new ImageIcon(SmallIcons.class.getResource("/images/small/terminal_osx.png"));
     public static final Icon TERMINAL_WIN = new ImageIcon(SmallIcons.class.getResource("/images/small/terminal_win.png"));
+
+    public static final Icon RELOAD_REFRESH = new ImageIcon(SmallIcons.class.getResource("/images/small/reload_refresh.png"));
+
+    public static final Icon TABLE = new ImageIcon(SmallIcons.class.getResource("/images/small/table.png"));
+    public static final Icon TABLE_REFRESH = new ImageIcon(SmallIcons.class.getResource("/images/small/table_refresh.png"));
+
+    public static final Icon NODE_TREE = new ImageIcon(SmallIcons.class.getResource("/images/small/node_tree.png"));
 }

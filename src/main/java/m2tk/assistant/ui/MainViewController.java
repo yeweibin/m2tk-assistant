@@ -33,9 +33,10 @@ public class MainViewController
     private DefaultListModel<String> logsModel;
     private StreamInfoView streamInfoView;
     private NetworkInfoView networkInfoView;
-    private EPGInfoView epgInfoView;
     private TR290InfoView tr290InfoView;
     private PCRInfoView pcrStatsView;
+    private EPGInfoView epgInfoView;
+    private DatagramView datagramView;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
@@ -86,6 +87,7 @@ public class MainViewController
         menuViews.add(createMenuItem("showTR290Info", "报警信息", "查看报警信息"));
         menuViews.add(createMenuItem("showPCRInfo", "PCR信息", "查看PCR信息"));
         menuViews.add(createMenuItem("showEPGInfo", "EPG信息", "查看EPG信息"));
+        menuViews.add(createMenuItem("showPSISIInfo", "PSI/SI信息", "查看PSI/SI信息"));
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
@@ -164,9 +166,10 @@ public class MainViewController
 
         streamInfoView = new StreamInfoView(frameView);
         networkInfoView = new NetworkInfoView(frameView);
-        epgInfoView = new EPGInfoView(frameView);
         tr290InfoView = new TR290InfoView(frameView);
         pcrStatsView = new PCRInfoView(frameView);
+        epgInfoView = new EPGInfoView(frameView);
+        datagramView = new DatagramView(frameView);
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
@@ -175,6 +178,7 @@ public class MainViewController
         tabbedPane.add("TR 101 290", tr290InfoView);
         tabbedPane.add("PCR", pcrStatsView);
         tabbedPane.add("EPG", epgInfoView);
+        tabbedPane.add("PSI/SI", datagramView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
 
@@ -254,12 +258,6 @@ public class MainViewController
     }
 
     @Action
-    public void showEPGInfo()
-    {
-        tabbedPane.setSelectedComponent(epgInfoView);
-    }
-
-    @Action
     public void showTR290Info()
     {
         tabbedPane.setSelectedComponent(tr290InfoView);
@@ -269,6 +267,18 @@ public class MainViewController
     public void showPCRInfo()
     {
         tabbedPane.setSelectedComponent(pcrStatsView);
+    }
+
+    @Action
+    public void showEPGInfo()
+    {
+        tabbedPane.setSelectedComponent(epgInfoView);
+    }
+
+    @Action
+    public void showPSISIInfo()
+    {
+        tabbedPane.setSelectedComponent(datagramView);
     }
 
     @Action

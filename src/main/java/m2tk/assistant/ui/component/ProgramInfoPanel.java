@@ -203,76 +203,75 @@ public class ProgramInfoPanel extends JPanel
 
     class ProgramTreeCellRenderer extends DefaultTreeCellRenderer
     {
-
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
         {
-            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
-            if (value != root)
+            if (value == root)
+                return this;
+
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+            String text = (String) node.getUserObject();
+            if (text.startsWith("[P]"))
             {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-                String text = (String) node.getUserObject();
-                if (text.startsWith("[P]"))
-                {
-                    text = text.substring("[P]".length());
-                    setIcon(SmallIcons.FILM);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[P*]"))
-                {
-                    text = text.substring("[P*]".length());
-                    setIcon(SmallIcons.FILM_KEY);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[BW]"))
-                {
-                    text = text.substring("[BW]".length());
-                    setIcon(SmallIcons.CHART_BAR);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[PCR]"))
-                {
-                    text = text.substring("[PCR]".length());
-                    setIcon(SmallIcons.CLOCK);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[ECM]"))
-                {
-                    text = text.substring("[ECM]".length());
-                    setIcon(SmallIcons.KEY);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[V]"))
-                {
-                    text = text.substring("[V]".length());
-                    setIcon(SmallIcons.VIDEO);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[A]"))
-                {
-                    text = text.substring("[A]".length());
-                    setIcon(SmallIcons.SOUND);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[D]"))
-                {
-                    text = text.substring("[D]".length());
-                    setIcon(SmallIcons.TEXT);
-                    setText(text);
-                    setToolTipText(text);
-                } else if (text.startsWith("[U]"))
-                {
-                    text = text.substring("[U]".length());
-                    setIcon(SmallIcons.PAGE_WHITE);
-                    setText(text);
-                    setToolTipText(text);
-                } else
-                {
-                    setIcon(null);
-                    setText(null);
-                    setToolTipText(null);
-                }
+                text = text.substring("[P]".length());
+                setIcon(SmallIcons.FILM);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[P*]"))
+            {
+                text = text.substring("[P*]".length());
+                setIcon(SmallIcons.FILM_KEY);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[BW]"))
+            {
+                text = text.substring("[BW]".length());
+                setIcon(SmallIcons.CHART_BAR);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[PCR]"))
+            {
+                text = text.substring("[PCR]".length());
+                setIcon(SmallIcons.CLOCK);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[ECM]"))
+            {
+                text = text.substring("[ECM]".length());
+                setIcon(SmallIcons.KEY);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[V]"))
+            {
+                text = text.substring("[V]".length());
+                setIcon(SmallIcons.VIDEO);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[A]"))
+            {
+                text = text.substring("[A]".length());
+                setIcon(SmallIcons.SOUND);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[D]"))
+            {
+                text = text.substring("[D]".length());
+                setIcon(SmallIcons.TEXT);
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[U]"))
+            {
+                text = text.substring("[U]".length());
+                setIcon(SmallIcons.PAGE_WHITE);
+                setText(text);
+                setToolTipText(text);
+            } else
+            {
+                setIcon(null);
+                setText(null);
+                setToolTipText(null);
             }
 
             return this;

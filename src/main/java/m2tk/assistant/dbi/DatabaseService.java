@@ -404,8 +404,13 @@ public class DatabaseService
         dbi.useHandle(handle -> sectionHandler.addSection(handle, tag, pid, position, encoding));
     }
 
-    public List<SectionEntity> getSections(String tagPrefix)
+    public List<SectionEntity> getSectionGroups(String tagPrefix)
     {
         return dbi.withHandle(handle -> sectionHandler.getSections(handle, tagPrefix));
+    }
+
+    public Map<String, List<SectionEntity>> getSectionGroups()
+    {
+        return dbi.withHandle(sectionHandler::getSectionGroups);
     }
 }

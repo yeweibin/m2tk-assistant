@@ -47,7 +47,7 @@ public class SectionPrinter implements Consumer<DemuxStatus>
 
     private void printSections(String name)
     {
-        Map<Integer, List<SectionEntity>> sectionGroups = databaseService.getSections(name)
+        Map<Integer, List<SectionEntity>> sectionGroups = databaseService.getSectionGroups(name)
                                                                          .stream()
                                                                          .collect(groupingBy(SectionEntity::getStream,
                                                                                              toList()));

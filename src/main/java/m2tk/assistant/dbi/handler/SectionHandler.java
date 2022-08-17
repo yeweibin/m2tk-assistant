@@ -6,6 +6,10 @@ import m2tk.assistant.dbi.mapper.SectionEntityMapper;
 import org.jdbi.v3.core.Handle;
 
 import java.util.List;
+import java.util.Map;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 public class SectionHandler
 {
@@ -40,6 +44,13 @@ public class SectionHandler
         handle.execute("INSERT INTO T_SECTION (`id`, `tag`, `stream`, `position`, `encoding`) " +
                        "VALUES (?,?,?,?,?)",
                        idGenerator.next(), tag, pid, position, encoding);
+    }
+
+    public Map<String, List<SectionEntity>> getSectionGroups(Handle handle)
+    {
+        return handle.select("SELECT * FROM T_SECTION")
+                     .map(sectionEntityMapper)
+                     .collect(groupingBy(entity -> entity.getTag(), toList()));
     }
 
     public List<SectionEntity> getSections(Handle handle, String tagPrefix)
