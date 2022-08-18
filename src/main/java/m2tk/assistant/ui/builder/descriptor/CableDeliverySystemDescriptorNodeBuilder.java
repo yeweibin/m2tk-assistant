@@ -34,7 +34,7 @@ public class CableDeliverySystemDescriptorNodeBuilder implements TreeNodeBuilder
     {
         String bits = "0000";
         String binary = Integer.toBinaryString(value);
-        return bits.substring(binary.length()) + binary;
+        return '\'' + bits.substring(binary.length()) + binary + '\'';
     }
 
     private String modulationType(int code)
