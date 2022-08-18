@@ -96,6 +96,12 @@ public class PSITracer implements Tracer
             return;
 
         pat.attach(payload.getEncoding());
+        if (!pat.isChecksumCorrect())
+        {
+            log.warn("PAT校验错误。");
+            return;
+        }
+
         int version = pat.getVersionNumber();
         int secnum = pat.getSectionNumber();
         int total = pat.getLastSectionNumber() + 1;
@@ -156,6 +162,12 @@ public class PSITracer implements Tracer
             return;
 
         cat.attach(payload.getEncoding());
+        if (!cat.isChecksumCorrect())
+        {
+            log.warn("CAT校验错误。");
+            return;
+        }
+
         int version = cat.getVersionNumber();
         int secnum = cat.getSectionNumber();
         int total = cat.getLastSectionNumber() + 1;
@@ -202,6 +214,12 @@ public class PSITracer implements Tracer
             return;
 
         pmt.attach(payload.getEncoding());
+        if (!pat.isChecksumCorrect())
+        {
+            log.warn("PMT校验错误。");
+            return;
+        }
+
         int version = pmt.getVersionNumber();
         int pmtpid = payload.getStreamPID();
 

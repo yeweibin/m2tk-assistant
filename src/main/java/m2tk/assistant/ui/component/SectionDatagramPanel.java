@@ -16,22 +16,20 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.LargeIcons;
 import m2tk.assistant.SmallIcons;
 import m2tk.assistant.dbi.entity.SectionEntity;
+import m2tk.assistant.ui.builder.section.*;
 import m2tk.encoding.Encoding;
-import m2tk.mpeg2.decoder.section.CATSectionDecoder;
-import m2tk.mpeg2.decoder.section.PATSectionDecoder;
-import m2tk.mpeg2.decoder.section.PMTSectionDecoder;
-import m2tk.util.Bytes;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public class SectionDatagramPanel extends JPanel
 {
@@ -54,12 +52,9 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupEITScheduleOther;
     private DefaultMutableTreeNode groupTDT;
     private DefaultMutableTreeNode groupEMM;
-    private JTree tree;
-    private final List<SectionEntity> currentSections;
 
     public SectionDatagramPanel()
     {
-        currentSections = new ArrayList<>();
         initUI();
     }
 
@@ -67,7 +62,8 @@ public class SectionDatagramPanel extends JPanel
     {
         root = new DefaultMutableTreeNode("/");
         model = new DefaultTreeModel(root);
-        tree = new JTree(model);
+
+        JTree tree = new JTree(model);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new SectionDatagramTreeCellRenderer());
@@ -161,123 +157,195 @@ public class SectionDatagramPanel extends JPanel
 
     private void addPATSectionNodes(List<SectionEntity> sections)
     {
-        PATSectionDecoder pat = new PATSectionDecoder();
+        PATNodeBuilder builder = new PATNodeBuilder();
         sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupPAT.removeAllChildren();
         for (SectionEntity section : sections)
-        {
-            pat.attach(Encoding.wrap(section.getEncoding()));
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-            node.setUserObject(String.format("Section (transport_stream_id = %d, version_number = %d, section_number = %d)",
-                                             pat.getTransportStreamID(), pat.getVersionNumber(), pat.getSectionNumber()));
-
-            DefaultMutableTreeNode content = new DefaultMutableTreeNode();
-            content.setUserObject(Bytes.toHexString(section.getEncoding()));
-
-            node.add(content);
-            groupPAT.add(node);
-        }
+            groupPAT.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupPAT.setUserObject(String.format("PAT（%d）", groupPAT.getChildCount()));
     }
 
     private void addCATSectionNodes(List<SectionEntity> sections)
     {
-        CATSectionDecoder cat = new CATSectionDecoder();
+        CATNodeBuilder builder = new CATNodeBuilder();
         sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupCAT.removeAllChildren();
         for (SectionEntity section : sections)
-        {
-            cat.attach(Encoding.wrap(section.getEncoding()));
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-            node.setUserObject(String.format("Section (version_number = %d, section_number = %d)",
-                                             cat.getVersionNumber(), cat.getSectionNumber()));
-
-            DefaultMutableTreeNode content = new DefaultMutableTreeNode();
-            content.setUserObject(Bytes.toHexString(section.getEncoding()));
-
-            node.add(content);
-            groupCAT.add(node);
-        }
+            groupCAT.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupCAT.setUserObject(String.format("CAT（%d）", groupCAT.getChildCount()));
     }
 
     private void addPMTSectionNodes(List<SectionEntity> sections)
     {
-        PMTSectionDecoder pmt = new PMTSectionDecoder();
+        PMTNodeBuilder builder = new PMTNodeBuilder();
         sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupPMT.removeAllChildren();
         for (SectionEntity section : sections)
-        {
-            pmt.attach(Encoding.wrap(section.getEncoding()));
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-            node.setUserObject(String.format("Section (program_number = %d, version_number = %d)",
-                                             pmt.getProgramNumber(), pmt.getVersionNumber()));
-
-            DefaultMutableTreeNode content = new DefaultMutableTreeNode();
-            content.setUserObject(Bytes.toHexString(section.getEncoding()));
-
-            node.add(content);
-            groupPMT.add(node);
-        }
+            groupPMT.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupPMT.setUserObject(String.format("PMT（%d）", groupPMT.getChildCount()));
     }
 
     private void addBATSectionNodes(List<SectionEntity> sections)
     {
+        BATNodeBuilder builder = new BATNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupBAT.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupBAT.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupBAT.setUserObject(String.format("BAT（%d）", groupBAT.getChildCount()));
     }
 
     private void addNITActualSectionNodes(List<SectionEntity> sections)
     {
+        NITNodeBuilder builder = new NITNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupNITActual.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupNITActual.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupNITActual.setUserObject(String.format("NIT_Actual（%d）", groupNITActual.getChildCount()));
     }
 
     private void addNITOtherSectionNodes(List<SectionEntity> sections)
     {
+        NITNodeBuilder builder = new NITNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupNITOther.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupNITOther.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupNITOther.setUserObject(String.format("NIT_Other（%d）", groupNITOther.getChildCount()));
     }
 
     private void addSDTActualSectionNodes(List<SectionEntity> sections)
     {
+        SDTNodeBuilder builder = new SDTNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupSDTActual.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupSDTActual.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupSDTActual.setUserObject(String.format("SDT_Actual（%d）", groupSDTActual.getChildCount()));
     }
 
     private void addSDTOtherSectionNodes(List<SectionEntity> sections)
     {
+        SDTNodeBuilder builder = new SDTNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupSDTOther.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupSDTOther.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupSDTOther.setUserObject(String.format("SDT_Other（%d）", groupSDTOther.getChildCount()));
     }
 
     private void addEITPFActualSectionNodes(List<SectionEntity> sections)
     {
+        EITNodeBuilder builder = new EITNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEITPFActual.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupEITPFActual.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupEITPFActual.setUserObject(String.format("EIT_PF_Actual（%d）", groupEITPFActual.getChildCount()));
     }
 
     private void addEITPFOtherSectionNodes(List<SectionEntity> sections)
     {
+        EITNodeBuilder builder = new EITNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEITPFOther.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupEITPFOther.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupEITPFOther.setUserObject(String.format("EIT_PF_Other（%d）", groupEITPFOther.getChildCount()));
     }
 
     private void addEITScheduleActualSectionNodes(List<SectionEntity> sections)
     {
+        EITNodeBuilder builder = new EITNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEITScheduleActual.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupEITScheduleActual.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupEITScheduleActual.setUserObject(String.format("EIT_Schedule_Actual（%d）", groupEITScheduleActual.getChildCount()));
     }
 
     private void addEITScheduleOtherSectionNodes(List<SectionEntity> sections)
     {
+        EITNodeBuilder builder = new EITNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEITScheduleOther.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupEITScheduleOther.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupEITScheduleOther.setUserObject(String.format("EIT_Schedule_Other（%d）", groupEITScheduleOther.getChildCount()));
     }
 
     private void addTDTSectionNodes(List<SectionEntity> sections)
     {
+        TDTNodeBuilder builder = new TDTNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupTDT.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupTDT.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupTDT.setUserObject(String.format("TDT（%d）", groupTDT.getChildCount()));
     }
 
     private void addEMMSectionNodes(List<SectionEntity> sections)
     {
+        PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEMM.removeAllChildren();
+        for (SectionEntity section : sections)
+        {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) builder.build(Encoding.wrap(section.getEncoding()));
+            node.setUserObject(String.format("%s @ pid = 0x%X",
+                                             node.getUserObject(),
+                                             section.getStream()));
+            groupEMM.add(node);
+        }
+        groupEMM.setUserObject(String.format("EMM（%d）", groupEMM.getChildCount()));
     }
 
     class SectionDatagramTreeCellRenderer extends DefaultTreeCellRenderer
     {
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        public Component getTreeCellRendererComponent(JTree tree,
+                                                      Object value,
+                                                      boolean selected,
+                                                      boolean expanded,
+                                                      boolean leaf,
+                                                      int row,
+                                                      boolean hasFocus)
         {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
-            if (value == groupPSI || value == groupSI || value == groupPrivate)
+            if (value == root)
+                return this;
+
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+            setToolTipText((String) node.getUserObject());
+
+            if (node == groupPSI || node == groupSI || node == groupPrivate)
                 setIcon(SmallIcons.NODE_TREE);
-            else if (value == groupPAT || value == groupCAT || value == groupPMT ||
-                     value == groupBAT || value == groupNITActual || value == groupNITOther ||
-                     value == groupSDTActual || value == groupSDTOther ||
-                     value == groupEITPFActual || value == groupEITPFOther ||
-                     value == groupEITScheduleActual || value == groupEITScheduleOther ||
-                     value == groupTDT || value == groupEMM)
+            else if (node == groupPAT || node == groupCAT || node == groupPMT ||
+                     node == groupBAT || node == groupNITActual || node == groupNITOther ||
+                     node == groupSDTActual || node == groupSDTOther ||
+                     node == groupEITPFActual || node == groupEITPFOther ||
+                     node == groupEITScheduleActual || node == groupEITScheduleOther ||
+                     node == groupTDT || node == groupEMM)
                 setIcon(SmallIcons.TABLE);
             else
-                setIcon(SmallIcons.DOT_WHITE);
+                setIcon(SmallIcons.DOT_ORANGE);
+
             return this;
         }
     }

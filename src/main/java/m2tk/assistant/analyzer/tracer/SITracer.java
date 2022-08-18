@@ -33,7 +33,6 @@ import m2tk.mpeg2.decoder.SectionDecoder;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxPayload;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -83,7 +82,7 @@ public class SITracer implements Tracer
         sdd = new ServiceDescriptionDecoder();
         edd = new EventDescriptionDecoder();
         sld = new ServiceListDescriptorDecoder();
-        startTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        startTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         tableVersions = new HashMap<>();
     }
 
@@ -343,7 +342,7 @@ public class SITracer implements Tracer
             edd.attach(encoding);
             int eventId = edd.getEventID();
             String startTime = translateStartTime(edd.getStartTime());
-            String duration = translateDuration(edd.getDuration());
+            String duration = DVB.printTimeFields(edd.getDuration());
             String runningStatus = RunningStatus.name(edd.getRunningStatus());
             boolean isFreeCAMode = (edd.getFreeCAMode() == 0);
             SIEventEntity event;
@@ -405,20 +404,9 @@ public class SITracer implements Tracer
                                    payload.getEncoding().getBytes());
     }
 
-    private String translateStartTime(long startTime)
+    private String translateStartTime(long timepoint)
     {
-        LocalDateTime localDateTime = DVB.decodeTimepointIntoLocalDateTime(startTime);
-        return localDateTime.format(startTimeFormatter);
-    }
-
-    private String translateDuration(int duration)
-    {
-        int seconds = DVB.decodeDuration(duration);
-        int hh = seconds / 3600;
-        seconds = seconds % 3600;
-        int mm = seconds / 60;
-        int ss = seconds % 60;
-
-        return String.format("%02d:%02d:%02d", hh, mm, ss);
+        return DVB.decodeTimepointIntoLocalDateTime(timepoint)
+                  .format(startTimeFormatter);
     }
 }

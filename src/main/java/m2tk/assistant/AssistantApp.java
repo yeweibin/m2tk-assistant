@@ -1,6 +1,6 @@
 package m2tk.assistant;
 
-import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatLaf;
 import m2tk.assistant.ui.MainViewController;
 import org.jdesktop.application.FrameView;
@@ -34,7 +34,8 @@ public final class AssistantApp extends SingleFrameApplication
     {
         Font treeFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Tree.font").getSize());
         Font tableFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Table.font").getSize());
-        FlatIntelliJLaf.setup();
+//        FlatIntelliJLaf.setup();
+        FlatDarculaLaf.setup();
         UIManager.put("TitlePane.showIconBesideTitle", true);
         UIManager.put("TabbedPane.showTabSeparators", true);
         UIManager.put("Table.paintOutsideAlternateRows", true);

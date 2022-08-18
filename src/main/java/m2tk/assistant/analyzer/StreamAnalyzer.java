@@ -66,7 +66,7 @@ public class StreamAnalyzer
 
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxerStopped));
-        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
+//        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
 
         demuxer.attach(input);
 

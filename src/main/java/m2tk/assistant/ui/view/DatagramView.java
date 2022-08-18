@@ -21,10 +21,13 @@ import m2tk.assistant.SmallIcons;
 import m2tk.assistant.dbi.entity.SectionEntity;
 import m2tk.assistant.ui.component.SectionDatagramPanel;
 import m2tk.assistant.ui.task.AsyncQueryTask;
+import m2tk.assistant.ui.util.ComponentUtil;
+import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -32,9 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 
 public class DatagramView extends JPanel
 {
@@ -59,11 +59,13 @@ public class DatagramView extends JPanel
         btn.setText("刷新");
         btn.setToolTipText("刷新数据");
 
-        setLayout(new BorderLayout());
-        add(toolBar, BorderLayout.NORTH);
-        add(sectionDatagramPanel, BorderLayout.CENTER);
-        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6),
-                                                     BorderFactory.createTitledBorder("PSI/SI")));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(toolBar, BorderLayout.NORTH);
+        panel.add(sectionDatagramPanel, BorderLayout.CENTER);
+        ComponentUtil.setTitledBorder(panel, "PSI/SI", TitledBorder.LEFT);
+
+        setLayout(new MigLayout("fill"));
+        add(panel, "center, grow");
 
         addComponentListener(new ComponentAdapter()
         {

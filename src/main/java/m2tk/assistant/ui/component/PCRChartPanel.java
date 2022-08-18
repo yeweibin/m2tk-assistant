@@ -87,7 +87,7 @@ public class PCRChartPanel extends JPanel
 
         XYPlot plot = new XYPlot(pcrValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
-        plot.setBackgroundPaint(Color.WHITE);
+        plot.setBackgroundPaint(new Color(0xF6F7F9));
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
@@ -110,7 +110,7 @@ public class PCRChartPanel extends JPanel
 
         XYPlot plot = new XYPlot(bitrateValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
-        plot.setBackgroundPaint(Color.WHITE);
+        plot.setBackgroundPaint(new Color(0xF6F7F9));
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
 
@@ -142,7 +142,7 @@ public class PCRChartPanel extends JPanel
 
         XYPlot plot = new XYPlot(accuracyValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
-        plot.setBackgroundPaint(Color.WHITE);
+        plot.setBackgroundPaint(new Color(0xF6F7F9));
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
         plot.addDomainMarker(0, new ValueMarker(2, Color.ORANGE, new BasicStroke(2.0f)), Layer.FOREGROUND);
@@ -175,10 +175,9 @@ public class PCRChartPanel extends JPanel
 
         XYPlot plot = new XYPlot(intervalValues, xAxis, yAxis, renderer);
         plot.setOrientation(PlotOrientation.VERTICAL);
-        plot.setBackgroundPaint(Color.WHITE);
+        plot.setBackgroundPaint(new Color(0xF6F7F9));
         plot.setRangeGridlinesVisible(false);
         plot.setDomainGridlinesVisible(false);
-        plot.setDomainCrosshairVisible(false);
         plot.addDomainMarker(0, new ValueMarker(5, Color.ORANGE, new BasicStroke(2.0f)), Layer.FOREGROUND);
 
         return new JFreeChart("PCR间隔统计", new Font(Font.DIALOG, Font.BOLD, 18), plot, false);
