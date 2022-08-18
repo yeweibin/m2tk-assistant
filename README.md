@@ -4,8 +4,8 @@
 传输流分析工具，支持静态文件分析和UDP组播流实时分析。支持TR 101.290故障检测，PSI/SI语法分析，SI解析，EPG解析，PCR统计。
 
 #### 软件架构
-GUI：Java Swing
-底层：m2tk-core + m2tk-multiplex + m2tk-io
+1.  GUI：Java Swing
+2.  底层：m2tk-core + m2tk-multiplex + m2tk-io
 
 
 #### 安装教程
