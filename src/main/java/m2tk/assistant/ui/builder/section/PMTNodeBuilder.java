@@ -58,7 +58,7 @@ public class PMTNodeBuilder implements TreeNodeBuilder
             elementDecoder.attach(elements[i]);
 
             DefaultMutableTreeNode nodeElement = new DefaultMutableTreeNode(String.format("基本流%d", i + 1));
-            nodeElement.add(create(String.format("stream_Type = 0x%02X（%s）",
+            nodeElement.add(create(String.format("stream_type = 0x%02X（%s）",
                                                  elementDecoder.getStreamType(),
                                                  StreamTypes.description(elementDecoder.getStreamType()))));
             nodeElement.add(create(String.format("elementary_PID = 0x%X", elementDecoder.getElementaryPID())));

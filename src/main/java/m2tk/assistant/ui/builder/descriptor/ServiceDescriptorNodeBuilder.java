@@ -20,7 +20,7 @@ public class ServiceDescriptorNodeBuilder implements TreeNodeBuilder
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("service_descriptor");
         node.add(create("descriptor_tag = 0x48"));
         node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create(String.format("service_type = %d（%s）",
+        node.add(create(String.format("service_type = 0x%02X（%s）",
                                       decoder.getServiceType(),
                                       ServiceTypes.name(decoder.getServiceType()))));
 

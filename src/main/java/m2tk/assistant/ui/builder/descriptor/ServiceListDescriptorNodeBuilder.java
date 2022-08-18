@@ -27,7 +27,9 @@ public class ServiceListDescriptorNodeBuilder implements TreeNodeBuilder
         {
             DefaultMutableTreeNode nodeItem = new DefaultMutableTreeNode("业务说明" + (i + 1));
             nodeItem.add(create("service_id = " + serviceIDList[i]));
-            nodeItem.add(create("service_type = " + serviceTypeList[i] + "（" + ServiceTypes.name(serviceTypeList[i]) + "）"));
+            nodeItem.add(create(String.format("service_type = 0x%02X（%s）",
+                                              serviceTypeList[i],
+                                              ServiceTypes.name(serviceTypeList[i]))));
             node.add(nodeItem);
         }
 
