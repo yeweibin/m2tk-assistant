@@ -9,15 +9,16 @@ import javax.swing.tree.MutableTreeNode;
 
 public class CADescriptorNodeBuilder implements TreeNodeBuilder
 {
+    private final CADescriptorDecoder cad = new CADescriptorDecoder();
+
     @Override
     public MutableTreeNode build(Encoding encoding)
     {
-        CADescriptorDecoder cad = new CADescriptorDecoder();
         cad.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("CA_descriptor");
         node.add(create("descriptor_tag = 0x09"));
-        node.add(create("descriptor_length = " + cad.getPayload().size()));
+        node.add(create("descriptor_length = " + cad.getPayloadLength()));
         node.add(create(String.format("CA_system_ID = 0x%04X", cad.getConditionalAccessSystemID())));
         node.add(create(String.format("CA_PID = 0x%04X", cad.getConditionalAccessStreamPID())));
 

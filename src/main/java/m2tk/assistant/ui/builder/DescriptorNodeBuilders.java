@@ -1,11 +1,7 @@
 package m2tk.assistant.ui.builder;
 
-import m2tk.assistant.ui.builder.descriptor.CADescriptorNodeBuilder;
-import m2tk.encoding.Encoding;
-import m2tk.mpeg2.decoder.DescriptorDecoder;
+import m2tk.assistant.ui.builder.descriptor.*;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.MutableTreeNode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -17,6 +13,13 @@ public final class DescriptorNodeBuilders
     {
         builderClasses = new HashMap<>();
         builderClasses.put(0x09, CADescriptorNodeBuilder.class);
+        builderClasses.put(0x40, NetworkNameDescriptorNodeBuilder.class);
+        builderClasses.put(0x41, ServiceListDescriptorNodeBuilder.class);
+        builderClasses.put(0x44, CableDeliverySystemDescriptorNodeBuilder.class);
+        builderClasses.put(0x47, BouquetNameDescriptorNodeBuilder.class);
+        builderClasses.put(0x48, ServiceDescriptorNodeBuilder.class);
+        builderClasses.put(0x4A, LinkageDescriptorNodeBuilder.class);
+        builderClasses.put(0x4D, ShortEventDescriptorNodeBuilder.class);
     }
 
     private DescriptorNodeBuilders()
@@ -37,24 +40,6 @@ public final class DescriptorNodeBuilders
         } catch (Exception ex)
         {
             return new GenericDescriptorNodeBuilder();
-        }
-    }
-
-    static class GenericDescriptorNodeBuilder implements TreeNodeBuilder
-    {
-        @Override
-        public MutableTreeNode build(Encoding encoding)
-        {
-            DescriptorDecoder decoder = new DescriptorDecoder();
-            decoder.attach(encoding);
-
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(String.format("Unknown_descriptor (%02X)",
-                                                                                   decoder.getTag()));
-            node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
-            node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
-            if (decoder.getPayloadLength() > 0)
-                node.add(create(String.format("descriptor_payload = %s", decoder.getPayload().toHexStringPrettyPrint())));
-            return node;
         }
     }
 }

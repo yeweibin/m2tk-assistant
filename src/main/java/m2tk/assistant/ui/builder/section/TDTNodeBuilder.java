@@ -25,7 +25,7 @@ public class TDTNodeBuilder implements TreeNodeBuilder
         node.add(create(String.format("table_id = 0x%02X", tdt.getTableID())));
         node.add(create(String.format("section_syntax_indicator = %d", tdt.getSyntaxIndicator())));
         node.add(create(String.format("section_length = %d", tdt.getSectionLength())));
-        node.add(create(String.format("UTC_time = %s（原始字节：%s）",
+        node.add(create(String.format("UTC_time = %s（原始数据：%s）",
                                       translateTimepoint2UTC(tdt.getUTCTime()),
                                       encoding.toHexStringPrettyPrint(3, 8))));
 

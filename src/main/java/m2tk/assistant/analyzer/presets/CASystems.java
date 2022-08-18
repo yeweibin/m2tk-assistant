@@ -18,6 +18,10 @@ package m2tk.assistant.analyzer.presets;
 
 public class CASystems
 {
+    private CASystems()
+    {
+    }
+
     private static boolean between(int value, int first, int last)
     {
         return value >= first && value <= last;
@@ -64,6 +68,9 @@ public class CASystems
 
         if (between(systemId, 0x4900, 0x49FF))
             return "中视联（DTVIA）";
+
+        if (between(systemId, 0x4A02, 0x4A02))
+            return "永新视博";
 
         if (between(systemId, 0x4AB0, 0x4ABF))
             return "算通科技";
