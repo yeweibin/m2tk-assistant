@@ -16,9 +16,6 @@
 4.  解压zip，双击exe启动程序。
 
 
-#### 运行界面
-
-
 #### 待完善
 
 1.  实现对更多的PSI/SI描述符进行解析和语法呈现（目前仅实现了几个常用的描述符）。
@@ -26,4 +23,13 @@
 3.  支持指定流数据过滤
 4.  结果导出和报表
 5.  播放清流节目
-6.  对PES结构的解析和呈现，对视频质量进行评估![输入图片说明](screenshots1.png)![输入图片说明](screenshots2.png)![输入图片说明](screenshots3.png)![输入图片说明](screenshots4.png)![输入图片说明](screenshots5.png)
+6.  对PES结构的解析和呈现，对视频质量进行评估
+
+
+#### 运行界面
+
+![流基本信息](screenshots1.png)
+![SI信息（网络结构分析）](screenshots2.png)
+![TR290分析](screenshots3.png)
+![EPG信息](screenshots4.png)
+![PSI/SI表结构](screenshots5.png)
