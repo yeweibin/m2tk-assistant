@@ -15,7 +15,7 @@
 3.  下载源代码，maven clean package，target目录里生成m2tk-assistant-{version}.zip。
 4.  解压zip，双击exe启动程序。运行时可以将Java环境拷贝到m2tk-assistant目录下（命名为java），则程序将引用java目录里的运行时环境。目录结构如下：
 
-![目录结构](6.png)
+![目录结构](screenshots/目录结构.png)
 
 
 #### 待完善
@@ -31,16 +31,19 @@
 #### 运行界面
 
 流基本信息
-![流基本信息](screenshots1.png)
+![流基本信息](screenshots/传输流信息.png)
 
 网络结构分析
-![SI信息（网络结构分析）](screenshots2.png)
+![SI信息（网络结构分析）](screenshots/网络结构分析.png)
 
 TR290分析
-![TR290分析](screenshots3.png)
+![TR290分析](screenshots/TR290.png)
+
+PCR分析
+![PCR分析](screenshots/PCR分析.png)
 
 EPG解析
-![EPG信息](screenshots4.png)
+![EPG信息](screenshots/EPG分析.png)
 
 PSI/SI表结构
-![PSI/SI表结构](screenshots5.png)
+![PSI/SI表结构](screenshots/PSISI语法分析.png)
