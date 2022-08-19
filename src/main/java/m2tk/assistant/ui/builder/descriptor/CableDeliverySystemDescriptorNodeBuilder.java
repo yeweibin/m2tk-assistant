@@ -21,7 +21,7 @@ public class CableDeliverySystemDescriptorNodeBuilder implements TreeNodeBuilder
 
         node.add(create("descriptor_tag = 0x44"));
         node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create(String.format("频率 = %s MHz", DVB.decodeFrequencyCode(decoder.getFrequencyCode()))));
+        node.add(create("频率 = " + DVB.decodeCableFrequencyCode(decoder.getFrequencyCode()) + " MHz"));
         node.add(create(String.format("前向纠错外码 = '%s'（%s）",
                                       fourBits(decoder.getOuterFECScheme()),
                                       outerFECScheme(decoder.getInnerFECScheme()))));

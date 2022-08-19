@@ -112,8 +112,8 @@ public class SIObjectHandler
                        "`srv_id` INT NOT NULL," +
                        "`evt_id` INT NOT NULL," +
                        "`evt_type` VARCHAR(10)," +
-                       "`evt_name` VARCHAR(200)," +
-                       "`evt_desc` VARCHAR(200)," +
+                       "`evt_name` VARCHAR(500)," +
+                       "`evt_desc` VARCHAR(2000)," +
                        "`lang_code` VARCHAR(4)," +
                        "`start_time` VARCHAR(100)," +
                        "`duration` VARCHAR(20)," +

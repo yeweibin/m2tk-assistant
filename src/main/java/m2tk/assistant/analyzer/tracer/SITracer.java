@@ -58,6 +58,7 @@ public class SITracer implements Tracer
     private final ServiceDescriptorDecoder sd;
     private final ShortEventDescriptorDecoder sed;
     private final CableDeliverySystemDescriptorDecoder cdsd;
+    private final SatelliteDeliverySystemDescriptorDecoder sdsd;
     private final BouquetNameDescriptorDecoder bnd;
     private final ServiceListDescriptorDecoder sld;
     private final DateTimeFormatter startTimeFormatter;
@@ -78,6 +79,7 @@ public class SITracer implements Tracer
         sd = new ServiceDescriptorDecoder();
         sed = new ShortEventDescriptorDecoder();
         cdsd = new CableDeliverySystemDescriptorDecoder();
+        sdsd = new SatelliteDeliverySystemDescriptorDecoder();
         tsd = new TransportStreamDescriptionDecoder();
         sdd = new ServiceDescriptionDecoder();
         edd = new EventDescriptionDecoder();
@@ -164,12 +166,20 @@ public class SITracer implements Tracer
                                                                        tsd.getTransportStreamID(),
                                                                        tsd.getOriginalNetworkID());
             descloop.attach(tsd.getDescriptorLoop());
-            descloop.findFirstDescriptor(cdsd::isAttachable)
-                    .ifPresent(descriptor -> {
-                        cdsd.attach(descriptor);
-                        multiplex.setDeliverySystemType("Cable");
-                        multiplex.setTransmitFrequency(DVB.decodeFrequencyCode(cdsd.getFrequencyCode()) + " MHz");
-                    });
+            descloop.forEach(descriptor -> {
+                if (cdsd.isAttachable(descriptor))
+                {
+                    cdsd.attach(descriptor);
+                    multiplex.setDeliverySystemType("有线");
+                    multiplex.setTransmitFrequency(DVB.decodeCableFrequencyCode(cdsd.getFrequencyCode()) + " MHz");
+                }
+                if (sdsd.isAttachable(descriptor))
+                {
+                    sdsd.attach(descriptor);
+                    multiplex.setDeliverySystemType("卫星");
+                    multiplex.setTransmitFrequency(DVB.decodeSatelliteFrequencyCode(sdsd.getFrequencyCode()) + " GHz");
+                }
+            });
             databaseService.updateMultiplexDeliverySystemConfigure(multiplex);
         });
     }
