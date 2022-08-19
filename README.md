@@ -12,7 +12,12 @@
 
 1.  安装Java 1.8+环境（JRE或JDK，任意）
 2.  安装maven
-3.  下载源代码，maven clean package，target目录里生成m2tk-assistant-<version>.zip。
+3.  下载源代码，maven clean package，target目录里生成m2tk-assistant-{version}.zip。
+4.  解压zip，双击exe启动程序。
+
+
+#### 运行界面
+
 
 #### 待完善
 
@@ -21,4 +26,4 @@
 3.  支持指定流数据过滤
 4.  结果导出和报表
 5.  播放清流节目
-6.  对PES结构的解析和呈现，对视频质量进行评估
+6.  对PES结构的解析和呈现，对视频质量进行评估![输入图片说明](screenshots1.png)![输入图片说明](screenshots2.png)![输入图片说明](screenshots3.png)![输入图片说明](screenshots4.png)![输入图片说明](screenshots5.png)
