@@ -52,12 +52,12 @@ public class SIService
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SIService siService = (SIService) o;
-        return Objects.equals(id, siService.id) && Objects.equals(serviceType, siService.serviceType) && Objects.equals(serviceName, siService.serviceName);
+        return Objects.equals(id, siService.id);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(id, serviceType, serviceName);
+        return Objects.hash(id);
     }
 }

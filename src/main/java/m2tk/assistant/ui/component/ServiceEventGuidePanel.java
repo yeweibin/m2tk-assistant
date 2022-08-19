@@ -34,8 +34,7 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.*;
 
 public class ServiceEventGuidePanel extends JPanel
 {
@@ -43,9 +42,8 @@ public class ServiceEventGuidePanel extends JPanel
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode treeRoot;
     private EventTableModel eventTableModel;
-    private final List<SIService> serviceList = new ArrayList<>();
-    private final List<SIEvent> eventList = new ArrayList<>();
-    private Map<String, List<SIEvent>> eventRegistry;
+    private final transient List<SIService> serviceList = new ArrayList<>();
+    private transient Map<SIService, List<SIEvent>> eventRegistry = Collections.emptyMap();
 
     public ServiceEventGuidePanel()
     {
@@ -65,10 +63,10 @@ public class ServiceEventGuidePanel extends JPanel
             if (node != null && node.getUserObject() instanceof SIService)
             {
                 SIService service = (SIService) node.getUserObject();
-                Map<String, List<SIEvent>> registry = eventRegistry;
+                Map<SIService, List<SIEvent>> registry = eventRegistry;
                 if (registry != null)
                 {
-                    List<SIEvent> events = registry.getOrDefault(service.getId(), Collections.emptyList());
+                    List<SIEvent> events = registry.getOrDefault(service, Collections.emptyList());
                     eventTableModel.update(events);
                 }
             }
@@ -107,47 +105,39 @@ public class ServiceEventGuidePanel extends JPanel
         treeModel.reload();
         eventTableModel.update(Collections.emptyList());
         serviceList.clear();
-        eventList.clear();
-        if (eventRegistry != null)
-        {
-            eventRegistry.clear();
-            eventRegistry = null;
-        }
+        eventRegistry = Collections.emptyMap();
     }
 
-    public void updateServiceList(List<SIService> services)
+    public void update(List<SIService> services, Map<SIService, List<SIEvent>> events)
     {
-        if (services == null || isSameServices(serviceList, services))
-            return;
-
-        treeRoot.removeAllChildren();
-
-        // 这里Map是排好序的
-        Map<String, List<SIService>> groups = groupServices(services);
-        for (Map.Entry<String, List<SIService>> entry : groups.entrySet())
+        if (!isSameServices(serviceList, services) || !isSameEventGroups(eventRegistry, events))
         {
-            treeRoot.add(createServiceGroupNode(entry.getKey(), entry.getValue()));
+            treeRoot.removeAllChildren();
+
+            // 这里Map是排好序的
+            Map<String, List<SIService>> groups1 = groupServices(services);
+            for (Map.Entry<String, List<SIService>> entry : groups1.entrySet())
+            {
+                treeRoot.add(createServiceGroupNode(entry.getKey(), entry.getValue()));
+            }
+
+            Map<String, List<SIService>> groups2 = groupServices(events.keySet());
+            for (Map.Entry<String, List<SIService>> entry : groups2.entrySet())
+            {
+                // 其他流的节目描述，且该业务无对应的SDT描述。
+                if (!groups1.containsKey(entry.getKey()))
+                {
+                    treeRoot.add(createServiceGroupNode(entry.getKey(), entry.getValue()));
+                }
+            }
+
+            serviceTree.expandPath(new TreePath(treeRoot));
+            treeModel.reload();
+
+            eventRegistry = events;
+            serviceList.clear();
+            serviceList.addAll(services);
         }
-
-        serviceTree.expandPath(new TreePath(treeRoot));
-        treeModel.reload();
-
-        serviceList.clear();
-        serviceList.addAll(services);
-    }
-
-    public void updateEventRegistry(List<SIEvent> events)
-    {
-        if (events == null || isSameEvents(eventList, events))
-            return;
-
-        Map<String, List<SIEvent>> currRegistry = eventRegistry;
-        if (currRegistry != null)
-            currRegistry.clear();
-
-        eventRegistry = events.stream().collect(groupingBy(SIEvent::getParentId));
-        eventList.clear();
-        eventList.addAll(events);
     }
 
     private boolean isSameServices(List<SIService> current, List<SIService> incoming)
@@ -163,37 +153,23 @@ public class ServiceEventGuidePanel extends JPanel
             SIService s1 = current.get(i);
             SIService s2 = incoming.get(i);
 
-            if (!Objects.equals(s1, s2))
+            if (!Objects.equals(s1, s2) &&
+                !Objects.equals(s1.getServiceName(), s2.getServiceName()))
                 return false;
         }
 
         return true;
     }
 
-    private boolean isSameEvents(List<SIEvent> current, List<SIEvent> incoming)
+    private boolean isSameEventGroups(Map<SIService, List<SIEvent>> current, Map<SIService, List<SIEvent>> incoming)
     {
-        if (current.size() != incoming.size())
-            return false;
-
-        incoming.sort(Comparator.comparing(SIEvent::getId));
-
-        int n = current.size();
-        for (int i = 0; i < n; i++)
-        {
-            SIEvent e1 = current.get(i);
-            SIEvent e2 = incoming.get(i);
-
-            if (!Objects.equals(e1, e2))
-                return false;
-        }
-
-        return true;
+        return Objects.equals(current.keySet(), incoming.keySet());
     }
 
-    private Map<String, List<SIService>> groupServices(List<SIService> services)
+    private Map<String, List<SIService>> groupServices(Collection<SIService> services)
     {
         return services.stream()
-                       .collect(groupingBy(service -> String.format("TS ID: %05d（Net ID: %d）",
+                       .collect(groupingBy(service -> String.format("TS ID: %d（Net ID: %d）",
                                                                     service.getTransportStreamId(),
                                                                     service.getOriginalNetworkId()),
                                            TreeMap::new, toList()));

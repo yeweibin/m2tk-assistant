@@ -29,15 +29,17 @@ import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
+import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 
 public class EPGInfoView extends JPanel
 {
@@ -99,7 +101,7 @@ public class EPGInfoView extends JPanel
     public void queryServiceAndEvents()
     {
         List<SIService> serviceList = new ArrayList<>();
-        List<SIEvent> eventList = new ArrayList<>();
+        Map<SIService, List<SIEvent>> eventRegistry = new HashMap<>();
 
         Comparator<SIService> comparator1 = (s1, s2) -> {
             if (s1.getOriginalNetworkId() != s2.getOriginalNetworkId())
@@ -124,43 +126,42 @@ public class EPGInfoView extends JPanel
             List<SIServiceEntity> services = databaseService.listServices();
             List<SIEventEntity> events = databaseService.listEvents();
 
-            for (SIServiceEntity service : services)
-            {
-                SIService srv = new SIService(service.getTransportStreamId(),
-                                              service.getOriginalNetworkId(),
-                                              service.getServiceId(),
-                                              service.getServiceTypeName(),
-                                              service.getServiceName(),
-                                              service.getServiceProvider());
-                serviceList.add(srv);
-            }
+            services.stream()
+                    .map(service -> new SIService(service.getTransportStreamId(),
+                                                  service.getOriginalNetworkId(),
+                                                  service.getServiceId(),
+                                                  service.getServiceTypeName(),
+                                                  service.getServiceName(),
+                                                  service.getServiceProvider()))
+                    .sorted(comparator1)
+                    .forEach(serviceList::add);
 
-            for (SIEventEntity event : events)
-            {
-                SIEvent evt = new SIEvent(event.getTransportStreamId(),
-                                          event.getOriginalNetworkId(),
-                                          event.getServiceId(),
-                                          event.getEventId(),
-                                          event.getEventName(),
-                                          event.getEventDescription(),
-                                          event.getLanguageCode(),
-                                          event.getStartTime(),
-                                          event.getDuration(),
-                                          event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
-                                          event.isPresentEvent());
-                eventList.add(evt);
-            }
+            events.stream()
+                  .map(event -> new SIEvent(event.getTransportStreamId(),
+                                            event.getOriginalNetworkId(),
+                                            event.getServiceId(),
+                                            event.getEventId(),
+                                            event.getEventName(),
+                                            event.getEventDescription(),
+                                            event.getLanguageCode(),
+                                            event.getStartTime(),
+                                            event.getDuration(),
+                                            event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
+                                            event.isPresentEvent()))
+                  .sorted(comparator2)
+                  .collect(groupingBy(event -> new SIService(event.getTransportStreamId(),
+                                                             event.getOriginalNetworkId(),
+                                                             event.getServiceId(),
+                                                             "数字电视业务",
+                                                             String.format("未知业务（业务号：%d）", event.getServiceId()),
+                                                             "未知提供商"),
+                                      () -> eventRegistry,
+                                      toList()));
 
-            serviceList.sort(comparator1);
-            eventList.sort(comparator2);
             return null;
         };
 
-        Consumer<Void> consumer = nothing ->
-        {
-            serviceEventGuidePanel.updateServiceList(serviceList);
-            serviceEventGuidePanel.updateEventRegistry(eventList);
-        };
+        Consumer<Void> consumer = nothing -> serviceEventGuidePanel.update(serviceList, eventRegistry);
 
         AsyncQueryTask<Void> task = new AsyncQueryTask<>(frameView.getApplication(),
                                                          query,

@@ -21,11 +21,15 @@ public class CableDeliverySystemDescriptorNodeBuilder implements TreeNodeBuilder
 
         node.add(create("descriptor_tag = 0x44"));
         node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create("频率 = " + DVB.decodeFrequencyCode(decoder.getFrequencyCode()) + " MHz"));
-        node.add(create("FEC外码 = " + fourBits(decoder.getOuterFECScheme()) + "（" + outerFECScheme(decoder.getInnerFECScheme()) + "）"));
-        node.add(create("调制方式 = " + modulationType(decoder.getModulationType())));
-        node.add(create("符号率 = " + DVB.decodeSymbolRateCode(decoder.getSymbolRateCode()) + " Msymbol/s"));
-        node.add(create("FEC内码 = " + fourBits(decoder.getInnerFECScheme()) + "（" + innerFECScheme(decoder.getInnerFECScheme()) + "）"));
+        node.add(create(String.format("频率 = %s MHz", DVB.decodeFrequencyCode(decoder.getFrequencyCode()))));
+        node.add(create(String.format("前向纠错外码 = '%s'（%s）",
+                                      fourBits(decoder.getOuterFECScheme()),
+                                      outerFECScheme(decoder.getInnerFECScheme()))));
+        node.add(create(String.format("调制方式 = %s", modulationType(decoder.getModulationType()))));
+        node.add(create(String.format("符号率 = %s Msymbol/s", DVB.decodeSymbolRateCode(decoder.getSymbolRateCode()))));
+        node.add(create(String.format("前向纠错内码 = '%s'（%s）",
+                                      fourBits(decoder.getInnerFECScheme()),
+                                      innerFECScheme(decoder.getInnerFECScheme()))));
 
         return node;
     }
@@ -34,7 +38,7 @@ public class CableDeliverySystemDescriptorNodeBuilder implements TreeNodeBuilder
     {
         String bits = "0000";
         String binary = Integer.toBinaryString(value);
-        return '\'' + bits.substring(binary.length()) + binary + '\'';
+        return bits.substring(binary.length()) + binary;
     }
 
     private String modulationType(int code)
@@ -65,7 +69,7 @@ public class CableDeliverySystemDescriptorNodeBuilder implements TreeNodeBuilder
             case 0b0000:
                 return "未定义";
             case 0b0001:
-                return "无FEC外码";
+                return "无前向纠错外码";
             case 0b0010:
                 return "RS（204，188）";
             default:

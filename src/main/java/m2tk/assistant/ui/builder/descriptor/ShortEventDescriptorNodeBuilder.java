@@ -22,31 +22,17 @@ public class ShortEventDescriptorNodeBuilder implements TreeNodeBuilder
         node.add(create("ISO_639_language_code = " + decoder.getLanguageCode()));
 
         int len = encoding.readUINT8(5);
-        if (len == 0)
-        {
-            node.add(create("event_name_length = 0"));
-            node.add(create("event_name = []"));
-        } else
-        {
-            node.add(create(String.format("event_name_length = %d", len)));
-            node.add(create(String.format("event_name = %s（原始数据：%s）",
-                                          decoder.getEventName(),
-                                          encoding.toHexStringPrettyPrint(6, 6 + len))));
-        }
+        node.add(create(String.format("event_name_length = %d", len)));
+        node.add(create(String.format("event_name = '%s'（原始数据：%s）",
+                                      (len == 0) ? "" : decoder.getEventName(),
+                                      (len == 0) ? "[]" : encoding.toHexStringPrettyPrint(6, 6 + len))));
 
         int offset = 6 + len;
         len = encoding.readUINT8(offset);
-        if (len == 0)
-        {
-            node.add(create("text_length = 0"));
-            node.add(create("text = []"));
-        } else
-        {
-            node.add(create(String.format("text_length = %d", len)));
-            node.add(create(String.format("text = %s（原始数据：%s）",
-                                          decoder.getEventDescription(),
-                                          encoding.toHexStringPrettyPrint(offset + 1, offset + 1 + len))));
-        }
+        node.add(create(String.format("text_length = %d", len)));
+        node.add(create(String.format("text = '%s'（原始数据：%s）",
+                                      (len == 0) ? "" : decoder.getEventDescription(),
+                                      (len == 0) ? "[]" : encoding.toHexStringPrettyPrint(offset + 1, offset + 1 + len))));
 
         return node;
     }
