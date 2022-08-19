@@ -14,6 +14,7 @@
 2.  安装maven
 3.  下载源代码，maven clean package，target目录里生成m2tk-assistant-{version}.zip。
 4.  解压zip，双击exe启动程序。运行时可以将Java环境拷贝到m2tk-assistant目录下（命名为java），则程序将引用java目录里的运行时环境。目录结构如下：
+
 ![目录结构](6.png)
 
 
