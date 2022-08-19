@@ -407,21 +407,23 @@ public class SIObjectHandler
             entity.setServiceId(serviceId);
             entity.setEventId(eventId);
             entity.setEventType(SIEventEntity.TYPE_PRESENT_FOLLOWING);
+            entity.setEventName("<未命名事件>");
             entity.setStartTime(startTime);
             entity.setDuration(duration);
             entity.setRunningStatus(runningStatus);
             entity.setFreeCAMode(freeCAMode);
             entity.setPresentEvent(isPresent);
 
-            handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, " +
+            handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, `evt_name`, " +
                            "`start_time`, `duration`, `running_status`, `free_ca_mode`, `present`) " +
-                           "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId(),
                            entity.getServiceId(),
                            entity.getEventId(),
                            entity.getEventType(),
+                           entity.getEventName(),
                            entity.getStartTime(),
                            entity.getDuration(),
                            entity.getRunningStatus(),
@@ -460,20 +462,22 @@ public class SIObjectHandler
             entity.setServiceId(serviceId);
             entity.setEventId(eventId);
             entity.setEventType(SIEventEntity.TYPE_SCHEDULE);
+            entity.setEventName("<未命名事件>");
             entity.setStartTime(startTime);
             entity.setDuration(duration);
             entity.setRunningStatus(runningStatus);
             entity.setFreeCAMode(freeCAMode);
 
-            handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, " +
+            handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, `evt_name`, " +
                            "`start_time`, `duration`, `running_status`, `free_ca_mode`) " +
-                           "VALUES (?,?,?,?,?,?,?,?,?,?)",
+                           "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId(),
                            entity.getServiceId(),
                            entity.getEventId(),
                            entity.getEventType(),
+                           entity.getEventName(),
                            entity.getStartTime(),
                            entity.getDuration(),
                            entity.getRunningStatus(),
