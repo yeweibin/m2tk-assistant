@@ -429,7 +429,7 @@ public class SITracer implements Tracer
     private void processTOT(TSDemuxPayload payload)
     {
         tot.attach(payload.getEncoding());
-        databaseService.addDateTime(tdt.getUTCTime());
+        databaseService.addDateTime(tot.getUTCTime());
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
         databaseService.addSection("TOT",
                                    payload.getStreamPID(),
