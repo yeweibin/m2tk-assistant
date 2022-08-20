@@ -21,12 +21,12 @@ public class CableDeliverySystemDescriptorNodeBuilder implements TreeNodeBuilder
 
         node.add(create("descriptor_tag = 0x44"));
         node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create("频率 = " + DVB.decodeCableFrequencyCode(decoder.getFrequencyCode()) + " MHz"));
+        node.add(create("频率 = " + DVB.translateCableFrequencyCode(decoder.getFrequencyCode())));
         node.add(create(String.format("前向纠错外码 = '%s'（%s）",
                                       fourBits(decoder.getOuterFECScheme()),
                                       outerFECScheme(decoder.getInnerFECScheme()))));
         node.add(create(String.format("调制方式 = %s", modulationType(decoder.getModulationType()))));
-        node.add(create(String.format("符号率 = %s Msymbol/s", DVB.decodeSymbolRateCode(decoder.getSymbolRateCode()))));
+        node.add(create(String.format("符号率 = %s", DVB.translateSymbolRateCode(decoder.getSymbolRateCode()))));
         node.add(create(String.format("前向纠错内码 = '%s'（%s）",
                                       fourBits(decoder.getInnerFECScheme()),
                                       innerFECScheme(decoder.getInnerFECScheme()))));

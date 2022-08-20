@@ -17,8 +17,8 @@ public class BouquetNameDescriptorNodeBuilder implements TreeNodeBuilder
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("bouquet_name_descriptor");
-        node.add(create("descriptor_tag = 0x47"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
         String name = decoder.getBouquetName();
         node.add(create(String.format("bouquet name = '%s'（原始数据：%s）",

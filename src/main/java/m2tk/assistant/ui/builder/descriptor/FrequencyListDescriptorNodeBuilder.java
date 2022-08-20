@@ -26,10 +26,19 @@ public class FrequencyListDescriptorNodeBuilder implements TreeNodeBuilder
         DefaultMutableTreeNode nodeList = new DefaultMutableTreeNode();
         for (int i = 0;i < frequencyList.length; i++)
         {
-            String text = String.format("中心频率%d = %s MHz",
-                                        i + 1,
-                                        DVB.decodeFrequencyCode(frequencyList[i]));
-            nodeList.add(create(text));
+            long frequencyCode = frequencyList[i];
+
+            String freqText;
+            if (decoder.getCodingType() == 0b01)
+                freqText = DVB.translateSatelliteFrequencyCode(frequencyCode);
+            else if (decoder.getCodingType() == 0b10)
+                freqText = DVB.translateCableFrequencyCode(frequencyCode);
+            else if (decoder.getCodingType() == 0b11)
+                freqText = DVB.translateTerrestrialFrequencyCode(frequencyCode);
+            else
+                freqText = "未定义";
+
+            nodeList.add(create(String.format("中心频率%d = %s", i + 1, freqText)));
         }
         nodeList.setUserObject(String.format("频率列表（%d）", nodeList.getChildCount()));
         node.add(nodeList);

@@ -23,13 +23,18 @@ public final class DescriptorNodeBuilders
         builderClasses.put(0x4A, LinkageDescriptorNodeBuilder.class);
         builderClasses.put(0x4D, ShortEventDescriptorNodeBuilder.class);
         builderClasses.put(0x4E, ExtendedEventDescriptorNodeBuilder.class);
+        builderClasses.put(0x53, CAIdentifierDescriptorNodeBuilder.class);
         builderClasses.put(0x54, ContentDescriptorNodeBuilder.class);
+        builderClasses.put(0x55, ParentalRatingDescriptorNodeBuilder.class);
+        builderClasses.put(0x5A, TerrestrialDeliverySystemDescriptorNodeBuilder.class);
         builderClasses.put(0x5B, MultilingualNetworkNameDescriptorNodeBuilder.class);
         builderClasses.put(0x5C, MultilingualBouquetNameDescriptorNodeBuilder.class);
         builderClasses.put(0x5D, MultilingualServiceNameDescriptorNodeBuilder.class);
         builderClasses.put(0x5E, MultilingualComponentDescriptorNodeBuilder.class);
         builderClasses.put(0x62, FrequencyListDescriptorNodeBuilder.class);
         builderClasses.put(0x68, DSNGDescriptorNodeBuilder.class);
+        builderClasses.put(0x6B, AncillaryDataDescriptorNodeBuilder.class);
+        builderClasses.put(0x70, AdaptationFieldDataDescriptorNodeBuilder.class);
     }
 
     private DescriptorNodeBuilders()

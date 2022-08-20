@@ -99,8 +99,8 @@ public class ContentDescriptorNodeBuilder implements TreeNodeBuilder
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("content_descriptor");
-        node.add(create("descriptor_tag = 0x54"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
         int[] contentIdentifiers = decoder.getContentIdentifierList();
         for (int i = 0; i < contentIdentifiers.length; i++)

@@ -18,19 +18,19 @@ public class ServiceListDescriptorNodeBuilder implements TreeNodeBuilder
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("service_list_descriptor");
-        node.add(create("descriptor_tag = 0x41"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
         int[] serviceIDList = decoder.getServiceIDList();
         int[] serviceTypeList = decoder.getServiceTypeList();
         for (int i = 0; i < serviceTypeList.length; i++)
         {
-            DefaultMutableTreeNode nodeItem = new DefaultMutableTreeNode("业务说明" + (i + 1));
-            nodeItem.add(create("service_id = " + serviceIDList[i]));
-            nodeItem.add(create(String.format("service_type = 0x%02X（%s）",
-                                              serviceTypeList[i],
-                                              ServiceTypes.name(serviceTypeList[i]))));
-            node.add(nodeItem);
+            String text = String.format("业务说明%d：[业务号：%d，业务类型：（0x%02X）%s]",
+                                        i + 1,
+                                        serviceIDList[i],
+                                        serviceTypeList[i],
+                                        ServiceTypes.name(serviceTypeList[i]));
+            node.add(create(text));
         }
 
         return node;

@@ -21,11 +21,11 @@ public class SatelliteDeliverySystemDescriptorNodeBuilder implements TreeNodeBui
 
         node.add(create("descriptor_tag = 0x43"));
         node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create("下行频率 = " + DVB.decodeSatelliteFrequencyCode(decoder.getFrequencyCode()) + " GHz"));
+        node.add(create("下行频率 = " + DVB.translateSatelliteFrequencyCode(decoder.getFrequencyCode())));
         node.add(create("轨道位置 = " + translateOrbitalPosition(decoder.getOrbitalPositionCode(), decoder.getWestEastFlag())));
         node.add(create("极化方式 = " + polarizationType(decoder.getPolarizationCode())));
         node.add(create("调制方式 = " + modulationType(decoder.getModulationType())));
-        node.add(create("符号率 = " + DVB.decodeSymbolRateCode(decoder.getSymbolRateCode()) + " Msymbol/s"));
+        node.add(create("符号率 = " + DVB.translateSymbolRateCode(decoder.getSymbolRateCode())));
         node.add(create("前向纠错内码 = " + fourBits(decoder.getInnerFECScheme()) + "（" + innerFECScheme(decoder.getInnerFECScheme()) + "）"));
 
         return node;
@@ -36,11 +36,10 @@ public class SatelliteDeliverySystemDescriptorNodeBuilder implements TreeNodeBui
         int d1 = (position >> 12) & 0xF;
         int d2 = (position >> 8) & 0xF;
         int d3 = (position >> 4) & 0xF;
-        int d4 = position & 0xFF;
-        int p1 = d1 * 100 + d2 * 10 + d3;
-        int p2 = d4;
+        int d4 = position & 0xF;
+        int p = d1 * 100 + d2 * 10 + d3;
 
-        return String.format("%d.%d°%s", p1, p2, (flag == 0) ? "W" : "E");
+        return String.format("%03d.%d°%s", p, d4, (flag == 0) ? "W" : "E");
     }
 
     private String polarizationType(int code)
