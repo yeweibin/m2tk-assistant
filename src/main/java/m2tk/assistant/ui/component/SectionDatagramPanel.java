@@ -51,6 +51,7 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupEITScheduleActual;
     private DefaultMutableTreeNode groupEITScheduleOther;
     private DefaultMutableTreeNode groupTDT;
+    private DefaultMutableTreeNode groupTOT;
     private DefaultMutableTreeNode groupEMM;
 
     public SectionDatagramPanel()
@@ -95,6 +96,7 @@ public class SectionDatagramPanel extends JPanel
         groupEITScheduleActual = new DefaultMutableTreeNode("EIT_Schedule_Actual");
         groupEITScheduleOther = new DefaultMutableTreeNode("EIT_Schedule_Other");
         groupTDT = new DefaultMutableTreeNode("TDT");
+        groupTOT = new DefaultMutableTreeNode("TOT");
         groupEMM = new DefaultMutableTreeNode("EMM");
 
         root.add(groupPSI);
@@ -113,6 +115,7 @@ public class SectionDatagramPanel extends JPanel
         groupSI.add(groupEITScheduleActual);
         groupSI.add(groupEITScheduleOther);
         groupSI.add(groupTDT);
+        groupSI.add(groupTOT);
         groupPrivate.add(groupEMM);
         model.reload();
     }
@@ -132,6 +135,7 @@ public class SectionDatagramPanel extends JPanel
         addEITScheduleActualSectionNodes(sectionGroups.getOrDefault("EIT_Schedule_Actual", Collections.emptyList()));
         addEITScheduleOtherSectionNodes(sectionGroups.getOrDefault("EIT_Schedule_Other", Collections.emptyList()));
         addTDTSectionNodes(sectionGroups.getOrDefault("TDT", Collections.emptyList()));
+        addTOTSectionNodes(sectionGroups.getOrDefault("TOT", Collections.emptyList()));
         addEMMSectionNodes(sectionGroups.getOrDefault("EMM", Collections.emptyList()));
         model.reload();
     }
@@ -151,6 +155,7 @@ public class SectionDatagramPanel extends JPanel
         groupEITScheduleActual.removeAllChildren();
         groupEITScheduleOther.removeAllChildren();
         groupTDT.removeAllChildren();
+        groupTOT.removeAllChildren();
         groupEMM.removeAllChildren();
         model.reload();
     }
@@ -298,6 +303,17 @@ public class SectionDatagramPanel extends JPanel
         groupTDT.setUserObject(String.format("TDT（%d）", groupTDT.getChildCount()));
     }
 
+    private void addTOTSectionNodes(List<SectionEntity> sections)
+    {
+        TOTNodeBuilder builder = new TOTNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupTOT.removeAllChildren();
+        for (SectionEntity section : sections)
+            groupTOT.add(builder.build(Encoding.wrap(section.getEncoding())));
+        groupTOT.setUserObject(String.format("TOT（%d）", groupTOT.getChildCount()));
+    }
+
     private void addEMMSectionNodes(List<SectionEntity> sections)
     {
         PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
@@ -341,7 +357,8 @@ public class SectionDatagramPanel extends JPanel
                      node == groupSDTActual || node == groupSDTOther ||
                      node == groupEITPFActual || node == groupEITPFOther ||
                      node == groupEITScheduleActual || node == groupEITScheduleOther ||
-                     node == groupTDT || node == groupEMM)
+                     node == groupTDT || node == groupTOT ||
+                     node == groupEMM)
                 setIcon(SmallIcons.TABLE);
             else
                 setIcon(SmallIcons.DOT_ORANGE);

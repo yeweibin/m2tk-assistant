@@ -13,6 +13,7 @@ public final class DescriptorNodeBuilders
     {
         builderClasses = new HashMap<>();
         builderClasses.put(0x09, CADescriptorNodeBuilder.class);
+        builderClasses.put(0x0A, ISO639LanguageDescriptorNodeBuilder.class);
         builderClasses.put(0x40, NetworkNameDescriptorNodeBuilder.class);
         builderClasses.put(0x41, ServiceListDescriptorNodeBuilder.class);
         builderClasses.put(0x42, StuffingDescriptorNodeBuilder.class);
@@ -20,18 +21,26 @@ public final class DescriptorNodeBuilders
         builderClasses.put(0x44, CableDeliverySystemDescriptorNodeBuilder.class);
         builderClasses.put(0x47, BouquetNameDescriptorNodeBuilder.class);
         builderClasses.put(0x48, ServiceDescriptorNodeBuilder.class);
+        builderClasses.put(0x49, CountryAvailabilityDescriptorNodeBuilder.class);
         builderClasses.put(0x4A, LinkageDescriptorNodeBuilder.class);
         builderClasses.put(0x4D, ShortEventDescriptorNodeBuilder.class);
         builderClasses.put(0x4E, ExtendedEventDescriptorNodeBuilder.class);
+        builderClasses.put(0x50, ComponentDescriptorNodeBuilder.class);
+        builderClasses.put(0x52, StreamIdentifierDescriptorNodeBuilder.class);
         builderClasses.put(0x53, CAIdentifierDescriptorNodeBuilder.class);
         builderClasses.put(0x54, ContentDescriptorNodeBuilder.class);
         builderClasses.put(0x55, ParentalRatingDescriptorNodeBuilder.class);
+        builderClasses.put(0x58, LocalTimeOffsetDescriptorNodeBuilder.class);
+        builderClasses.put(0x59, SubtitlingDescriptorNodeBuilder.class);
         builderClasses.put(0x5A, TerrestrialDeliverySystemDescriptorNodeBuilder.class);
         builderClasses.put(0x5B, MultilingualNetworkNameDescriptorNodeBuilder.class);
         builderClasses.put(0x5C, MultilingualBouquetNameDescriptorNodeBuilder.class);
         builderClasses.put(0x5D, MultilingualServiceNameDescriptorNodeBuilder.class);
         builderClasses.put(0x5E, MultilingualComponentDescriptorNodeBuilder.class);
+        builderClasses.put(0x5F, PrivateDataSpecifierDescriptorNodeBuilder.class);
         builderClasses.put(0x62, FrequencyListDescriptorNodeBuilder.class);
+        builderClasses.put(0x64, DataBroadcastDescriptorNodeBuilder.class);
+        builderClasses.put(0x66, DataBroadcastIdentifierDescriptorNodeBuilder.class);
         builderClasses.put(0x68, DSNGDescriptorNodeBuilder.class);
         builderClasses.put(0x6B, AncillaryDataDescriptorNodeBuilder.class);
         builderClasses.put(0x70, AdaptationFieldDataDescriptorNodeBuilder.class);

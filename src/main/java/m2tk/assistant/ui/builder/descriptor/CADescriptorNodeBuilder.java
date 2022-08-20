@@ -19,14 +19,14 @@ public class CADescriptorNodeBuilder implements TreeNodeBuilder
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("CA_descriptor");
         node.add(create("descriptor_tag = 0x09"));
         node.add(create("descriptor_length = " + cad.getPayloadLength()));
-        node.add(create(String.format("CA_system_ID = 0x%04X", cad.getConditionalAccessSystemID())));
+        node.add(create(String.format("CA_system_id = 0x%04X", cad.getConditionalAccessSystemID())));
         node.add(create(String.format("CA_PID = 0x%04X", cad.getConditionalAccessStreamPID())));
 
         Encoding privateData = cad.getPrivateData();
         if (privateData.size() > 0)
         {
-            String text = String.format("private_data = %s",
-                                        privateData.toHexStringPrettyPrint().toUpperCase());
+            String text = String.format("private_data = [%s]",
+                                        privateData.toHexStringPrettyPrint());
             node.add(create(text));
         }
 

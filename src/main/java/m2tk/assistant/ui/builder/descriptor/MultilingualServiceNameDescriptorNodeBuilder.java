@@ -17,29 +17,29 @@ public class MultilingualServiceNameDescriptorNodeBuilder implements TreeNodeBui
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("multilingual_network_name_descriptor");
-        node.add(create("descriptor_tag = 0x5D"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
         Encoding[] names = decoder.getMultilingualNames();
         DefaultMutableTreeNode nodeList = new DefaultMutableTreeNode();
         for (int i = 0; i < names.length; i++)
         {
             Encoding name = names[i];
-            String langCode = decoder.getISO639LanguageCode(name);
+            String langCode = decoder.getLanguageCode(name);
             String providerName = decoder.getMultilingualServiceProviderName(name);
             String serviceName = decoder.getMultilingualServiceName(name);
 
             DefaultMutableTreeNode nodeDesc = new DefaultMutableTreeNode("业务描述" + (i + 1));
-            nodeDesc.add(create(String.format("业务提供商 = （%s）'%s'（原始数据：%s）",
+            nodeDesc.add(create(String.format("业务提供商 = （%s）'%s'（原始数据：[%s]）",
                                               langCode,
-                                              providerName.isEmpty() ? "" : providerName,
-                                              providerName.isEmpty() ? "[]" : name.toHexStringPrettyPrint(4, name.readUINT8(3)))));
+                                              providerName,
+                                              name.toHexStringPrettyPrint(4, name.readUINT8(3)))));
 
             int offset = 4 + name.readUINT8(3);
-            nodeDesc.add(create(String.format("业务名 = （%s）'%s'（原始数据：%s）",
+            nodeDesc.add(create(String.format("业务名 = （%s）'%s'（原始数据：[%s]）",
                                               langCode,
-                                              serviceName.isEmpty() ? "" : serviceName,
-                                              serviceName.isEmpty() ? "[]" : name.toHexStringPrettyPrint(offset + 1, offset + 1 + name.readUINT8(offset)))));
+                                              serviceName,
+                                              name.toHexStringPrettyPrint(offset + 1, offset + 1 + name.readUINT8(offset)))));
 
             nodeList.add(nodeDesc);
         }

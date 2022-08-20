@@ -21,6 +21,7 @@ public final class SectionNodeBuilders
         builderClasses.put(0x46, SDTNodeBuilder.class);
         builderClasses.put(0x4A, BATNodeBuilder.class);
         builderClasses.put(0x70, TDTNodeBuilder.class);
+        builderClasses.put(0x73, TOTNodeBuilder.class);
     }
 
     private SectionNodeBuilders()

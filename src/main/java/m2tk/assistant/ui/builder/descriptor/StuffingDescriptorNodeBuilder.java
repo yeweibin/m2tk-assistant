@@ -17,11 +17,9 @@ public class StuffingDescriptorNodeBuilder implements TreeNodeBuilder
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("stuffing_descriptor");
-        node.add(create("descriptor_tag = 0x42"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-
-        if (decoder.getPayloadLength() > 0)
-            node.add(create("填充字节 = " + decoder.getPayload().toHexStringPrettyPrint()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
+        node.add(create(String.format("填充字节 = [%s]", decoder.getPayload().toHexStringPrettyPrint())));
 
         return node;
     }

@@ -17,13 +17,11 @@ public class NetworkNameDescriptorNodeBuilder implements TreeNodeBuilder
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("network_name_descriptor");
-        node.add(create("descriptor_tag = 0x40"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-
-        String name = decoder.getNetworkName();
-        node.add(create(String.format("network name = '%s'（原始数据：%s）",
-                                      name.isEmpty() ? "" : name,
-                                      name.isEmpty() ? "[]" : decoder.getPayload().toHexStringPrettyPrint())));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
+        node.add(create(String.format("network name = '%s'（原始数据：[%s]）",
+                                      decoder.getNetworkName(),
+                                      decoder.getPayload().toHexStringPrettyPrint())));
 
         return node;
     }

@@ -21,9 +21,9 @@ public class BouquetNameDescriptorNodeBuilder implements TreeNodeBuilder
         node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
         String name = decoder.getBouquetName();
-        node.add(create(String.format("bouquet name = '%s'（原始数据：%s）",
-                                      name.isEmpty() ? "" : name,
-                                      name.isEmpty() ? "[]" : decoder.getPayload().toHexStringPrettyPrint())));
+        node.add(create(String.format("bouquet name = '%s'（原始数据：[%s]）",
+                                      name,
+                                      decoder.getPayload().toHexStringPrettyPrint())));
 
         return node;
     }

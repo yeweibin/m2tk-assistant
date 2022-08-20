@@ -19,14 +19,16 @@ public class SatelliteDeliverySystemDescriptorNodeBuilder implements TreeNodeBui
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("satellite_delivery_system_descriptor");
 
-        node.add(create("descriptor_tag = 0x43"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create("下行频率 = " + DVB.translateSatelliteFrequencyCode(decoder.getFrequencyCode())));
-        node.add(create("轨道位置 = " + translateOrbitalPosition(decoder.getOrbitalPositionCode(), decoder.getWestEastFlag())));
-        node.add(create("极化方式 = " + polarizationType(decoder.getPolarizationCode())));
-        node.add(create("调制方式 = " + modulationType(decoder.getModulationType())));
-        node.add(create("符号率 = " + DVB.translateSymbolRateCode(decoder.getSymbolRateCode())));
-        node.add(create("前向纠错内码 = " + fourBits(decoder.getInnerFECScheme()) + "（" + innerFECScheme(decoder.getInnerFECScheme()) + "）"));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
+        node.add(create(String.format("下行频率 = %s", DVB.translateSatelliteFrequencyCode(decoder.getFrequencyCode()))));
+        node.add(create(String.format("轨道位置 = %s", translateOrbitalPosition(decoder.getOrbitalPositionCode(), decoder.getWestEastFlag()))));
+        node.add(create(String.format("极化方式 = %s", polarizationType(decoder.getPolarizationCode()))));
+        node.add(create(String.format("调制方式 = %s", modulationType(decoder.getModulationType()))));
+        node.add(create(String.format("符号率 = %s", DVB.translateSymbolRateCode(decoder.getSymbolRateCode()))));
+        node.add(create(String.format("前向纠错内码 = '%s'（%s）",
+                                      fourBits(decoder.getInnerFECScheme()),
+                                      innerFECScheme(decoder.getInnerFECScheme()))));
 
         return node;
     }
@@ -76,7 +78,7 @@ public class SatelliteDeliverySystemDescriptorNodeBuilder implements TreeNodeBui
     {
         String bits = "0000";
         String binary = Integer.toBinaryString(value);
-        return '\'' + bits.substring(binary.length()) + binary + '\'';
+        return bits.substring(binary.length()) + binary;
     }
 
     private String innerFECScheme(int scheme)

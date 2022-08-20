@@ -21,9 +21,7 @@ public class GenericDescriptorNodeBuilder implements TreeNodeBuilder
 
         node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
         node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
-
-        if (decoder.getPayloadLength() > 0)
-            node.add(create(String.format("descriptor_payload = %s", decoder.getPayload().toHexStringPrettyPrint())));
+        node.add(create(String.format("descriptor_payload = [%s]", decoder.getPayload().toHexStringPrettyPrint())));
 
         return node;
     }

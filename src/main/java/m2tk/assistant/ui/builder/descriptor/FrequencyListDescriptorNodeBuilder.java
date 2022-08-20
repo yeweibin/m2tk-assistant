@@ -18,10 +18,11 @@ public class FrequencyListDescriptorNodeBuilder implements TreeNodeBuilder
         decoder.attach(encoding);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("frequency_list_descriptor");
-        node.add(create("descriptor_tag = 0x62"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
-        node.add(create("coding_type = " + codingType(decoder.getCodingType())));
+        node.add(create(String.format("coding_type = %s", codingType(decoder.getCodingType()))));
+
         long[] frequencyList = decoder.getFrequencyList();
         DefaultMutableTreeNode nodeList = new DefaultMutableTreeNode();
         for (int i = 0;i < frequencyList.length; i++)

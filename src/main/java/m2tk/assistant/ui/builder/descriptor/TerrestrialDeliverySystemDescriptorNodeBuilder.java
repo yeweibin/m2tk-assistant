@@ -19,20 +19,20 @@ public class TerrestrialDeliverySystemDescriptorNodeBuilder implements TreeNodeB
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("terrestrial_delivery_system_descriptor");
 
-        node.add(create("descriptor_tag = 0x5A"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
-        node.add(create("中心频率 = " + DVB.translateTerrestrialFrequencyCode(decoder.getCentreFrequencyCode())));
-        node.add(create("带宽 = " + translateBandwidth(decoder.getBandwidth())));
-        node.add(create("优先级 = " + (decoder.getPriority() == 1 ? "高" : "低")));
-        node.add(create("TimeSlicing标志位 = " + decoder.getTimeSlicingIndicator()));
-        node.add(create("MPE-FEC标志位 = " + decoder.getMPEFECIndicator()));
-        node.add(create("星座特性 = " + translateConstellation(decoder.getConstellation())));
-        node.add(create("层次信息 = " + translateHierarchyInformation(decoder.getHierarchyInformation())));
-        node.add(create("高优先级流编码率模式 = " + translateCodeRate(decoder.getCodeRateHPStream())));
-        node.add(create("低优先级流编码率模式 = " + translateCodeRate(decoder.getCodeRateLPStream())));
-        node.add(create("保护间隙 = " + translateGuardInterval(decoder.getGuardInterval())));
-        node.add(create("传输模式 = " + translateTransmissionMode(decoder.getTransmissionMode())));
-        node.add(create("其他频率标志 = " + decoder.getOtherFrequencyFlag()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
+        node.add(create(String.format("中心频率 = %s", DVB.translateTerrestrialFrequencyCode(decoder.getCentreFrequencyCode()))));
+        node.add(create(String.format("带宽 = %s", translateBandwidth(decoder.getBandwidth()))));
+        node.add(create(String.format("优先级 = %s", (decoder.getPriority() == 1) ? "高" : "低")));
+        node.add(create(String.format("TimeSlicing标志位 = %d", decoder.getTimeSlicingIndicator())));
+        node.add(create(String.format("MPE-FEC标志位 = %d", decoder.getMPEFECIndicator())));
+        node.add(create(String.format("星座特性 = %s", translateConstellation(decoder.getConstellation()))));
+        node.add(create(String.format("层次信息 = %s", translateHierarchyInformation(decoder.getHierarchyInformation()))));
+        node.add(create(String.format("高优先级流编码率模式 = %s", translateCodeRate(decoder.getCodeRateHPStream()))));
+        node.add(create(String.format("低优先级流编码率模式 = %s", translateCodeRate(decoder.getCodeRateLPStream()))));
+        node.add(create(String.format("保护间隙 = %s", translateGuardInterval(decoder.getGuardInterval()))));
+        node.add(create(String.format("传输模式 = %s", translateTransmissionMode(decoder.getTransmissionMode()))));
+        node.add(create(String.format("其他频率标志 = %d", decoder.getOtherFrequencyFlag())));
 
         return node;
     }

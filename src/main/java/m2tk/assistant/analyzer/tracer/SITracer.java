@@ -50,6 +50,7 @@ public class SITracer implements Tracer
     private final SDTSectionDecoder sdt;
     private final EITSectionDecoder eit;
     private final TDTSectionDecoder tdt;
+    private final TOTSectionDecoder tot;
     private final DescriptorLoopDecoder descloop;
     private final TransportStreamDescriptionDecoder tsd;
     private final ServiceDescriptionDecoder sdd;
@@ -74,6 +75,7 @@ public class SITracer implements Tracer
         sdt = new SDTSectionDecoder();
         eit = new EITSectionDecoder();
         tdt = new TDTSectionDecoder();
+        tot = new TOTSectionDecoder();
         descloop = new DescriptorLoopDecoder();
         nnd = new NetworkNameDescriptorDecoder();
         bnd = new BouquetNameDescriptorDecoder();
@@ -114,6 +116,8 @@ public class SITracer implements Tracer
             processEIT(payload);
         if (payload.getStreamPID() == 0x0014 && tdt.isAttachable(payload.getEncoding()))
             processTDT(payload);
+        if (payload.getStreamPID() == 0x0014 && tot.isAttachable(payload.getEncoding()))
+            processTOT(payload);
     }
 
     private void processNIT(TSDemuxPayload payload)
@@ -417,6 +421,17 @@ public class SITracer implements Tracer
         databaseService.addDateTime(tdt.getUTCTime());
         databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
         databaseService.addSection("TDT",
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
+    }
+
+    private void processTOT(TSDemuxPayload payload)
+    {
+        tot.attach(payload.getEncoding());
+        databaseService.addDateTime(tdt.getUTCTime());
+        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
+        databaseService.addSection("TOT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());

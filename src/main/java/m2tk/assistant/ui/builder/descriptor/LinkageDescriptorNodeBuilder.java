@@ -18,12 +18,12 @@ public class LinkageDescriptorNodeBuilder implements TreeNodeBuilder
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode("linkage_descriptor");
 
-        node.add(create("descriptor_tag = 0x4A"));
-        node.add(create("descriptor_length = " + decoder.getPayloadLength()));
+        node.add(create(String.format("descriptor_tag = 0x%02X", decoder.getTag())));
+        node.add(create(String.format("descriptor_length = %d", decoder.getPayloadLength())));
 
-        node.add(create("transport_stream_id = " + decoder.getTransportStreamID()));
-        node.add(create("original_network_id = " + decoder.getOriginalNetworkID()));
-        node.add(create("service_id = " + decoder.getServiceID()));
+        node.add(create(String.format("transport_stream_id = %d", decoder.getTransportStreamID())));
+        node.add(create(String.format("original_network_id = %d", decoder.getOriginalNetworkID())));
+        node.add(create(String.format("service_id = %d", decoder.getServiceID())));
         node.add(create(String.format("linkage_type = 0x%02X（%s）",
                                       decoder.getLinkageType(),
                                       translateLinkageType(decoder.getLinkageType()))));
@@ -46,17 +46,18 @@ public class LinkageDescriptorNodeBuilder implements TreeNodeBuilder
             int off = 1;
             if (handoverType == 0x01 || handoverType == 0x02 || handoverType == 0x03)
             {
-                node.add(create("network_id = " + handover.readUINT16(1)));
+                node.add(create(String.format("network_id = %d", handover.readUINT16(1))));
                 off += 2;
             }
             if (originType == 0x00)
             {
-                node.add(create("initial_service_id = " + handover.readUINT16(off)));
+                node.add(create(String.format("initial_service_id = %d", handover.readUINT16(off))));
             }
             offset += handover.size();
         }
 
-        node.add(create("private_data = " + encoding.readSelector(offset).toHexStringPrettyPrint()));
+        node.add(create(String.format("private_data = [%s]", encoding.readSelector(offset).toHexStringPrettyPrint())));
+
         return node;
     }
 
