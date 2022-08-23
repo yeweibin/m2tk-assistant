@@ -27,16 +27,26 @@ public class AsyncQueryTask<V> extends Task<V, Void>
 {
     private final Supplier<V> action;
     private final Consumer<V> consumer;
+    private final Consumer<Throwable> exceptionConsumer;
 
     public AsyncQueryTask(Application application, Supplier<V> action, Consumer<V> consumer)
     {
         super(application);
         this.action = Objects.requireNonNull(action);
         this.consumer = Objects.requireNonNull(consumer);
+        this.exceptionConsumer = t -> {};
+    }
+
+    public AsyncQueryTask(Application application, Supplier<V> action, Consumer<V> consumer, Consumer<Throwable> exceptionConsumer)
+    {
+        super(application);
+        this.action = Objects.requireNonNull(action);
+        this.consumer = Objects.requireNonNull(consumer);
+        this.exceptionConsumer = Objects.requireNonNull(exceptionConsumer);
     }
 
     @Override
-    protected V doInBackground() throws Exception
+    protected V doInBackground()
     {
         return action.get();
     }
@@ -45,5 +55,11 @@ public class AsyncQueryTask<V> extends Task<V, Void>
     protected void succeeded(V result)
     {
         consumer.accept(result);
+    }
+
+    @Override
+    protected void failed(Throwable cause)
+    {
+        exceptionConsumer.accept(cause);
     }
 }

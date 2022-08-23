@@ -1,7 +1,7 @@
 package m2tk.assistant.ui.dialog;
 
 import hu.kazocsaba.imageviewer.ImageViewer;
-import m2tk.assistant.ui.component.ImageCanvas;
+import hu.kazocsaba.imageviewer.ResizeStrategy;
 import m2tk.assistant.ui.util.ComponentUtil;
 
 import javax.swing.*;
@@ -20,13 +20,13 @@ public class NetworkGraphDialog extends JFrame
     private void initUI()
     {
         viewer = new ImageViewer();
+        viewer.setResizeStrategy(ResizeStrategy.NO_RESIZE);
         getContentPane().add(viewer.getComponent(), BorderLayout.CENTER);
         setTitle("网络结构");
     }
 
     public void showImage(BufferedImage image)
     {
-//        canvas.setImage(image);
         viewer.setImage(image);
         ComponentUtil.setPreferSizeAndLocateToCenter(this, 0.75, 0.75);
         setVisible(true);
