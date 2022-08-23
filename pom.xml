@@ -135,6 +135,21 @@
             <artifactId>lombok</artifactId>
             <version>1.18.24</version>
         </dependency>
+        <dependency>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-java</artifactId>
+            <version>0.18.1</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.xmlgraphics</groupId>-->
+<!--            <artifactId>batik-swing</artifactId>-->
+<!--            <version>1.14</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>hu.kazocsaba</groupId>
+            <artifactId>image-viewer</artifactId>
+            <version>1.2.3</version>
+        </dependency>
     </dependencies>
 
     <build>

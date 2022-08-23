@@ -60,6 +60,7 @@ public final class SmallIcons
     public static final Icon CHART_PIE = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_pie.png"));
     public static final Icon CHART_BAR = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_bar.png"));
     public static final Icon CHART_COLUMN = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_column.png"));
+    public static final Icon CHART_ORGANISATION = new ImageIcon(SmallIcons.class.getResource("/images/small/chart_organisation.png"));
     public static final Icon DOCUMENT_SIGNATURE = new ImageIcon(SmallIcons.class.getResource("/images/small/document_signature.png"));
     public static final Icon CHIP_GOLD = new ImageIcon(SmallIcons.class.getResource("/images/small/chip_gold.png"));
     public static final Icon SHIELD = new ImageIcon(SmallIcons.class.getResource("/images/small/shield.png"));
