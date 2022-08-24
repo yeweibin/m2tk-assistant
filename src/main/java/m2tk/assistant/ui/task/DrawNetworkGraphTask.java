@@ -199,11 +199,11 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
                                                               (service.getServiceName() == null) ? "未命名业务" : service.getServiceName(),
                                                               (service.getServiceProvider() == null) ? "未知提供商" : service.getServiceProvider())),
                                     Records.rec(String.format(" 运行状态：%s %n " +
-                                                              " 无条件接收：%s %n " +
+                                                              " 条件接收：%s %n " +
                                                               " 发送EIT_P/f：%s %n " +
                                                               " 发送EIT_Sch：%s",
                                                               service.getRunningStatus(),
-                                                              service.isFreeCAMode() ? "是" : "否",
+                                                              service.isFreeCAMode() ? "否" : "是",
                                                               service.isPresentFollowingEITEnabled() ? "是" : "否",
                                                               service.isScheduleEITEnabled() ? "是" : "否")));
         return Factory.node(key(service))
