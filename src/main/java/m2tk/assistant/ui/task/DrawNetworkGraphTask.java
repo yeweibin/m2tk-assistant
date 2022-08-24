@@ -183,7 +183,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
     {
         String label = Records.turn(Records.rec("id",
                                                 String.format(" %s 业务%d",
-                                                              service.isActualTransportStream() ? "[A]" : "",
+                                                              service.isActualTransportStream() ? "[当前]" : "",
                                                               service.getServiceId())),
                                     Records.rec(String.format(" service_id：%d %n " +
                                                               " transport_stream_id：%d %n " +
@@ -216,7 +216,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
         List<String> records = new ArrayList<>();
         records.add(Records.rec("id",
                                 String.format(" %s 传输流%d",
-                                              (multiplex.getTransportStreamId() == actualTransportStreamId) ? "[A]" : "",
+                                              (multiplex.getTransportStreamId() == actualTransportStreamId) ? "[当前]" : "",
                                               multiplex.getTransportStreamId())));
         records.add(Records.rec(String.format(" transport_stream_id：%d %n " +
                                               " original_network_id：%d",
@@ -245,7 +245,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
     {
         List<String> records = new ArrayList<>();
         records.add(Records.rec("id", String.format(" %s 网络%d",
-                                                    network.isActualNetwork() ? "[A]" : "",
+                                                    network.isActualNetwork() ? "[当前]" : "",
                                                     network.getNetworkId())));
         records.add(Records.rec(String.format(" network_id：%d", network.getNetworkId())));
         if (network.getNetworkName() != null)

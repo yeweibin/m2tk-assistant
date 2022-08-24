@@ -23,7 +23,6 @@ public class NetworkGraphDialog extends JFrame
         viewer.setResizeStrategy(ResizeStrategy.NO_RESIZE);
         getContentPane().add(viewer.getComponent(), BorderLayout.CENTER);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setAlwaysOnTop(true);
         setTitle("网络结构");
     }
 
