@@ -1,25 +1,10 @@
 package m2tk.assistant.ui;
 
 import cn.hutool.core.io.FileUtil;
-import guru.nidi.graphviz.attribute.GraphAttr;
-import guru.nidi.graphviz.attribute.Rank;
-import guru.nidi.graphviz.attribute.Records;
-import guru.nidi.graphviz.engine.Engine;
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.Factory;
-import guru.nidi.graphviz.model.Graph;
-import guru.nidi.graphviz.model.LinkSource;
-import guru.nidi.graphviz.model.Node;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
-import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.SIMultiplexEntity;
-import m2tk.assistant.dbi.entity.SINetworkEntity;
-import m2tk.assistant.dbi.entity.SIServiceEntity;
-import m2tk.assistant.ui.dialog.NetworkGraphDialog;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
-import m2tk.assistant.ui.task.AsyncQueryTask;
+import m2tk.assistant.ui.task.DrawNetworkGraphTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ListModelOutputStream;
 import m2tk.assistant.ui.view.*;
@@ -34,21 +19,12 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import static guru.nidi.graphviz.attribute.GraphAttr.splines;
-import static guru.nidi.graphviz.attribute.Rank.RankDir.LEFT_TO_RIGHT;
-import static guru.nidi.graphviz.model.Factory.*;
 
 public class MainViewController
 {
@@ -66,8 +42,6 @@ public class MainViewController
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
     private String lastInput = null;
-    private NetworkGraphDialog networkGraphDialog;
-
 
     public MainViewController(FrameView view)
     {
@@ -229,8 +203,6 @@ public class MainViewController
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         initFileChooserCurrentDirectory(fileChooser);
-
-        networkGraphDialog = new NetworkGraphDialog();
 
         actionMap.get("reopenLastInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
@@ -561,126 +533,7 @@ public class MainViewController
     @Action
     public void drawNetworkGraph()
     {
-        Supplier<BufferedImage> query = () -> {
-            Map<String, Node> nodes = new HashMap<>();
-            DatabaseService databaseService = Global.getDatabaseService();
-            List<SINetworkEntity> networks = databaseService.listNetworks();
-            List<SIMultiplexEntity> multiplexes = databaseService.listMultiplexes();
-            List<SIServiceEntity> services = databaseService.listServices();
-
-            int actualTransportStreamId = -1;
-            Map<String, Object> siObjects = new HashMap<>();
-            Map<String, List<String>> muxSrvMap = new TreeMap<>();
-            Map<String, List<String>> netMuxMap = new TreeMap<>();
-            for (SIServiceEntity service : services)
-            {
-                String srvKey = String.format("service.%04x.%04x.%04x",
-                                              service.getServiceId(),
-                                              service.getTransportStreamId(),
-                                              service.getOriginalNetworkId());
-                siObjects.put(srvKey, service);
-                nodes.put(srvKey, createServiceNode(service));
-
-                String muxKey = String.format("multiplex.%04x.%04x",
-                                              service.getTransportStreamId(),
-                                              service.getOriginalNetworkId());
-                muxSrvMap.computeIfAbsent(muxKey, k -> new ArrayList<>()).add(srvKey);
-
-                if (service.isActualTransportStream())
-                    actualTransportStreamId = service.getTransportStreamId();
-            }
-
-            for (SIMultiplexEntity multiplex : multiplexes)
-            {
-                String muxKey = String.format("multiplex.%04x.%04x",
-                                              multiplex.getTransportStreamId(),
-                                              multiplex.getOriginalNetworkId());
-                siObjects.put(muxKey, multiplex);
-                nodes.put(muxKey, createMultiplexNode(multiplex, siObjects, muxSrvMap, actualTransportStreamId));
-
-                String netKey = String.format("network.%04x", multiplex.getNetworkId());
-                netMuxMap.computeIfAbsent(netKey, k -> new ArrayList<>()).add(muxKey);
-            }
-
-            for (SINetworkEntity network : networks)
-            {
-                String netKey = String.format("network.%04x", network.getNetworkId());
-                siObjects.put(netKey, network);
-                nodes.put(netKey, createNetworkNode(network, siObjects, netMuxMap));
-            }
-
-            networks.forEach(network -> siObjects.put(String.format("network.%04x", network.getNetworkId()),
-                                                      network));
-            multiplexes.forEach(multiplex -> siObjects.put(String.format("multiplex.%04x.%04x",
-                                                                         multiplex.getTransportStreamId(),
-                                                                         multiplex.getOriginalNetworkId()),
-                                                           multiplex));
-            services.forEach(service -> siObjects.put(String.format("service.%04x.%04x.%04x",
-                                                                    service.getServiceId(),
-                                                                    service.getTransportStreamId(),
-                                                                    service.getOriginalNetworkId()),
-                                                      service));
-
-            List<LinkSource> linkSources = new ArrayList<>();
-            for (String netKey : netMuxMap.keySet())
-            {
-                Node netNode = nodes.get(netKey);
-                List<String> muxKeys = netMuxMap.get(netKey);
-                for (String muxKey : muxKeys)
-                {
-                    Node muxNode = nodes.get(muxKey);
-                    if (muxNode != null)
-                        linkSources.add(netNode.link(between(port(muxKey + ":e"), muxNode.port("id:w"))));
-                }
-            }
-            for (String muxKey : muxSrvMap.keySet())
-            {
-                Node muxNode = nodes.get(muxKey);
-                if (muxNode != null)
-                {
-                    List<String> srvKeys = muxSrvMap.get(muxKey);
-                    for (String srvKey : srvKeys)
-                    {
-                        Node srvNode = nodes.get(srvKey);
-                        if (srvNode != null)
-                            linkSources.add(muxNode.link(between(port(srvKey + ":e"), srvNode.port("id:w"))));
-                    }
-                }
-            }
-
-            Graph graph = graph("NetworkGraph")
-                    .directed()
-                    .graphAttr().with(Rank.dir(LEFT_TO_RIGHT), splines(GraphAttr.SplineMode.LINE))
-                    .nodeAttr().with("fontname", "SimSun")
-                    .linkAttr().with("class", "link-class")
-                    .with(linkSources);
-
-            return Graphviz.fromGraph(graph)
-                           .engine(Engine.DOT)
-                           .render(Format.PNG)
-                           .toImage();
-        };
-
-        Consumer<BufferedImage> consumer = image ->
-        {
-            ComponentUtil.setWaitingMouseCursor(frameView.getRootPane(), false);
-            networkGraphDialog.showImage(image);
-        };
-
-        Consumer<Throwable> exceptionConsumer = t -> {
-            logger.warn("创建网络结构时发生错误：{}", t.getMessage());
-            ComponentUtil.setWaitingMouseCursor(frameView.getRootPane(), false);
-            JOptionPane.showMessageDialog(frameView.getFrame(),
-                                          "运行时异常，无法创建网络结构图",
-                                          "请注意",
-                                          JOptionPane.ERROR_MESSAGE);
-        };
-
-        AsyncQueryTask<BufferedImage> task = new AsyncQueryTask<>(frameView.getApplication(),
-                                                                  query,
-                                                                  consumer,
-                                                                  exceptionConsumer);
-
+        DrawNetworkGraphTask task = new DrawNetworkGraphTask(frameView.getApplication());
         ComponentUtil.setWaitingMouseCursor(frameView.getRootPane(), true);
         task.execute();
     }
@@ -748,96 +601,5 @@ public class MainViewController
         {
             logger.debug("无法保存最近使用的文件：{}", ex.getMessage());
         }
-    }
-
-    private Node createServiceNode(SIServiceEntity service)
-    {
-        String label = Records.turn(Records.rec("id",
-                                                String.format("%s业务 %d",
-                                                              service.isActualTransportStream() ? "★" : "",
-                                                              service.getServiceId())),
-                                    Records.rec(String.format("service_id：%d %n" +
-                                                              "transport_stream_id：%d %n" +
-                                                              "original_network_id：%d",
-                                                              service.getServiceId(),
-                                                              service.getTransportStreamId(),
-                                                              service.getOriginalNetworkId())),
-                                    Records.rec(String.format("业务类型：0x%02X（%s） %n" +
-                                                              "业务名称：%s %n" +
-                                                              "提供商：%s",
-                                                              service.getServiceType(),
-                                                              service.getServiceTypeName(),
-                                                              (service.getServiceName() == null) ? "未命名业务" : service.getServiceName(),
-                                                              (service.getServiceProvider() == null) ? "未知提供商" : service.getServiceProvider())),
-                                    Records.rec(String.format("运行状态：%s %n" +
-                                                              "无条件接收：%s %n" +
-                                                              "发送EIT_P/f：%s %n" +
-                                                              "发送EIT_Sch：%s",
-                                                              service.getRunningStatus(),
-                                                              service.isFreeCAMode() ? "是" : "否",
-                                                              service.isPresentFollowingEITEnabled() ? "是" : "否",
-                                                              service.isScheduleEITEnabled() ? "是" : "否")));
-        return Factory.node(String.format("service.%d", service.getServiceId()))
-                      .with("shape", "record")
-                      .with(Records.label(label));
-    }
-
-    private Node createMultiplexNode(SIMultiplexEntity multiplex,
-                                     Map<String, Object> siObjects,
-                                     Map<String, List<String>> muxSrvMap,
-                                     int actualTransportStreamId)
-    {
-        List<String> records = new ArrayList<>();
-        records.add(Records.rec("id",
-                                String.format("%s传输流 %d",
-                                              (multiplex.getTransportStreamId() == actualTransportStreamId) ? "★" : "",
-                                              multiplex.getTransportStreamId())));
-        records.add(Records.rec(String.format("transport_stream_id：%d%n" +
-                                              "original_network_id：%d",
-                                              multiplex.getTransportStreamId(),
-                                              multiplex.getOriginalNetworkId())));
-        if (multiplex.getDeliverySystemType() != null)
-            records.add(Records.rec(String.format("传输系统：%s", multiplex.getDeliverySystemType())));
-
-        String muxKey = String.format("multiplex.%04x.%04x",
-                                      multiplex.getTransportStreamId(),
-                                      multiplex.getOriginalNetworkId());
-        List<String> srvKeys = muxSrvMap.getOrDefault(muxKey, Collections.emptyList());
-        srvKeys.sort(String::compareTo);
-        for (String srvKey : srvKeys)
-        {
-            SIServiceEntity service = (SIServiceEntity) siObjects.get(srvKey);
-            records.add(Records.rec(srvKey, String.format("业务 %d", service.getServiceId())));
-        }
-
-        return Factory.node(String.format("multiplex.%04x", multiplex.getTransportStreamId()))
-                      .with("shape", "record")
-                      .with(Records.of(records.toArray(new String[0])));
-    }
-
-    private Node createNetworkNode(SINetworkEntity network,
-                                   Map<String, Object> siObjects,
-                                   Map<String, List<String>> netMuxMap)
-    {
-        List<String> records = new ArrayList<>();
-        records.add(Records.rec("id", String.format("%s网络 %d",
-                                                    network.isActualNetwork() ? "★" : "",
-                                                    network.getNetworkId())));
-        records.add(Records.rec(String.format("network_id：%d", network.getNetworkId())));
-        if (network.getNetworkName() != null)
-            records.add(Records.rec(String.format("网络名称：%s", network.getNetworkName())));
-
-        String netKey = String.format("network.%04x", network.getNetworkId());
-        List<String> muxKeys = netMuxMap.getOrDefault(netKey, Collections.emptyList());
-        muxKeys.sort(String::compareTo);
-        for (String muxKey : muxKeys)
-        {
-            SIMultiplexEntity multiplex = (SIMultiplexEntity) siObjects.get(muxKey);
-            records.add(Records.rec(muxKey, String.format("传输流 %d", multiplex.getTransportStreamId())));
-        }
-
-        return Factory.node(String.format("network.%d", network.getNetworkId()))
-                      .with("shape", "record")
-                      .with(Records.of(records.toArray(new String[0])));
     }
 }
