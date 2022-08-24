@@ -92,7 +92,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
 
     private void draw(BufferedImage image)
     {
-        ComponentUtil.setWaitingMouseCursor(getContext().getFocusOwner(), false);
+        ComponentUtil.setWaitingMouseCursor(getContext().getFocusOwner().getRootPane(), false);
         NetworkGraphDialog dialog = new NetworkGraphDialog();
         dialog.showImage(image);
     }
