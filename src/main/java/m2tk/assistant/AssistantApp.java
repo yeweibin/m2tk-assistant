@@ -1,6 +1,5 @@
 package m2tk.assistant;
 
-import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import m2tk.assistant.ui.MainViewController;
@@ -26,7 +25,7 @@ public final class AssistantApp extends SingleFrameApplication
     }
 
     public static final String APP_NAME = "M2TK码流分析助手";
-    public static final String APP_VERSION = "1.5.6.1300";
+    public static final String APP_VERSION = "1.5.7.1800";
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;
 
