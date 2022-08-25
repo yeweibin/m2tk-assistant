@@ -17,9 +17,7 @@
 package m2tk.assistant.ui.view;
 
 import m2tk.assistant.Global;
-import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.PCRCheckEntity;
-import m2tk.assistant.dbi.entity.PCREntity;
 import m2tk.assistant.dbi.entity.PCRStatEntity;
 import m2tk.assistant.ui.component.PCRChartPanel;
 import m2tk.assistant.ui.component.PCRStatsPanel;
@@ -37,7 +35,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@SuppressWarnings("unchecked")
 public class PCRInfoView extends JPanel
 {
     private final transient FrameView frameView;
@@ -46,7 +43,7 @@ public class PCRInfoView extends JPanel
     private PCRChartPanel pcrChartPanel;
     private JSplitPane splitPane;
     private Timer timer;
-    private PCRStatEntity selectedPCRStat;
+    private transient PCRStatEntity selectedPCRStat;
 
     public PCRInfoView(FrameView view)
     {
@@ -118,10 +115,10 @@ public class PCRInfoView extends JPanel
     }
 
 
-    private void updatePCRChart(List<PCREntity> records, List<PCRCheckEntity> checks)
+    private void updatePCRChart(List<PCRCheckEntity> checks)
     {
         pcrChartPanel.setVisible(true);
-        pcrChartPanel.update(records, checks);
+        pcrChartPanel.update(checks);
         splitPane.setDividerLocation(0.25);
     }
 
@@ -144,17 +141,11 @@ public class PCRInfoView extends JPanel
         if (target == null)
             return;
 
-        Supplier<List<?>[]> query = () -> {
-            List<?>[] result = new List[2];
-            DatabaseService databaseService = Global.getDatabaseService();
-            result[0] = databaseService.getRecentPCRs(target.getPid(), 5000);
-            result[1] = databaseService.getRecentPCRChecks(target.getPid(), 5000);
-            return result;
-        };
-        Consumer<List<?>[]> consumer = result -> updatePCRChart((List<PCREntity>) result[0], (List<PCRCheckEntity>) result[1]);
-        AsyncQueryTask<List<?>[]> task = new AsyncQueryTask<>(frameView.getApplication(),
-                                                              query,
-                                                              consumer);
+        Supplier<List<PCRCheckEntity>> query = () -> Global.getDatabaseService().getRecentPCRChecks(target.getPid(), 1000);
+        Consumer<List<PCRCheckEntity>> consumer = this::updatePCRChart;
+        AsyncQueryTask<List<PCRCheckEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
+                                                                         query,
+                                                                         consumer);
         task.execute();
     }
 }

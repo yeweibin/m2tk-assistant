@@ -389,11 +389,6 @@ public class DatabaseService
         return dbi.withHandle(pcrHandler::listPCRStats);
     }
 
-    public List<PCREntity> getRecentPCRs(int pid, int limit)
-    {
-        return dbi.withHandle(handle -> pcrHandler.listRecentPCRs(handle, pid, limit));
-    }
-
     public List<PCRCheckEntity> getRecentPCRChecks(int pid, int limit)
     {
         return dbi.withHandle(handle -> pcrHandler.listRecentPCRChecks(handle, pid, limit));
