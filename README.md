@@ -47,3 +47,6 @@ EPG解析
 
 PSI/SI表结构
 ![PSI/SI表结构](screenshots/PSISI语法分析.png)
+
+根据SI信息绘制网络结构图
+![网络结构图](screenshots/网络结构图.png)
