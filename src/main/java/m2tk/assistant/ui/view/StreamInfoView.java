@@ -142,6 +142,7 @@ public class StreamInfoView extends JPanel
                          ? "节目完全加扰，无法播放"
                          : "无可播放内容";
             JOptionPane.showMessageDialog(frameView.getFrame(), text);
+            return;
         }
 
         RxChannel channel = ProtocolManager.openRxChannel(Global.getInputResource());
@@ -272,8 +273,8 @@ public class StreamInfoView extends JPanel
     {
         selectedProgram = program;
         String text = (selectedProgram.getProgramName() == null)
-                      ? String.format("播放节目%d", selectedProgram.getProgramNumber())
-                      : String.format("播放节目“%s”", selectedProgram.getProgramName());
+                      ? String.format("播放 节目%d", selectedProgram.getProgramNumber())
+                      : String.format("播放 %s", selectedProgram.getProgramName());
         programContextMenuItem.setText(text);
         programContextMenu.show(event.getComponent(), event.getX(), event.getY());
     }
