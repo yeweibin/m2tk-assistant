@@ -81,12 +81,14 @@ public class TR290InfoView extends JPanel
     public void reset()
     {
         tr290StatsPanel.reset();
-        timer.restart();
+        if (Global.getStreamAnalyser().isRunning())
+            timer.restart();
     }
 
     public void startRefreshing()
     {
-        timer.start();
+        if (Global.getStreamAnalyser().isRunning())
+            timer.start();
     }
 
     public void stopRefreshing()

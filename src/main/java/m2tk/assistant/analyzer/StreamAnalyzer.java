@@ -25,6 +25,7 @@ public class StreamAnalyzer
     private final TSDemux demuxer;
     private RxChannel input;
     private DatabaseService databaseService;
+    private volatile boolean running;
 
     public StreamAnalyzer()
     {
@@ -69,6 +70,7 @@ public class StreamAnalyzer
 //        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
 
         demuxer.attach(input);
+        running = true;
 
         log.info("开始分析");
         return true;
@@ -90,8 +92,14 @@ public class StreamAnalyzer
         if (!status.isRunning())
         {
             IoUtil.close(input);
+            running = false;
             log.info("停止分析");
         }
+    }
+
+    public boolean isRunning()
+    {
+        return running;
     }
 
     static class EventFilter<T extends TSDemuxEvent> implements Consumer<TSDemuxEvent>

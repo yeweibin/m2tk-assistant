@@ -20,7 +20,7 @@ import m2tk.assistant.dbi.entity.SourceEntity;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
+import java.util.Objects;
 
 public class SourceInfoPanel extends JPanel
 {
@@ -83,7 +83,13 @@ public class SourceInfoPanel extends JPanel
         if (source == null || isSame(currentSourceEntity, source))
             return;
 
-        fieldSourceName.setText(source.getSourceName());
+        String oldSourceName = fieldSourceName.getText();
+        if (!Objects.equals(oldSourceName, source.getSourceName()))
+        {
+            fieldSourceName.setText(source.getSourceName());
+            fieldSourceName.setToolTipText(source.getSourceName());
+        }
+
         fieldBitrate.setText(String.format("%,d bps", source.getBitrate()));
         fieldFrameSize.setText("" + source.getFrameSize());
         fieldPacketCount.setText(String.format("%,d", source.getPacketCount()));

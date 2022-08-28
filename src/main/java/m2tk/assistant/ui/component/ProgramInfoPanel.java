@@ -23,21 +23,22 @@ import m2tk.assistant.analyzer.domain.ElementaryStream;
 import m2tk.assistant.analyzer.domain.MPEGProgram;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
+import javax.swing.tree.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 
 public class ProgramInfoPanel extends JPanel
 {
     private DefaultTreeModel model;
     private DefaultMutableTreeNode root;
     private JTree tree;
+    private BiConsumer<MouseEvent, MPEGProgram> popupListener;
     private final List<MPEGProgram> currentPrograms;
 
     public ProgramInfoPanel()
@@ -54,11 +55,45 @@ public class ProgramInfoPanel extends JPanel
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new ProgramTreeCellRenderer());
+        tree.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                if (e.isPopupTrigger())
+                {
+                    TreePath selected = tree.getSelectionPath();
+                    TreePath path = (selected != null)
+                                    ? selected
+                                    : tree.getClosestPathForLocation(e.getX(), e.getY());
+
+                    if (path == null)
+                        return;
+
+                    Object[] nodes = path.getPath();
+                    if (nodes.length > 1 && popupListener != null)
+                    {
+                        try
+                        {
+                            int idx = root.getIndex((TreeNode) nodes[1]);
+                            popupListener.accept(e, currentPrograms.get(idx));
+                        } catch (Exception ignored)
+                        {
+                        }
+                    }
+                }
+            }
+        });
 
         ToolTipManager.sharedInstance().registerComponent(tree);
 
         setLayout(new BorderLayout());
         add(new JScrollPane(tree), BorderLayout.CENTER);
+    }
+
+    public void setPopupListener(BiConsumer<MouseEvent, MPEGProgram> listener)
+    {
+        popupListener = listener;
     }
 
     public void resetProgramList()

@@ -1,13 +1,17 @@
 package m2tk.assistant;
 
+import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import m2tk.assistant.ui.MainViewController;
 import org.jdesktop.application.FrameView;
 import org.jdesktop.application.SingleFrameApplication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.InputStream;
 
 public final class AssistantApp extends SingleFrameApplication
 {
@@ -15,6 +19,11 @@ public final class AssistantApp extends SingleFrameApplication
     {
         System.setProperty("awt.useSystemAAFontSettings", "on");
         System.setProperty("swing.aatext", "true");
+    }
+
+    public static AssistantApp getInstance()
+    {
+        return SingleFrameApplication.getInstance(AssistantApp.class);
     }
 
     public static void main(String[] args)
@@ -25,9 +34,11 @@ public final class AssistantApp extends SingleFrameApplication
     }
 
     public static final String APP_NAME = "M2TK码流分析助手";
-    public static final String APP_VERSION = "1.5.7.1800";
+    public static final String APP_VERSION = "1.5.8.1900";
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;
+    private MPEGTSPlayer player;
+    private static final Logger logger = LoggerFactory.getLogger(AssistantApp.class);
 
     @Override
     protected void initialize(String[] args)
@@ -50,14 +61,35 @@ public final class AssistantApp extends SingleFrameApplication
     {
         FrameView frameView = getMainView();
         controller = new MainViewController(frameView);
+        player = new MPEGTSPlayer();
         show(frameView);
     }
 
     @Override
     protected void shutdown()
     {
+        player.stop();
         controller.setWillQuit();
         Global.getStreamAnalyser().shutdown();
         super.shutdown();
+    }
+
+    public void playVideoAndAudio(InputStream in, int videoPid, int audioPid)
+    {
+        Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
+                                                               "无法播放指定内容",
+                                                               "错误",
+                                                               JOptionPane.WARNING_MESSAGE);
+
+        ThreadUtil.execute(() -> {
+            try
+            {
+                player.playVideoAndAudio(in, videoPid, audioPid);
+            } catch (Exception ex)
+            {
+                logger.warn("{}", ex.getMessage());
+                EventQueue.invokeLater(onError);
+            }
+        });
     }
 }

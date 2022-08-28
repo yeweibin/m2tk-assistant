@@ -41,7 +41,6 @@ public class MainViewController
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
-    private String lastInput = null;
 
     public MainViewController(FrameView view)
     {
@@ -328,17 +327,18 @@ public class MainViewController
         {
             File file = fileChooser.getSelectedFile();
             fileChooser.setCurrentDirectory(file.getParentFile());
-            String input = file.toURI().toASCIIString();
+            String input = file.getAbsolutePath();
+
+            Global.setInputResource(input);
             boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
             if (!started)
             {
-                lastInput = null;
+                Global.setInputResource(null);
                 actionMap.get("reopenLastInput").setEnabled(false);
                 JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
             } else
             {
                 saveRecentFile(file);
-                lastInput = input;
                 streamInfoView.reset();
                 networkInfoView.reset();
                 epgInfoView.reset();
@@ -360,7 +360,7 @@ public class MainViewController
     {
         String input = JOptionPane.showInputDialog(frameView.getFrame(),
                                                    "组播地址",
-                                                   "udp://224.0.0.1:7890");
+                                                   "udp://224.1.1.1:7890");
         if (input == null)
             return;
 
@@ -373,15 +373,16 @@ public class MainViewController
             return;
         }
 
+        Global.setInputResource(input);
         boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
         if (!started)
         {
-            lastInput = null;
+            Global.setInputResource(null);
             actionMap.get("reopenLastInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
-            lastInput = input;
+            Global.setInputResource(input);
             streamInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
@@ -406,15 +407,16 @@ public class MainViewController
         if (input == null)
             return;
 
+        Global.setInputResource(input);
         boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
         if (!started)
         {
-            lastInput = null;
+            Global.setInputResource(null);
             actionMap.get("reopenLastInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
-            lastInput = input;
+            Global.setInputResource(input);
             streamInfoView.reset();
             networkInfoView.reset();
             epgInfoView.reset();
@@ -433,6 +435,7 @@ public class MainViewController
     @Action
     public void reopenLastInput()
     {
+        String lastInput = Global.getInputResource();
         if (lastInput == null)
         {
             actionMap.get("reopenLastInput").setEnabled(false);
@@ -442,6 +445,7 @@ public class MainViewController
         boolean started = Global.getStreamAnalyser().start(lastInput, this::onAnalyzerStopped);
         if (!started)
         {
+            Global.setInputResource(null);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
@@ -553,6 +557,12 @@ public class MainViewController
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
+
+        streamInfoView.stopRefreshing();
+        networkInfoView.stopRefreshing();
+        epgInfoView.stopRefreshing();
+        tr290InfoView.stopRefreshing();
+        pcrStatsView.stopRefreshing();
     }
 
     private boolean isCorrectMulticastAddress(String input)

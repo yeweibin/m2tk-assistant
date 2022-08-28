@@ -101,12 +101,15 @@ public class PCRInfoView extends JPanel
     {
         pcrStatsPanel.reset();
         pcrChartPanel.reset();
-        timer.restart();
+
+        if (Global.getStreamAnalyser().isRunning())
+            timer.restart();
     }
 
     public void startRefreshing()
     {
-        timer.start();
+        if (Global.getStreamAnalyser().isRunning())
+            timer.start();
     }
 
     public void stopRefreshing()

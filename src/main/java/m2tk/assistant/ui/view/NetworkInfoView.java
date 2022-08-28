@@ -219,16 +219,22 @@ public class NetworkInfoView extends JPanel
     public void reset()
     {
         networkTimePanel.resetTime();
-        timer1.restart();
-        timer2.restart();
-        timer3.restart();
+        if (Global.getStreamAnalyser().isRunning())
+        {
+            timer1.restart();
+            timer2.restart();
+            timer3.restart();
+        }
     }
 
     public void startRefreshing()
     {
-        timer1.start();
-        timer2.start();
-        timer3.start();
+        if (Global.getStreamAnalyser().isRunning())
+        {
+            timer1.start();
+            timer2.start();
+            timer3.start();
+        }
     }
 
     public void stopRefreshing()
