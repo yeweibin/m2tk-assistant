@@ -16,6 +16,7 @@
 
 package m2tk.assistant.ui.view;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.ElementaryStream;
@@ -48,6 +49,7 @@ import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toMap;
 
+@Slf4j
 public class StreamInfoView extends JPanel
 {
     private final transient FrameView frameView;
@@ -136,14 +138,21 @@ public class StreamInfoView extends JPanel
                 audioPid = es.getStreamPid();
         }
 
+        String programName = (selectedProgram.getProgramName() == null)
+                             ? "节目" + selectedProgram.getProgramNumber()
+                             : selectedProgram.getProgramName();
+
         if (videoPid == 0x1FFF && audioPid == 0x1FFF)
         {
-            String text= !selectedProgram.isFreeAccess()
-                         ? "节目完全加扰，无法播放"
-                         : "无可播放内容";
+            String text = !selectedProgram.isFreeAccess()
+                          ? programName + "完全加扰，无法播放"
+                          : programName + "无可播放内容";
             JOptionPane.showMessageDialog(frameView.getFrame(), text);
+            log.info(text);
             return;
         }
+
+        log.info("播放'{}'，视频PID：{}，音频PID：{}", programName, videoPid, audioPid);
 
         RxChannel channel = ProtocolManager.openRxChannel(Global.getInputResource());
         AssistantApp.getInstance().playVideoAndAudio(new RxChannelInputStream(channel), videoPid, audioPid);

@@ -3,16 +3,16 @@ package m2tk.assistant;
 import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.ui.MainViewController;
 import org.jdesktop.application.FrameView;
 import org.jdesktop.application.SingleFrameApplication;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.InputStream;
 
+@Slf4j
 public final class AssistantApp extends SingleFrameApplication
 {
     static void enableAntiAliasing()
@@ -38,7 +38,6 @@ public final class AssistantApp extends SingleFrameApplication
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;
     private MPEGTSPlayer player;
-    private static final Logger logger = LoggerFactory.getLogger(AssistantApp.class);
 
     @Override
     protected void initialize(String[] args)
@@ -46,7 +45,6 @@ public final class AssistantApp extends SingleFrameApplication
         Font treeFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Tree.font").getSize());
         Font tableFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Table.font").getSize());
         FlatIntelliJLaf.setup();
-//        FlatDarculaLaf.setup();
         UIManager.put("TitlePane.showIconBesideTitle", true);
         UIManager.put("TabbedPane.showTabSeparators", true);
         UIManager.put("Table.paintOutsideAlternateRows", true);
@@ -87,7 +85,7 @@ public final class AssistantApp extends SingleFrameApplication
                 player.playVideoAndAudio(in, videoPid, audioPid);
             } catch (Exception ex)
             {
-                logger.warn("{}", ex.getMessage());
+                log.warn("{}", ex.getMessage());
                 EventQueue.invokeLater(onError);
             }
         });

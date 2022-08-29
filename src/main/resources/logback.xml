@@ -26,11 +26,22 @@
     </appender>
 
 <!--    <root level="INFO">-->
-    <root>
+    <root level="INFO">
         <appender-ref ref="FileAppender"/>
-        <appender-ref ref="TextListLogAppender"/>
     </root>
+    <logger name="m2tk.assistant.AssistantApp" level="INFO">
+        <appender-ref ref="TextListLogAppender" />
+    </logger>
+    <logger name="m2tk.assistant.MPEGTSPlayer" level="INFO">
+        <appender-ref ref="TextListLogAppender" />
+    </logger>
+    <logger name="m2tk.assistant.analyzer.StreamAnalyzer" level="INFO">
+        <appender-ref ref="TextListLogAppender" />
+    </logger>
     <logger name="m2tk.assistant.ui.MainViewController" level="INFO">
+        <appender-ref ref="TextListLogAppender" />
+    </logger>
+    <logger name="m2tk.assistant.ui.view.StreamInfoView" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
 </configuration>

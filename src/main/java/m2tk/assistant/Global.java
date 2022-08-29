@@ -1,10 +1,7 @@
 package m2tk.assistant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,8 +9,6 @@ import java.util.List;
 
 public final class Global
 {
-    private static final Logger logger;
-    private static final ObjectMapper objectMapper;
     private static final DatabaseService databaseService;
     private static final StreamAnalyzer streamAnalyser;
     private static final List<Integer> userPrivateSectionStreams;
@@ -21,8 +16,6 @@ public final class Global
 
     static
     {
-        logger = LoggerFactory.getLogger(Global.class);
-        objectMapper = new ObjectMapper();
         databaseService = new DatabaseService();
         streamAnalyser = new StreamAnalyzer();
         userPrivateSectionStreams = new ArrayList<>();
@@ -32,11 +25,6 @@ public final class Global
 
     private Global()
     {
-    }
-
-    public static ObjectMapper getObjectMapper()
-    {
-        return objectMapper;
     }
 
     public static StreamAnalyzer getStreamAnalyser()

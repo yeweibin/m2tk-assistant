@@ -17,14 +17,12 @@
 package m2tk.assistant;
 
 import cn.hutool.core.thread.ThreadUtil;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.util.FFmpegTSFrameGrabber;
 import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.CanvasFrame;
-import org.bytedeco.javacv.FFmpegLogCallback;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -44,17 +42,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.bytedeco.ffmpeg.global.avutil.AV_LOG_QUIET;
 
+@Slf4j
 public class MPEGTSPlayer
 {
-    private static final Logger logger = LoggerFactory.getLogger(MPEGTSPlayer.class);
-    private static final long VIDEO_FINE_TUNE = 100;
-
     private final BlockingDeque<Frame> vQueue;
     private final BlockingDeque<Frame> aQueue;
     private Rectangle bounds;
 
     private CanvasFrame canvasFrame;
     private volatile long timelineStart = -1;
+    private volatile long prevAudioTimestamp = -1;
+    private volatile long prevAudioPosition = 0;
     private boolean isFullScreen;
 
     public MPEGTSPlayer()
@@ -75,7 +73,6 @@ public class MPEGTSPlayer
     public void playVideoAndAudio(InputStream in, int videoPid, int audioPid) throws FFmpegTSFrameGrabber.Exception
     {
         avutil.av_log_set_level(AV_LOG_QUIET);
-        FFmpegLogCallback.set();
 
         FFmpegTSFrameGrabber grabber = new FFmpegTSFrameGrabber(in, 0);
         grabber.setCloseInputStream(true);
@@ -114,9 +111,9 @@ public class MPEGTSPlayer
                     grabber.close();
                 } catch (Exception ex)
                 {
-                    logger.warn("{}", ex.getMessage());
+                    log.warn("{}", ex.getMessage());
                 }
-                logger.debug("播放进程结束");
+                log.debug("播放进程结束");
             }
         });
         JRootPane rootPane = canvasFrame.getRootPane();
@@ -144,10 +141,12 @@ public class MPEGTSPlayer
 
     private void grabFrames(CanvasFrame canvas, FrameGrabber grabber, PlaybackTimer timer)
     {
+        timelineStart = -1;
+        prevAudioPosition = 0;
+        prevAudioTimestamp = -1;
         vQueue.clear();
         aQueue.clear();
-        if (timer != null)
-            timer.start();
+        timer.start();
 
         while (canvas.isVisible())
         {
@@ -156,20 +155,16 @@ public class MPEGTSPlayer
                 Frame frame = grabber.grab();
                 if (frame == null)
                     continue;
-
                 if (frame.image != null)
                     vQueue.add(frame.clone());
                 if (frame.samples != null)
                     aQueue.add(frame.clone());
-
-                if (timelineStart == -1)
-                    timelineStart = frame.timestamp;
             } catch (Exception ex)
             {
-                logger.warn("[抽帧] {}", ex.getMessage());
+                log.warn("[抽帧] {}", ex.getMessage());
             }
         }
-        logger.debug("抽帧线程结束");
+        log.debug("抽帧线程结束");
     }
 
     private void processVideoFrame(CanvasFrame canvas, int frameGaps, PlaybackTimer timer)
@@ -193,7 +188,7 @@ public class MPEGTSPlayer
                 long vaOffset = image.timestamp - timelineStart - timer.elapsedMicros();
                 if (vaOffset > 0)
                 {
-                    ThreadUtil.safeSleep(Math.min(frameGaps, (vaOffset - VIDEO_FINE_TUNE) / 1000));
+                    ThreadUtil.safeSleep(Math.min(frameGaps, vaOffset / 1000));
                 }
 
                 // ??? 原示例是直接showImage，并没有在EDT里showImage，可以吗？
@@ -208,10 +203,10 @@ public class MPEGTSPlayer
                     EventQueue.invokeLater(r);
             } catch (Exception ex)
             {
-                logger.warn("[视频] {}", ex.getMessage());
+                log.warn("[视频] {}", ex.getMessage());
             }
         }
-        logger.debug("视频处理线程结束");
+        log.debug("视频处理线程结束");
     }
 
     private void processAudioFrame(CanvasFrame canvas, SourceDataLine sourceDataLine, int sampleFormat)
@@ -223,18 +218,18 @@ public class MPEGTSPlayer
                 Frame audio = aQueue.poll(50, TimeUnit.MILLISECONDS);
                 if (audio != null)
                 {
-                    playAudioSample(sourceDataLine, sampleFormat, audio.samples);
+                    playAudioSample(sourceDataLine, sampleFormat, audio.timestamp, audio.samples);
                     audio.close();
                 }
             } catch (Exception ex)
             {
-                logger.warn("[音频] {}", ex.getMessage());
+                log.warn("[音频] {}", ex.getMessage());
             }
         }
-        logger.debug("音频处理线程结束");
+        log.debug("音频处理线程结束");
     }
 
-    private void playAudioSample(SourceDataLine sourceDataLine, int sampleFormat, Buffer[] samples)
+    private void playAudioSample(SourceDataLine sourceDataLine, int sampleFormat, long timestamp, Buffer[] samples)
     {
         if (sourceDataLine == null || samples == null)
             return;
@@ -270,7 +265,18 @@ public class MPEGTSPlayer
         if (data == null)
             return;
 
+        long currAudioPosition = sourceDataLine.getMicrosecondPosition();
+        if (timelineStart == -1)
+        {
+            timelineStart = timestamp;
+        } else
+        {
+            long offset = timestamp - prevAudioTimestamp - (currAudioPosition - prevAudioPosition);
+            ThreadUtil.safeSleep(Math.min(10, offset / 1000));
+        }
         sourceDataLine.write(data, 0, data.length);
+        prevAudioPosition = currAudioPosition;
+        prevAudioTimestamp = timestamp;
     }
 
     private SourceDataLine initSourceDataLine(FrameGrabber grabber)
@@ -310,7 +316,7 @@ public class MPEGTSPlayer
             case avutil.AV_SAMPLE_FMT_S64P://有符号short 64bit平面型
                 break;
             default:
-                logger.warn("不支持的声音格式：{}", grabber.getSampleFormat());
+                log.warn("不支持的声音格式：{}", grabber.getSampleFormat());
                 return null;
         }
 
