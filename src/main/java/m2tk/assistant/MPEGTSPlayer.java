@@ -47,14 +47,15 @@ import static org.bytedeco.ffmpeg.global.avutil.AV_LOG_QUIET;
 public class MPEGTSPlayer
 {
     private static final Logger logger = LoggerFactory.getLogger(MPEGTSPlayer.class);
+    private static final long VIDEO_FINE_TUNE = 100;
 
     private final BlockingDeque<Frame> vQueue;
     private final BlockingDeque<Frame> aQueue;
-    private volatile Rectangle bounds;
+    private Rectangle bounds;
 
     private CanvasFrame canvasFrame;
     private volatile long timelineStart = -1;
-    private boolean isFullscreen;
+    private boolean isFullScreen;
 
     public MPEGTSPlayer()
     {
@@ -71,7 +72,7 @@ public class MPEGTSPlayer
         }
     }
 
-    public void playVideoAndAudio(InputStream in, int videoPid, int audioPid) throws Exception
+    public void playVideoAndAudio(InputStream in, int videoPid, int audioPid) throws FFmpegTSFrameGrabber.Exception
     {
         avutil.av_log_set_level(AV_LOG_QUIET);
         FFmpegLogCallback.set();
@@ -115,7 +116,7 @@ public class MPEGTSPlayer
                 {
                     logger.warn("{}", ex.getMessage());
                 }
-                logger.debug("grabber closed.");
+                logger.debug("播放进程结束");
             }
         });
         JRootPane rootPane = canvasFrame.getRootPane();
@@ -126,15 +127,15 @@ public class MPEGTSPlayer
                                         KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
                                         JComponent.WHEN_IN_FOCUSED_WINDOW);
         rootPane.registerKeyboardAction(e -> {
-                                            if (isFullscreen)
+                                            if (isFullScreen)
                                             {
                                                 canvasFrame.setBounds(bounds);
-                                                isFullscreen = false;
+                                                isFullScreen = false;
                                             } else
                                             {
                                                 bounds = canvasFrame.getBounds();
                                                 canvasFrame.setExtendedState(canvasFrame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
-                                                isFullscreen = true;
+                                                isFullScreen = true;
                                             }
                                         },
                                         KeyStroke.getKeyStroke(KeyEvent.VK_F, 0),
@@ -165,11 +166,10 @@ public class MPEGTSPlayer
                     timelineStart = frame.timestamp;
             } catch (Exception ex)
             {
-                logger.warn("[grabproc] {}", ex.getMessage());
+                logger.warn("[抽帧] {}", ex.getMessage());
             }
         }
-
-        logger.debug("grabproc task stopped.");
+        logger.debug("抽帧线程结束");
     }
 
     private void processVideoFrame(CanvasFrame canvas, int frameGaps, PlaybackTimer timer)
@@ -193,7 +193,7 @@ public class MPEGTSPlayer
                 long vaOffset = image.timestamp - timelineStart - timer.elapsedMicros();
                 if (vaOffset > 0)
                 {
-                    ThreadUtil.safeSleep(Math.min(frameGaps, vaOffset / 1000));
+                    ThreadUtil.safeSleep(Math.min(frameGaps, (vaOffset - VIDEO_FINE_TUNE) / 1000));
                 }
 
                 // ??? 原示例是直接showImage，并没有在EDT里showImage，可以吗？
@@ -208,10 +208,10 @@ public class MPEGTSPlayer
                     EventQueue.invokeLater(r);
             } catch (Exception ex)
             {
-                logger.warn("[videoproc] {}", ex.getMessage());
+                logger.warn("[视频] {}", ex.getMessage());
             }
         }
-        logger.debug("videoproc task stopped.");
+        logger.debug("视频处理线程结束");
     }
 
     private void processAudioFrame(CanvasFrame canvas, SourceDataLine sourceDataLine, int sampleFormat)
@@ -228,10 +228,10 @@ public class MPEGTSPlayer
                 }
             } catch (Exception ex)
             {
-                logger.warn("[audioproc] {}", ex.getMessage());
+                logger.warn("[音频] {}", ex.getMessage());
             }
         }
-        logger.debug("audioproc task stopped.");
+        logger.debug("音频处理线程结束");
     }
 
     private void playAudioSample(SourceDataLine sourceDataLine, int sampleFormat, Buffer[] samples)
@@ -239,46 +239,38 @@ public class MPEGTSPlayer
         if (sourceDataLine == null || samples == null)
             return;
 
-        int k;
-        ByteBuffer TLData, TRData;
         float vol = 1;//音量
-        byte[] tl, tr;
-        byte[] combine;
+        byte[] data = null;
 
         switch (sampleFormat)
         {
-            case avutil.AV_SAMPLE_FMT_FLTP://平面型左右声道分开。
+            case avutil.AV_SAMPLE_FMT_FLTP://平面型左右声道分开
             case avutil.AV_SAMPLE_FMT_S16P://平面型左右声道分开
+            {
                 if (samples.length < 2 || samples[0] == null || samples[1] == null)
                     return;
-                TLData = toByteBuffer(samples[0], vol);
-                TRData = toByteBuffer(samples[1], vol);
-                tl = TLData.array();
-                tr = TRData.array();
-                combine = new byte[tl.length + tr.length];
-                k = 0;
-                for (int i = 0; i < tl.length; i = i + 2)
-                {//混合两个声道。
-                    for (int j = 0; j < 2; j++)
-                    {
-                        combine[j + 4 * k] = tl[i + j];
-                        combine[j + 2 + 4 * k] = tr[i + j];
-                    }
-                    k++;
-                }
-                sourceDataLine.write(combine, 0, combine.length);
+                ByteBuffer TLData = toByteBuffer(samples[0], vol);
+                ByteBuffer TRData = toByteBuffer(samples[1], vol);
+                data = combineChannels(TLData.array(), TRData.array());
                 break;
-            case avutil.AV_SAMPLE_FMT_S16://非平面型左右声道在一个buffer中。
+            }
+            case avutil.AV_SAMPLE_FMT_S16://非平面型左右声道在一个buffer中
             case avutil.AV_SAMPLE_FMT_FLT://float非平面型
+            {
                 if (samples.length < 1 || samples[0] == null)
                     return;
-                TLData = toByteBuffer(samples[0], vol);
-                tl = TLData.array();
-                sourceDataLine.write(tl, 0, tl.length);
+                ByteBuffer TLData = toByteBuffer(samples[0], vol);
+                data = TLData.array();
                 break;
+            }
             default:
                 break;
         }
+
+        if (data == null)
+            return;
+
+        sourceDataLine.write(data, 0, data.length);
     }
 
     private SourceDataLine initSourceDataLine(FrameGrabber grabber)
@@ -318,7 +310,7 @@ public class MPEGTSPlayer
             case avutil.AV_SAMPLE_FMT_S64P://有符号short 64bit平面型
                 break;
             default:
-                System.out.println("不支持的音乐格式");
+                logger.warn("不支持的声音格式：{}", grabber.getSampleFormat());
                 return null;
         }
 
@@ -373,19 +365,30 @@ public class MPEGTSPlayer
         return res;
     }
 
+    private byte[] combineChannels(byte[] tl, byte[] tr)
+    {
+        byte[] combined = new byte[tl.length + tr.length];
+        int k = 0;
+        for (int i = 0; i < tl.length; i = i + 2)
+        {
+            //混合两个声道。
+            combined[4 * k    ] = tl[i    ];
+            combined[4 * k + 1] = tl[i + 1];
+            combined[4 * k + 2] = tr[i    ];
+            combined[4 * k + 3] = tr[i + 1];
+            k++;
+        }
+        return combined;
+    }
+
     private static class PlaybackTimer
     {
         private volatile long startTime = -1L;
-        private DataLine soundLine;
+        private final DataLine soundLine;
 
         public PlaybackTimer(DataLine soundLine)
         {
             this.soundLine = soundLine;
-        }
-
-        public PlaybackTimer()
-        {
-            this.soundLine = null;
         }
 
         public void start()
@@ -394,11 +397,6 @@ public class MPEGTSPlayer
             {
                 startTime = System.nanoTime();
             }
-        }
-
-        public void setSoundLine(DataLine line)
-        {
-            soundLine = line;
         }
 
         public long elapsedMicros()
