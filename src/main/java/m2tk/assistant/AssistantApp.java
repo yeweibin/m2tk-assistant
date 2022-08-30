@@ -82,6 +82,7 @@ public final class AssistantApp extends SingleFrameApplication
         ThreadUtil.execute(() -> {
             try
             {
+                player.stop();
                 player.playVideoAndAudio(in, videoPid, audioPid);
             } catch (Exception ex)
             {
