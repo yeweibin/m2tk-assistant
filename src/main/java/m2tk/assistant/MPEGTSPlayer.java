@@ -18,6 +18,7 @@ package m2tk.assistant;
 
 import cn.hutool.core.thread.ThreadUtil;
 import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.util.FFmpegTSFrameGrabber;
 import org.bytedeco.ffmpeg.global.avutil;
 import org.bytedeco.javacv.CanvasFrame;
@@ -81,6 +82,8 @@ public class MPEGTSPlayer
         grabber.start();
 
         double fps = grabber.getVideoFrameRate();
+        int width = grabber.getImageWidth();
+        int height = grabber.getImageHeight();
         int frameGaps = (int) (1000 / fps);
         int sampleFormat = grabber.getSampleFormat();
         SourceDataLine sourceDataLine = initSourceDataLine(grabber);
@@ -92,6 +95,7 @@ public class MPEGTSPlayer
         Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, playbackTimer));
         Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sourceDataLine, sampleFormat));
 
+        ComponentUtil.setPreferSizeAndLocateToCenter(canvasFrame, width, height);
         canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         canvasFrame.addWindowListener(new WindowAdapter()
         {
