@@ -69,6 +69,7 @@ public class MPEGProgram
             totalBitrate += (stream == null) ? 0 : stream.getBitrate();
         }
 
+        boolean hasScrambledElement = false;
         for (ProgramStreamMappingEntity mapping : mappings)
         {
             StreamEntity stream = streams.get(mapping.getStreamPid());
@@ -95,12 +96,15 @@ public class MPEGProgram
 
             elementList.add(es);
             totalBitrate += es.getBitrate();
+
+            if (es.isScrambled())
+                hasScrambledElement = true;
         }
 
         ProgramStreamComparator comparator = new ProgramStreamComparator();
         elementList.sort(comparator);
 
-        freeAccess = ecmList.isEmpty();
+        freeAccess = ecmList.isEmpty() && !hasScrambledElement;
         bandwidth = totalBitrate;
     }
 }
