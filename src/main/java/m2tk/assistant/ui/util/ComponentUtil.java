@@ -29,6 +29,18 @@ public final class ComponentUtil
     }
 
     /**
+     * 设置组件定位于屏幕中央
+     */
+    public static void setLocateToCenter(Component component)
+    {
+        Insets screenInsets = Toolkit.getDefaultToolkit().getScreenInsets(component.getGraphicsConfiguration());
+        Dimension d = component.getPreferredSize();
+        int w = SCREEN_SIZE.width - screenInsets.left - screenInsets.right;
+        int h = SCREEN_SIZE.height - screenInsets.top - screenInsets.bottom;
+        component.setBounds((w - d.width) / 2, (h - d.height) / 2, d.width, d.height);
+    }
+
+    /**
      * 设置组件preferSize并定位于屏幕中央
      */
     public static void setPreferSizeAndLocateToCenter(Component component,
