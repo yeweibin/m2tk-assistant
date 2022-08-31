@@ -55,4 +55,7 @@ public final class LargeIcons
 
     public static final Icon TERMINAL_OSX = new ImageIcon(LargeIcons.class.getResource("/images/large/terminal_osx.png"));
     public static final Icon TERMINAL_WIN = new ImageIcon(LargeIcons.class.getResource("/images/large/terminal_win.png"));
+
+    public static final Icon SOUND_WAVE_128 = new ImageIcon(LargeIcons.class.getResource("/images/large/sound_wave_128.png"));
+    public static final Icon SOUND_WAVE_256 = new ImageIcon(LargeIcons.class.getResource("/images/large/sound_wave_256.png"));
 }

@@ -26,13 +26,17 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class StreamInfoPanel extends JPanel
 {
     private StreamInfoTableModel model;
-    private TableRowSorter<StreamInfoTableModel> rowSorter;
+    private transient TableRowSorter<StreamInfoTableModel> rowSorter;
+    private transient BiConsumer<MouseEvent, StreamEntity> popupListener;
 
     public StreamInfoPanel()
     {
@@ -50,6 +54,26 @@ public class StreamInfoPanel extends JPanel
         table.setRowSorter(rowSorter);
         table.getTableHeader().setReorderingAllowed(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                if (e.isPopupTrigger())
+                {
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow != -1 && popupListener != null)
+                    {
+                        try
+                        {
+                            popupListener.accept(e, model.getRow(selectedRow));
+                        } catch (Exception ignored)
+                        {
+                        }
+                    }
+                }
+            }
+        });
 
         DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
         centeredRenderer.setHorizontalAlignment(SwingConstants.CENTER);
@@ -73,6 +97,11 @@ public class StreamInfoPanel extends JPanel
 
         setLayout(new BorderLayout());
         add(new JScrollPane(table), BorderLayout.CENTER);
+    }
+
+    public void setPopupListener(BiConsumer<MouseEvent, StreamEntity> listener)
+    {
+        popupListener = listener;
     }
 
     public void resetStreamList()

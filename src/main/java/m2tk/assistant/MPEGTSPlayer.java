@@ -87,13 +87,12 @@ public class MPEGTSPlayer
         int frameGaps = (int) (1000 / fps);
         int sampleFormat = grabber.getSampleFormat();
         SourceDataLine sourceDataLine = initSourceDataLine(grabber);
-        PlaybackTimer playbackTimer = new PlaybackTimer(sourceDataLine);
 
         canvasFrame = new CanvasFrame("播放", CanvasFrame.getDefaultGamma() / grabber.getGamma());
 
-        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber, playbackTimer));
-        Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, playbackTimer));
-        Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sourceDataLine, sampleFormat));
+        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber));
+        Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, sourceDataLine));
+        Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sampleFormat, sourceDataLine));
 
         if (width > 1280)
         {
@@ -150,14 +149,150 @@ public class MPEGTSPlayer
                                         JComponent.WHEN_IN_FOCUSED_WINDOW);
     }
 
-    private void grabFrames(CanvasFrame canvas, FrameGrabber grabber, PlaybackTimer timer)
+    public void playVideo(InputStream in, int videoPid) throws FFmpegTSFrameGrabber.Exception
+    {
+        avutil.av_log_set_level(AV_LOG_QUIET);
+
+        FFmpegTSFrameGrabber grabber = new FFmpegTSFrameGrabber(in, 0);
+        grabber.setCloseInputStream(true);
+        grabber.setVideoStreamPid(videoPid);
+        grabber.setAudioStreamPid(0x1FFF);
+        grabber.start();
+
+        double fps = grabber.getVideoFrameRate();
+        int width = grabber.getImageWidth();
+        int height = grabber.getImageHeight();
+        int frameGaps = (int) (1000 / fps);
+
+        canvasFrame = new CanvasFrame("播放", CanvasFrame.getDefaultGamma() / grabber.getGamma());
+
+        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber));
+        Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, null));
+
+        if (width > 1280)
+        {
+            double ratio = 1.0 * height / width;
+            width = 1280;
+            height = (int) (width * ratio);
+        }
+        canvasFrame.setCanvasSize(width, height);
+        ComponentUtil.setLocateToCenter(canvasFrame);
+        canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        canvasFrame.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosed(WindowEvent e)
+            {
+                vQueue.clear();
+                aQueue.clear();
+                try
+                {
+                    task1.get();
+                    task0.get();
+                    grabber.close();
+                } catch (Exception ex)
+                {
+                    log.warn("{}", ex.getMessage());
+                }
+                log.debug("播放进程结束");
+            }
+        });
+        JRootPane rootPane = canvasFrame.getRootPane();
+        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e -> {
+                                            if (isFullScreen)
+                                            {
+                                                canvasFrame.setBounds(bounds);
+                                                isFullScreen = false;
+                                            } else
+                                            {
+                                                bounds = canvasFrame.getBounds();
+                                                canvasFrame.setExtendedState(canvasFrame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
+                                                isFullScreen = true;
+                                            }
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_F, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
+    public void playAudio(InputStream in, int audioPid) throws FFmpegTSFrameGrabber.Exception
+    {
+        avutil.av_log_set_level(AV_LOG_QUIET);
+
+        FFmpegTSFrameGrabber grabber = new FFmpegTSFrameGrabber(in, 0);
+        grabber.setCloseInputStream(true);
+        grabber.setVideoStreamPid(0x1FFF);
+        grabber.setAudioStreamPid(audioPid);
+        grabber.start();
+
+        int sampleFormat = grabber.getSampleFormat();
+        SourceDataLine sourceDataLine = initSourceDataLine(grabber);
+
+        canvasFrame = new CanvasFrame("播放", CanvasFrame.getDefaultGamma() / grabber.getGamma());
+
+        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber));
+        Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sampleFormat, sourceDataLine));
+
+        canvasFrame.showImage(((ImageIcon) LargeIcons.SOUND_WAVE_128).getImage());
+        ComponentUtil.setLocateToCenter(canvasFrame);
+        canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        canvasFrame.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosed(WindowEvent e)
+            {
+                vQueue.clear();
+                aQueue.clear();
+                try
+                {
+                    if (sourceDataLine != null)
+                        sourceDataLine.close();
+
+                    task2.get();
+                    task0.get();
+                    grabber.close();
+                } catch (Exception ex)
+                {
+                    log.warn("{}", ex.getMessage());
+                }
+                log.debug("播放进程结束");
+            }
+        });
+        JRootPane rootPane = canvasFrame.getRootPane();
+        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e -> {
+                                            if (isFullScreen)
+                                            {
+                                                canvasFrame.setBounds(bounds);
+                                                isFullScreen = false;
+                                            } else
+                                            {
+                                                bounds = canvasFrame.getBounds();
+                                                canvasFrame.setExtendedState(canvasFrame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
+                                                isFullScreen = true;
+                                            }
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_F, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+    }
+
+    private void grabFrames(CanvasFrame canvas, FrameGrabber grabber)
     {
         timelineStart = -1;
         prevAudioPosition = 0;
         prevAudioTimestamp = -1;
         vQueue.clear();
         aQueue.clear();
-        timer.start();
 
         while (canvas.isVisible())
         {
@@ -181,7 +316,7 @@ public class MPEGTSPlayer
         log.debug("抽帧线程结束");
     }
 
-    private void processVideoFrame(CanvasFrame canvas, int frameGaps, PlaybackTimer timer)
+    private void processVideoFrame(CanvasFrame canvas, int frameGaps, SourceDataLine dataLine)
     {
         // 如果视频的fps很小或接近于零，则会导致frameGaps超级大。这里做一个保护。
         int waitQueue = Math.min(50, frameGaps / 2);
@@ -193,18 +328,18 @@ public class MPEGTSPlayer
                 if (image == null)
                     continue;
 
-                if (timelineStart == -1 || image.timestamp < timelineStart)
+                if (timelineStart == -1 && dataLine == null)
+                    timelineStart = image.timestamp;
+
+                if (image.timestamp < timelineStart)
                 {
                     image.close();
                     continue;
                 }
 
-                long vaOffset = image.timestamp - timelineStart - timer.elapsedMicros();
-                if (vaOffset > 0)
-                {
-                    long delay = Math.min(frameGaps, vaOffset / 1000);
-                    ThreadUtil.safeSleep(delay);
-                }
+                long vaOffset = image.timestamp - timelineStart - (dataLine == null ? 0 : dataLine.getMicrosecondPosition());
+                long delay = Math.min(frameGaps, vaOffset / 1000);
+                ThreadUtil.safeSleep(delay);
 
                 // ??? 原示例是直接showImage，并没有在EDT里showImage，可以吗？
                 Runnable r = () ->
@@ -224,7 +359,7 @@ public class MPEGTSPlayer
         log.debug("视频处理线程结束");
     }
 
-    private void processAudioFrame(CanvasFrame canvas, SourceDataLine sourceDataLine, int sampleFormat)
+    private void processAudioFrame(CanvasFrame canvas, int sampleFormat, SourceDataLine sourceDataLine)
     {
         while (canvas.isVisible())
         {
@@ -401,38 +536,5 @@ public class MPEGTSPlayer
             k++;
         }
         return combined;
-    }
-
-    private static class PlaybackTimer
-    {
-        private volatile long startTime = -1L;
-        private final DataLine soundLine;
-
-        public PlaybackTimer(DataLine soundLine)
-        {
-            this.soundLine = soundLine;
-        }
-
-        public void start()
-        {
-            if (soundLine == null)
-            {
-                startTime = System.nanoTime();
-            }
-        }
-
-        public long elapsedMicros()
-        {
-            if (soundLine == null)
-            {
-                if (startTime < 0)
-                    throw new IllegalStateException("PlaybackTimer not initialized.");
-
-                return (System.nanoTime() - startTime) / 1000;
-            } else
-            {
-                return soundLine.getMicrosecondPosition();
-            }
-        }
     }
 }

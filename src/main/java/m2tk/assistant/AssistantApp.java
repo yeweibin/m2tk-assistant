@@ -28,7 +28,7 @@ public final class AssistantApp extends SingleFrameApplication
 
     public static void main(String[] args)
     {
-//        enableAntiAliasing();
+        //        enableAntiAliasing();
         Global.init();
         SingleFrameApplication.launch(AssistantApp.class, args);
     }
@@ -84,6 +84,46 @@ public final class AssistantApp extends SingleFrameApplication
             {
                 player.stop();
                 player.playVideoAndAudio(in, videoPid, audioPid);
+            } catch (Exception ex)
+            {
+                log.warn("{}", ex.getMessage());
+                EventQueue.invokeLater(onError);
+            }
+        });
+    }
+
+    public void playVideo(InputStream in, int videoPid)
+    {
+        Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
+                                                               "无法播放指定内容",
+                                                               "错误",
+                                                               JOptionPane.WARNING_MESSAGE);
+
+        ThreadUtil.execute(() -> {
+            try
+            {
+                player.stop();
+                player.playVideo(in, videoPid);
+            } catch (Exception ex)
+            {
+                log.warn("{}", ex.getMessage());
+                EventQueue.invokeLater(onError);
+            }
+        });
+    }
+
+    public void playAudio(InputStream in, int audioPid)
+    {
+        Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
+                                                               "无法播放指定内容",
+                                                               "错误",
+                                                               JOptionPane.WARNING_MESSAGE);
+
+        ThreadUtil.execute(() -> {
+            try
+            {
+                player.stop();
+                player.playAudio(in, audioPid);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());

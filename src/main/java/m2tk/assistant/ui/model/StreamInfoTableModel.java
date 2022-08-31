@@ -27,7 +27,7 @@ import java.util.List;
 
 public class StreamInfoTableModel extends AbstractTableModel
 {
-    private final List<StreamEntity> data;
+    private final transient List<StreamEntity> data;
     private static final String[] COLUMNS = {
             "序号", "状态", "加扰", "PCR", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "传输错误", "连续计数错误"
     };
@@ -48,6 +48,11 @@ public class StreamInfoTableModel extends AbstractTableModel
         data.clear();
         data.addAll(streams);
         fireTableDataChanged();
+    }
+
+    public StreamEntity getRow(int row)
+    {
+        return data.get(row);
     }
 
     @Override

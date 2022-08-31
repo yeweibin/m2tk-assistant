@@ -58,6 +58,8 @@ public class StreamInfoView extends JPanel
     private ProgramInfoPanel programInfoPanel;
     private StreamInfoPanel streamInfoPanel;
     private CASystemInfoPanel casInfoPanel;
+    private JPopupMenu streamContextMenu;
+    private JMenuItem streamContextMenuItem;
     private JPopupMenu programContextMenu;
     private JMenuItem programContextMenuItem;
 
@@ -65,7 +67,8 @@ public class StreamInfoView extends JPanel
     private Timer timer2;
     private Timer timer3;
     private Timer timer4;
-    private MPEGProgram selectedProgram;
+    private transient StreamEntity selectedStream;
+    private transient MPEGProgram selectedProgram;
 
     public StreamInfoView(FrameView view)
     {
@@ -80,6 +83,12 @@ public class StreamInfoView extends JPanel
         timer2 = new Timer(500, actionMap.get("queryProgramInfo"));
         timer3 = new Timer(500, actionMap.get("queryStreamInfo"));
         timer4 = new Timer(500, actionMap.get("queryCASystemInfo"));
+
+        streamContextMenuItem = new JMenuItem();
+        streamContextMenuItem.setAction(actionMap.get("playStream"));
+        streamContextMenu = new JPopupMenu();
+        streamContextMenu.setLabel("播放");
+        streamContextMenu.add(streamContextMenuItem);
 
         programContextMenuItem = new JMenuItem();
         programContextMenuItem.setAction(actionMap.get("playProgram"));
@@ -119,6 +128,42 @@ public class StreamInfoView extends JPanel
                 stopRefreshing();
             }
         });
+    }
+
+    @Action
+    public void playStream()
+    {
+        int videoPid = 0x1FFF;
+        int audioPid = 0x1FFF;
+        if (selectedStream.isScrambled())
+        {
+            String text = String.format("流%d 被加扰，无法播放", selectedStream.getPid());
+            JOptionPane.showMessageDialog(frameView.getFrame(), text);
+            log.info(text);
+            return;
+        }
+
+        if (StreamTypes.CATEGORY_VIDEO.equals(selectedStream.getCategory()))
+            videoPid = selectedStream.getPid();
+
+        if (StreamTypes.CATEGORY_AUDIO.equals(selectedStream.getCategory()))
+            audioPid = selectedStream.getPid();
+
+        if (videoPid == 0x1FFF && audioPid == 0x1FFF)
+        {
+            String text = String.format("不支持的流类型：%s", selectedStream.getDescription());
+            JOptionPane.showMessageDialog(frameView.getFrame(), text);
+            log.info(text);
+            return;
+        }
+
+        log.info("播放'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
+
+        RxChannel channel = ProtocolManager.openRxChannel(Global.getInputResource());
+        if (videoPid != 0x1FFF)
+            AssistantApp.getInstance().playVideo(new RxChannelInputStream(channel), videoPid);
+        else
+            AssistantApp.getInstance().playAudio(new RxChannelInputStream(channel), audioPid);
     }
 
     @Action
@@ -253,6 +298,7 @@ public class StreamInfoView extends JPanel
             timer2.restart();
             timer3.restart();
             timer4.restart();
+            streamInfoPanel.setPopupListener(null);
             programInfoPanel.setPopupListener(null);
         }
     }
@@ -265,6 +311,7 @@ public class StreamInfoView extends JPanel
             timer2.start();
             timer3.start();
             timer4.start();
+            streamInfoPanel.setPopupListener(null);
             programInfoPanel.setPopupListener(null);
         }
     }
@@ -275,7 +322,15 @@ public class StreamInfoView extends JPanel
         timer2.stop();
         timer3.stop();
         timer4.stop();
+        streamInfoPanel.setPopupListener(this::showStreamPopupMenu);
         programInfoPanel.setPopupListener(this::showProgramPopupMenu);
+    }
+
+    private void showStreamPopupMenu(MouseEvent event, StreamEntity stream)
+    {
+        selectedStream = stream;
+        streamContextMenuItem.setText("播放 " + selectedStream.getDescription());
+        streamContextMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 
     private void showProgramPopupMenu(MouseEvent event, MPEGProgram program)
