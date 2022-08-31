@@ -283,7 +283,8 @@ public class MPEGTSPlayer
         } else
         {
             long offset = timestamp - prevAudioTimestamp - (currAudioPosition - prevAudioPosition);
-            ThreadUtil.safeSleep(Math.min(10, offset / 1000));
+            long delay = Math.min(50, offset / 1000);
+            ThreadUtil.safeSleep(delay);
         }
         sourceDataLine.write(data, 0, data.length);
         prevAudioPosition = currAudioPosition;
