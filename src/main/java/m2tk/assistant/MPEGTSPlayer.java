@@ -170,6 +170,9 @@ public class MPEGTSPlayer
                     vQueue.add(frame.clone());
                 if (frame.samples != null)
                     aQueue.add(frame.clone());
+
+                if (vQueue.size() > 50 || aQueue.size() > 50)
+                    ThreadUtil.safeSleep(100); // 做个保护，避免缓存过多，占用内存；一般在抓非实时流帧时有意义。
             } catch (Exception ex)
             {
                 log.warn("[抽帧] {}", ex.getMessage());
@@ -199,7 +202,8 @@ public class MPEGTSPlayer
                 long vaOffset = image.timestamp - timelineStart - timer.elapsedMicros();
                 if (vaOffset > 0)
                 {
-                    ThreadUtil.safeSleep(Math.min(frameGaps, vaOffset / 1000));
+                    long delay = Math.min(frameGaps, vaOffset / 1000);
+                    ThreadUtil.safeSleep(delay);
                 }
 
                 // ??? 原示例是直接showImage，并没有在EDT里showImage，可以吗？
