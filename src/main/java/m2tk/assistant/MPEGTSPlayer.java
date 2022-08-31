@@ -95,6 +95,12 @@ public class MPEGTSPlayer
         Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, playbackTimer));
         Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sourceDataLine, sampleFormat));
 
+        if (width > 1280)
+        {
+            double ratio = 1.0 * height / width;
+            width = 1280;
+            height = (int) (width * ratio);
+        }
         ComponentUtil.setPreferSizeAndLocateToCenter(canvasFrame, width, height);
         canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         canvasFrame.addWindowListener(new WindowAdapter()
