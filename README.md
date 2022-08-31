@@ -5,27 +5,27 @@
 
 #### 软件架构
 1.  GUI：Java Swing
-2.  底层：m2tk-core + m2tk-multiplex + m2tk-io
+2.  解复用：m2tk-core + m2tk-multiplex + m2tk-io
+3.  音视频解码：ffmpeg（基于JavaCPP封装的ffmpeg依赖）
 
 
 #### 安装教程
 
 1.  安装JDK 8+
 2.  安装maven
-3.  下载源代码，maven clean package，target目录里生成m2tk-assistant-{version}.zip。
-4.  解压zip，双击exe启动程序。运行时可以将Java环境拷贝到m2tk-assistant目录下（命名为java），则程序将引用java目录里的运行时环境。目录结构如下：
+3.  下载源代码，执行build.bat脚本，target目录里生成m2tk-assistant-{version}.zip。
+4.  解压zip，双击exe启动程序。运行时可以将Java环境（64位）拷贝到m2tk-assistant目录下（命名为java），则程序将引用java目录里的运行时环境。目录结构如下：
+
 
 ![目录结构](screenshots/目录结构.png)
 
 
 #### 待完善
 
-1.  实现对更多的PSI/SI描述符进行解析和语法呈现（目前仅实现了几个常用的描述符）。
-2.  支持用户自定义结构解析与语法呈现（通用解析模型）
-3.  支持指定流数据过滤
-4.  结果导出和报表
-5.  播放清流节目
-6.  对PES结构的解析和呈现，对视频质量进行评估
+1.  支持用户自定义结构解析与语法呈现（通用解析模型）
+2.  支持指定流数据过滤
+3.  结果导出和报表
+4.  对PES结构的解析和呈现，对视频质量进行评估
 
 
 #### 运行界面
@@ -50,3 +50,6 @@ PSI/SI表结构
 
 根据SI信息绘制网络结构图
 ![网络结构图](screenshots/网络结构图.png)
+
+播放未加扰节目
+![播放节目](screenshots/播放节目.png)
