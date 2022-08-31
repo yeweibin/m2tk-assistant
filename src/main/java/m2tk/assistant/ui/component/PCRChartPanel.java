@@ -115,7 +115,7 @@ public class PCRChartPanel extends JPanel
         xAxis.setAutoRangeIncludesZero(false);
         xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         NumberAxis yAxis = new NumberAxis("瞬时码率（Mb/s）");
-        yAxis.setRange(new Range(0, 50));
+        yAxis.setRange(new Range(0, 75));
         yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
         XYPlot plot = new XYPlot(bitrateValues, xAxis, yAxis, renderer);
@@ -173,7 +173,7 @@ public class PCRChartPanel extends JPanel
         xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         NumberAxis yAxis = new NumberAxis("PCR精度（单位：ns）");
         yAxis.setAutoRange(false);
-        yAxis.setRange(-600, 600);
+        yAxis.setRange(-800, 800);
         yAxis.setAutoRangeIncludesZero(true);
         yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
@@ -233,7 +233,7 @@ public class PCRChartPanel extends JPanel
         xAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
         NumberAxis yAxis = new NumberAxis("PCR间隔（单位：ms）");
         yAxis.setAutoRange(false);
-        yAxis.setRange(0, 50);
+        yAxis.setRange(0, 100);
         yAxis.setAutoRangeIncludesZero(true);
         yAxis.setLabelFont(new Font(Font.SANS_SERIF, Font.PLAIN, 14));
 
