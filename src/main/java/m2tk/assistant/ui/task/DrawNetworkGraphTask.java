@@ -6,10 +6,12 @@ import guru.nidi.graphviz.attribute.Records;
 import guru.nidi.graphviz.engine.Engine;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.engine.GraphvizCmdLineEngine;
 import guru.nidi.graphviz.model.Factory;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.LinkSource;
 import guru.nidi.graphviz.model.Node;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.Global;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIMultiplexEntity;
@@ -23,11 +25,14 @@ import org.jdesktop.application.Task;
 import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import static guru.nidi.graphviz.attribute.Rank.RankDir.LEFT_TO_RIGHT;
 import static guru.nidi.graphviz.model.Factory.between;
 import static guru.nidi.graphviz.model.Factory.port;
 
+@Slf4j
 public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
 {
     static class Context
@@ -58,6 +63,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
     @Override
     protected void failed(Throwable cause)
     {
+        log.warn("构建网络结构图时异常：{}", cause.getMessage(), cause);
         ComponentUtil.setWaitingMouseCursor(getContext().getFocusOwner().getRootPane(), false);
         JOptionPane.showMessageDialog(getContext().getFocusOwner(),
                                       "运行时异常，无法创建网络结构图",
@@ -83,6 +89,10 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
                              .nodeAttr().with("fontname", "SimSun")
                              .linkAttr().with("class", "link-class")
                              .with(linkSources);
+
+        GraphvizCmdLineEngine engine = new GraphvizCmdLineEngine();
+        engine.timeout(60, TimeUnit.SECONDS);
+        Graphviz.useEngine(engine);
 
         return Graphviz.fromGraph(graph)
                        .engine(Engine.DOT)
