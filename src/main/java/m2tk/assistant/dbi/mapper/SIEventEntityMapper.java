@@ -34,6 +34,8 @@ public class SIEventEntityMapper implements RowMapper<SIEventEntity>
         entity.setOriginalNetworkId(rs.getInt("onet_id"));
         entity.setServiceId(rs.getInt("srv_id"));
         entity.setEventId(rs.getInt("evt_id"));
+        entity.setReferenceServiceId(rs.getInt("ref_srv_id"));
+        entity.setReferenceEventId(rs.getInt("ref_evt_id"));
         entity.setEventType(rs.getString("evt_type"));
         entity.setEventName(rs.getString("evt_name"));
         entity.setEventDescription(rs.getString("evt_desc"));
@@ -43,6 +45,8 @@ public class SIEventEntityMapper implements RowMapper<SIEventEntity>
         entity.setFreeCAMode(rs.getBoolean("free_ca_mode"));
         entity.setPresentEvent(rs.getBoolean("present"));
         entity.setLanguageCode(rs.getString("lang_code"));
+        entity.setNvodReferenceEvent(rs.getBoolean("nvod_reference"));
+        entity.setNvodTimeShiftedEvent(rs.getBoolean("nvod_time_shifted"));
         return entity;
     }
 }

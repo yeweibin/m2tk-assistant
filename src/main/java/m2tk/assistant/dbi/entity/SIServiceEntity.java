@@ -25,6 +25,7 @@ public class SIServiceEntity
     private int transportStreamId;
     private int originalNetworkId;
     private int serviceId;
+    private int referenceServiceId;
     private int serviceType;
     private String serviceTypeName;
     private String serviceName;
@@ -34,4 +35,6 @@ public class SIServiceEntity
     private boolean scheduleEITEnabled;
     private boolean freeCAMode;
     private boolean actualTransportStream;
+    private boolean nvodReferenceService;
+    private boolean nvodTimeShiftedService;
 }

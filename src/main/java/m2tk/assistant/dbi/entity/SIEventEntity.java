@@ -29,6 +29,8 @@ public class SIEventEntity
     private int originalNetworkId;
     private int serviceId;
     private int eventId;
+    private int referenceServiceId;
+    private int referenceEventId;
     private String startTime;
     private String duration;
     private String eventType;
@@ -38,4 +40,6 @@ public class SIEventEntity
     private boolean freeCAMode;
     private boolean presentEvent;
     private String languageCode;
+    private boolean nvodReferenceEvent;
+    private boolean nvodTimeShiftedEvent;
 }

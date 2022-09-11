@@ -57,6 +57,8 @@ public class SITracer implements Tracer
     private final EventDescriptionDecoder edd;
     private final NetworkNameDescriptorDecoder nnd;
     private final ServiceDescriptorDecoder sd;
+    private final TimeShiftedServiceDescriptorDecoder tssd;
+    private final TimeShiftedEventDescriptorDecoder tsed;
     private final ShortEventDescriptorDecoder sed;
     private final CableDeliverySystemDescriptorDecoder cdsd;
     private final SatelliteDeliverySystemDescriptorDecoder sdsd;
@@ -80,6 +82,8 @@ public class SITracer implements Tracer
         nnd = new NetworkNameDescriptorDecoder();
         bnd = new BouquetNameDescriptorDecoder();
         sd = new ServiceDescriptorDecoder();
+        tssd = new TimeShiftedServiceDescriptorDecoder();
+        tsed = new TimeShiftedEventDescriptorDecoder();
         sed = new ShortEventDescriptorDecoder();
         cdsd = new CableDeliverySystemDescriptorDecoder();
         sdsd = new SatelliteDeliverySystemDescriptorDecoder();
@@ -308,15 +312,28 @@ public class SITracer implements Tracer
                                                                  tableId == 0x42);
 
             descloop.attach(sdd.getDescriptorLoop());
-            descloop.findFirstDescriptor(sd::isAttachable)
-                    .ifPresent(descriptor -> {
-                        sd.attach(descriptor);
-                        service.setServiceType(sd.getServiceType());
-                        service.setServiceTypeName(ServiceTypes.name(sd.getServiceType()));
-                        service.setServiceName(sd.getServiceName());
-                        service.setServiceProvider(sd.getServiceProviderName());
-                        databaseService.updateServiceDetails(service);
-                    });
+            descloop.forEach(descriptor -> {
+                if (sd.isAttachable(descriptor))
+                {
+                    sd.attach(descriptor);
+                    service.setServiceType(sd.getServiceType());
+                    service.setServiceTypeName(ServiceTypes.name(sd.getServiceType()));
+                    service.setServiceName(sd.getServiceName());
+                    service.setServiceProvider(sd.getServiceProviderName());
+                    databaseService.updateServiceDetails(service);
+                }
+                if (tssd.isAttachable(descriptor))
+                {
+                    tssd.attach(descriptor);
+                    service.setReferenceServiceId(tssd.getReferenceServiceID());
+                    service.setServiceType(0x05);
+                    service.setServiceTypeName(ServiceTypes.name(0x05));
+                    service.setServiceName(String.format("NVOD时移业务（引用业务号：%d）",
+                                                         service.getReferenceServiceId()));
+                    databaseService.updateServiceReference(service);
+                    databaseService.updateServiceDetails(service);
+                }
+            });
         });
     }
 
@@ -392,14 +409,24 @@ public class SITracer implements Tracer
             }
 
             descloop.attach(edd.getDescriptorLoop());
-            descloop.findFirstDescriptor(sed::isAttachable)
-                    .ifPresent(descriptor -> {
-                        sed.attach(descriptor);
-                        event.setEventName(sed.getEventName());
-                        event.setEventDescription(sed.getEventDescription());
-                        event.setLanguageCode(sed.getLanguageCode());
-                        databaseService.updateEventDescription(event);
-                    });
+            descloop.forEach(descriptor -> {
+                if (sed.isAttachable(descriptor))
+                {
+                    sed.attach(descriptor);
+                    event.setEventName(sed.getEventName());
+                    event.setEventDescription(sed.getEventDescription());
+                    event.setLanguageCode(sed.getLanguageCode());
+                    databaseService.updateEventDescription(event);
+                }
+                if (tsed.isAttachable(descriptor))
+                {
+                    tsed.attach(descriptor);
+                    event.setReferenceServiceId(tsed.getReferenceServiceID());
+                    event.setReferenceEventId(tsed.getReferenceEventID());
+                    event.setNvodTimeShiftedEvent(true);
+                    databaseService.updateEventReference(event);
+                }
+            });
         });
     }
 
@@ -439,6 +466,9 @@ public class SITracer implements Tracer
 
     private String translateStartTime(long timepoint)
     {
+        // NVOD索引事件的起始时间为全1。
+        if (timepoint == 0xFFFFFFFFFFL)
+            return "未定义";
         return DVB.decodeTimepointIntoLocalDateTime(timepoint)
                   .format(startTimeFormatter);
     }

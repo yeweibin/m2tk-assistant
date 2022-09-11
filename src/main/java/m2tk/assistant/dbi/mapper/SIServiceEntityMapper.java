@@ -33,6 +33,7 @@ public class SIServiceEntityMapper implements RowMapper<SIServiceEntity>
         entity.setTransportStreamId(rs.getInt("ts_id"));
         entity.setOriginalNetworkId(rs.getInt("onet_id"));
         entity.setServiceId(rs.getInt("srv_id"));
+        entity.setReferenceServiceId(rs.getInt("ref_srv_id"));
         entity.setServiceType(rs.getInt("srv_type"));
         entity.setServiceTypeName(rs.getString("srv_type_name"));
         entity.setServiceName(rs.getString("srv_name"));
@@ -42,6 +43,8 @@ public class SIServiceEntityMapper implements RowMapper<SIServiceEntity>
         entity.setActualTransportStream(rs.getBoolean("actual_ts"));
         entity.setPresentFollowingEITEnabled(rs.getBoolean("pnf_eit_enabled"));
         entity.setScheduleEITEnabled(rs.getBoolean("sch_eit_enabled"));
+        entity.setNvodReferenceService(rs.getBoolean("nvod_reference"));
+        entity.setNvodTimeShiftedService(rs.getBoolean("nvod_time_shifted"));
         return entity;
     }
 }

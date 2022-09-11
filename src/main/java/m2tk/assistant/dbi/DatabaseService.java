@@ -247,6 +247,11 @@ public class DatabaseService
         });
     }
 
+    public void updateServiceReference(SIServiceEntity service)
+    {
+        dbi.useHandle(handle -> siHandler.updateServiceReference(handle, service));
+    }
+
     public SIEventEntity addPresentFollowingEvent(int transportStreamId,
                                                   int originalNetworkId,
                                                   int serviceId,
@@ -292,6 +297,11 @@ public class DatabaseService
     public void updateEventDescription(SIEventEntity event)
     {
         dbi.useHandle(handle -> siHandler.updateEventDescription(handle, event));
+    }
+
+    public void updateEventReference(SIEventEntity event)
+    {
+        dbi.useHandle(handle -> siHandler.updateEventReference(handle, event));
     }
 
     public void addDateTime(long timepoint)

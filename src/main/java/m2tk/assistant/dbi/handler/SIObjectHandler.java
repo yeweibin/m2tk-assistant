@@ -84,6 +84,7 @@ public class SIObjectHandler
                        "`ts_id` INT NOT NULL," +
                        "`onet_id` INT NOT NULL," +
                        "`srv_id` INT NOT NULL," +
+                       "`ref_srv_id` INT," +
                        "`srv_type` INT," +
                        "`srv_type_name` VARCHAR(200)," +
                        "`srv_name` VARCHAR(200)," +
@@ -92,7 +93,9 @@ public class SIObjectHandler
                        "`free_ca_mode` BOOLEAN DEFAULT TRUE," +
                        "`pnf_eit_enabled` BOOLEAN DEFAULT TRUE," +
                        "`sch_eit_enabled` BOOLEAN DEFAULT TRUE," +
-                       "`actual_ts` BOOLEAN DEFAULT TRUE" +
+                       "`actual_ts` BOOLEAN DEFAULT TRUE," +
+                       "`nvod_reference` BOOLEAN DEFAULT FALSE," +
+                       "`nvod_time_shifted` BOOLEAN DEFAULT FALSE" +
                        ")");
 
         handle.execute("DROP TABLE IF EXISTS `T_SI_BOUQUET_SERVICE_MAPPING`");
@@ -111,6 +114,8 @@ public class SIObjectHandler
                        "`onet_id` INT NOT NULL," +
                        "`srv_id` INT NOT NULL," +
                        "`evt_id` INT NOT NULL," +
+                       "`ref_srv_id` INT," +
+                       "`ref_evt_id` INT," +
                        "`evt_type` VARCHAR(10)," +
                        "`evt_name` VARCHAR(500)," +
                        "`evt_desc` VARCHAR(2000)," +
@@ -119,7 +124,9 @@ public class SIObjectHandler
                        "`duration` VARCHAR(20)," +
                        "`running_status` VARCHAR(100)," +
                        "`free_ca_mode` BOOLEAN DEFAULT TRUE," +
-                       "`present` BOOLEAN DEFAULT TRUE" +
+                       "`present` BOOLEAN DEFAULT TRUE," +
+                       "`nvod_reference` BOOLEAN DEFAULT FALSE," +
+                       "`nvod_time_shifted` BOOLEAN DEFAULT FALSE" +
                        ")");
 
         handle.execute("DROP TABLE IF EXISTS `T_SI_DATETIME`");
@@ -345,10 +352,12 @@ public class SIObjectHandler
     public void updateServiceType(Handle handle, SIServiceEntity entity)
     {
         handle.execute("UPDATE T_SI_SERVICE " +
-                       "SET `srv_type` = ?, `srv_type_name` = ? " +
+                       "SET `srv_type` = ?, `srv_type_name` = ?, nvod_reference = ?, nvod_time_shifted = ? " +
                        "WHERE `id` = ?",
                        entity.getServiceType(),
                        entity.getServiceTypeName(),
+                       (entity.getServiceType() == 0x04),
+                       (entity.getServiceType() == 0x05),
                        entity.getId());
     }
 
@@ -359,6 +368,13 @@ public class SIObjectHandler
                        "WHERE `id` = ?",
                        entity.getServiceName(),
                        entity.getServiceProvider(),
+                       entity.getId());
+    }
+
+    public void updateServiceReference(Handle handle, SIServiceEntity entity)
+    {
+        handle.execute("UPDATE T_SI_SERVICE SET `ref_srv_id` = ? WHERE `id` = ?",
+                       entity.getReferenceServiceId(),
                        entity.getId());
     }
 
@@ -413,9 +429,10 @@ public class SIObjectHandler
             entity.setRunningStatus(runningStatus);
             entity.setFreeCAMode(freeCAMode);
             entity.setPresentEvent(isPresent);
+            entity.setNvodReferenceEvent(startTime.equals("未定义"));
 
             handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, `evt_name`, " +
-                           "`start_time`, `duration`, `running_status`, `free_ca_mode`, `present`) " +
+                           "`start_time`, `duration`, `running_status`, `free_ca_mode`, `present`, `nvod_reference`) " +
                            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
                            entity.getTransportStreamId(),
@@ -428,7 +445,8 @@ public class SIObjectHandler
                            entity.getDuration(),
                            entity.getRunningStatus(),
                            entity.isFreeCAMode(),
-                           entity.isPresentEvent());
+                           entity.isPresentEvent(),
+                           entity.isNvodReferenceEvent());
         }
         return entity;
     }
@@ -494,6 +512,16 @@ public class SIObjectHandler
                        entity.getEventName(),
                        entity.getEventDescription(),
                        entity.getLanguageCode(),
+                       entity.getId());
+    }
+
+    public void updateEventReference(Handle handle, SIEventEntity entity)
+    {
+        handle.execute("UPDATE T_SI_EVENT " +
+                       "SET `ref_srv_id` = ?, `ref_evt_id` = ? " +
+                       "WHERE `id` = ?",
+                       entity.getReferenceServiceId(),
+                       entity.getReferenceEventId(),
                        entity.getId());
     }
 

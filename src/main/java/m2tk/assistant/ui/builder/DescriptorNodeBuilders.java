@@ -53,11 +53,11 @@ public final class DescriptorNodeBuilders
         builders.put(0x48, new DescriptorNodeBuilder("service_descriptor", new ServiceDescriptorPayloadNodeBuilder()));
         builders.put(0x49, new DescriptorNodeBuilder("country_availability_descriptor", new CountryAvailabilityDescriptorPayloadNodeBuilder()));
         builders.put(0x4A, new DescriptorNodeBuilder("linkage_descriptor", new LinkageDescriptorPayloadNodeBuilder()));
-        builders.put(0x4B, new DescriptorNodeBuilder("NVOD_reference_descriptor"));
-        builders.put(0x4C, new DescriptorNodeBuilder("time_shifted_service_descriptor"));
+        builders.put(0x4B, new DescriptorNodeBuilder("NVOD_reference_descriptor", new NVODReferenceDescriptorPayloadNodeBuilder()));
+        builders.put(0x4C, new DescriptorNodeBuilder("time_shifted_service_descriptor", new TimeShiftedServiceDescriptorPayloadNodeBuilder()));
         builders.put(0x4D, new DescriptorNodeBuilder("short_event_descriptor", new ShortEventDescriptorPayloadNodeBuilder()));
         builders.put(0x4E, new DescriptorNodeBuilder("extended_event_descriptor", new ExtendedEventDescriptorPayloadNodeBuilder()));
-        builders.put(0x4F, new DescriptorNodeBuilder("time_shifted_event_descriptor"));
+        builders.put(0x4F, new DescriptorNodeBuilder("time_shifted_event_descriptor", new TimeShiftedEventDescriptorPayloadNodeBuilder()));
         builders.put(0x50, new DescriptorNodeBuilder("component_descriptor", new ComponentDescriptorPayloadNodeBuilder()));
         builders.put(0x51, new DescriptorNodeBuilder("mosaic_descriptor"));
         builders.put(0x52, new DescriptorNodeBuilder("stream_identifier_descriptor", new StreamIdentifierDescriptorPayloadNodeBuilder()));
