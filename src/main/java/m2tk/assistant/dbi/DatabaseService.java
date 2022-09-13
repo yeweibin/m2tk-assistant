@@ -334,6 +334,11 @@ public class DatabaseService
         return dbi.withHandle(handle -> siHandler.listServices(handle, tsid));
     }
 
+    public List<SIServiceEntity> listNVODServices()
+    {
+        return dbi.withHandle(siHandler::listNVODServices);
+    }
+
     public List<SIMultiplexServiceCountView> listMultiplexServiceCounts()
     {
         return dbi.withHandle(siHandler::listMultiplexServiceCounts);
@@ -347,6 +352,11 @@ public class DatabaseService
     public List<SIEventEntity> listEvents()
     {
         return dbi.withHandle(siHandler::listEvents);
+    }
+
+    public List<SIEventEntity> listNVODEvents()
+    {
+        return dbi.withHandle(siHandler::listNVODEvents);
     }
 
     public void addTR290Event(LocalDateTime timestamp, String type, String description, long position, int pid)

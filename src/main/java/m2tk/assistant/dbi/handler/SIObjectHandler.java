@@ -393,6 +393,15 @@ public class SIObjectHandler
                      .list();
     }
 
+    public List<SIServiceEntity> listNVODServices(Handle handle)
+    {
+        return handle.select("SELECT * FROM T_SI_SERVICE " +
+                             "WHERE `srv_type` = ? OR `srv_type` = ? ORDER BY `id`",
+                             0x04, 0x05)
+                     .map(serviceEntityMapper)
+                     .list();
+    }
+
     public SIEventEntity addPresentFollowingEvent(Handle handle,
                                                   int transportStreamId,
                                                   int originalNetworkId,
@@ -518,10 +527,11 @@ public class SIObjectHandler
     public void updateEventReference(Handle handle, SIEventEntity entity)
     {
         handle.execute("UPDATE T_SI_EVENT " +
-                       "SET `ref_srv_id` = ?, `ref_evt_id` = ? " +
+                       "SET `ref_srv_id` = ?, `ref_evt_id` = ?, `nvod_time_shifted` = ? " +
                        "WHERE `id` = ?",
                        entity.getReferenceServiceId(),
                        entity.getReferenceEventId(),
+                       entity.isNvodTimeShiftedEvent(),
                        entity.getId());
     }
 
@@ -541,6 +551,14 @@ public class SIObjectHandler
                              originalNetworkId,
                              serviceId,
                              SIEventEntity.TYPE_SCHEDULE)
+                     .map(eventEntityMapper)
+                     .list();
+    }
+
+    public List<SIEventEntity> listNVODEvents(Handle handle)
+    {
+        return handle.select("SELECT * FROM T_SI_EVENT " +
+                             "WHERE `nvod_reference` = TRUE OR `nvod_time_shifted` = TRUE")
                      .map(eventEntityMapper)
                      .list();
     }

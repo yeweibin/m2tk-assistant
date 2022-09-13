@@ -37,6 +37,7 @@ public class MainViewController
     private TR290InfoView tr290InfoView;
     private PCRInfoView pcrStatsView;
     private EPGInfoView epgInfoView;
+    private NVODInfoView nvodInfoView;
     private DatagramView datagramView;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
@@ -89,6 +90,7 @@ public class MainViewController
         menuViews.add(createMenuItem("showTR290Info", "报警信息", "查看报警信息"));
         menuViews.add(createMenuItem("showPCRInfo", "PCR信息", "查看PCR信息"));
         menuViews.add(createMenuItem("showEPGInfo", "EPG信息", "查看EPG信息"));
+        menuViews.add(createMenuItem("showNVODInfo", "NVOD信息", "查看NVOD信息"));
         menuViews.add(createMenuItem("showPSISIInfo", "PSI/SI信息", "查看PSI/SI信息"));
 
         JMenu menuLogs = new JMenu("日志(L)");
@@ -176,6 +178,7 @@ public class MainViewController
         tr290InfoView = new TR290InfoView(frameView);
         pcrStatsView = new PCRInfoView(frameView);
         epgInfoView = new EPGInfoView(frameView);
+        nvodInfoView = new NVODInfoView(frameView);
         datagramView = new DatagramView(frameView);
 
         tabbedPane = new JTabbedPane();
@@ -185,6 +188,7 @@ public class MainViewController
         tabbedPane.add("TR 101 290", tr290InfoView);
         tabbedPane.add("PCR", pcrStatsView);
         tabbedPane.add("EPG", epgInfoView);
+        tabbedPane.add("NVOD", nvodInfoView);
         tabbedPane.add("PSI/SI", datagramView);
         tabbedPane.add("日志", new JScrollPane(logsView));
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
@@ -280,6 +284,12 @@ public class MainViewController
     public void showEPGInfo()
     {
         tabbedPane.setSelectedComponent(epgInfoView);
+    }
+
+    @Action
+    public void showNVODInfo()
+    {
+        tabbedPane.setSelectedComponent(nvodInfoView);
     }
 
     @Action
