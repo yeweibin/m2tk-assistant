@@ -433,7 +433,7 @@ public class SIObjectHandler
 
             handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, `evt_name`, " +
                            "`start_time`, `duration`, `running_status`, `free_ca_mode`, `present`, `nvod_reference`) " +
-                           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId(),

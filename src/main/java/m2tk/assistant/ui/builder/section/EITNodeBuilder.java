@@ -88,6 +88,9 @@ public class EITNodeBuilder implements TreeNodeBuilder
 
     private String translateStartTime(long timepoint)
     {
+        // NVOD索引事件的起始时间为全1。
+        if (timepoint == 0xFFFFFFFFFFL)
+            return "未定义";
         return DVB.decodeTimepointIntoLocalDateTime(timepoint)
                   .format(startTimeFormatter);
     }
