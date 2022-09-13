@@ -129,6 +129,7 @@ public class EPGInfoView extends JPanel
             List<SIEventEntity> events = databaseService.listEvents();
 
             services.stream()
+                    .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)
                     .map(service -> new SIService(service.getTransportStreamId(),
                                                   service.getOriginalNetworkId(),
                                                   service.getServiceId(),
@@ -139,6 +140,7 @@ public class EPGInfoView extends JPanel
                     .forEach(serviceList::add);
 
             events.stream()
+                  .filter(event -> !event.isNvodReferenceEvent() && !event.isNvodTimeShiftedEvent())
                   .map(event -> new SIEvent(event.getTransportStreamId(),
                                             event.getOriginalNetworkId(),
                                             event.getServiceId(),

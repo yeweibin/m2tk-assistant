@@ -163,7 +163,15 @@ public class ServiceEventGuidePanel extends JPanel
 
     private boolean isSameEventGroups(Map<SIService, List<SIEvent>> current, Map<SIService, List<SIEvent>> incoming)
     {
-        return Objects.equals(current.keySet(), incoming.keySet());
+        if (!Objects.equals(current.keySet(), incoming.keySet()))
+            return false;
+
+        for (SIService key : incoming.keySet())
+        {
+            if (!Objects.equals(current.get(key), incoming.get(key)))
+                return false;
+        }
+        return true;
     }
 
     private Map<String, List<SIService>> groupServices(Collection<SIService> services)
