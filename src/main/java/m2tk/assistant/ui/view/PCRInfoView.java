@@ -86,6 +86,7 @@ public class PCRInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
+                queryPCRStats();
                 startRefreshing();
             }
 

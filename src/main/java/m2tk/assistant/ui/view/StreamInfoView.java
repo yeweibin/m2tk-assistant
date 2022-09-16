@@ -119,6 +119,10 @@ public class StreamInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
+                querySourceInfo();
+                queryStreamInfo();
+                queryProgramInfo();
+                queryCASystemInfo();
                 startRefreshing();
             }
 

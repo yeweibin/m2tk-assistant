@@ -67,6 +67,7 @@ public class TR290InfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
+                queryTR290Events();
                 startRefreshing();
             }
 

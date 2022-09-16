@@ -90,6 +90,9 @@ public class NetworkInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
+                queryNetworks();
+                queryServices();
+                queryNetworkTime();
                 startRefreshing();
             }
 

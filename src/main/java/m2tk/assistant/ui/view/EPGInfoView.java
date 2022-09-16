@@ -70,6 +70,7 @@ public class EPGInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
+                queryServiceAndEvents();
                 startRefreshing();
             }
 

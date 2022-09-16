@@ -68,6 +68,7 @@ public class NVODInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
+                queryServiceAndEvents();
                 startRefreshing();
             }
 
