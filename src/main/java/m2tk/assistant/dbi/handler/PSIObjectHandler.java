@@ -16,7 +16,6 @@
 
 package m2tk.assistant.dbi.handler;
 
-
 import cn.hutool.core.lang.generator.Generator;
 import m2tk.assistant.dbi.entity.CAStreamEntity;
 import m2tk.assistant.dbi.entity.ProgramEntity;
