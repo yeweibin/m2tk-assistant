@@ -22,6 +22,7 @@ import lombok.Data;
 public class PCRCheckEntity
 {
     private long id;
+    private long transactionId;
     private int pid;
     private long previousValue;
     private long previousPosition;

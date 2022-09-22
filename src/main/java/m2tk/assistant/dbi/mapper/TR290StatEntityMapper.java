@@ -31,6 +31,7 @@ public class TR290StatEntityMapper implements RowMapper<TR290StatEntity>
     public TR290StatEntity map(ResultSet rs, StatementContext ctx) throws SQLException
     {
         TR290StatEntity entity = new TR290StatEntity();
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setIndicator(rs.getString("indicator"));
         entity.setCount(rs.getLong("count"));
         entity.setLastEventTimestamp(Optional.ofNullable(rs.getTimestamp("timestamp")).map(Timestamp::toLocalDateTime).orElse(null));

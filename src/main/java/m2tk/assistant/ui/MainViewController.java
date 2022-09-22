@@ -1,14 +1,16 @@
 package m2tk.assistant.ui;
 
 import cn.hutool.core.io.FileUtil;
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
+import m2tk.assistant.dbi.entity.SourceEntity;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.DrawNetworkGraphTask;
 import m2tk.assistant.ui.util.ComponentUtil;
-import m2tk.assistant.ui.util.ListModelOutputStream;
 import m2tk.assistant.ui.view.*;
-import m2tk.assistant.util.TextListLogAppender;
 import m2tk.multiplex.DemuxStatus;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
@@ -31,7 +33,7 @@ public class MainViewController
     private static final Logger logger = LoggerFactory.getLogger(MainViewController.class);
     private final FrameView frameView;
     private final ActionMap actionMap;
-    private DefaultListModel<String> logsModel;
+    private SourceListView sourceListView;
     private StreamInfoView streamInfoView;
     private NetworkInfoView networkInfoView;
     private TR290InfoView tr290InfoView;
@@ -39,6 +41,7 @@ public class MainViewController
     private EPGInfoView epgInfoView;
     private NVODInfoView nvodInfoView;
     private DatagramView datagramView;
+    private LogsView logsView;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
     private volatile boolean willQuit;
@@ -117,6 +120,8 @@ public class MainViewController
         ResourceMap resourceMap = frameView.getResourceMap();
 
         JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+
         JButton btnOpenFile = createButton("openFile", "分析码流文件");
         btnOpenFile.setIcon(resourceMap.getIcon("toolbar.openFile.icon"));
         btnOpenFile.setText(null);
@@ -167,12 +172,7 @@ public class MainViewController
 
     private void createAndSetupWorkspace()
     {
-        logsModel = new DefaultListModel<>();
-        JList<String> logsView = new JList<>();
-        logsView.setModel(logsModel);
-        logsView.setDragEnabled(false);
-        logsView.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-
+        sourceListView = new SourceListView();
         streamInfoView = new StreamInfoView(frameView);
         networkInfoView = new NetworkInfoView(frameView);
         tr290InfoView = new TR290InfoView(frameView);
@@ -180,6 +180,7 @@ public class MainViewController
         epgInfoView = new EPGInfoView(frameView);
         nvodInfoView = new NVODInfoView(frameView);
         datagramView = new DatagramView(frameView);
+        logsView = new LogsView();
 
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
@@ -190,11 +191,10 @@ public class MainViewController
         tabbedPane.add("EPG", epgInfoView);
         tabbedPane.add("NVOD", nvodInfoView);
         tabbedPane.add("PSI/SI", datagramView);
-        tabbedPane.add("日志", new JScrollPane(logsView));
-        frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
+        tabbedPane.add("日志", logsView);
 
-        // Bind ListModel to LogAppender
-        TextListLogAppender.setStaticOutputStream(new ListModelOutputStream(logsModel));
+        frameView.getRootPane().getContentPane().add(sourceListView, BorderLayout.WEST);
+        frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
     }
 
     private void setupInitialStates()
@@ -212,6 +212,18 @@ public class MainViewController
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
         ComponentUtil.setPreferSizeAndLocateToCenter(frameView.getFrame(), 0.5, 0.5);
+
+        Global.registerSubscriber(this);
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        Component c = tabbedPane.getSelectedComponent();
+        if (c instanceof InfoView)
+        {
+            ((InfoView)c).refresh();
+        }
     }
 
     private JMenuItem createMenuItem(String action, String text, String tooltip)
@@ -315,7 +327,7 @@ public class MainViewController
     @Action
     public void clearLogs()
     {
-        logsModel.clear();
+        logsView.clear();
     }
 
     @Action
@@ -351,9 +363,11 @@ public class MainViewController
                 saveRecentFile(file);
                 streamInfoView.reset();
                 networkInfoView.reset();
-                epgInfoView.reset();
                 tr290InfoView.reset();
                 pcrStatsView.reset();
+                epgInfoView.reset();
+                nvodInfoView.reset();
+                datagramView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -361,6 +375,12 @@ public class MainViewController
                 actionMap.get("stopAnalyzer").setEnabled(true);
                 actionMap.get("pauseRefreshing").setEnabled(true);
                 actionMap.get("startRefreshing").setEnabled(false);
+
+                long transactionId = Global.getCurrentTransactionId();
+                SourceEntity source = Global.getDatabaseService().getSource(transactionId);
+                SourceAttachedEvent event = new SourceAttachedEvent();
+                event.setSource(source);
+                Global.postEvent(event);
             }
         }
     }
@@ -395,9 +415,11 @@ public class MainViewController
             Global.setInputResource(input);
             streamInfoView.reset();
             networkInfoView.reset();
-            epgInfoView.reset();
             tr290InfoView.reset();
             pcrStatsView.reset();
+            epgInfoView.reset();
+            nvodInfoView.reset();
+            datagramView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -405,6 +427,12 @@ public class MainViewController
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
+
+            long transactionId = Global.getCurrentTransactionId();
+            SourceEntity source = Global.getDatabaseService().getSource(transactionId);
+            SourceAttachedEvent event = new SourceAttachedEvent();
+            event.setSource(source);
+            Global.postEvent(event);
         }
     }
 
@@ -429,9 +457,11 @@ public class MainViewController
             Global.setInputResource(input);
             streamInfoView.reset();
             networkInfoView.reset();
-            epgInfoView.reset();
             tr290InfoView.reset();
             pcrStatsView.reset();
+            epgInfoView.reset();
+            nvodInfoView.reset();
+            datagramView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -439,6 +469,12 @@ public class MainViewController
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
+
+            long transactionId = Global.getCurrentTransactionId();
+            SourceEntity source = Global.getDatabaseService().getSource(transactionId);
+            SourceAttachedEvent event = new SourceAttachedEvent();
+            event.setSource(source);
+            Global.postEvent(event);
         }
     }
 
@@ -471,6 +507,12 @@ public class MainViewController
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
+
+            long transactionId = Global.getCurrentTransactionId();
+            SourceEntity source = Global.getDatabaseService().getSource(transactionId);
+            SourceAttachedEvent event = new SourceAttachedEvent();
+            event.setSource(source);
+            Global.postEvent(event);
         }
     }
 
@@ -485,9 +527,11 @@ public class MainViewController
     {
         streamInfoView.stopRefreshing();
         networkInfoView.stopRefreshing();
-        epgInfoView.stopRefreshing();
         tr290InfoView.stopRefreshing();
         pcrStatsView.stopRefreshing();
+        epgInfoView.stopRefreshing();
+        nvodInfoView.stopRefreshing();
+        datagramView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -497,9 +541,11 @@ public class MainViewController
     {
         streamInfoView.startRefreshing();
         networkInfoView.startRefreshing();
-        epgInfoView.startRefreshing();
         tr290InfoView.startRefreshing();
         pcrStatsView.startRefreshing();
+        epgInfoView.startRefreshing();
+        nvodInfoView.startRefreshing();
+        datagramView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }

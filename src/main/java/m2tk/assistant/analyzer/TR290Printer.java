@@ -27,15 +27,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.summingLong;
 
 public class TR290Printer implements Consumer<DemuxStatus>
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
 
-    public TR290Printer(DatabaseService service)
+    public TR290Printer(DatabaseService service, long transaction)
     {
         databaseService = Objects.requireNonNull(service);
+        transactionId = transaction;
     }
 
 
@@ -45,7 +48,7 @@ public class TR290Printer implements Consumer<DemuxStatus>
         if (status.isRunning())
             return;
 
-        List<TR290EventEntity> events = databaseService.listTR290Events(TR290ErrorTypes.PCR_ACCURACY_ERROR, 10000);
+        List<TR290EventEntity> events = databaseService.listTR290Events(transactionId, TR290ErrorTypes.PCR_ACCURACY_ERROR, 10000);
         System.out.println("error count: " + events.size());
 
         for (TR290EventEntity event : events)
@@ -71,7 +74,7 @@ public class TR290Printer implements Consumer<DemuxStatus>
         System.out.println();
         System.out.println("===========================================");
         System.out.println();
-        List<PCRStatEntity> pcrStats = databaseService.listPCRStats();
+        List<PCRStatEntity> pcrStats = databaseService.listPCRStats(transactionId);
         for (PCRStatEntity stat : pcrStats)
         {
             System.out.printf("[PID %04x] PCR Cnt: %d%n", stat.getPid(), stat.getPcrCount());

@@ -14,6 +14,7 @@ public class SourceEntityMapper implements RowMapper<SourceEntity>
     {
         SourceEntity entity = new SourceEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setBitrate(rs.getInt("bitrate"));
         entity.setFrameSize(rs.getInt("frame_size"));
         entity.setTransportStreamId(rs.getInt("transport_stream_id"));

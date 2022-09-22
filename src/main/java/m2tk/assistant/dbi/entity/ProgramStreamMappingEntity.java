@@ -9,6 +9,7 @@ import java.util.Objects;
 public class ProgramStreamMappingEntity
 {
     private long id;
+    private long transactionId;
     private int programNumber;
     private int streamPid;
     private int streamType;

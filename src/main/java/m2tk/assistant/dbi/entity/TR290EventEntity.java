@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class TR290EventEntity
 {
     private long id;
+    private long transactionId;
     private String type;
     private String description;
     private int streamPid;

@@ -22,6 +22,7 @@ import lombok.Data;
 public class SINetworkEntity
 {
     private long id;
+    private long transactionId;
     private int networkId;
     private String networkName;
     private boolean actualNetwork;

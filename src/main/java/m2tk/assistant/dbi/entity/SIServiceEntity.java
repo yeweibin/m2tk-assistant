@@ -22,6 +22,7 @@ import lombok.Data;
 public class SIServiceEntity
 {
     private long id;
+    private long transactionId;
     private int transportStreamId;
     private int originalNetworkId;
     private int serviceId;

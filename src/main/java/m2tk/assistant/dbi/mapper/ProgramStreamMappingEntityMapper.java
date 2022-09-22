@@ -14,6 +14,7 @@ public class ProgramStreamMappingEntityMapper implements RowMapper<ProgramStream
     {
         ProgramStreamMappingEntity entity = new ProgramStreamMappingEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setProgramNumber(rs.getInt("prg_num"));
         entity.setStreamPid(rs.getInt("es_pid"));
         entity.setStreamType(rs.getInt("es_type"));

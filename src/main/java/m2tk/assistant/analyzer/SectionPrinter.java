@@ -17,10 +17,12 @@ import static java.util.stream.Collectors.toList;
 public class SectionPrinter implements Consumer<DemuxStatus>
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
 
-    public SectionPrinter(DatabaseService service)
+    public SectionPrinter(DatabaseService service, long transaction)
     {
         databaseService = Objects.requireNonNull(service);
+        transactionId = transaction;
     }
 
     @Override
@@ -47,7 +49,7 @@ public class SectionPrinter implements Consumer<DemuxStatus>
 
     private void printSections(String name)
     {
-        Map<Integer, List<SectionEntity>> sectionGroups = databaseService.getSectionGroups(name)
+        Map<Integer, List<SectionEntity>> sectionGroups = databaseService.getSectionGroups(transactionId, name)
                                                                          .stream()
                                                                          .collect(groupingBy(SectionEntity::getStream,
                                                                                              toList()));

@@ -1,5 +1,6 @@
 package m2tk.assistant.dbi;
 
+import cn.hutool.core.lang.generator.Generator;
 import cn.hutool.core.lang.generator.SnowflakeGenerator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -19,6 +20,7 @@ import static java.util.stream.Collectors.toMap;
 public class DatabaseService
 {
     private final Jdbi dbi;
+    private final Generator<Long> idGenerator;
     private final SourceHandler sourceHandler;
     private final StreamHandler streamHandler;
     private final PSIObjectHandler psiHandler;
@@ -35,15 +37,15 @@ public class DatabaseService
 
         dbi = Jdbi.create(new HikariDataSource(config)).installPlugin(new H2DatabasePlugin());
 
-        SnowflakeGenerator generator = new SnowflakeGenerator();
+        idGenerator = new SnowflakeGenerator();
 
-        sourceHandler = new SourceHandler(generator);
-        streamHandler = new StreamHandler(generator);
-        psiHandler = new PSIObjectHandler(generator);
-        siHandler = new SIObjectHandler(generator);
-        tr290Handler = new TR290EventHandler(generator);
-        pcrHandler = new PCRHandler(generator);
-        sectionHandler = new SectionHandler(generator);
+        sourceHandler = new SourceHandler(idGenerator);
+        streamHandler = new StreamHandler(idGenerator);
+        psiHandler = new PSIObjectHandler(idGenerator);
+        siHandler = new SIObjectHandler(idGenerator);
+        tr290Handler = new TR290EventHandler(idGenerator);
+        pcrHandler = new PCRHandler(idGenerator);
+        sectionHandler = new SectionHandler(idGenerator);
     }
 
     public void initDatabase()
@@ -59,22 +61,19 @@ public class DatabaseService
         });
     }
 
-    public void resetDatabase()
+    public void initStreamContext(long transactionId)
     {
-        dbi.useHandle(handle -> {
-            sourceHandler.resetTable(handle);
-            streamHandler.resetTable(handle);
-            psiHandler.resetTable(handle);
-            siHandler.resetTable(handle);
-            tr290Handler.resetTable(handle);
-            pcrHandler.resetTable(handle);
-            sectionHandler.resetTable(handle);
-        });
+        dbi.useHandle(handle -> streamHandler.initForTransaction(handle, transactionId));
     }
 
-    public StreamEntity getStream(int pid)
+    public long requestTransactionId()
     {
-        return dbi.withHandle(handle -> streamHandler.getStream(handle, pid));
+        return idGenerator.next();
+    }
+
+    public StreamEntity getStream(long transactionId, int pid)
+    {
+        return dbi.withHandle(handle -> streamHandler.getStream(handle, transactionId, pid));
     }
 
     public void updateStreamStatistics(StreamEntity stream)
@@ -82,32 +81,32 @@ public class DatabaseService
         dbi.useHandle(handle -> streamHandler.updateStreamStatistics(handle, stream));
     }
 
-    public void cumsumStreamErrorCounts(int pid, long transportErrors, long continuityErrors)
+    public void cumsumStreamErrorCounts(long transactionId, int pid, long transportErrors, long continuityErrors)
     {
-        dbi.useHandle(handle -> streamHandler.cumsumStreamErrorCounts(handle, pid, transportErrors, continuityErrors));
+        dbi.useHandle(handle -> streamHandler.cumsumStreamErrorCounts(handle, transactionId, pid, transportErrors, continuityErrors));
     }
 
-    public void updateStreamUsage(int pid, String category, String description)
+    public void updateStreamUsage(long transactionId, int pid, String category, String description)
     {
-        dbi.useHandle(handle -> streamHandler.updateStreamUsage(handle, pid, category, description));
+        dbi.useHandle(handle -> streamHandler.updateStreamUsage(handle, transactionId, pid, category, description));
     }
 
-    public List<StreamEntity> listStreams()
+    public List<StreamEntity> listStreams(long transactionId)
     {
-        return dbi.withHandle(streamHandler::listPresentStreams);
+        return dbi.withHandle(handle -> streamHandler.listPresentStreams(handle, transactionId));
     }
 
-    public Map<Integer, StreamEntity> getStreamRegistry()
+    public Map<Integer, StreamEntity> getStreamRegistry(long transactionId)
     {
-        return dbi.withHandle(handle -> streamHandler.listPresentStreams(handle)
+        return dbi.withHandle(handle -> streamHandler.listPresentStreams(handle, transactionId)
                                                      .stream()
                                                      .collect(toMap(StreamEntity::getPid, Function.identity()))
                              );
     }
 
-    public void addSource(String name)
+    public void addSource(long transactionId, String name)
     {
-        dbi.useHandle(handle -> sourceHandler.addSource(handle, name));
+        dbi.useHandle(handle -> sourceHandler.addSource(handle, transactionId, name));
     }
 
     public void updateSourceStatistics(SourceEntity source)
@@ -120,19 +119,19 @@ public class DatabaseService
         dbi.useHandle(handle -> sourceHandler.updateSourceTransportId(handle, source));
     }
 
-    public SourceEntity getSource()
+    public SourceEntity getSource(long transactionId)
     {
-        return dbi.withHandle(sourceHandler::getLatestSource);
+        return dbi.withHandle(handle -> sourceHandler.getSource(handle, transactionId));
     }
 
-    public void clearPrograms()
+    public void clearPrograms(long transactionId)
     {
-        dbi.useHandle(psiHandler::clearProgramAndMappingStreams);
+        dbi.useHandle(handle -> psiHandler.clearProgramAndMappingStreams(handle, transactionId));
     }
 
-    public ProgramEntity addProgram(int tsid, int number, int pmtpid)
+    public ProgramEntity addProgram(long transactionId, int tsid, int number, int pmtpid)
     {
-        return dbi.withHandle(handle -> psiHandler.addProgram(handle, tsid, number, pmtpid));
+        return dbi.withHandle(handle -> psiHandler.addProgram(handle, transactionId, tsid, number, pmtpid));
     }
 
     public void updateProgram(ProgramEntity program)
@@ -140,48 +139,48 @@ public class DatabaseService
         dbi.useHandle(handle -> psiHandler.updateProgram(handle, program));
     }
 
-    public void addProgramStreamMapping(int program, int pid, int type, String category, String description)
+    public void addProgramStreamMapping(long transactionId, int program, int pid, int type, String category, String description)
     {
-        dbi.useHandle(handle -> psiHandler.addProgramStreamMapping(handle, program, pid, type, category, description));
+        dbi.useHandle(handle -> psiHandler.addProgramStreamMapping(handle, transactionId, program, pid, type, category, description));
     }
 
-    public Map<ProgramEntity, List<ProgramStreamMappingEntity>> getProgramMappings()
+    public Map<ProgramEntity, List<ProgramStreamMappingEntity>> getProgramMappings(long transactionId)
     {
         return dbi.withHandle(handle -> {
-            List<ProgramEntity> programs = psiHandler.listPrograms(handle);
+            List<ProgramEntity> programs = psiHandler.listPrograms(handle, transactionId);
             Map<ProgramEntity, List<ProgramStreamMappingEntity>> mappings = new HashMap<>();
             for (ProgramEntity program : programs)
             {
                 mappings.put(program,
-                             psiHandler.listProgramStreamMappings(handle, program.getProgramNumber()));
+                             psiHandler.listProgramStreamMappings(handle, transactionId, program.getProgramNumber()));
             }
             return mappings;
         });
     }
 
-    public Map<Integer, List<CAStreamEntity>> listECMGroups()
+    public Map<Integer, List<CAStreamEntity>> listECMGroups(long transactionId)
     {
-        return dbi.withHandle(psiHandler::listECMGroups);
+        return dbi.withHandle(handle -> psiHandler.listECMGroups(handle, transactionId));
     }
 
-    public void addEMMStream(int systemId, int pid, byte[] privateData)
+    public void addEMMStream(long transactionId, int systemId, int pid, byte[] privateData)
     {
-        dbi.useHandle(handle -> psiHandler.addEMMStream(handle, systemId, pid, privateData));
+        dbi.useHandle(handle -> psiHandler.addEMMStream(handle, transactionId, systemId, pid, privateData));
     }
 
-    public void addECMStream(int systemId, int pid, byte[] privateData, int programNumber, int esPid)
+    public void addECMStream(long transactionId, int systemId, int pid, byte[] privateData, int programNumber, int esPid)
     {
-        dbi.useHandle(handle -> psiHandler.addECMStream(handle, systemId, pid, privateData, programNumber, esPid));
+        dbi.useHandle(handle -> psiHandler.addECMStream(handle, transactionId, systemId, pid, privateData, programNumber, esPid));
     }
 
-    public List<CAStreamEntity> listCAStreams()
+    public List<CAStreamEntity> listCAStreams(long transactionId)
     {
-        return dbi.withHandle(psiHandler::listCAStreams);
+        return dbi.withHandle(handle -> psiHandler.listCAStreams(handle, transactionId));
     }
 
-    public SIBouquetEntity addBouquet(int bouquetId)
+    public SIBouquetEntity addBouquet(long transactionId, int bouquetId)
     {
-        return dbi.withHandle(handle -> siHandler.addBouquet(handle, bouquetId));
+        return dbi.withHandle(handle -> siHandler.addBouquet(handle, transactionId, bouquetId));
     }
 
     public void updateBouquetName(SIBouquetEntity bouquet)
@@ -189,21 +188,23 @@ public class DatabaseService
         dbi.useHandle(handle -> siHandler.updateBouquetName(handle, bouquet));
     }
 
-    public void addBouquetServiceMapping(int bouquetId,
+    public void addBouquetServiceMapping(long transactionId,
+                                         int bouquetId,
                                          int transportStreamId,
                                          int originalNetworkId,
                                          int serviceId)
     {
         dbi.useHandle(handle -> siHandler.addBouquetServiceMapping(handle,
+                                                                   transactionId,
                                                                    bouquetId,
                                                                    transportStreamId,
                                                                    originalNetworkId,
                                                                    serviceId));
     }
 
-    public SINetworkEntity addNetwork(int networkId, boolean isActual)
+    public SINetworkEntity addNetwork(long transactionId, int networkId, boolean isActual)
     {
-        return dbi.withHandle(handle -> siHandler.addNetwork(handle, networkId, isActual));
+        return dbi.withHandle(handle -> siHandler.addNetwork(handle, transactionId, networkId, isActual));
     }
 
     public void updateNetworkName(SINetworkEntity network)
@@ -211,15 +212,17 @@ public class DatabaseService
         dbi.useHandle(handle -> siHandler.updateNetworkName(handle, network));
     }
 
-    public SIMultiplexEntity addMultiplex(int networkId, int transportStreamId, int originalNetworkId)
+    public SIMultiplexEntity addMultiplex(long transactionId, int networkId, int transportStreamId, int originalNetworkId)
     {
         return dbi.withHandle(handle -> siHandler.addMultiplex(handle,
+                                                               transactionId,
                                                                networkId,
                                                                transportStreamId,
                                                                originalNetworkId));
     }
 
-    public SIServiceEntity addService(int transportStreamId,
+    public SIServiceEntity addService(long transactionId,
+                                      int transportStreamId,
                                       int originalNetworkId,
                                       int serviceId,
                                       String runningStatus,
@@ -229,6 +232,7 @@ public class DatabaseService
                                       boolean isActualTS)
     {
         return dbi.withHandle(handle -> siHandler.addService(handle,
+                                                             transactionId,
                                                              transportStreamId,
                                                              originalNetworkId,
                                                              serviceId,
@@ -252,7 +256,8 @@ public class DatabaseService
         dbi.useHandle(handle -> siHandler.updateServiceReference(handle, service));
     }
 
-    public SIEventEntity addPresentFollowingEvent(int transportStreamId,
+    public SIEventEntity addPresentFollowingEvent(long transactionId,
+                                                  int transportStreamId,
                                                   int originalNetworkId,
                                                   int serviceId,
                                                   int eventId,
@@ -263,6 +268,7 @@ public class DatabaseService
                                                   boolean isPresent)
     {
         return dbi.withHandle(handle -> siHandler.addPresentFollowingEvent(handle,
+                                                                           transactionId,
                                                                            transportStreamId,
                                                                            originalNetworkId,
                                                                            serviceId,
@@ -274,7 +280,8 @@ public class DatabaseService
                                                                            isPresent));
     }
 
-    public SIEventEntity addScheduleEvent(int transportStreamId,
+    public SIEventEntity addScheduleEvent(long transactionId,
+                                          int transportStreamId,
                                           int originalNetworkId,
                                           int serviceId,
                                           int eventId,
@@ -284,6 +291,7 @@ public class DatabaseService
                                           boolean isFreeCAMode)
     {
         return dbi.withHandle(handle -> siHandler.addScheduleEvent(handle,
+                                                                   transactionId,
                                                                    transportStreamId,
                                                                    originalNetworkId,
                                                                    serviceId,
@@ -304,44 +312,44 @@ public class DatabaseService
         dbi.useHandle(handle -> siHandler.updateEventReference(handle, event));
     }
 
-    public void addDateTime(long timepoint)
+    public void addDateTime(long transactionId, long timepoint)
     {
-        dbi.useHandle(handle -> siHandler.addDateTime(handle, timepoint));
+        dbi.useHandle(handle -> siHandler.addDateTime(handle, transactionId, timepoint));
     }
 
-    public SIDateTimeEntity getLatestDateTime()
+    public SIDateTimeEntity getLatestDateTime(long transactionId)
     {
-        return dbi.withHandle(siHandler::getLatestDateTime);
+        return dbi.withHandle(handler -> siHandler.getLatestDateTime(handler, transactionId));
     }
 
-    public List<SINetworkEntity> listNetworks()
+    public List<SINetworkEntity> listNetworks(long transactionId)
     {
-        return dbi.withHandle(siHandler::listNetworks);
+        return dbi.withHandle(handle -> siHandler.listNetworks(handle, transactionId));
     }
 
-    public List<SIMultiplexEntity> listMultiplexes()
+    public List<SIMultiplexEntity> listMultiplexes(long transactionId)
     {
-        return dbi.withHandle(siHandler::listMultiplexes);
+        return dbi.withHandle(handle -> siHandler.listMultiplexes(handle, transactionId));
     }
 
-    public List<SIServiceEntity> listServices()
+    public List<SIServiceEntity> listServices(long transactionId)
     {
-        return dbi.withHandle(siHandler::listServices);
+        return dbi.withHandle(handle -> siHandler.listServices(handle, transactionId));
     }
 
-    public List<SIServiceEntity> listServices(int tsid)
+    public List<SIServiceEntity> listServices(long transactionId, int tsid)
     {
-        return dbi.withHandle(handle -> siHandler.listServices(handle, tsid));
+        return dbi.withHandle(handle -> siHandler.listServices(handle, transactionId, tsid));
     }
 
-    public List<SIServiceEntity> listNVODServices()
+    public List<SIServiceEntity> listNVODServices(long transactionId)
     {
-        return dbi.withHandle(siHandler::listNVODServices);
+        return dbi.withHandle(handle -> siHandler.listNVODServices(handle, transactionId));
     }
 
-    public List<SIMultiplexServiceCountView> listMultiplexServiceCounts()
+    public List<SIMultiplexServiceCountView> listMultiplexServiceCounts(long transactionId)
     {
-        return dbi.withHandle(siHandler::listMultiplexServiceCounts);
+        return dbi.withHandle(handle -> siHandler.listMultiplexServiceCounts(handle, transactionId));
     }
 
     public void updateMultiplexDeliverySystemConfigure(SIMultiplexEntity multiplex)
@@ -349,42 +357,46 @@ public class DatabaseService
         dbi.useHandle(handle -> siHandler.updateMultiplexDeliverySystemConfigure(handle, multiplex));
     }
 
-    public List<SIEventEntity> listEvents()
+    public List<SIEventEntity> listEvents(long transactionId)
     {
-        return dbi.withHandle(siHandler::listEvents);
+        return dbi.withHandle(handle -> siHandler.listEvents(handle, transactionId));
     }
 
-    public List<SIEventEntity> listNVODEvents()
+    public List<SIEventEntity> listNVODEvents(long transactionId)
     {
-        return dbi.withHandle(siHandler::listNVODEvents);
+        return dbi.withHandle(handle -> siHandler.listNVODEvents(handle, transactionId));
     }
 
-    public void addTR290Event(LocalDateTime timestamp, String type, String description, long position, int pid)
+    public void addTR290Event(long transactionId,
+                              LocalDateTime timestamp, String type, String description, long position, int pid)
     {
-        dbi.useHandle(handle -> tr290Handler.addTR290Event(handle, timestamp, type, description, position, pid));
+        dbi.useHandle(handle -> tr290Handler.addTR290Event(handle,
+                                                           transactionId,
+                                                           timestamp, type, description, position, pid));
     }
 
-    public List<TR290EventEntity> listTR290Events(long start, int count)
+    public List<TR290EventEntity> listTR290Events(long transactionId, long start, int count)
     {
-        return dbi.withHandle(handle -> tr290Handler.listEvents(handle, start, count));
+        return dbi.withHandle(handle -> tr290Handler.listEvents(handle, transactionId, start, count));
     }
 
-    public List<TR290EventEntity> listTR290Events(String type, int count)
+    public List<TR290EventEntity> listTR290Events(long transactionId, String type, int count)
     {
-        return dbi.withHandle(handle -> tr290Handler.listEvents(handle, type, count));
+        return dbi.withHandle(handle -> tr290Handler.listEvents(handle, transactionId, type, count));
     }
 
-    public List<TR290StatEntity> listTR290Stats()
+    public List<TR290StatEntity> listTR290Stats(long transactionId)
     {
-        return dbi.withHandle(tr290Handler::listStats);
+        return dbi.withHandle(handle -> tr290Handler.listStats(handle, transactionId));
     }
 
-    public void addPCR(int pid, long position, long value)
+    public void addPCR(long transactionId, int pid, long position, long value)
     {
-        dbi.useHandle(handle -> pcrHandler.addPCR(handle, pid, position, value));
+        dbi.useHandle(handle -> pcrHandler.addPCR(handle, transactionId, pid, position, value));
     }
 
-    public void addPCRCheck(int pid,
+    public void addPCRCheck(long transactionId,
+                            int pid,
                             long prevValue, long prevPosition,
                             long currValue, long currPosition,
                             long bitrate,
@@ -394,6 +406,7 @@ public class DatabaseService
                             boolean accuracyCheckFailed)
     {
         dbi.useHandle(handle -> pcrHandler.addPCRCheck(handle,
+                                                       transactionId,
                                                        pid,
                                                        prevValue, prevPosition,
                                                        currValue, currPosition,
@@ -404,28 +417,28 @@ public class DatabaseService
                                                        accuracyCheckFailed));
     }
 
-    public List<PCRStatEntity> listPCRStats()
+    public List<PCRStatEntity> listPCRStats(long transactionId)
     {
-        return dbi.withHandle(pcrHandler::listPCRStats);
+        return dbi.withHandle(handle -> pcrHandler.listPCRStats(handle, transactionId));
     }
 
-    public List<PCRCheckEntity> getRecentPCRChecks(int pid, int limit)
+    public List<PCRCheckEntity> getRecentPCRChecks(long transactionId, int pid, int limit)
     {
-        return dbi.withHandle(handle -> pcrHandler.listRecentPCRChecks(handle, pid, limit));
+        return dbi.withHandle(handle -> pcrHandler.listRecentPCRChecks(handle, transactionId, pid, limit));
     }
 
-    public void addSection(String tag, int pid, long position, byte[] encoding)
+    public void addSection(long transactionId, String tag, int pid, long position, byte[] encoding)
     {
-        dbi.useHandle(handle -> sectionHandler.addSection(handle, tag, pid, position, encoding));
+        dbi.useHandle(handle -> sectionHandler.addSection(handle, transactionId, tag, pid, position, encoding));
     }
 
-    public List<SectionEntity> getSectionGroups(String tagPrefix)
+    public List<SectionEntity> getSectionGroups(long transactionId, String tagPrefix)
     {
-        return dbi.withHandle(handle -> sectionHandler.getSections(handle, tagPrefix));
+        return dbi.withHandle(handle -> sectionHandler.getSections(handle, transactionId, tagPrefix));
     }
 
-    public Map<String, List<SectionEntity>> getSectionGroups()
+    public Map<String, List<SectionEntity>> getSectionGroups(long transactionId)
     {
-        return dbi.withHandle(sectionHandler::getSectionGroups);
+        return dbi.withHandle(handle -> sectionHandler.getSectionGroups(handle, transactionId));
     }
 }

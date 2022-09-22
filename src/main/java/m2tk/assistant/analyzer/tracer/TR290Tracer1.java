@@ -36,6 +36,8 @@ import java.util.Arrays;
 public class TR290Tracer1 implements Tracer
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
+
     private final int[] TEFs;
     private final int[] CCTs; // next cct
     private final int[] DupCnts;
@@ -57,9 +59,10 @@ public class TR290Tracer1 implements Tracer
         Arrays.fill(DUPLICATE_PACKET_MASK, 6, 12, (byte) 0); // PCR field
     }
 
-    public TR290Tracer1(DatabaseService service)
+    public TR290Tracer1(DatabaseService service, long transaction)
     {
         databaseService = service;
+        transactionId = transaction;
 
         TEFs = new int[8192];
         CCTs = new int[8192];
@@ -96,7 +99,8 @@ public class TR290Tracer1 implements Tracer
 
     private void reportError(String errorType, String errorMessage, long position, int stream)
     {
-        databaseService.addTR290Event(LocalDateTime.now(),
+        databaseService.addTR290Event(transactionId,
+                                      LocalDateTime.now(),
                                       errorType, errorMessage,
                                       position, stream);
     }
@@ -144,6 +148,8 @@ public class TR290Tracer1 implements Tracer
                                 status.getPosition(), status.getPid());
                     break;
                 }
+
+                default: break;
             }
         }
     }
@@ -289,7 +295,7 @@ public class TR290Tracer1 implements Tracer
         if (currPcr == -1)
             return;
 
-        databaseService.addPCR(pid, currPct, currPcr);
+        databaseService.addPCR(transactionId, pid, currPct, currPcr);
 
         if (PCRs[pid] == -1)
         {
@@ -332,7 +338,8 @@ public class TR290Tracer1 implements Tracer
                         payload.getStartPacketCounter(), payload.getStreamPID());
         }
 
-        databaseService.addPCRCheck(pid,
+        databaseService.addPCRCheck(transactionId,
+                                    pid,
                                     PCRs[pid], PCRPcts[pid],
                                     currPcr, currPct,
                                     bitrate,
@@ -379,7 +386,7 @@ public class TR290Tracer1 implements Tracer
             {
                 if (TECnts[i] > 0 || CECnts[i] > 0)
                 {
-                    databaseService.cumsumStreamErrorCounts(i, TECnts[i], CECnts[i]);
+                    databaseService.cumsumStreamErrorCounts(transactionId, i, TECnts[i], CECnts[i]);
                     TECnts[i] = 0;
                     CECnts[i] = 0;
                 }

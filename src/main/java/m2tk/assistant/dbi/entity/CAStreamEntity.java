@@ -9,6 +9,7 @@ public class CAStreamEntity
     public static final int TYPE_ECM = 1;
 
     private long id;
+    private long transactionId;
     private int systemId;
     private int streamType;
     private int streamPid;

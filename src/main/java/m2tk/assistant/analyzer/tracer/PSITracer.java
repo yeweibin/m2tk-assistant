@@ -40,6 +40,7 @@ import java.util.Map;
 public class PSITracer implements Tracer
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
 
     private final PATSectionDecoder pat;
     private final CATSectionDecoder cat;
@@ -62,9 +63,10 @@ public class PSITracer implements Tracer
         TSDemux.Channel channel;
     }
 
-    public PSITracer(DatabaseService service)
+    public PSITracer(DatabaseService service, long transaction)
     {
         databaseService = service;
+        transactionId = transaction;
 
         pat = new PATSectionDecoder();
         cat = new CATSectionDecoder();
@@ -118,11 +120,14 @@ public class PSITracer implements Tracer
             for (ProgramContext context : programs.values())
             {
                 demux.closeChannel(context.channel);
-                databaseService.updateStreamUsage(context.program.getPmtPid(), StreamTypes.CATEGORY_USER_PRIVATE, "未知流");
+                databaseService.updateStreamUsage(transactionId,
+                                                  context.program.getPmtPid(),
+                                                  StreamTypes.CATEGORY_USER_PRIVATE,
+                                                  "未知流");
             }
             pmtVersions.clear();
             programs.clear();
-            databaseService.clearPrograms();
+            databaseService.clearPrograms(transactionId);
         }
 
         tsid = pat.getTransportStreamID();
@@ -135,20 +140,20 @@ public class PSITracer implements Tracer
             }
 
             ProgramContext context = new ProgramContext();
-            context.program = databaseService.addProgram(tsid, number, pmtpid);
+            context.program = databaseService.addProgram(transactionId, tsid, number, pmtpid);
             context.program.setPmtPid(pmtpid);
             context.channel = demux.registerSectionChannel(pmtpid, this::processPMT);
             programs.put(number, context);
             pmtVersions.put(pmtpid, -1);
         });
 
-        SourceEntity source = databaseService.getSource();
+        SourceEntity source = databaseService.getSource(transactionId);
         source.setTransportStreamId(tsid);
         databaseService.updateSourceTransportId(source);
 
         patSections[secnum] = version;
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
-        databaseService.addSection("PAT",
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
+        databaseService.addSection(transactionId, "PAT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
@@ -192,15 +197,15 @@ public class PSITracer implements Tracer
             String description = String.format("EMM，系统号：%04X", casid);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
-            databaseService.updateStreamUsage(emm, StreamTypes.CATEGORY_DATA, description);
-            databaseService.addEMMStream(casid, emm, privateData);
+            databaseService.updateStreamUsage(transactionId, emm, StreamTypes.CATEGORY_DATA, description);
+            databaseService.addEMMStream(transactionId, casid, emm, privateData);
 
             demux.registerSectionChannel(emm, this::processEMM);
         });
 
         catSections[secnum] = version;
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
-        databaseService.addSection("CAT",
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
+        databaseService.addSection(transactionId, "CAT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
@@ -254,18 +259,19 @@ public class PSITracer implements Tracer
             String description = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), casid);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
-            databaseService.updateStreamUsage(ecm, StreamTypes.CATEGORY_DATA, description);
-            databaseService.addECMStream(casid, ecm, privateData, program.getProgramNumber(), 8191);
+            databaseService.updateStreamUsage(transactionId, ecm, StreamTypes.CATEGORY_DATA, description);
+            databaseService.addECMStream(transactionId, casid, ecm, privateData, program.getProgramNumber(), 8191);
         });
 
         pmt.forEachProgramElement(encoding -> {
             element.attach(encoding);
             int esPid = element.getElementaryPID();
             int esType = element.getStreamType();
-            databaseService.updateStreamUsage(esPid, StreamTypes.category(esType),
+            databaseService.updateStreamUsage(transactionId, esPid, StreamTypes.category(esType),
                                               StreamTypes.description(esType) +
                                               String.format("（节目号：%d）", program.getProgramNumber()));
-            databaseService.addProgramStreamMapping(program.getProgramNumber(),
+            databaseService.addProgramStreamMapping(transactionId,
+                                                    program.getProgramNumber(),
                                                     esPid,
                                                     esType,
                                                     StreamTypes.category(esType),
@@ -285,18 +291,18 @@ public class PSITracer implements Tracer
                                                    casid);
                 if (!vendor.isEmpty())
                     description += "，提供商：" + vendor;
-                databaseService.updateStreamUsage(ecm, StreamTypes.CATEGORY_DATA, description);
-                databaseService.addECMStream(casid, ecm, privateData, program.getProgramNumber(), esPid);
+                databaseService.updateStreamUsage(transactionId, ecm, StreamTypes.CATEGORY_DATA, description);
+                databaseService.addECMStream(transactionId, casid, ecm, privateData, program.getProgramNumber(), esPid);
             });
         });
 
         databaseService.updateProgram(program);
 
         pmtVersions.put(pmtpid, version);
-        databaseService.updateStreamUsage(pmtpid,
+        databaseService.updateStreamUsage(transactionId, pmtpid,
                                           StreamTypes.CATEGORY_DATA,
                                           String.format("PMT（节目号：%d）", program.getProgramNumber()));
-        databaseService.addSection("PMT",
+        databaseService.addSection(transactionId, "PMT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
@@ -310,7 +316,7 @@ public class PSITracer implements Tracer
         int pid = payload.getStreamPID();
         if (emmCounts[pid] < Global.getPrivateSectionFilteringLimit())
         {
-            databaseService.addSection("EMM",
+            databaseService.addSection(transactionId, "EMM",
                                        payload.getStreamPID(),
                                        payload.getFinishPacketCounter(),
                                        payload.getEncoding().getBytes());

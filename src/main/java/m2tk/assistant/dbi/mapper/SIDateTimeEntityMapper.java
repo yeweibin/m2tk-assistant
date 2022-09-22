@@ -31,6 +31,7 @@ public class SIDateTimeEntityMapper implements RowMapper<SIDateTimeEntity>
     {
         SIDateTimeEntity entity = new SIDateTimeEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setTimepoint(rs.getLong("timepoint"));
         return entity;
     }

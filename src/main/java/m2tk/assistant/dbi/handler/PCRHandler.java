@@ -47,6 +47,7 @@ public class PCRHandler
         handle.execute("DROP TABLE IF EXISTS `T_PCR`");
         handle.execute("CREATE TABLE `T_PCR` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`pid` INT NOT NULL," +
                        "`pct` BIGINT DEFAULT 0," +
                        "`value` BIGINT DEFAULT 0" +
@@ -55,6 +56,7 @@ public class PCRHandler
         handle.execute("DROP TABLE IF EXISTS `T_PCR_CHECK`");
         handle.execute("CREATE TABLE `T_PCR_CHECK` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`pid` INT NOT NULL," +
                        "`prev_pcr` BIGINT DEFAULT 0," +
                        "`prev_pct` BIGINT DEFAULT 0," +
@@ -70,19 +72,14 @@ public class PCRHandler
                        ")");
     }
 
-    public void resetTable(Handle handle)
+    public void addPCR(Handle handle, long transactionId, int pid, long position, long value)
     {
-        handle.execute("TRUNCATE TABLE T_PCR");
-        handle.execute("TRUNCATE TABLE T_PCR_CHECK");
+        handle.execute("INSERT INTO T_PCR(`id`, `transaction_id`, `pid`, `pct`, `value`) VALUES (?,?,?,?,?)",
+                       idGenerator.next(), transactionId, pid, position, value);
     }
 
-    public void addPCR(Handle handle, int pid, long position, long value)
-    {
-        handle.execute("INSERT INTO T_PCR(`id`, `pid`, `pct`, `value`) VALUES (?,?,?,?)",
-                       idGenerator.next(), pid, position, value);
-    }
-
-    public void addPCRCheck(Handle handle, int pid,
+    public void addPCRCheck(Handle handle, long transactionId,
+                            int pid,
                             long prevValue, long prevPosition,
                             long currValue, long currPosition,
                             long bitrate,
@@ -91,12 +88,13 @@ public class PCRHandler
                             boolean discontinuityCheckFailed,
                             boolean accuracyCheckFailed)
     {
-        handle.execute("INSERT INTO T_PCR_CHECK(`id`, `pid`, " +
-                       "`prev_pcr`, `prev_pct`, `curr_pcr`, `curr_pct`, `bitrate`, " +
+        handle.execute("INSERT INTO T_PCR_CHECK(`id`, `transaction_id`, " +
+                       "`pid`, `prev_pcr`, `prev_pct`, `curr_pcr`, `curr_pct`, `bitrate`, " +
                        "`interval_ns`, `diff_ns`, `accuracy_ns`, " +
                        "`repetition_check_failed`, `discontinuity_check_failed`, `accuracy_check_failed`) " +
-                       "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                       "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                        idGenerator.next(),
+                       transactionId,
                        pid,
                        prevValue, prevPosition, currValue, currPosition, bitrate,
                        interval, diff, accuracy,
@@ -105,31 +103,31 @@ public class PCRHandler
                        accuracyCheckFailed);
     }
 
-    public List<PCREntity> listRecentPCRs(Handle handle, int pid, int limit)
+    public List<PCREntity> listRecentPCRs(Handle handle, long transactionId, int pid, int limit)
     {
         return handle.select("SELECT * FROM " +
-                             "  (SELECT * FROM T_PCR WHERE `pid` = ? ORDER BY `id` DESC FETCH FIRST ? ROWS ONLY) " +
+                             "  (SELECT * FROM T_PCR WHERE `transaction_id` = ? AND `pid` = ? ORDER BY `id` DESC FETCH FIRST ? ROWS ONLY) " +
                              "ORDER BY `id` ASC",
-                             pid, limit)
+                             transactionId, pid, limit)
                      .map(pcrEntityMapper)
                      .list();
     }
 
 
-    public List<PCRCheckEntity> listRecentPCRChecks(Handle handle, int pid, int limit)
+    public List<PCRCheckEntity> listRecentPCRChecks(Handle handle, long transactionId, int pid, int limit)
     {
         return handle.select("SELECT * FROM " +
-                             "  (SELECT * FROM T_PCR_CHECK WHERE `pid` = ? ORDER BY `id` DESC FETCH FIRST ? ROWS ONLY) " +
+                             "  (SELECT * FROM T_PCR_CHECK WHERE `transaction_id` = ? AND `pid` = ? ORDER BY `id` DESC FETCH FIRST ? ROWS ONLY) " +
                              "ORDER BY `id` ASC",
-                             pid, limit)
+                             transactionId, pid, limit)
                      .map(checkEntityMapper)
                      .list();
     }
 
-    public List<PCRStatEntity> listPCRStats(Handle handle)
+    public List<PCRStatEntity> listPCRStats(Handle handle, long transactionId)
     {
         return handle.select("SELECT A.*, B.* FROM " +
-                             "  (SELECT `pid`, COUNT(`id`) AS `pcr_count` FROM T_PCR GROUP BY `pid`) A " +
+                             "  (SELECT `pid`, COUNT(`id`) AS `pcr_count` FROM T_PCR WHERE `transaction_id` = :tx GROUP BY `pid`) A " +
                              "LEFT JOIN " +
                              "  (SELECT `pid`, " +
                              "      AVG(`bitrate`) AS `avg_bitrate`, " +
@@ -142,10 +140,11 @@ public class PCRHandler
                              "      SUM(CASE `repetition_check_failed` WHEN TRUE THEN 1 ELSE 0 END) AS `repetition_errors`, " +
                              "      SUM(CASE `discontinuity_check_failed` WHEN TRUE THEN 1 ELSE 0 END) AS `discontinuity_errors`, " +
                              "      SUM(CASE `accuracy_check_failed` WHEN TRUE THEN 1 ELSE 0 END) AS `accuracy_errors` " +
-                             "  FROM T_PCR_CHECK " +
+                             "  FROM T_PCR_CHECK WHERE `transaction_id` = :tx " +
                              "  GROUP BY `pid`) B " +
                              "ON A.pid = B.pid " +
                              "ORDER BY A.pid")
+                     .bind("tx", transactionId)
                      .map(statEntityMapper)
                      .list();
     }

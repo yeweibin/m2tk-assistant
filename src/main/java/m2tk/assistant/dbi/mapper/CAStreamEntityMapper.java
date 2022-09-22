@@ -14,6 +14,7 @@ public class CAStreamEntityMapper implements RowMapper<CAStreamEntity>
     {
         CAStreamEntity entity = new CAStreamEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setSystemId(rs.getInt("cas_id"));
         entity.setStreamType(rs.getInt("stream_type"));
         entity.setStreamPid(rs.getInt("stream_pid"));

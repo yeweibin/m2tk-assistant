@@ -30,6 +30,7 @@ public class SIServiceEntityMapper implements RowMapper<SIServiceEntity>
     {
         SIServiceEntity entity = new SIServiceEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setTransportStreamId(rs.getInt("ts_id"));
         entity.setOriginalNetworkId(rs.getInt("onet_id"));
         entity.setServiceId(rs.getInt("srv_id"));

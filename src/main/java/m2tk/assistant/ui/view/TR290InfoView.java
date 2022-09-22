@@ -16,16 +16,17 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.TR290Event;
 import m2tk.assistant.analyzer.domain.TR290Stats;
 import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.entity.TR290StatEntity;
 import m2tk.assistant.ui.component.TR290StatsPanel;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
@@ -38,23 +39,30 @@ import java.util.function.Supplier;
 
 import static java.util.stream.Collectors.toMap;
 
-public class TR290InfoView extends JPanel
+public class TR290InfoView extends JPanel implements InfoView
 {
-    private final FrameView frameView;
-    private final ActionMap actionMap;
+    private final transient FrameView frameView;
     private TR290StatsPanel tr290StatsPanel;
     private Timer timer;
+    private volatile long transactionId;
 
     public TR290InfoView(FrameView view)
     {
         frameView = view;
-        actionMap = view.getContext().getActionMap(this);
         initUI();
     }
 
     private void initUI()
     {
-        timer = new Timer(1000, actionMap.get("queryTR290Events"));
+        timer = new Timer(1000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer.stop();
+
+            queryTR290Events();
+        });
 
         tr290StatsPanel = new TR290StatsPanel();
         ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101 290", TitledBorder.LEFT);
@@ -67,16 +75,24 @@ public class TR290InfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
-                queryTR290Events();
-                startRefreshing();
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e)
-            {
-                stopRefreshing();
+                refresh();
             }
         });
+
+        Global.registerSubscriber(this);
+        transactionId = -1;
+    }
+
+    @Override
+    public void refresh()
+    {
+        queryTR290Events();
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        transactionId = event.getTransactionId();
     }
 
     public void reset()
@@ -97,14 +113,15 @@ public class TR290InfoView extends JPanel
         timer.stop();
     }
 
-    @Action
-    public void queryTR290Events()
+    private void queryTR290Events()
     {
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+
         Supplier<TR290Stats> query = () -> {
             Map<String, TR290StatEntity> statsMap = Global.getDatabaseService()
-                                                          .listTR290Stats()
+                                                          .listTR290Stats(currentTransactionId)
                                                           .stream()
-                                                          .collect(toMap(entity -> entity.getIndicator(),
+                                                          .collect(toMap(TR290StatEntity::getIndicator,
                                                                          entity -> entity));
 
             TR290Stats stats = new TR290Stats();

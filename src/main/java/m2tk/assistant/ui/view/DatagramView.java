@@ -16,19 +16,18 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
-import m2tk.assistant.SmallIcons;
 import m2tk.assistant.dbi.entity.SectionEntity;
 import m2tk.assistant.ui.component.SectionDatagramPanel;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.List;
@@ -36,36 +35,37 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class DatagramView extends JPanel
+public class DatagramView extends JPanel implements InfoView
 {
     private final transient FrameView frameView;
-    private final ActionMap actionMap;
     private SectionDatagramPanel sectionDatagramPanel;
+    private Timer timer;
+    private volatile long transactionId;
 
     public DatagramView(FrameView view)
     {
         frameView = view;
-        actionMap = view.getContext().getActionMap(this);
         initUI();
     }
 
     private void initUI()
     {
-        sectionDatagramPanel = new SectionDatagramPanel();
-        JToolBar toolBar = new JToolBar();
-        JButton btn = toolBar.add(actionMap.get("refresh"));
-        btn.setIcon(SmallIcons.TABLE_REFRESH);
-        btn.setHorizontalTextPosition(SwingConstants.RIGHT);
-        btn.setText("刷新");
-        btn.setToolTipText("刷新数据");
+        timer = new Timer(10000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
 
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.add(toolBar, BorderLayout.NORTH);
-        panel.add(sectionDatagramPanel, BorderLayout.CENTER);
-        ComponentUtil.setTitledBorder(panel, "PSI/SI", TitledBorder.LEFT);
+            if (!Global.getStreamAnalyser().isRunning())
+                timer.stop();
+
+            queryDatagrams();
+        });
+
+        sectionDatagramPanel = new SectionDatagramPanel();
+        ComponentUtil.setTitledBorder(sectionDatagramPanel, "PSI/SI", TitledBorder.LEFT);
 
         setLayout(new MigLayout("fill"));
-        add(panel, "center, grow");
+        add(sectionDatagramPanel, "center, grow");
+
 
         addComponentListener(new ComponentAdapter()
         {
@@ -75,13 +75,47 @@ public class DatagramView extends JPanel
                 refresh();
             }
         });
+
+        Global.registerSubscriber(this);
+        transactionId = -1;
     }
 
-    @Action
+    @Override
     public void refresh()
     {
+        queryDatagrams();
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        transactionId = event.getTransactionId();
+    }
+
+    public void reset()
+    {
+        sectionDatagramPanel.reset();
+        if (Global.getStreamAnalyser().isRunning())
+            timer.restart();
+    }
+
+    public void startRefreshing()
+    {
+        if (Global.getStreamAnalyser().isRunning())
+            timer.start();
+    }
+
+    public void stopRefreshing()
+    {
+        timer.stop();
+    }
+
+    private void queryDatagrams()
+    {
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+
         Supplier<Map<String, List<SectionEntity>>> query = () ->
-                Global.getDatabaseService().getSectionGroups();
+                Global.getDatabaseService().getSectionGroups(currentTransactionId);
 
         Consumer<Map<String, List<SectionEntity>>> consumer = sectionDatagramPanel::update;
 

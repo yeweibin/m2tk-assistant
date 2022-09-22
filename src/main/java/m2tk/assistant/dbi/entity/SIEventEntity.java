@@ -25,6 +25,7 @@ public class SIEventEntity
     public static final String TYPE_SCHEDULE = "SCH";
 
     private long id;
+    private long transactionId;
     private int transportStreamId;
     private int originalNetworkId;
     private int serviceId;

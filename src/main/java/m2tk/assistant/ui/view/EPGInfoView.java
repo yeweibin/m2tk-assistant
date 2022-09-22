@@ -16,6 +16,7 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.SIEvent;
 import m2tk.assistant.analyzer.domain.SIService;
@@ -23,10 +24,10 @@ import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIEventEntity;
 import m2tk.assistant.dbi.entity.SIServiceEntity;
 import m2tk.assistant.ui.component.ServiceEventGuidePanel;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.Timer;
@@ -41,23 +42,30 @@ import java.util.function.Supplier;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
-public class EPGInfoView extends JPanel
+public class EPGInfoView extends JPanel implements InfoView
 {
-    private final FrameView frameView;
-    private final ActionMap actionMap;
+    private final transient FrameView frameView;
     private ServiceEventGuidePanel serviceEventGuidePanel;
     private Timer timer;
+    private volatile long transactionId;
 
     public EPGInfoView(FrameView view)
     {
         frameView = view;
-        actionMap = view.getContext().getActionMap(this);
         initUI();
     }
 
     private void initUI()
     {
-        timer = new Timer(1000, actionMap.get("queryServiceAndEvents"));
+        timer = new Timer(5000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer.stop();
+
+            queryServiceAndEvents();
+        });
 
         serviceEventGuidePanel = new ServiceEventGuidePanel();
         ComponentUtil.setTitledBorder(serviceEventGuidePanel, "EPG", TitledBorder.LEFT);
@@ -70,16 +78,24 @@ public class EPGInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
-                queryServiceAndEvents();
-                startRefreshing();
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e)
-            {
-                stopRefreshing();
+                refresh();
             }
         });
+
+        Global.registerSubscriber(this);
+        transactionId = -1;
+    }
+
+    @Override
+    public void refresh()
+    {
+        queryServiceAndEvents();
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        transactionId = event.getTransactionId();
     }
 
     public void reset()
@@ -100,8 +116,7 @@ public class EPGInfoView extends JPanel
         timer.stop();
     }
 
-    @Action
-    public void queryServiceAndEvents()
+    private void queryServiceAndEvents()
     {
         List<SIService> serviceList = new ArrayList<>();
         Map<SIService, List<SIEvent>> eventRegistry = new HashMap<>();
@@ -124,10 +139,12 @@ public class EPGInfoView extends JPanel
             return e1.getStartTime().compareTo(e2.getStartTime());
         };
 
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();
-            List<SIServiceEntity> services = databaseService.listServices();
-            List<SIEventEntity> events = databaseService.listEvents();
+
+            List<SIServiceEntity> services = databaseService.listServices(currentTransactionId);
+            List<SIEventEntity> events = databaseService.listEvents(currentTransactionId);
 
             services.stream()
                     .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)

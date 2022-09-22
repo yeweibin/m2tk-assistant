@@ -31,6 +31,8 @@ import m2tk.multiplex.TSDemuxPayload;
 public class StreamTracer implements Tracer
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
+
     private final StreamEntity[] streams;
     private final TransportPacketDecoder pkt;
     private final AdaptationFieldDecoder adpt;
@@ -44,9 +46,11 @@ public class StreamTracer implements Tracer
     private long t0;
     private SourceEntity source;
 
-    public StreamTracer(DatabaseService service)
+    public StreamTracer(DatabaseService service, long transaction)
     {
         databaseService = service;
+        transactionId = transaction;
+
         streams = new StreamEntity[8192];
         pkt = new TransportPacketDecoder();
         adpt = new AdaptationFieldDecoder();
@@ -73,7 +77,8 @@ public class StreamTracer implements Tracer
         DemuxStatus status = (DemuxStatus) event;
         if (status.isRunning())
         {
-            source = databaseService.getSource();
+            source = databaseService.getSource(transactionId);
+            databaseService.initStreamContext(transactionId);
         } else
         {
             source.setBitrate(avgBitrate);
@@ -105,7 +110,7 @@ public class StreamTracer implements Tracer
         StreamEntity stream = streams[pid];
         if (stream == null)
         {
-            stream = databaseService.getStream(pid);
+            stream = databaseService.getStream(transactionId, pid);
             streams[pid] = stream;
         }
 

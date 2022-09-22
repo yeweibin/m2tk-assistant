@@ -30,6 +30,7 @@ public class SIBouquetServiceMappingEntityMapper implements RowMapper<SIBouquetS
     {
         SIBouquetServiceMappingEntity entity = new SIBouquetServiceMappingEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setBouquetId(rs.getInt("bqt_id"));
         entity.setTransportStreamId(rs.getInt("ts_id"));
         entity.setOriginalNetworkId(rs.getInt("onet_id"));

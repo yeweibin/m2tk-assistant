@@ -22,6 +22,7 @@ import lombok.Data;
 public class PCREntity
 {
     private long id;
+    private long transactionId;
     private int pid;
     private long position;
     private long value;

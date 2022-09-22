@@ -43,6 +43,7 @@ import java.util.Map;
 public class SITracer implements Tracer
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
 
     private final SectionDecoder sec;
     private final NITSectionDecoder nit;
@@ -68,9 +69,11 @@ public class SITracer implements Tracer
     private final DateTimeFormatter startTimeFormatter;
     private final Map<String, Integer> tableVersions;
 
-    public SITracer(DatabaseService service)
+    public SITracer(DatabaseService service, long transaction)
     {
         databaseService = service;
+        transactionId = transaction;
+
         sec = new SectionDecoder();
         nit = new NITSectionDecoder();
         bat = new BATSectionDecoder();
@@ -152,14 +155,15 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "NIT");
-        databaseService.addSection(tableId == 0x40 ? "NIT_Actual" : "NIT_Other",
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "NIT");
+        databaseService.addSection(transactionId,
+                                   tableId == 0x40 ? "NIT_Actual" : "NIT_Other",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
-        SINetworkEntity network = databaseService.addNetwork(nit.getNetworkID(), tableId == 0x40);
+        SINetworkEntity network = databaseService.addNetwork(transactionId, nit.getNetworkID(), tableId == 0x40);
         descloop.attach(nit.getDescriptorLoop());
         descloop.findFirstDescriptor(nnd::isAttachable)
                 .ifPresent(encoding ->
@@ -172,7 +176,8 @@ public class SITracer implements Tracer
 
         nit.forEachTransportStreamDescription(encoding -> {
             tsd.attach(encoding);
-            SIMultiplexEntity multiplex = databaseService.addMultiplex(nit.getNetworkID(),
+            SIMultiplexEntity multiplex = databaseService.addMultiplex(transactionId,
+                                                                       nit.getNetworkID(),
                                                                        tsd.getTransportStreamID(),
                                                                        tsd.getOriginalNetworkID());
             descloop.attach(tsd.getDescriptorLoop());
@@ -228,14 +233,15 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
-        databaseService.addSection("BAT",
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
+        databaseService.addSection(transactionId,
+                                   "BAT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
-        SIBouquetEntity bouquet = databaseService.addBouquet(bouquetId);
+        SIBouquetEntity bouquet = databaseService.addBouquet(transactionId, bouquetId);
         descloop.attach(bat.getDescriptorLoop());
         descloop.findFirstDescriptor(bnd::isAttachable)
                 .ifPresent(encoding ->
@@ -254,7 +260,8 @@ public class SITracer implements Tracer
                         int[] serviceIds = sld.getServiceIDList();
                         for (int serviceId : serviceIds)
                         {
-                            databaseService.addBouquetServiceMapping(bouquetId,
+                            databaseService.addBouquetServiceMapping(transactionId,
+                                                                     bouquetId,
                                                                      tsd.getTransportStreamID(),
                                                                      tsd.getOriginalNetworkID(),
                                                                      serviceId);
@@ -293,8 +300,9 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
-        databaseService.addSection(tableId == 0x42 ? "SDT_Actual" : "SDT_Other",
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
+        databaseService.addSection(transactionId,
+                                   tableId == 0x42 ? "SDT_Actual" : "SDT_Other",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
@@ -302,7 +310,8 @@ public class SITracer implements Tracer
 
         sdt.forEachServiceDescription(encoding -> {
             sdd.attach(encoding);
-            SIServiceEntity service = databaseService.addService(transportStreamId,
+            SIServiceEntity service = databaseService.addService(transactionId,
+                                                                 transportStreamId,
                                                                  originalNetworkId,
                                                                  sdd.getServiceID(),
                                                                  RunningStatus.name(sdd.getRunningStatus()),
@@ -370,8 +379,9 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "EIT");
-        databaseService.addSection(getEITTag(tableId),
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "EIT");
+        databaseService.addSection(transactionId,
+                                   getEITTag(tableId),
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
@@ -387,7 +397,8 @@ public class SITracer implements Tracer
             SIEventEntity event;
             if (tableId == 0x4E || tableId == 0x4F)
             {
-                event = databaseService.addPresentFollowingEvent(transportStreamId,
+                event = databaseService.addPresentFollowingEvent(transactionId,
+                                                                 transportStreamId,
                                                                  originalNetworkId,
                                                                  serviceId,
                                                                  eventId,
@@ -398,7 +409,8 @@ public class SITracer implements Tracer
                                                                  secnum == 0);
             } else
             {
-                event = databaseService.addScheduleEvent(transportStreamId,
+                event = databaseService.addScheduleEvent(transactionId,
+                                                         transportStreamId,
                                                          originalNetworkId,
                                                          serviceId,
                                                          eventId,
@@ -445,9 +457,9 @@ public class SITracer implements Tracer
     private void processTDT(TSDemuxPayload payload)
     {
         tdt.attach(payload.getEncoding());
-        databaseService.addDateTime(tdt.getUTCTime());
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
-        databaseService.addSection("TDT",
+        databaseService.addDateTime(transactionId, tdt.getUTCTime());
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
+        databaseService.addSection(transactionId, "TDT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
@@ -456,9 +468,9 @@ public class SITracer implements Tracer
     private void processTOT(TSDemuxPayload payload)
     {
         tot.attach(payload.getEncoding());
-        databaseService.addDateTime(tot.getUTCTime());
-        databaseService.updateStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
-        databaseService.addSection("TOT",
+        databaseService.addDateTime(transactionId, tot.getUTCTime());
+        databaseService.updateStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
+        databaseService.addSection(transactionId, "TOT",
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());

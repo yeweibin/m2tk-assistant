@@ -22,6 +22,7 @@ import lombok.Data;
 public class SIMultiplexEntity
 {
     private long id;
+    private long transactionId;
     private int networkId;
     private int transportStreamId;
     private int originalNetworkId;

@@ -40,11 +40,12 @@ public class StreamAnalyzer
 
     public boolean start(String resource, Consumer<DemuxStatus> consumer)
     {
+        long transactionId;
         try
         {
+            transactionId = databaseService.requestTransactionId();
             input = ProtocolManager.openRxChannel(resource);
-            databaseService.resetDatabase();
-            databaseService.addSource((String) input.query("source name"));
+            databaseService.addSource(transactionId, (String) input.query("source name"));
         } catch (Exception ex)
         {
             log.warn("无法获取输入通道：{}", ex.getMessage());
@@ -54,12 +55,12 @@ public class StreamAnalyzer
 
         demuxer.reset();
 
-        List<Tracer> tracers = Arrays.asList(new StreamTracer(databaseService),
-                                             new PSITracer(databaseService),
-                                             new SITracer(databaseService),
-                                             new TR290Tracer1(databaseService),
-                                             new TR290Tracer2(databaseService),
-                                             new UserPrivateSectionTracer(databaseService,
+        List<Tracer> tracers = Arrays.asList(new StreamTracer(databaseService, transactionId),
+                                             new PSITracer(databaseService, transactionId),
+                                             new SITracer(databaseService, transactionId),
+                                             new TR290Tracer1(databaseService, transactionId),
+                                             new TR290Tracer2(databaseService, transactionId),
+                                             new UserPrivateSectionTracer(databaseService, transactionId,
                                                                           Global.getUserPrivateSectionStreamList(),
                                                                           Global.getPrivateSectionFilteringLimit())
                                             );
@@ -67,10 +68,12 @@ public class StreamAnalyzer
 
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxerStopped));
-//        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
+        //        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
 
         demuxer.attach(input);
         running = true;
+
+        Global.setCurrentTransactionId(transactionId);
 
         log.info("开始分析");
         return true;

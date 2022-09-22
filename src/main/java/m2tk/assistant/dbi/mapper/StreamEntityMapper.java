@@ -14,6 +14,7 @@ public class StreamEntityMapper implements RowMapper<StreamEntity>
     {
         StreamEntity entity = new StreamEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setPid(rs.getInt("pid"));
         entity.setPacketCount(rs.getLong("pkt_cnt"));
         entity.setPcrCount(rs.getInt("pcr_cnt"));

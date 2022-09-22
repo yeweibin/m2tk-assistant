@@ -1,5 +1,6 @@
 package m2tk.assistant;
 
+import com.google.common.eventbus.EventBus;
 import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 
@@ -13,6 +14,8 @@ public final class Global
     private static final StreamAnalyzer streamAnalyser;
     private static final List<Integer> userPrivateSectionStreams;
     private static String inputResource;
+    private static volatile long currentTransactionId;
+    private static final EventBus eventBus;
 
     static
     {
@@ -21,6 +24,8 @@ public final class Global
         userPrivateSectionStreams = new ArrayList<>();
         streamAnalyser.setDatabaseService(databaseService);
         inputResource = null;
+        currentTransactionId = -1;
+        eventBus = new EventBus();
     }
 
     private Global()
@@ -66,5 +71,30 @@ public final class Global
     public static void setInputResource(String inputResource)
     {
         Global.inputResource = inputResource;
+    }
+
+    public static void postEvent(Object event)
+    {
+        eventBus.post(event);
+    }
+
+    public static void setCurrentTransactionId(long transactionId)
+    {
+        currentTransactionId = transactionId;
+    }
+
+    public static long getCurrentTransactionId()
+    {
+        return currentTransactionId;
+    }
+
+    public static void registerSubscriber(Object subscriber)
+    {
+        eventBus.register(subscriber);
+    }
+
+    public static void unregisterSubscriber(Object subscriber)
+    {
+        eventBus.unregister(subscriber);
     }
 }

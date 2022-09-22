@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 @Data
 public class TR290StatEntity
 {
+    private long transactionId;
     private String indicator;
     private long count;
     private LocalDateTime lastEventTimestamp;

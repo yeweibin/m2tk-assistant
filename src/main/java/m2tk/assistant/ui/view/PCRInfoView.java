@@ -16,15 +16,16 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.dbi.entity.PCRCheckEntity;
 import m2tk.assistant.dbi.entity.PCRStatEntity;
 import m2tk.assistant.ui.component.PCRChartPanel;
 import m2tk.assistant.ui.component.PCRStatsPanel;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
@@ -35,26 +36,33 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class PCRInfoView extends JPanel
+public class PCRInfoView extends JPanel implements InfoView
 {
     private final transient FrameView frameView;
-    private final ActionMap actionMap;
     private PCRStatsPanel pcrStatsPanel;
     private PCRChartPanel pcrChartPanel;
     private JSplitPane splitPane;
     private Timer timer;
+    private volatile long transactionId;
     private transient PCRStatEntity selectedPCRStat;
 
     public PCRInfoView(FrameView view)
     {
         frameView = view;
-        actionMap = view.getContext().getActionMap(this);
         initUI();
     }
 
     private void initUI()
     {
-        timer = new Timer(500, actionMap.get("queryPCRStats"));
+        timer = new Timer(500, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer.stop();
+
+            queryPCRStats();
+        });
 
         pcrStatsPanel = new PCRStatsPanel();
         pcrStatsPanel.addPCRStatConsumer(stat -> {
@@ -64,7 +72,7 @@ public class PCRInfoView extends JPanel
             } else
             {
                 selectedPCRStat = stat;
-                actionMap.get("queryPCRRecords").actionPerformed(null);
+                queryPCRRecords();
             }
         });
 
@@ -86,16 +94,24 @@ public class PCRInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
-                queryPCRStats();
-                startRefreshing();
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e)
-            {
-                stopRefreshing();
+                refresh();
             }
         });
+
+        Global.registerSubscriber(this);
+        transactionId = -1;
+    }
+
+    @Override
+    public void refresh()
+    {
+        queryPCRStats();
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        transactionId = event.getTransactionId();
     }
 
     public void reset()
@@ -118,7 +134,6 @@ public class PCRInfoView extends JPanel
         timer.stop();
     }
 
-
     private void updatePCRChart(List<PCRCheckEntity> checks)
     {
         pcrChartPanel.setVisible(true);
@@ -126,10 +141,11 @@ public class PCRInfoView extends JPanel
         splitPane.setDividerLocation(0.25);
     }
 
-    @Action
-    public void queryPCRStats()
+    private void queryPCRStats()
     {
-        Supplier<List<PCRStatEntity>> query = () -> Global.getDatabaseService().listPCRStats();
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+
+        Supplier<List<PCRStatEntity>> query = () -> Global.getDatabaseService().listPCRStats(currentTransactionId);
         Consumer<List<PCRStatEntity>> consumer = pcrStatsPanel::update;
 
         AsyncQueryTask<List<PCRStatEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -138,14 +154,18 @@ public class PCRInfoView extends JPanel
         task.execute();
     }
 
-    @Action
-    public void queryPCRRecords()
+    private void queryPCRRecords()
     {
         PCRStatEntity target = selectedPCRStat;
         if (target == null)
             return;
 
-        Supplier<List<PCRCheckEntity>> query = () -> Global.getDatabaseService().getRecentPCRChecks(target.getPid(), 1000);
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+
+        Supplier<List<PCRCheckEntity>> query = () -> Global.getDatabaseService()
+                                                           .getRecentPCRChecks(currentTransactionId,
+                                                                               target.getPid(),
+                                                                               1000);
         Consumer<List<PCRCheckEntity>> consumer = this::updatePCRChart;
         AsyncQueryTask<List<PCRCheckEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
                                                                          query,

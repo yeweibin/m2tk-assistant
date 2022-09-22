@@ -30,6 +30,7 @@ public class SINetworkEntityMapper implements RowMapper<SINetworkEntity>
     {
         SINetworkEntity entity = new SINetworkEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setNetworkId(rs.getInt("net_id"));
         entity.setNetworkName(rs.getString("net_name"));
         entity.setActualNetwork(rs.getBoolean("actual_nw"));

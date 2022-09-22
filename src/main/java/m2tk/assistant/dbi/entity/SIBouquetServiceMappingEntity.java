@@ -22,6 +22,7 @@ import lombok.Data;
 public class SIBouquetServiceMappingEntity
 {
     private long id;
+    private long transactionId;
     private int bouquetId;
     private int transportStreamId;
     private int originalNetworkId;

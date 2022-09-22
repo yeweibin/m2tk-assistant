@@ -30,6 +30,7 @@ public class SIMultiplexEntityMapper implements RowMapper<SIMultiplexEntity>
     {
         SIMultiplexEntity entity = new SIMultiplexEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setNetworkId(rs.getInt("net_id"));
         entity.setTransportStreamId(rs.getInt("ts_id"));
         entity.setOriginalNetworkId(rs.getInt("onet_id"));

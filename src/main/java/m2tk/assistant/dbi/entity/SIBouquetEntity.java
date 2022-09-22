@@ -22,6 +22,7 @@ import lombok.Data;
 public class SIBouquetEntity
 {
     private long id;
+    private long transactionId;
     private int bouquetId;
     private String bouquetName;
 }

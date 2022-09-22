@@ -30,6 +30,7 @@ public class SIBouquetEntityMapper implements RowMapper<SIBouquetEntity>
     {
         SIBouquetEntity entity = new SIBouquetEntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setBouquetId(rs.getInt("bqt_id"));
         entity.setBouquetName(rs.getString("bqt_name"));
         return entity;

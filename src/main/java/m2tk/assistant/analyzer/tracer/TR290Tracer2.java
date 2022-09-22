@@ -40,6 +40,8 @@ import java.util.stream.IntStream;
 public class TR290Tracer2 implements Tracer
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
+
     private final TransportPacketDecoder pkt;
     private final AdaptationFieldDecoder adpt;
     private final ProgramClockReferenceDecoder pcr;
@@ -105,9 +107,11 @@ public class TR290Tracer2 implements Tracer
         boolean checksumCorrect;
     }
 
-    public TR290Tracer2(DatabaseService service)
+    public TR290Tracer2(DatabaseService service, long transaction)
     {
         databaseService = service;
+        transactionId = transaction;
+
         pkt = new TransportPacketDecoder();
         adpt = new AdaptationFieldDecoder();
         pcr = new ProgramClockReferenceDecoder();
@@ -183,7 +187,8 @@ public class TR290Tracer2 implements Tracer
 
     private void reportError(String errorType, String errorMessage, long position, int stream)
     {
-        databaseService.addTR290Event(LocalDateTime.now(),
+        databaseService.addTR290Event(transactionId,
+                                      LocalDateTime.now(),
                                       errorType, errorMessage,
                                       position, stream);
     }

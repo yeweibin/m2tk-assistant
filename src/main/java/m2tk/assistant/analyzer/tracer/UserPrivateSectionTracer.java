@@ -12,14 +12,19 @@ import java.util.Set;
 public class UserPrivateSectionTracer implements Tracer
 {
     private final DatabaseService databaseService;
+    private final long transactionId;
+
     private final Set<Integer> targetStreams;
     private final SectionDecoder sec;
     private final int limitPerStream;
     private final int[] secCounts;
 
-    public UserPrivateSectionTracer(DatabaseService service, Collection<Integer> streams, int maxSectionCountPerStream)
+    public UserPrivateSectionTracer(DatabaseService service, long transaction,
+                                    Collection<Integer> streams, int maxSectionCountPerStream)
     {
         databaseService = service;
+        transactionId = transaction;
+
         targetStreams = new HashSet<>(streams);
         limitPerStream = maxSectionCountPerStream;
         sec = new SectionDecoder();
@@ -44,7 +49,8 @@ public class UserPrivateSectionTracer implements Tracer
 
         if (secCounts[payload.getStreamPID()] < limitPerStream)
         {
-            databaseService.addSection("user-private",
+            databaseService.addSection(transactionId,
+                                         "user-private",
                                        payload.getStreamPID(),
                                        payload.getFinishPacketCounter(),
                                        payload.getEncoding().getBytes());

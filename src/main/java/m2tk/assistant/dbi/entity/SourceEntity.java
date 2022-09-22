@@ -6,6 +6,7 @@ import lombok.Data;
 public class SourceEntity
 {
     private long id;
+    private long transactionId;
     private int bitrate;
     private int frameSize;
     private int transportStreamId;

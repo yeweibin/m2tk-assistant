@@ -56,6 +56,7 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_BOUQUET`");
         handle.execute("CREATE TABLE `T_SI_BOUQUET` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`bqt_id` INT NOT NULL," +
                        "`bqt_name` VARCHAR(100)" +
                        ")");
@@ -63,6 +64,7 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_NETWORK`");
         handle.execute("CREATE TABLE `T_SI_NETWORK` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`net_id` INT NOT NULL," +
                        "`net_name` VARCHAR(200)," +
                        "`actual_nw` BOOLEAN DEFAULT TRUE" +
@@ -71,6 +73,7 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_MULTIPLEX`");
         handle.execute("CREATE TABLE `T_SI_MULTIPLEX` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`net_id` INT NOT NULL," +
                        "`ts_id` INT NOT NULL," +
                        "`onet_id` INT NOT NULL," +
@@ -81,6 +84,7 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_SERVICE`");
         handle.execute("CREATE TABLE `T_SI_SERVICE` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`ts_id` INT NOT NULL," +
                        "`onet_id` INT NOT NULL," +
                        "`srv_id` INT NOT NULL," +
@@ -101,6 +105,7 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_BOUQUET_SERVICE_MAPPING`");
         handle.execute("CREATE TABLE `T_SI_BOUQUET_SERVICE_MAPPING` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`ts_id` INT NOT NULL," +
                        "`onet_id` INT NOT NULL," +
                        "`srv_id` INT NOT NULL," +
@@ -110,6 +115,7 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_EVENT`");
         handle.execute("CREATE TABLE `T_SI_EVENT` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`ts_id` INT NOT NULL," +
                        "`onet_id` INT NOT NULL," +
                        "`srv_id` INT NOT NULL," +
@@ -132,34 +138,25 @@ public class SIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_SI_DATETIME`");
         handle.execute("CREATE TABLE `T_SI_DATETIME` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`timepoint` BIGINT NOT NULL" +
                        ")");
     }
 
-    public void resetTable(Handle handle)
+    public SIBouquetEntity getBouquet(Handle handle, long transactionId, int bouquetId)
     {
-        handle.execute("TRUNCATE TABLE T_SI_BOUQUET");
-        handle.execute("TRUNCATE TABLE T_SI_NETWORK");
-        handle.execute("TRUNCATE TABLE T_SI_MULTIPLEX");
-        handle.execute("TRUNCATE TABLE T_SI_SERVICE");
-        handle.execute("TRUNCATE TABLE T_SI_EVENT");
-        handle.execute("TRUNCATE TABLE T_SI_BOUQUET_SERVICE_MAPPING");
-        handle.execute("TRUNCATE TABLE T_SI_DATETIME");
-    }
-
-    public SIBouquetEntity getBouquet(Handle handle, int bouquetId)
-    {
-        return handle.select("SELECT * FROM T_SI_BOUQUET WHERE `bqt_id` = ? ORDER BY `id` DESC FETCH FIRST ROW ONLY",
-                             bouquetId)
+        return handle.select("SELECT * FROM T_SI_BOUQUET WHERE `transaction_id` = ? AND `bqt_id` = ? " +
+                             "ORDER BY `id` DESC FETCH FIRST ROW ONLY",
+                             transactionId, bouquetId)
                      .map(bouquetEntityMapper)
                      .findOne()
                      .orElse(null);
     }
 
-    public SIBouquetEntity addBouquet(Handle handle, int bouquetId)
+    public SIBouquetEntity addBouquet(Handle handle, long transactionId, int bouquetId)
     {
-        SIBouquetEntity entity = handle.select("SELECT * FROM T_SI_BOUQUET WHERE `bqt_id` = ?",
-                                               bouquetId)
+        SIBouquetEntity entity = handle.select("SELECT * FROM T_SI_BOUQUET WHERE `transaction_id` = ? AND `bqt_id` = ?",
+                                               transactionId, bouquetId)
                                        .map(bouquetEntityMapper)
                                        .findOne()
                                        .orElse(null);
@@ -167,10 +164,12 @@ public class SIObjectHandler
         {
             entity = new SIBouquetEntity();
             entity.setId(idGenerator.next());
+            entity.setTransactionId(transactionId);
             entity.setBouquetId(bouquetId);
 
-            handle.execute("INSERT INTO T_SI_BOUQUET (`id`, `bqt_id`) VALUES (?, ?)",
+            handle.execute("INSERT INTO T_SI_BOUQUET (`id`, `transaction_id`, `bqt_id`) VALUES (?, ?, ?)",
                            entity.getId(),
+                           entity.getTransactionId(),
                            entity.getBouquetId());
         }
         return entity;
@@ -184,29 +183,31 @@ public class SIObjectHandler
     }
 
     public void addBouquetServiceMapping(Handle handle,
+                                         long transactionId,
                                          int bouquetId,
                                          int transportStreamID,
                                          int originalNetworkID,
                                          int serviceId)
     {
-        handle.execute("INSERT INTO T_SI_BOUQUET_SERVICE_MAPPING (`id`, `bqt_id`, `ts_id`, `onet_id`, `srv_id`) " +
-                       "VALUES (?,?,?,?,?)",
-                       idGenerator.next(), bouquetId, transportStreamID, originalNetworkID, serviceId);
+        handle.execute("INSERT INTO T_SI_BOUQUET_SERVICE_MAPPING (`id`, `transaction_id`, `bqt_id`, `ts_id`, `onet_id`, `srv_id`) " +
+                       "VALUES (?,?,?,?,?,?)",
+                       idGenerator.next(), transactionId, bouquetId, transportStreamID, originalNetworkID, serviceId);
     }
 
-    public SINetworkEntity getNetwork(Handle handle, int networkId)
+    public SINetworkEntity getNetwork(Handle handle, long transactionId, int networkId)
     {
-        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `net_id` = ? ORDER BY `id` DESC FETCH FIRST ROW ONLY",
-                             networkId)
+        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `transaction_id` = ? AND `net_id` = ? " +
+                             "ORDER BY `id` DESC FETCH FIRST ROW ONLY",
+                             transactionId, networkId)
                      .map(networkEntityMapper)
                      .findOne().
                      orElse(null);
     }
 
-    public SINetworkEntity addNetwork(Handle handle, int networkId, boolean isActual)
+    public SINetworkEntity addNetwork(Handle handle, long transactionId, int networkId, boolean isActual)
     {
-        SINetworkEntity entity = handle.select("SELECT * FROM T_SI_NETWORK WHERE `net_id` = ? AND `actual_nw` = ?",
-                                               networkId, isActual)
+        SINetworkEntity entity = handle.select("SELECT * FROM T_SI_NETWORK WHERE `transaction_id` = ? AND `net_id` = ? AND `actual_nw` = ?",
+                                               transactionId, networkId, isActual)
                                        .map(networkEntityMapper)
                                        .findOne()
                                        .orElse(null);
@@ -214,11 +215,12 @@ public class SIObjectHandler
         {
             entity = new SINetworkEntity();
             entity.setId(idGenerator.next());
+            entity.setTransactionId(transactionId);
             entity.setNetworkId(networkId);
             entity.setActualNetwork(isActual);
 
-            handle.execute("INSERT INTO T_SI_NETWORK (`id`, `net_id`, `actual_nw`) VALUES (?, ?, ?)",
-                           entity.getId(), entity.getNetworkId(), entity.isActualNetwork());
+            handle.execute("INSERT INTO T_SI_NETWORK (`id`, `transaction_id`, `net_id`, `actual_nw`) VALUES (?, ?, ?, ?)",
+                           entity.getId(), entity.getTransactionId(), entity.getNetworkId(), entity.isActualNetwork());
         }
         return entity;
     }
@@ -229,36 +231,39 @@ public class SIObjectHandler
                        entity.getNetworkName(), entity.getId());
     }
 
-    public List<SINetworkEntity> listNetworks(Handle handle)
+    public List<SINetworkEntity> listNetworks(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_NETWORK ORDER BY `id`")
+        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `transaction_id` = ? ORDER BY `id`", transactionId)
                      .map(networkEntityMapper)
                      .list();
     }
 
-    public SINetworkEntity getActualNetwork(Handle handle)
+    public SINetworkEntity getActualNetwork(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `actual_nw` = TRUE ORDER BY `id`")
+        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `transaction_id` = ? AND `actual_nw` = TRUE ORDER BY `id`",
+                             transactionId)
                      .map(networkEntityMapper)
                      .findOne()
                      .orElse(null);
     }
 
-    public List<SINetworkEntity> getOtherNetworks(Handle handle)
+    public List<SINetworkEntity> getOtherNetworks(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `actual_nw` = FALSE ORDER BY `id`")
+        return handle.select("SELECT * FROM T_SI_NETWORK WHERE `transaction_id` = ? AND `actual_nw` = FALSE ORDER BY `id`",
+                             transactionId)
                      .map(networkEntityMapper)
                      .list();
     }
 
     public SIMultiplexEntity addMultiplex(Handle handle,
+                                          long transactionId,
                                           int networkId,
                                           int transportStreamId,
                                           int originalNetworkId)
     {
         SIMultiplexEntity entity = handle.select("SELECT * FROM T_SI_MULTIPLEX " +
-                                                 "WHERE `net_id` = ? AND `ts_id` = ? AND `onet_id` = ?",
-                                                 networkId, transportStreamId, originalNetworkId)
+                                                 "WHERE `transaction_id` = ? AND `net_id` = ? AND `ts_id` = ? AND `onet_id` = ?",
+                                                 transactionId, networkId, transportStreamId, originalNetworkId)
                                          .map(multiplexEntityMapper)
                                          .findOne()
                                          .orElse(null);
@@ -266,13 +271,15 @@ public class SIObjectHandler
         {
             entity = new SIMultiplexEntity();
             entity.setId(idGenerator.next());
+            entity.setTransactionId(transactionId);
             entity.setNetworkId(networkId);
             entity.setTransportStreamId(transportStreamId);
             entity.setOriginalNetworkId(originalNetworkId);
 
-            handle.execute("INSERT INTO T_SI_MULTIPLEX (`id`, `net_id`, `ts_id`, `onet_id`) " +
-                           "VALUES (?,?,?,?)",
+            handle.execute("INSERT INTO T_SI_MULTIPLEX (`id`, `transaction_id`, `net_id`, `ts_id`, `onet_id`) " +
+                           "VALUES (?,?,?,?,?)",
                            entity.getId(),
+                           entity.getTransactionId(),
                            entity.getNetworkId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId());
@@ -288,22 +295,25 @@ public class SIObjectHandler
                        entity.getId());
     }
 
-    public List<SIMultiplexEntity> listMultiplexes(Handle handle)
+    public List<SIMultiplexEntity> listMultiplexes(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_MULTIPLEX ORDER BY `onet_id`,`ts_id`")
+        return handle.select("SELECT * FROM T_SI_MULTIPLEX WHERE `transaction_id` = ? ORDER BY `onet_id`,`ts_id`",
+                             transactionId)
                      .map(multiplexEntityMapper)
                      .list();
     }
 
-    public List<SIMultiplexEntity> listMultiplexes(Handle handle, int networkId)
+    public List<SIMultiplexEntity> listMultiplexes(Handle handle, long transactionId, int networkId)
     {
-        return handle.select("SELECT * FROM T_SI_MULTIPLEX WHERE `net_id` = ? ORDER BY `onet_id`,`ts_id`",
-                             networkId)
+        return handle.select("SELECT * FROM T_SI_MULTIPLEX WHERE `transaction_id` = ? AND `net_id` = ? " +
+                             "ORDER BY `onet_id`,`ts_id`",
+                             transactionId, networkId)
                      .map(multiplexEntityMapper)
                      .list();
     }
 
     public SIServiceEntity addService(Handle handle,
+                                      long transactionId,
                                       int transportStreamId,
                                       int originalNetworkId,
                                       int serviceId,
@@ -314,7 +324,8 @@ public class SIObjectHandler
                                       boolean actualTS)
     {
         SIServiceEntity entity = handle.select("SELECT * FROM T_SI_SERVICE " +
-                                               "WHERE `ts_id` = ? AND `onet_id` = ? AND `srv_id` = ?",
+                                               "WHERE `transaction_id` = ? AND `ts_id` = ? AND `onet_id` = ? AND `srv_id` = ?",
+                                               transactionId,
                                                transportStreamId,
                                                originalNetworkId,
                                                serviceId)
@@ -325,6 +336,7 @@ public class SIObjectHandler
         {
             entity = new SIServiceEntity();
             entity.setId(idGenerator.next());
+            entity.setTransactionId(transactionId);
             entity.setTransportStreamId(transportStreamId);
             entity.setOriginalNetworkId(originalNetworkId);
             entity.setServiceId(serviceId);
@@ -334,9 +346,11 @@ public class SIObjectHandler
             entity.setScheduleEITEnabled(schEITEnabled);
             entity.setActualTransportStream(actualTS);
 
-            handle.execute("INSERT INTO T_SI_SERVICE (`id`, `ts_id`, `onet_id`, `srv_id`, `running_status`, `free_ca_mode`, `pnf_eit_enabled`, `sch_eit_enabled`, `actual_ts`) " +
-                           "VALUES (?,?,?,?,?,?,?,?,?)",
+            handle.execute("INSERT INTO T_SI_SERVICE (`id`, `transaction_id`, `ts_id`, `onet_id`, `srv_id`, " +
+                           "`running_status`, `free_ca_mode`, `pnf_eit_enabled`, `sch_eit_enabled`, `actual_ts`) " +
+                           "VALUES (?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
+                           entity.getTransactionId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId(),
                            entity.getServiceId(),
@@ -378,31 +392,33 @@ public class SIObjectHandler
                        entity.getId());
     }
 
-    public List<SIServiceEntity> listServices(Handle handle)
+    public List<SIServiceEntity> listServices(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_SERVICE ORDER BY `id`")
+        return handle.select("SELECT * FROM T_SI_SERVICE WHERE `transaction_id` = ? ORDER BY `id`",
+                             transactionId)
                      .map(serviceEntityMapper)
                      .list();
     }
 
-    public List<SIServiceEntity> listServices(Handle handle, int transportStreamId)
+    public List<SIServiceEntity> listServices(Handle handle, long transactionId, int transportStreamId)
     {
-        return handle.select("SELECT * FROM T_SI_SERVICE WHERE `ts_id` = ? ORDER BY `srv_id`",
-                             transportStreamId)
+        return handle.select("SELECT * FROM T_SI_SERVICE WHERE `transaction_id` = ? AND `ts_id` = ? ORDER BY `srv_id`",
+                             transactionId, transportStreamId)
                      .map(serviceEntityMapper)
                      .list();
     }
 
-    public List<SIServiceEntity> listNVODServices(Handle handle)
+    public List<SIServiceEntity> listNVODServices(Handle handle, long transactionId)
     {
         return handle.select("SELECT * FROM T_SI_SERVICE " +
-                             "WHERE `srv_type` = ? OR `srv_type` = ? ORDER BY `id`",
-                             0x04, 0x05)
+                             "WHERE `transaction_id` = ? AND `srv_type` = ? OR `srv_type` = ? ORDER BY `id`",
+                             transactionId, 0x04, 0x05)
                      .map(serviceEntityMapper)
                      .list();
     }
 
     public SIEventEntity addPresentFollowingEvent(Handle handle,
+                                                  long transactionId,
                                                   int transportStreamId,
                                                   int originalNetworkId,
                                                   int serviceId,
@@ -414,7 +430,9 @@ public class SIObjectHandler
                                                   boolean isPresent)
     {
         SIEventEntity entity = handle.select("SELECT * FROM T_SI_EVENT " +
-                                             "WHERE `ts_id` = ? AND `onet_id` = ? AND `srv_id` = ? AND `evt_id` = ? AND `evt_type` = ?",
+                                             "WHERE `transaction_id` = ? AND `ts_id` = ? AND `onet_id` = ? " +
+                                             "AND `srv_id` = ? AND `evt_id` = ? AND `evt_type` = ?",
+                                             transactionId,
                                              transportStreamId,
                                              originalNetworkId,
                                              serviceId,
@@ -427,6 +445,7 @@ public class SIObjectHandler
         {
             entity = new SIEventEntity();
             entity.setId(idGenerator.next());
+            entity.setTransactionId(transactionId);
             entity.setTransportStreamId(transportStreamId);
             entity.setOriginalNetworkId(originalNetworkId);
             entity.setServiceId(serviceId);
@@ -440,10 +459,12 @@ public class SIObjectHandler
             entity.setPresentEvent(isPresent);
             entity.setNvodReferenceEvent(startTime.equals("未定义"));
 
-            handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, `evt_name`, " +
-                           "`start_time`, `duration`, `running_status`, `free_ca_mode`, `present`, `nvod_reference`) " +
-                           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            handle.execute("INSERT INTO T_SI_EVENT (`id`, `transaction_id`, `ts_id`, `onet_id`, `srv_id`, " +
+                           "`evt_id`, `evt_type`, `evt_name`, `start_time`, `duration`, `running_status`, " +
+                           "`free_ca_mode`, `present`, `nvod_reference`) " +
+                           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
+                           entity.getTransactionId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId(),
                            entity.getServiceId(),
@@ -461,6 +482,7 @@ public class SIObjectHandler
     }
 
     public SIEventEntity addScheduleEvent(Handle handle,
+                                          long transactionId,
                                           int transportStreamId,
                                           int originalNetworkId,
                                           int serviceId,
@@ -471,7 +493,9 @@ public class SIObjectHandler
                                           boolean freeCAMode)
     {
         SIEventEntity entity = handle.select("SELECT * FROM T_SI_EVENT " +
-                                             "WHERE `ts_id` = ? AND `onet_id` = ? AND `srv_id` = ? AND `evt_id` = ? AND `evt_type` = ?",
+                                             "WHERE `transaction_id` = ? AND `ts_id` = ? AND `onet_id` = ? " +
+                                             "AND `srv_id` = ? AND `evt_id` = ? AND `evt_type` = ?",
+                                             transactionId,
                                              transportStreamId,
                                              originalNetworkId,
                                              serviceId,
@@ -484,6 +508,7 @@ public class SIObjectHandler
         {
             entity = new SIEventEntity();
             entity.setId(idGenerator.next());
+            entity.setTransactionId(transactionId);
             entity.setTransportStreamId(transportStreamId);
             entity.setOriginalNetworkId(originalNetworkId);
             entity.setServiceId(serviceId);
@@ -495,10 +520,11 @@ public class SIObjectHandler
             entity.setRunningStatus(runningStatus);
             entity.setFreeCAMode(freeCAMode);
 
-            handle.execute("INSERT INTO T_SI_EVENT (`id`, `ts_id`, `onet_id`, `srv_id`, `evt_id`, `evt_type`, `evt_name`, " +
-                           "`start_time`, `duration`, `running_status`, `free_ca_mode`) " +
-                           "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            handle.execute("INSERT INTO T_SI_EVENT (`id`, `transaction_id`, `ts_id`, `onet_id`, `srv_id`, " +
+                           "`evt_id`, `evt_type`, `evt_name`, `start_time`, `duration`, `running_status`, `free_ca_mode`) " +
+                           "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                            entity.getId(),
+                           entity.getTransactionId(),
                            entity.getTransportStreamId(),
                            entity.getOriginalNetworkId(),
                            entity.getServiceId(),
@@ -535,18 +561,19 @@ public class SIObjectHandler
                        entity.getId());
     }
 
-    public List<SIEventEntity> listEvents(Handle handle)
+    public List<SIEventEntity> listEvents(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_EVENT")
+        return handle.select("SELECT * FROM T_SI_EVENT WHERE `transaction_id` = ?", transactionId)
                      .map(eventEntityMapper)
                      .list();
     }
 
-    public List<SIEventEntity> listServiceEvents(Handle handle, int transportStreamId, int originalNetworkId,
-                                                 int serviceId)
+    public List<SIEventEntity> listServiceEvents(Handle handle, long transactionId,
+                                                 int transportStreamId, int originalNetworkId, int serviceId)
     {
         return handle.select("SELECT * FROM T_SI_EVENT " +
-                             "WHERE `ts_id` = ? AND `onet_id` = ? AND `srv_id` = ? AND `evt_type` = ?",
+                             "WHERE `transaction_id` = ? AND `ts_id` = ? AND `onet_id` = ? AND `srv_id` = ? AND `evt_type` = ?",
+                             transactionId,
                              transportStreamId,
                              originalNetworkId,
                              serviceId,
@@ -555,34 +582,38 @@ public class SIObjectHandler
                      .list();
     }
 
-    public List<SIEventEntity> listNVODEvents(Handle handle)
+    public List<SIEventEntity> listNVODEvents(Handle handle, long transactionId)
     {
         return handle.select("SELECT * FROM T_SI_EVENT " +
-                             "WHERE `nvod_reference` = TRUE OR `nvod_time_shifted` = TRUE")
+                             "WHERE `transaction_id` = ? AND `nvod_reference` = TRUE OR `nvod_time_shifted` = TRUE",
+                             transactionId)
                      .map(eventEntityMapper)
                      .list();
     }
 
-    public void addDateTime(Handle handle, long timepoint)
+    public void addDateTime(Handle handle, long transactionId, long timepoint)
     {
-        handle.execute("INSERT INTO T_SI_DATETIME (`id`, `timepoint`) " +
-                       "VALUES (?,?)",
-                       idGenerator.next(), timepoint);
+        handle.execute("INSERT INTO T_SI_DATETIME (`id`, `transaction_id`, `timepoint`) " +
+                       "VALUES (?,?,?)",
+                       idGenerator.next(), transactionId, timepoint);
     }
 
-    public SIDateTimeEntity getLatestDateTime(Handle handle)
+    public SIDateTimeEntity getLatestDateTime(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_SI_DATETIME ORDER BY `id` DESC " +
-                             "FETCH FIRST ROW ONLY")
+        return handle.select("SELECT * FROM T_SI_DATETIME WHERE `transaction_id` = ? ORDER BY `id` DESC " +
+                             "FETCH FIRST ROW ONLY",
+                             transactionId)
                      .map(datetimeEntityMapper)
                      .findOne()
                      .orElse(null);
     }
 
-    public List<SIMultiplexServiceCountView> listMultiplexServiceCounts(Handle handle)
+    public List<SIMultiplexServiceCountView> listMultiplexServiceCounts(Handle handle, long transactionId)
     {
         return handle.select("SELECT `ts_id`, `onet_id`, COUNT(srv_id) AS `srv_cnt` FROM T_SI_SERVICE " +
-                             "GROUP BY `ts_id`, `onet_id`")
+                             "WHERE `transaction_id` = ? " +
+                             "GROUP BY `ts_id`, `onet_id`",
+                             transactionId)
                      .map(multiplexServiceCountViewMapper)
                      .list();
     }

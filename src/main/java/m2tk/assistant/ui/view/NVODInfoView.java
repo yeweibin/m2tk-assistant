@@ -16,6 +16,7 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.NVODEvent;
 import m2tk.assistant.analyzer.domain.NVODService;
@@ -23,10 +24,10 @@ import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIEventEntity;
 import m2tk.assistant.dbi.entity.SIServiceEntity;
 import m2tk.assistant.ui.component.NVODServiceEventGuidePanel;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
@@ -39,23 +40,30 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class NVODInfoView extends JPanel
+public class NVODInfoView extends JPanel implements InfoView
 {
-    private final FrameView frameView;
-    private final ActionMap actionMap;
+    private final transient FrameView frameView;
     private NVODServiceEventGuidePanel serviceEventGuidePanel;
     private Timer timer;
+    private volatile long transactionId;
 
     public NVODInfoView(FrameView view)
     {
         frameView = view;
-        actionMap = view.getContext().getActionMap(this);
         initUI();
     }
 
     private void initUI()
     {
-        timer = new Timer(1000, actionMap.get("queryServiceAndEvents"));
+        timer = new Timer(1000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer.stop();
+
+            queryServiceAndEvents();
+        });
 
         serviceEventGuidePanel = new NVODServiceEventGuidePanel();
         ComponentUtil.setTitledBorder(serviceEventGuidePanel, "NVOD", TitledBorder.LEFT);
@@ -68,16 +76,24 @@ public class NVODInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
-                queryServiceAndEvents();
-                startRefreshing();
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e)
-            {
-                stopRefreshing();
+                refresh();
             }
         });
+
+        Global.registerSubscriber(this);
+        transactionId = -1;
+    }
+
+    @Override
+    public void refresh()
+    {
+        queryServiceAndEvents();
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        transactionId = event.getTransactionId();
     }
 
     public void reset()
@@ -98,16 +114,17 @@ public class NVODInfoView extends JPanel
         timer.stop();
     }
 
-    @Action
-    public void queryServiceAndEvents()
+    private void queryServiceAndEvents()
     {
         Map<String, NVODService> serviceRegistry = new HashMap<>();
         Map<String, NVODEvent> eventRegistry = new HashMap<>();
 
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();
-            List<SIServiceEntity> services = databaseService.listNVODServices();
-            List<SIEventEntity> events = databaseService.listNVODEvents();
+            List<SIServiceEntity> services = databaseService.listNVODServices(currentTransactionId);
+            List<SIEventEntity> events = databaseService.listNVODEvents(currentTransactionId);
 
             services.forEach(service -> {
                 NVODService nvodService = service.isNvodReferenceService()

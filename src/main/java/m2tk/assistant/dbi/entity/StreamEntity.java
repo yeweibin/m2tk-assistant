@@ -7,6 +7,7 @@ import m2tk.assistant.analyzer.presets.StreamTypes;
 public class StreamEntity
 {
     private long id;
+    private long transactionId;
     private int pid;
     private boolean marked;
     private long packetCount;

@@ -15,12 +15,6 @@ import java.io.InputStream;
 @Slf4j
 public final class AssistantApp extends SingleFrameApplication
 {
-    static void enableAntiAliasing()
-    {
-        System.setProperty("awt.useSystemAAFontSettings", "on");
-        System.setProperty("swing.aatext", "true");
-    }
-
     public static AssistantApp getInstance()
     {
         return SingleFrameApplication.getInstance(AssistantApp.class);
@@ -28,7 +22,6 @@ public final class AssistantApp extends SingleFrameApplication
 
     public static void main(String[] args)
     {
-//        enableAntiAliasing();
         Global.init();
         SingleFrameApplication.launch(AssistantApp.class, args);
     }

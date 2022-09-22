@@ -27,6 +27,7 @@ public class SectionHandler
         handle.execute("DROP TABLE IF EXISTS `T_SECTION`");
         handle.execute("CREATE TABLE `T_SECTION` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`encoding` VARBINARY(4096)," +
                        "`stream` INT," +
                        "`position` BIGINT," +
@@ -34,28 +35,24 @@ public class SectionHandler
                        ")");
     }
 
-    public void resetTable(Handle handle)
+    public void addSection(Handle handle, long transactionId, String tag, int pid, long position, byte[] encoding)
     {
-        handle.execute("TRUNCATE TABLE T_SECTION");
+        handle.execute("INSERT INTO T_SECTION (`id`, `transaction_id`, `tag`, `stream`, `position`, `encoding`) " +
+                       "VALUES (?,?,?,?,?,?)",
+                       idGenerator.next(), transactionId, tag, pid, position, encoding);
     }
 
-    public void addSection(Handle handle, String tag, int pid, long position, byte[] encoding)
+    public Map<String, List<SectionEntity>> getSectionGroups(Handle handle, long transactionId)
     {
-        handle.execute("INSERT INTO T_SECTION (`id`, `tag`, `stream`, `position`, `encoding`) " +
-                       "VALUES (?,?,?,?,?)",
-                       idGenerator.next(), tag, pid, position, encoding);
-    }
-
-    public Map<String, List<SectionEntity>> getSectionGroups(Handle handle)
-    {
-        return handle.select("SELECT * FROM T_SECTION")
+        return handle.select("SELECT * FROM T_SECTION WHERE `transaction_id` = ?", transactionId)
                      .map(sectionEntityMapper)
-                     .collect(groupingBy(entity -> entity.getTag(), toList()));
+                     .collect(groupingBy(SectionEntity::getTag, toList()));
     }
 
-    public List<SectionEntity> getSections(Handle handle, String tagPrefix)
+    public List<SectionEntity> getSections(Handle handle, long transactionId, String tagPrefix)
     {
-        return handle.select("SELECT * FROM T_SECTION WHERE `tag` like CONCAT(?, '%')", tagPrefix)
+        return handle.select("SELECT * FROM T_SECTION WHERE `transaction_id` = ? AND `tag` like CONCAT(?, '%')",
+                             transactionId, tagPrefix)
                      .map(sectionEntityMapper)
                      .list();
     }

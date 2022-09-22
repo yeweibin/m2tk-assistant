@@ -30,6 +30,7 @@ public class PCREntityMapper implements RowMapper<PCREntity>
     {
         PCREntity entity = new PCREntity();
         entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
         entity.setPid(rs.getInt("pid"));
         entity.setPosition(rs.getLong("pct"));
         entity.setValue(rs.getLong("value"));

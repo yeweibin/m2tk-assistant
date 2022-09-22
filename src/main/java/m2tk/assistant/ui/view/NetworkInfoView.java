@@ -16,21 +16,19 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.domain.SIMultiplex;
 import m2tk.assistant.analyzer.domain.SIService;
 import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.SIDateTimeEntity;
-import m2tk.assistant.dbi.entity.SIMultiplexEntity;
-import m2tk.assistant.dbi.entity.SINetworkEntity;
-import m2tk.assistant.dbi.entity.SIServiceEntity;
+import m2tk.assistant.dbi.entity.*;
 import m2tk.assistant.ui.component.MultiplexInfoPanel;
 import m2tk.assistant.ui.component.NetworkTimePanel;
 import m2tk.assistant.ui.component.ServiceInfoPanel;
+import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 
 import javax.swing.*;
@@ -47,10 +45,9 @@ import java.util.function.Supplier;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
-public class NetworkInfoView extends JPanel
+public class NetworkInfoView extends JPanel implements InfoView
 {
-    private final FrameView frameView;
-    private final ActionMap actionMap;
+    private final transient FrameView frameView;
     private NetworkTimePanel networkTimePanel;
     private MultiplexInfoPanel multiplexInfoPanel;
     private ServiceInfoPanel serviceInfoPanel;
@@ -58,19 +55,43 @@ public class NetworkInfoView extends JPanel
     private Timer timer1;
     private Timer timer2;
     private Timer timer3;
+    private volatile long transactionId;
 
     public NetworkInfoView(FrameView view)
     {
         frameView = view;
-        actionMap = view.getContext().getActionMap(this);
         initUI();
     }
 
     private void initUI()
     {
-        timer1 = new Timer(500, actionMap.get("queryNetworks"));
-        timer2 = new Timer(500, actionMap.get("queryServices"));
-        timer3 = new Timer(1000, actionMap.get("queryNetworkTime"));
+        timer1 = new Timer(2000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer1.stop();
+
+            queryNetworks();
+        });
+        timer2 = new Timer(2000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer2.stop();
+
+            queryServices();
+        });
+        timer3 = new Timer(1000, e -> {
+            if (!isVisible())
+                return; // 不在后台刷新
+
+            if (!Global.getStreamAnalyser().isRunning())
+                timer3.stop();
+
+            queryNetworkTime();
+        });
 
         networkTimePanel = new NetworkTimePanel();
         multiplexInfoPanel = new MultiplexInfoPanel();
@@ -90,38 +111,49 @@ public class NetworkInfoView extends JPanel
             @Override
             public void componentShown(ComponentEvent e)
             {
-                queryNetworks();
-                queryServices();
-                queryNetworkTime();
-                startRefreshing();
-            }
-
-            @Override
-            public void componentHidden(ComponentEvent e)
-            {
-                stopRefreshing();
+                refresh();
             }
         });
+
+        Global.registerSubscriber(this);
+        transactionId = -1;
     }
 
-    @Action
-    public void queryNetworks()
+    @Override
+    public void refresh()
+    {
+        queryNetworks();
+        queryServices();
+        queryNetworkTime();
+    }
+
+    @Subscribe
+    public void onSourceChanged(SourceChangedEvent event)
+    {
+        transactionId = event.getTransactionId();
+    }
+
+    private void queryNetworks()
     {
         List<SIMultiplex> tsActualNW = new ArrayList<>();
         List<SIMultiplex> tsOtherNW = new ArrayList<>();
 
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();
-            List<SINetworkEntity> networks = databaseService.listNetworks();
+            List<SINetworkEntity> networks = databaseService.listNetworks(currentTransactionId);
             Map<Integer, List<SIMultiplexEntity>> muxGroups =
-                    databaseService.listMultiplexes().stream().collect(groupingBy(SIMultiplexEntity::getNetworkId));
+                    databaseService.listMultiplexes(currentTransactionId)
+                                   .stream()
+                                   .collect(groupingBy(SIMultiplexEntity::getNetworkId));
             Map<String, Integer> srvCnts =
-                    databaseService.listMultiplexServiceCounts()
+                    databaseService.listMultiplexServiceCounts(currentTransactionId)
                                    .stream()
                                    .collect(toMap(srvCnt -> String.format("%d.%d",
                                                                           srvCnt.getTransportStreamId(),
                                                                           srvCnt.getOriginalNetworkId()),
-                                                  srvCnt -> srvCnt.getServiceCount()));
+                                                  SIMultiplexServiceCountView::getServiceCount));
 
             for (SINetworkEntity network : networks)
             {
@@ -159,8 +191,7 @@ public class NetworkInfoView extends JPanel
         task.execute();
     }
 
-    @Action
-    public void queryServices()
+    private void queryServices()
     {
         List<SIService> srvActualTS = new ArrayList<>();
         List<SIService> srvOtherTS = new ArrayList<>();
@@ -173,8 +204,9 @@ public class NetworkInfoView extends JPanel
             return Integer.compare(s1.getServiceId(), s2.getServiceId());
         };
 
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
         Supplier<Void> query = () -> {
-            List<SIServiceEntity> services = Global.getDatabaseService().listServices();
+            List<SIServiceEntity> services = Global.getDatabaseService().listServices(currentTransactionId);
 
             for (SIServiceEntity service : services)
             {
@@ -207,10 +239,10 @@ public class NetworkInfoView extends JPanel
         task.execute();
     }
 
-    @Action
-    public void queryNetworkTime()
+    private void queryNetworkTime()
     {
-        Supplier<SIDateTimeEntity> query = () -> Global.getDatabaseService().getLatestDateTime();
+        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+        Supplier<SIDateTimeEntity> query = () -> Global.getDatabaseService().getLatestDateTime(currentTransactionId);
         Consumer<SIDateTimeEntity> consumer = networkTimePanel::updateTime;
 
         AsyncQueryTask<SIDateTimeEntity> task = new AsyncQueryTask<>(frameView.getApplication(),

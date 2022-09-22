@@ -21,6 +21,7 @@ import lombok.Data;
 @Data
 public class SIMultiplexServiceCountView
 {
+    private long transactionId;
     private int transportStreamId;
     private int originalNetworkId;
     private int serviceCount;

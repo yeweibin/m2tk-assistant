@@ -22,5 +22,6 @@ import lombok.Data;
 public class SIDateTimeEntity
 {
     private long id;
+    private long transactionId;
     private long timepoint;
 }

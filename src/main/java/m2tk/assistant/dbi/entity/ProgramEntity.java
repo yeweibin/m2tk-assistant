@@ -6,6 +6,7 @@ import lombok.Data;
 public class ProgramEntity
 {
     private long id;
+    private long transactionId;
     private int programNumber;
     private int transportStreamId;
     private int pmtPid;

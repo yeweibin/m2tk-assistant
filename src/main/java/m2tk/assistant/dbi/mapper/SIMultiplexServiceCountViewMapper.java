@@ -29,6 +29,7 @@ public class SIMultiplexServiceCountViewMapper implements RowMapper<SIMultiplexS
     public SIMultiplexServiceCountView map(ResultSet rs, StatementContext ctx) throws SQLException
     {
         SIMultiplexServiceCountView view = new SIMultiplexServiceCountView();
+        view.setTransactionId(rs.getLong("transaction_id"));
         view.setTransportStreamId(rs.getInt("ts_id"));
         view.setOriginalNetworkId(rs.getInt("onet_id"));
         view.setServiceCount(rs.getInt("srv_cnt"));

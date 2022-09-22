@@ -54,6 +54,7 @@ public class PSIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_PROGRAM`");
         handle.execute("CREATE TABLE `T_PROGRAM` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`ts_id` INT NOT NULL," +
                        "`prg_num` INT NOT NULL," +
                        "`pmt_pid` INT NOT NULL," +
@@ -65,6 +66,7 @@ public class PSIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_PROGRAM_STREAM_MAPPING`");
         handle.execute("CREATE TABLE `T_PROGRAM_STREAM_MAPPING` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`prg_num` INT NOT NULL," +
                        "`es_pid` INT NOT NULL," +
                        "`es_type` INT NOT NULL," +
@@ -75,6 +77,7 @@ public class PSIObjectHandler
         handle.execute("DROP TABLE IF EXISTS `T_CA_STREAM`");
         handle.execute("CREATE TABLE `T_CA_STREAM` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`cas_id` INT NOT NULL," +
                        "`stream_type` INT NOT NULL," +
                        "`stream_pid` INT NOT NULL," +
@@ -84,33 +87,28 @@ public class PSIObjectHandler
                        ")");
     }
 
-    public void resetTable(Handle handle)
+    public void clearProgramAndMappingStreams(Handle handle, long transactionId)
     {
-        handle.execute("TRUNCATE TABLE T_PROGRAM");
-        handle.execute("TRUNCATE TABLE T_PROGRAM_STREAM_MAPPING");
-        handle.execute("TRUNCATE TABLE T_CA_STREAM");
+        handle.execute("DELETE FROM T_PROGRAM WHERE `transaction_id` = ?", transactionId);
+        handle.execute("DELETE FROM T_PROGRAM_STREAM_MAPPING WHERE `transaction_id` = ?", transactionId);
+        handle.execute("DELETE FROM T_CA_STREAM WHERE `stream_type` = ? AND `transaction_id` = ?", CAStreamEntity.TYPE_ECM, transactionId);
     }
 
-    public void clearProgramAndMappingStreams(Handle handle)
-    {
-        handle.execute("TRUNCATE TABLE T_PROGRAM");
-        handle.execute("TRUNCATE TABLE T_PROGRAM_STREAM_MAPPING");
-        handle.execute("DELETE FROM T_CA_STREAM WHERE `stream_type` = ?", CAStreamEntity.TYPE_ECM);
-    }
-
-    public ProgramEntity addProgram(Handle handle, int tsid, int number, int pmtpid)
+    public ProgramEntity addProgram(Handle handle, long transactionId, int tsid, int number, int pmtpid)
     {
         ProgramEntity entity = new ProgramEntity();
         entity.setId(idGenerator.next());
+        entity.setTransactionId(transactionId);
         entity.setTransportStreamId(tsid);
         entity.setProgramNumber(number);
         entity.setPmtPid(pmtpid);
         entity.setPcrPid(8191);
         entity.setPmtVersion(-1);
         entity.setFreeAccess(true);
-        handle.execute("INSERT INTO T_PROGRAM (`id`, `ts_id`, `prg_num`, `pmt_pid`, `pcr_pid`, `pmt_version`, `free_access`) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        handle.execute("INSERT INTO T_PROGRAM (`id`, `transaction_id`, `ts_id`, `prg_num`, `pmt_pid`, `pcr_pid`, `pmt_version`, `free_access`) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                        entity.getId(),
+                       entity.getTransactionId(),
                        entity.getTransportStreamId(),
                        entity.getProgramNumber(),
                        entity.getPmtPid(),
@@ -133,38 +131,42 @@ public class PSIObjectHandler
                        entity.getId());
     }
 
-    public void addProgramStreamMapping(Handle handle, int program, int pid, int type, String category, String description)
+    public void addProgramStreamMapping(Handle handle, long transactionId, int program, int pid, int type, String category, String description)
     {
-        handle.execute("INSERT INTO T_PROGRAM_STREAM_MAPPING (`id`, `prg_num`, `es_pid`, `es_type`, `es_cate`, `es_desc`) " +
-                       "VALUES (?, ?, ?, ?, ?, ?)",
-                       idGenerator.next(), program, pid, type, category, description);
+        handle.execute("INSERT INTO T_PROGRAM_STREAM_MAPPING (`id`, `transaction_id`, `prg_num`, `es_pid`, `es_type`, `es_cate`, `es_desc`) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       idGenerator.next(), transactionId, program, pid, type, category, description);
     }
 
-    public List<ProgramEntity> listPrograms(Handle handle)
+    public List<ProgramEntity> listPrograms(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_PROGRAM ORDER BY `ts_id`, `prg_num`")
+        return handle.select("SELECT * FROM T_PROGRAM WHERE `transaction_id` = ? ORDER BY `ts_id`, `prg_num`",
+                             transactionId)
                      .map(programEntityMapper)
                      .list();
     }
 
-    public List<ProgramStreamMappingEntity> listProgramStreamMappings(Handle handle, int number)
+    public List<ProgramStreamMappingEntity> listProgramStreamMappings(Handle handle, long transactionId, int number)
     {
-        return handle.select("SELECT * FROM T_PROGRAM_STREAM_MAPPING WHERE `prg_num` = ?", number)
+        return handle.select("SELECT * FROM T_PROGRAM_STREAM_MAPPING WHERE `transaction_id`= ? AND `prg_num` = ?",
+                             transactionId, number)
                      .map(mappingEntityMapper)
                      .list();
     }
 
-    public ProgramEntity getProgram(Handle handle, int number)
+    public ProgramEntity getProgram(Handle handle, long transactionId, int number)
     {
-        return handle.select("SELECT * FROM T_PROGRAM WHERE `prg_num` = ?", number)
+        return handle.select("SELECT * FROM T_PROGRAM WHERE `transaction_id` = ? AND `prg_num` = ?",
+                             transactionId, number)
                      .map(programEntityMapper)
                      .one();
     }
 
-    public CAStreamEntity addEMMStream(Handle handle, int systemId, int emmPid, byte[] emmPrivateData)
+    public CAStreamEntity addEMMStream(Handle handle, long transactionId, int systemId, int emmPid, byte[] emmPrivateData)
     {
         CAStreamEntity entity = new CAStreamEntity();
         entity.setId(idGenerator.next());
+        entity.setTransactionId(transactionId);
         entity.setSystemId(systemId);
         entity.setStreamPid(emmPid);
         entity.setStreamPrivateData(emmPrivateData);
@@ -172,9 +174,10 @@ public class PSIObjectHandler
         entity.setProgramNumber(0);
         entity.setElementaryStreamPid(8191);
 
-        handle.execute("INSERT INTO T_CA_STREAM (`id`, `cas_id`, `stream_type`, `stream_pid`, `stream_private_data`, `program_number`, `es_pid`) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        handle.execute("INSERT INTO T_CA_STREAM (`id`, `transaction_id`, `cas_id`, `stream_type`, `stream_pid`, `stream_private_data`, `program_number`, `es_pid`) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                        entity.getId(),
+                       entity.getTransactionId(),
                        entity.getSystemId(),
                        entity.getStreamType(),
                        entity.getStreamPid(),
@@ -184,11 +187,12 @@ public class PSIObjectHandler
         return entity;
     }
 
-    public CAStreamEntity addECMStream(Handle handle, int systemId, int ecmPid, byte[] ecmPrivateData,
+    public CAStreamEntity addECMStream(Handle handle, long transactionId, int systemId, int ecmPid, byte[] ecmPrivateData,
                                        int programNumber, int esPid)
     {
         CAStreamEntity entity = new CAStreamEntity();
         entity.setId(idGenerator.next());
+        entity.setTransactionId(transactionId);
         entity.setSystemId(systemId);
         entity.setStreamPid(ecmPid);
         entity.setStreamPrivateData(ecmPrivateData);
@@ -196,9 +200,10 @@ public class PSIObjectHandler
         entity.setProgramNumber(programNumber);
         entity.setElementaryStreamPid(esPid);
 
-        handle.execute("INSERT INTO T_CA_STREAM (`id`, `cas_id`, `stream_type`, `stream_pid`, `stream_private_data`, `program_number`, `es_pid`) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        handle.execute("INSERT INTO T_CA_STREAM (`id`, `transaction_id`, `cas_id`, `stream_type`, `stream_pid`, `stream_private_data`, `program_number`, `es_pid`) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                        entity.getId(),
+                       entity.getTransactionId(),
                        entity.getSystemId(),
                        entity.getStreamType(),
                        entity.getStreamPid(),
@@ -208,41 +213,49 @@ public class PSIObjectHandler
         return entity;
     }
 
-    public List<CAStreamEntity> listCAStreams(Handle handle)
+    public List<CAStreamEntity> listCAStreams(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_CA_STREAM ORDER BY `cas_id`, `stream_type`, `stream_pid`")
+        return handle.select("SELECT * FROM T_CA_STREAM WHERE `transaction_id` = ? " +
+                             "ORDER BY `cas_id`, `stream_type`, `stream_pid`",
+                             transactionId)
                      .map(streamEntityMapper)
                      .list();
     }
 
-    public List<CAStreamEntity> listProgramECMStreams(Handle handle, int programNumber)
+    public List<CAStreamEntity> listProgramECMStreams(Handle handle, long transactionId, int programNumber)
     {
-        return handle.select("SELECT * FROM T_CA_STREAM WHERE `program_number` = ? AND `stream_type` = ? ORDER BY `cas_id`, `stream_pid`",
-                             programNumber, CAStreamEntity.TYPE_ECM)
+        return handle.select("SELECT * FROM T_CA_STREAM WHERE `transaction_id` = ? " +
+                             "AND `program_number` = ? " +
+                             "AND `stream_type` = ? " +
+                             "ORDER BY `cas_id`, `stream_pid`",
+                             transactionId, programNumber, CAStreamEntity.TYPE_ECM)
                      .map(streamEntityMapper)
                      .list();
     }
 
-    public List<CAStreamEntity> listECMStreams(Handle handle)
+    public List<CAStreamEntity> listECMStreams(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_CA_STREAM WHERE `stream_type` = ? ORDER BY `cas_id`, `stream_pid`",
-                             CAStreamEntity.TYPE_ECM)
+        return handle.select("SELECT * FROM T_CA_STREAM WHERE `transaction_id` = ? AND `stream_type` = ? " +
+                             "ORDER BY `cas_id`, `stream_pid`",
+                             transactionId, CAStreamEntity.TYPE_ECM)
                      .map(streamEntityMapper)
                      .list();
     }
 
-    public Map<Integer, List<CAStreamEntity>> listECMGroups(Handle handle)
+    public Map<Integer, List<CAStreamEntity>> listECMGroups(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_CA_STREAM WHERE `stream_type` = ? ORDER BY `cas_id`, `stream_pid`",
-                             CAStreamEntity.TYPE_ECM)
+        return handle.select("SELECT * FROM T_CA_STREAM WHERE `transaction_id` = ? AND `stream_type` = ? " +
+                             "ORDER BY `cas_id`, `stream_pid`",
+                             transactionId, CAStreamEntity.TYPE_ECM)
                      .map(streamEntityMapper)
                      .collect(groupingBy(CAStreamEntity::getProgramNumber));
     }
 
-    public List<CAStreamEntity> listEMMStreams(Handle handle)
+    public List<CAStreamEntity> listEMMStreams(Handle handle, long transactionId)
     {
-        return handle.select("SELECT * FROM T_CA_STREAM WHERE `stream_type` = ? ORDER BY `cas_id`, `stream_pid`",
-                             CAStreamEntity.TYPE_EMM)
+        return handle.select("SELECT * FROM T_CA_STREAM WHERE `transaction_id` = ? AND `stream_type` = ? " +
+                             "ORDER BY `cas_id`, `stream_pid`",
+                             transactionId, CAStreamEntity.TYPE_EMM)
                      .map(streamEntityMapper)
                      .list();
     }

@@ -21,6 +21,7 @@ public class SourceHandler
         handle.execute("DROP TABLE IF EXISTS `T_SOURCE`");
         handle.execute("CREATE TABLE `T_SOURCE` (" +
                        "`id` BIGINT PRIMARY KEY," +
+                       "`transaction_id` BIGINT NOT NULL," +
                        "`bitrate` INT DEFAULT 0," +
                        "`frame_size` INT DEFAULT 188," +
                        "`transport_stream_id` INT DEFAULT 0," +
@@ -29,27 +30,35 @@ public class SourceHandler
                        ")");
     }
 
-    public void resetTable(Handle handle)
-    {
-        handle.execute("TRUNCATE TABLE T_SOURCE");
-    }
-
-    public void addSource(Handle handle, String name)
+    public void addSource(Handle handle, long transactionId, String name)
     {
         SourceEntity entity = new SourceEntity();
         entity.setId(idGenerator.next());
+        entity.setTransactionId(transactionId);
         entity.setBitrate(0);
         entity.setFrameSize(188);
         entity.setTransportStreamId(0);
         entity.setPacketCount(0);
         entity.setSourceName(name);
-        handle.execute("INSERT INTO T_SOURCE (`id`, `bitrate`, `frame_size`, `transport_stream_id`, `packet_count`, `source_name`) VALUES (?, ?, ?, ?, ?, ?)",
+        handle.execute("INSERT INTO T_SOURCE (`id`, `transaction_id`, `bitrate`, `frame_size`, " +
+                       "`transport_stream_id`, `packet_count`, `source_name`) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
                        entity.getId(),
+                       entity.getTransactionId(),
                        entity.getBitrate(),
                        entity.getFrameSize(),
                        entity.getTransportStreamId(),
                        entity.getPacketCount(),
                        entity.getSourceName());
+    }
+
+    public SourceEntity getSource(Handle handle, long transactionId)
+    {
+        return handle.select("SELECT * FROM T_SOURCE WHERE `transaction_id` = ? ORDER BY `id` DESC LIMIT 1",
+                             transactionId)
+                     .map(sourceEntityMapper)
+                     .findFirst()
+                     .orElse(null);
     }
 
     public SourceEntity getLatestSource(Handle handle)
