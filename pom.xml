@@ -6,22 +6,26 @@
 
     <groupId>mpeg2-toolkit</groupId>
     <artifactId>m2tk-assistant</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 
     <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
+        <jdk.version>8</jdk.version>
+        <maven.compiler.source>${jdk.version}</maven.compiler.source>
+        <maven.compiler.target>${jdk.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <m2tk.version>1.1</m2tk.version>
+        <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <m2tk.version>1.2</m2tk.version>
         <bsaf.version>1.9.2</bsaf.version>
         <jfreechart.version>1.5.3</jfreechart.version>
-        <miglayout-swing.version>5.3</miglayout-swing.version>
+        <miglayout-swing.version>11.0</miglayout-swing.version>
         <guava.version>31.1-jre</guava.version>
-        <flatlaf.version>2.4</flatlaf.version>
-        <slf4j.version>2.0.0</slf4j.version>
-        <logback.version>1.3.0</logback.version>
+        <flatlaf.version>2.6</flatlaf.version>
+        <slf4j.version>2.0.3</slf4j.version>
+        <logback.version>1.4.4</logback.version>
         <jackson.version>2.13.4</jackson.version>
-        <hutool.version>5.8.6</hutool.version>
+        <hutool.version>5.8.9</hutool.version>
         <h2.version>2.1.214</h2.version>
         <hikari.version>4.0.3</hikari.version>
         <caffeine.version>2.9.2</caffeine.version>
@@ -55,6 +59,12 @@
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-multiplex</artifactId>
             <version>${m2tk.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
@@ -94,18 +104,8 @@
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -166,112 +166,6 @@
             <groupId>org.bytedeco</groupId>
             <artifactId>javacv-platform</artifactId>
             <version>${javacv.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>opencv</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>opencv-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>flycapture</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>flycapture-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>flandmark</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>flandmark-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>leptonica</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>leptonica-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>libdc1394</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>libdc1394-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>libfreenect</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>libfreenect-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>libfreenect2</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>libfreenect2-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>librealsense</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>librealsense-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>librealsense2</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>librealsense2-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>openblas</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>openblas-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>tesseract</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>tesseract-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>artoolkitplus</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>artoolkitplus-platform</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>videoinput</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.bytedeco</groupId>
-                    <artifactId>videoinput-platform</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 
@@ -283,6 +177,33 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <!--JDK8-->
+                        <configuration>
+                            <source>${jdk.version}</source>
+                            <target>${jdk.version}</target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>module-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>11</release>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/src/main/java9</compileSourceRoot>
+                            </compileSourceRoots>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
