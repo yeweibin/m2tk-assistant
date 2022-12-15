@@ -83,9 +83,8 @@ public class PMTNodeBuilder implements TreeNodeBuilder
             Encoding esInfo = elementDecoder.getDescriptorLoop();
             if (esInfo.size() > 0)
             {
-                DescriptorLoopDecoder loopDecoder = new DescriptorLoopDecoder();
-                loopDecoder.attach(esInfo);
-                loopDecoder.forEach(descriptor -> {
+                descriptorLoopDecoder.attach(esInfo);
+                descriptorLoopDecoder.forEach(descriptor -> {
                     int tag = descriptor.readUINT8(0);
                     TreeNodeBuilder builder = DescriptorNodeBuilders.getBuilder(tag);
                     nodeESInfo.add(builder.build(descriptor));

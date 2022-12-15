@@ -57,6 +57,7 @@ public class MainViewController
     private EPGInfoView epgInfoView;
     private NVODInfoView nvodInfoView;
     private DatagramView datagramView;
+    private EBInfoView ebInfoView;
     private LogsView logsView;
     private JTabbedPane tabbedPane;
     private JFileChooser fileChooser;
@@ -111,6 +112,7 @@ public class MainViewController
         menuViews.add(createMenuItem("showEPGInfo", "EPG信息", "查看EPG信息"));
         menuViews.add(createMenuItem("showNVODInfo", "NVOD信息", "查看NVOD信息"));
         menuViews.add(createMenuItem("showPSISIInfo", "PSI/SI信息", "查看PSI/SI信息"));
+        menuViews.add(createMenuItem("showEBInfo", "应急广播信息", "查看应急广播信息"));
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
@@ -196,6 +198,7 @@ public class MainViewController
         epgInfoView = new EPGInfoView(frameView);
         nvodInfoView = new NVODInfoView(frameView);
         datagramView = new DatagramView(frameView);
+        ebInfoView = new EBInfoView(frameView);
         logsView = new LogsView();
 
         tabbedPane = new JTabbedPane();
@@ -207,6 +210,7 @@ public class MainViewController
         tabbedPane.add("EPG", epgInfoView);
         tabbedPane.add("NVOD", nvodInfoView);
         tabbedPane.add("PSI/SI", datagramView);
+        tabbedPane.add("应急广播", ebInfoView);
         tabbedPane.add("日志", logsView);
 
         frameView.getRootPane().getContentPane().add(sourceListView, BorderLayout.WEST);
@@ -324,6 +328,12 @@ public class MainViewController
     public void showPSISIInfo()
     {
         tabbedPane.setSelectedComponent(datagramView);
+    }
+
+    @Action
+    public void showEBInfo()
+    {
+        tabbedPane.setSelectedComponent(ebInfoView);
     }
 
     @Action

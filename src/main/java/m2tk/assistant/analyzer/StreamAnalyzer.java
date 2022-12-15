@@ -78,7 +78,8 @@ public class StreamAnalyzer
                                              new TR290Tracer2(databaseService, transactionId),
                                              new UserPrivateSectionTracer(databaseService, transactionId,
                                                                           Global.getUserPrivateSectionStreamList(),
-                                                                          Global.getPrivateSectionFilteringLimit())
+                                                                          Global.getPrivateSectionFilteringLimit()),
+                                             new EBTSectionTracer(databaseService, transactionId)
                                             );
         tracers.forEach(tracer -> tracer.configureDemux(demuxer));
 
