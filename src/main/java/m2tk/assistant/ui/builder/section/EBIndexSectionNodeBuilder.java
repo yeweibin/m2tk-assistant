@@ -113,7 +113,7 @@ public class EBIndexSectionNodeBuilder implements TreeNodeBuilder
                 nodeEBM.add(create(String.format("details_channel_PCR_PID = 0x%X", payload.readUINT16(offset) & MPEG2.PID_MASK)));
                 offset += 2;
 
-                int descloopLen = payload.readUINT16(offset);
+                int descloopLen = payload.readUINT16(offset) & 0x0FFF;
                 offset += 2;
 
                 Encoding descloop = payload.readSelector(offset, descloopLen);

@@ -16,6 +16,7 @@
 
 package m2tk.assistant.analyzer.tracer;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.mpeg2.decoder.ExtendedSectionDecoder;
 import m2tk.multiplex.TSDemux;
@@ -27,6 +28,7 @@ import java.util.Set;
 /**
  * 应急广播（地面）数据段分析器
  */
+@Slf4j
 public class EBTSectionTracer implements Tracer
 {
     private static final int MAX_SECTION_COUNT = 1000;
@@ -72,7 +74,7 @@ public class EBTSectionTracer implements Tracer
             String ebmId = decoder.getPayload().toHexString(0, 18).substring(1);
             key = key + "." + ebmId;
 
-            System.out.println("==> EBM_ID: " + ebmId);
+            log.info("EBM_ID: {}", ebmId);
         }
         if (cache.contains(key))
             return;
