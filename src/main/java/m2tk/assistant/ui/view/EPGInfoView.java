@@ -24,7 +24,8 @@ import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIEventEntity;
 import m2tk.assistant.dbi.entity.SIServiceEntity;
 import m2tk.assistant.ui.component.ServiceEventGuidePanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -61,7 +62,7 @@ public class EPGInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer.stop();
 
             queryServiceAndEvents();
@@ -86,28 +87,34 @@ public class EPGInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
         queryServiceAndEvents();
     }
 
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
-    }
-
     public void reset()
     {
         serviceEventGuidePanel.reset();
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.restart();
     }
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.start();
     }
 
@@ -118,6 +125,10 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
         List<SIService> serviceList = new ArrayList<>();
         Map<SIService, List<SIEvent>> eventRegistry = new HashMap<>();
 
@@ -139,12 +150,11 @@ public class EPGInfoView extends JPanel implements InfoView
             return e1.getStartTime().compareTo(e2.getStartTime());
         };
 
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();
 
-            List<SIServiceEntity> services = databaseService.listServices(currentTransactionId);
-            List<SIEventEntity> events = databaseService.listEvents(currentTransactionId);
+            List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
+            List<SIEventEntity> events = databaseService.listEvents(currentTransaction);
 
             services.stream()
                     .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)

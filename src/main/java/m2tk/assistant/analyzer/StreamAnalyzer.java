@@ -21,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.tracer.*;
 import m2tk.assistant.dbi.DatabaseService;
+import m2tk.assistant.dbi.entity.SourceEntity;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.io.ProtocolManager;
 import m2tk.io.RxChannel;
 import m2tk.multiplex.DemuxStatus;
@@ -41,7 +44,6 @@ public class StreamAnalyzer
     private final TSDemux demuxer;
     private RxChannel input;
     private DatabaseService databaseService;
-    private volatile boolean running;
 
     public StreamAnalyzer()
     {
@@ -54,14 +56,11 @@ public class StreamAnalyzer
         databaseService = Objects.requireNonNull(service);
     }
 
-    public boolean start(String resource, Consumer<DemuxStatus> consumer)
+    public boolean start(String url, Consumer<DemuxStatus> consumer)
     {
-        long transactionId;
         try
         {
-            transactionId = databaseService.requestTransactionId();
-            input = ProtocolManager.openRxChannel(resource);
-            databaseService.addSource(transactionId, (String) input.query("source name"));
+            input = ProtocolManager.openRxChannel(url);
         } catch (Exception ex)
         {
             log.warn("无法获取输入通道：{}", ex.getMessage());
@@ -71,6 +70,11 @@ public class StreamAnalyzer
 
         demuxer.reset();
 
+        SourceEntity source = databaseService.addSource(databaseService.requestTransactionId(),
+                                                        (String) input.query("source name"),
+                                                        url);
+
+        long transactionId = source.getTransactionId();
         List<Tracer> tracers = Arrays.asList(new StreamTracer(databaseService, transactionId),
                                              new PSITracer(databaseService, transactionId),
                                              new SITracer(databaseService, transactionId),
@@ -88,9 +92,9 @@ public class StreamAnalyzer
         //        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
 
         demuxer.attach(input);
-        running = true;
 
-        Global.setCurrentTransactionId(transactionId);
+        Global.setCurrentSource(source);
+        Global.postEvent(new SourceAttachedEvent(source));
 
         log.info("开始分析");
         return true;
@@ -112,14 +116,9 @@ public class StreamAnalyzer
         if (!status.isRunning())
         {
             IoUtil.close(input);
-            running = false;
+            Global.postEvent(new SourceDetachedEvent());
             log.info("停止分析");
         }
-    }
-
-    public boolean isRunning()
-    {
-        return running;
     }
 
     static class EventFilter<T extends TSDemuxEvent> implements Consumer<TSDemuxEvent>

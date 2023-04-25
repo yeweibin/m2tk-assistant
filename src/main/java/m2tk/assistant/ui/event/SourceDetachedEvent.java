@@ -16,11 +16,6 @@
 
 package m2tk.assistant.ui.event;
 
-import lombok.Data;
-
-@Data
-public class SourceChangedEvent
+public class SourceDetachedEvent
 {
-    private String sourceName;
-    private long transactionId;
 }

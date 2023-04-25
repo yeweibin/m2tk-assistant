@@ -19,18 +19,20 @@ package m2tk.assistant;
 import com.google.common.eventbus.EventBus;
 import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
+import m2tk.assistant.dbi.entity.SourceEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public final class Global
 {
     private static final DatabaseService databaseService;
     private static final StreamAnalyzer streamAnalyser;
     private static final List<Integer> userPrivateSectionStreams;
-    private static String inputResource;
-    private static volatile long currentTransactionId;
+    private static SourceEntity currentSource;
+
     private static final EventBus eventBus;
 
     static
@@ -39,8 +41,6 @@ public final class Global
         streamAnalyser = new StreamAnalyzer();
         userPrivateSectionStreams = new ArrayList<>();
         streamAnalyser.setDatabaseService(databaseService);
-        inputResource = null;
-        currentTransactionId = -1;
         eventBus = new EventBus();
     }
 
@@ -79,29 +79,33 @@ public final class Global
         return 1000;
     }
 
-    public static String getInputResource()
+    public static List<String> getSourceHistory()
     {
-        return inputResource;
+        return databaseService.getSourceHistory();
     }
 
-    public static void setInputResource(String inputResource)
+    public static String getCurrentSourceUrl()
     {
-        Global.inputResource = inputResource;
+        return Optional.ofNullable(currentSource)
+                       .map(SourceEntity::getSourceUrl)
+                       .orElse(null);
+    }
+
+    public static long getCurrentSourceTransactionId()
+    {
+        return Optional.ofNullable(currentSource)
+                       .map(SourceEntity::getTransactionId)
+                       .orElse(-1L);
+    }
+
+    public static void setCurrentSource(SourceEntity source)
+    {
+        currentSource = source;
     }
 
     public static void postEvent(Object event)
     {
         eventBus.post(event);
-    }
-
-    public static void setCurrentTransactionId(long transactionId)
-    {
-        currentTransactionId = transactionId;
-    }
-
-    public static long getCurrentTransactionId()
-    {
-        return currentTransactionId;
     }
 
     public static void registerSubscriber(Object subscriber)

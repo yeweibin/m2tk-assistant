@@ -22,7 +22,8 @@ import m2tk.assistant.dbi.entity.PCRCheckEntity;
 import m2tk.assistant.dbi.entity.PCRStatEntity;
 import m2tk.assistant.ui.component.PCRChartPanel;
 import m2tk.assistant.ui.component.PCRStatsPanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -58,7 +59,7 @@ public class PCRInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer.stop();
 
             queryPCRStats();
@@ -102,16 +103,22 @@ public class PCRInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
         queryPCRStats();
-    }
-
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
     }
 
     public void reset()
@@ -119,13 +126,13 @@ public class PCRInfoView extends JPanel implements InfoView
         pcrStatsPanel.reset();
         pcrChartPanel.reset();
 
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.restart();
     }
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.start();
     }
 
@@ -143,9 +150,11 @@ public class PCRInfoView extends JPanel implements InfoView
 
     private void queryPCRStats()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
 
-        Supplier<List<PCRStatEntity>> query = () -> Global.getDatabaseService().listPCRStats(currentTransactionId);
+        Supplier<List<PCRStatEntity>> query = () -> Global.getDatabaseService().listPCRStats(currentTransaction);
         Consumer<List<PCRStatEntity>> consumer = pcrStatsPanel::update;
 
         AsyncQueryTask<List<PCRStatEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -157,15 +166,13 @@ public class PCRInfoView extends JPanel implements InfoView
     private void queryPCRRecords()
     {
         PCRStatEntity target = selectedPCRStat;
-        if (target == null)
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1 || target == null)
             return;
 
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
-
         Supplier<List<PCRCheckEntity>> query = () -> Global.getDatabaseService()
-                                                           .getRecentPCRChecks(currentTransactionId,
-                                                                               target.getPid(),
-                                                                               1000);
+                                                           .getRecentPCRChecks(currentTransaction, target.getPid(), 1000);
+
         Consumer<List<PCRCheckEntity>> consumer = this::updatePCRChart;
         AsyncQueryTask<List<PCRCheckEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
                                                                          query,

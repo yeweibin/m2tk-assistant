@@ -24,7 +24,8 @@ import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIEventEntity;
 import m2tk.assistant.dbi.entity.SIServiceEntity;
 import m2tk.assistant.ui.component.NVODServiceEventGuidePanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -59,7 +60,7 @@ public class NVODInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer.stop();
 
             queryServiceAndEvents();
@@ -84,28 +85,34 @@ public class NVODInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
         queryServiceAndEvents();
     }
 
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
-    }
-
     public void reset()
     {
         serviceEventGuidePanel.reset();
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.restart();
     }
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.start();
     }
 
@@ -116,10 +123,12 @@ public class NVODInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
+        long currentTransactionId = transactionId;
+        if (currentTransactionId == -1)
+            return;
+
         Map<String, NVODService> serviceRegistry = new HashMap<>();
         Map<String, NVODEvent> eventRegistry = new HashMap<>();
-
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
 
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();

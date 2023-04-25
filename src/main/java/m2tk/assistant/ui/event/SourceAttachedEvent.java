@@ -16,10 +16,12 @@
 
 package m2tk.assistant.ui.event;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import m2tk.assistant.dbi.entity.SourceEntity;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class SourceAttachedEvent
 {
     private SourceEntity source;

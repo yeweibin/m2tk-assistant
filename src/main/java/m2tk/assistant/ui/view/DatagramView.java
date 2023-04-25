@@ -20,7 +20,8 @@ import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.dbi.entity.SectionEntity;
 import m2tk.assistant.ui.component.SectionDatagramPanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -54,7 +55,7 @@ public class DatagramView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer.stop();
 
             queryDatagrams();
@@ -65,7 +66,6 @@ public class DatagramView extends JPanel implements InfoView
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
-
 
         addComponentListener(new ComponentAdapter()
         {
@@ -80,28 +80,34 @@ public class DatagramView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
         queryDatagrams();
     }
 
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
-    }
-
     public void reset()
     {
         sectionDatagramPanel.reset();
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.restart();
     }
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.start();
     }
 
@@ -112,10 +118,12 @@ public class DatagramView extends JPanel implements InfoView
 
     private void queryDatagrams()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
 
         Supplier<Map<String, List<SectionEntity>>> query = () ->
-                Global.getDatabaseService().getSectionGroups(currentTransactionId);
+                Global.getDatabaseService().getSectionGroups(currentTransaction);
 
         Consumer<Map<String, List<SectionEntity>>> consumer = sectionDatagramPanel::update;
 

@@ -25,7 +25,8 @@ import m2tk.assistant.dbi.entity.*;
 import m2tk.assistant.ui.component.MultiplexInfoPanel;
 import m2tk.assistant.ui.component.NetworkTimePanel;
 import m2tk.assistant.ui.component.ServiceInfoPanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -69,7 +70,7 @@ public class NetworkInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer1.stop();
 
             queryNetworks();
@@ -78,7 +79,7 @@ public class NetworkInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer2.stop();
 
             queryServices();
@@ -87,7 +88,7 @@ public class NetworkInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer3.stop();
 
             queryNetworkTime();
@@ -119,6 +120,18 @@ public class NetworkInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
@@ -127,28 +140,24 @@ public class NetworkInfoView extends JPanel implements InfoView
         queryNetworkTime();
     }
 
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
-    }
-
     private void queryNetworks()
     {
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
         List<SIMultiplex> tsActualNW = new ArrayList<>();
         List<SIMultiplex> tsOtherNW = new ArrayList<>();
 
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
-
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();
-            List<SINetworkEntity> networks = databaseService.listNetworks(currentTransactionId);
+            List<SINetworkEntity> networks = databaseService.listNetworks(currentTransaction);
             Map<Integer, List<SIMultiplexEntity>> muxGroups =
-                    databaseService.listMultiplexes(currentTransactionId)
+                    databaseService.listMultiplexes(currentTransaction)
                                    .stream()
                                    .collect(groupingBy(SIMultiplexEntity::getNetworkId));
             Map<String, Integer> srvCnts =
-                    databaseService.listMultiplexServiceCounts(currentTransactionId)
+                    databaseService.listMultiplexServiceCounts(currentTransaction)
                                    .stream()
                                    .collect(toMap(srvCnt -> String.format("%d.%d",
                                                                           srvCnt.getTransportStreamId(),
@@ -193,6 +202,10 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     private void queryServices()
     {
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
         List<SIService> srvActualTS = new ArrayList<>();
         List<SIService> srvOtherTS = new ArrayList<>();
 
@@ -204,9 +217,8 @@ public class NetworkInfoView extends JPanel implements InfoView
             return Integer.compare(s1.getServiceId(), s2.getServiceId());
         };
 
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
         Supplier<Void> query = () -> {
-            List<SIServiceEntity> services = Global.getDatabaseService().listServices(currentTransactionId);
+            List<SIServiceEntity> services = Global.getDatabaseService().listServices(currentTransaction);
 
             for (SIServiceEntity service : services)
             {
@@ -241,8 +253,11 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     private void queryNetworkTime()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
-        Supplier<SIDateTimeEntity> query = () -> Global.getDatabaseService().getLatestDateTime(currentTransactionId);
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
+        Supplier<SIDateTimeEntity> query = () -> Global.getDatabaseService().getLatestDateTime(currentTransaction);
         Consumer<SIDateTimeEntity> consumer = networkTimePanel::updateTime;
 
         AsyncQueryTask<SIDateTimeEntity> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -254,7 +269,7 @@ public class NetworkInfoView extends JPanel implements InfoView
     public void reset()
     {
         networkTimePanel.resetTime();
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
         {
             timer1.restart();
             timer2.restart();
@@ -264,7 +279,7 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
         {
             timer1.start();
             timer2.start();
