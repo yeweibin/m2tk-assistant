@@ -17,13 +17,10 @@
 package m2tk.assistant.ui;
 
 import cn.hutool.core.io.FileUtil;
-import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
-import m2tk.assistant.dbi.entity.SourceEntity;
+import m2tk.assistant.ui.dialog.SourceHistoryDialog;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
-import m2tk.assistant.ui.event.SourceAttachedEvent;
-import m2tk.assistant.ui.event.SourceChangedEvent;
 import m2tk.assistant.ui.task.DrawNetworkGraphTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.view.*;
@@ -49,7 +46,6 @@ public class MainViewController
     private static final Logger logger = LoggerFactory.getLogger(MainViewController.class);
     private final FrameView frameView;
     private final ActionMap actionMap;
-    private SourceListView sourceListView;
     private StreamInfoView streamInfoView;
     private NetworkInfoView networkInfoView;
     private TR290InfoView tr290InfoView;
@@ -92,7 +88,7 @@ public class MainViewController
         sourceMenu.add(createMenuItem("openMulticast", "组播流", "读取组播流"));
         sourceMenu.add(createMenuItem("openThirdPartyInputSource", "扩展外设", "读取扩展输入设备"));
         menuOps.add(sourceMenu);
-        menuOps.add(createMenuItem("reopenLastInput", "重新分析", "重新分析当前输入"));
+        menuOps.add(createMenuItem("reopenInput", "重新分析", "重新分析当前输入"));
         menuOps.add(createMenuItem("stopAnalyzer", "停止分析", "停止分析器"));
         menuOps.add(createMenuItem("pauseRefreshing", "暂停刷新", "暂停刷新"));
         menuOps.add(createMenuItem("startRefreshing", "继续刷新", "继续刷新"));
@@ -146,9 +142,9 @@ public class MainViewController
         JButton btnOpenMulticast = createButton("openMulticast", "分析组播流");
         btnOpenMulticast.setIcon(resourceMap.getIcon("toolbar.openMulticast.icon"));
         btnOpenMulticast.setText(null);
-        JButton btnReopenLastInput = createButton("reopenLastInput", "重新分析");
-        btnReopenLastInput.setIcon(resourceMap.getIcon("toolbar.reopenLastInput.icon"));
-        btnReopenLastInput.setText(null);
+        JButton btnReopenInput = createButton("reopenInput", "重新分析");
+        btnReopenInput.setIcon(resourceMap.getIcon("toolbar.reopenInput.icon"));
+        btnReopenInput.setText(null);
         JButton btnStopAnalysing = createButton("stopAnalyzer", "停止分析");
         btnStopAnalysing.setIcon(resourceMap.getIcon("toolbar.stopAnalyzer.icon"));
         btnStopAnalysing.setText(null);
@@ -174,7 +170,7 @@ public class MainViewController
         toolBar.add(btnOpenFile);
         toolBar.add(btnOpenMulticast);
         toolBar.addSeparator();
-        toolBar.add(btnReopenLastInput);
+        toolBar.add(btnReopenInput);
         toolBar.add(btnStopAnalysing);
         toolBar.add(btnPauseRefreshing);
         toolBar.add(btnStartRefreshing);
@@ -190,7 +186,6 @@ public class MainViewController
 
     private void createAndSetupWorkspace()
     {
-        sourceListView = new SourceListView();
         streamInfoView = new StreamInfoView(frameView);
         networkInfoView = new NetworkInfoView(frameView);
         tr290InfoView = new TR290InfoView(frameView);
@@ -213,7 +208,6 @@ public class MainViewController
         tabbedPane.add("应急广播", ebInfoView);
         tabbedPane.add("日志", logsView);
 
-        frameView.getRootPane().getContentPane().add(sourceListView, BorderLayout.WEST);
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
     }
 
@@ -227,23 +221,11 @@ public class MainViewController
 
         initFileChooserCurrentDirectory(fileChooser);
 
-        actionMap.get("reopenLastInput").setEnabled(false);
+        actionMap.get("reopenInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
         ComponentUtil.setPreferSizeAndLocateToCenter(frameView.getFrame(), 0.5, 0.5);
-
-        Global.registerSubscriber(this);
-    }
-
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        Component c = tabbedPane.getSelectedComponent();
-        if (c instanceof InfoView)
-        {
-            ((InfoView)c).refresh();
-        }
     }
 
     private JMenuItem createMenuItem(String action, String text, String tooltip)
@@ -377,12 +359,10 @@ public class MainViewController
             fileChooser.setCurrentDirectory(file.getParentFile());
             String input = file.getAbsolutePath();
 
-            Global.setInputResource(input);
             boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
             if (!started)
             {
-                Global.setInputResource(null);
-                actionMap.get("reopenLastInput").setEnabled(false);
+                actionMap.get("reopenInput").setEnabled(false);
                 JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
             } else
             {
@@ -397,16 +377,10 @@ public class MainViewController
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
-                actionMap.get("reopenLastInput").setEnabled(false);
+                actionMap.get("reopenInput").setEnabled(false);
                 actionMap.get("stopAnalyzer").setEnabled(true);
                 actionMap.get("pauseRefreshing").setEnabled(true);
                 actionMap.get("startRefreshing").setEnabled(false);
-
-                long transactionId = Global.getCurrentTransactionId();
-                SourceEntity source = Global.getDatabaseService().getSource(transactionId);
-                SourceAttachedEvent event = new SourceAttachedEvent();
-                event.setSource(source);
-                Global.postEvent(event);
             }
         }
     }
@@ -429,16 +403,13 @@ public class MainViewController
             return;
         }
 
-        Global.setInputResource(input);
         boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
         if (!started)
         {
-            Global.setInputResource(null);
-            actionMap.get("reopenLastInput").setEnabled(false);
+            actionMap.get("reopenInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
-            Global.setInputResource(input);
             streamInfoView.reset();
             networkInfoView.reset();
             tr290InfoView.reset();
@@ -449,16 +420,10 @@ public class MainViewController
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
-            actionMap.get("reopenLastInput").setEnabled(false);
+            actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
-
-            long transactionId = Global.getCurrentTransactionId();
-            SourceEntity source = Global.getDatabaseService().getSource(transactionId);
-            SourceAttachedEvent event = new SourceAttachedEvent();
-            event.setSource(source);
-            Global.postEvent(event);
         }
     }
 
@@ -471,16 +436,13 @@ public class MainViewController
         if (input == null)
             return;
 
-        Global.setInputResource(input);
         boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
         if (!started)
         {
-            Global.setInputResource(null);
-            actionMap.get("reopenLastInput").setEnabled(false);
+            actionMap.get("reopenInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
-            Global.setInputResource(input);
             streamInfoView.reset();
             networkInfoView.reset();
             tr290InfoView.reset();
@@ -491,33 +453,26 @@ public class MainViewController
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
-            actionMap.get("reopenLastInput").setEnabled(false);
+            actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
-
-            long transactionId = Global.getCurrentTransactionId();
-            SourceEntity source = Global.getDatabaseService().getSource(transactionId);
-            SourceAttachedEvent event = new SourceAttachedEvent();
-            event.setSource(source);
-            Global.postEvent(event);
         }
     }
 
     @Action
-    public void reopenLastInput()
+    public void reopenInput()
     {
-        String lastInput = Global.getInputResource();
-        if (lastInput == null)
-        {
-            actionMap.get("reopenLastInput").setEnabled(false);
-            return;
-        }
+        SourceHistoryDialog dialog = new SourceHistoryDialog(frameView.getFrame());
+        ComponentUtil.setPreferSizeAndLocateToCenter(dialog, 0.6, 0.4);
 
-        boolean started = Global.getStreamAnalyser().start(lastInput, this::onAnalyzerStopped);
+        String source = dialog.selectFromSourceHistory();
+        if (source == null)
+            return;
+
+        boolean started = Global.getStreamAnalyser().start(source, this::onAnalyzerStopped);
         if (!started)
         {
-            Global.setInputResource(null);
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
         } else
         {
@@ -529,16 +484,10 @@ public class MainViewController
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
-            actionMap.get("reopenLastInput").setEnabled(false);
+            actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
             actionMap.get("pauseRefreshing").setEnabled(true);
             actionMap.get("startRefreshing").setEnabled(false);
-
-            long transactionId = Global.getCurrentTransactionId();
-            SourceEntity source = Global.getDatabaseService().getSource(transactionId);
-            SourceAttachedEvent event = new SourceAttachedEvent();
-            event.setSource(source);
-            Global.postEvent(event);
         }
     }
 
@@ -635,7 +584,7 @@ public class MainViewController
         actionMap.get("openFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);
         actionMap.get("openThirdPartyInputSource").setEnabled(true);
-        actionMap.get("reopenLastInput").setEnabled(true);
+        actionMap.get("reopenInput").setEnabled(true);
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);

@@ -23,7 +23,8 @@ import m2tk.assistant.analyzer.domain.TR290Stats;
 import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.entity.TR290StatEntity;
 import m2tk.assistant.ui.component.TR290StatsPanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -58,7 +59,7 @@ public class TR290InfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer.stop();
 
             queryTR290Events();
@@ -83,28 +84,34 @@ public class TR290InfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
         queryTR290Events();
     }
 
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
-    }
-
     public void reset()
     {
         tr290StatsPanel.reset();
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.restart();
     }
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.start();
     }
 
@@ -115,11 +122,13 @@ public class TR290InfoView extends JPanel implements InfoView
 
     private void queryTR290Events()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
 
         Supplier<TR290Stats> query = () -> {
             Map<String, TR290StatEntity> statsMap = Global.getDatabaseService()
-                                                          .listTR290Stats(currentTransactionId)
+                                                          .listTR290Stats(currentTransaction)
                                                           .stream()
                                                           .collect(toMap(TR290StatEntity::getIndicator,
                                                                          entity -> entity));

@@ -20,7 +20,8 @@ import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
 import m2tk.assistant.dbi.entity.SectionEntity;
 import m2tk.assistant.ui.component.EBSectionDatagramPanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -55,7 +56,7 @@ public class EBInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer.stop();
 
             queryDatagrams();
@@ -66,7 +67,6 @@ public class EBInfoView extends JPanel implements InfoView
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
-
 
         addComponentListener(new ComponentAdapter()
         {
@@ -81,28 +81,34 @@ public class EBInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
         queryDatagrams();
     }
 
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
-    }
-
     public void reset()
     {
         sectionDatagramPanel.reset();
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.restart();
     }
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
             timer.start();
     }
 
@@ -113,11 +119,13 @@ public class EBInfoView extends JPanel implements InfoView
 
     private void queryDatagrams()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
 
         Supplier<Map<String, List<SectionEntity>>> query = () ->
                 Global.getDatabaseService()
-                      .getSectionGroups(currentTransactionId, "eb-section.")
+                      .getSectionGroups(currentTransaction, "eb-section.")
                       .stream()
                       .collect(Collectors.groupingBy(section -> section.getTag().replace("eb-section.", "")));
 

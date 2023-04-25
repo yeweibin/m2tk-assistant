@@ -6,7 +6,7 @@
 
     <groupId>mpeg2-toolkit</groupId>
     <artifactId>m2tk-assistant</artifactId>
-    <version>1.6.2.1</version>
+    <version>1.6.3</version>
 
     <properties>
         <jdk.version>8</jdk.version>
@@ -24,8 +24,8 @@
         <flatlaf.version>2.6</flatlaf.version>
         <slf4j.version>2.0.3</slf4j.version>
         <logback.version>1.4.4</logback.version>
-        <jackson.version>2.13.4</jackson.version>
-        <hutool.version>5.8.9</hutool.version>
+        <jackson.version>2.15.0</jackson.version>
+        <hutool.version>5.8.18</hutool.version>
         <h2.version>2.1.214</h2.version>
         <hikari.version>4.0.3</hikari.version>
         <caffeine.version>2.9.2</caffeine.version>
@@ -119,7 +119,7 @@
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
+            <artifactId>hutool-core</artifactId>
             <version>${hutool.version}</version>
         </dependency>
         <dependency>

@@ -36,6 +36,7 @@ public class SourceEntityMapper implements RowMapper<SourceEntity>
         entity.setTransportStreamId(rs.getInt("transport_stream_id"));
         entity.setPacketCount(rs.getLong("packet_count"));
         entity.setSourceName(rs.getString("source_name"));
+        entity.setSourceUrl(rs.getString("source_url"));
         return entity;
     }
 }

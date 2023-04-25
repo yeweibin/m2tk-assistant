@@ -21,6 +21,8 @@ import m2tk.assistant.dbi.entity.SourceEntity;
 import m2tk.assistant.dbi.mapper.SourceEntityMapper;
 import org.jdbi.v3.core.Handle;
 
+import java.util.List;
+
 public class SourceHandler
 {
     private final Generator<Long> idGenerator;
@@ -42,11 +44,12 @@ public class SourceHandler
                        "`frame_size` INT DEFAULT 188," +
                        "`transport_stream_id` INT DEFAULT 0," +
                        "`packet_count` BIGINT DEFAULT 0," +
-                       "`source_name` VARCHAR(500)" +
+                       "`source_name` VARCHAR(500)," +
+                       "`source_url` VARCHAR(1000)" +
                        ")");
     }
 
-    public void addSource(Handle handle, long transactionId, String name)
+    public SourceEntity addSource(Handle handle, long transactionId, String name, String url)
     {
         SourceEntity entity = new SourceEntity();
         entity.setId(idGenerator.next());
@@ -56,16 +59,19 @@ public class SourceHandler
         entity.setTransportStreamId(0);
         entity.setPacketCount(0);
         entity.setSourceName(name);
+        entity.setSourceUrl(url);
         handle.execute("INSERT INTO T_SOURCE (`id`, `transaction_id`, `bitrate`, `frame_size`, " +
-                       "`transport_stream_id`, `packet_count`, `source_name`) " +
-                       "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       "`transport_stream_id`, `packet_count`, `source_name`, `source_url`) " +
+                       "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                        entity.getId(),
                        entity.getTransactionId(),
                        entity.getBitrate(),
                        entity.getFrameSize(),
                        entity.getTransportStreamId(),
                        entity.getPacketCount(),
-                       entity.getSourceName());
+                       entity.getSourceName(),
+                       entity.getSourceUrl());
+        return entity;
     }
 
     public SourceEntity getSource(Handle handle, long transactionId)
@@ -77,12 +83,11 @@ public class SourceHandler
                      .orElse(null);
     }
 
-    public SourceEntity getLatestSource(Handle handle)
+    public List<String> listSourceUrls(Handle handle)
     {
-        return handle.select("SELECT * FROM T_SOURCE ORDER BY `id` DESC LIMIT 1")
-                     .map(sourceEntityMapper)
-                     .findFirst()
-                     .orElse(null);
+        return handle.select("SELECT DISTINCT `source_url` FROM T_SOURCE ORDER BY `source_url`")
+                     .map(rs -> rs.getColumn(1, String.class))
+                     .list();
     }
 
     public void updateSourceStatistics(Handle handle, SourceEntity entity)

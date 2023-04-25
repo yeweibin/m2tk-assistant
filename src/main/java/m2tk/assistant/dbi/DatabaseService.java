@@ -120,9 +120,14 @@ public class DatabaseService
                              );
     }
 
-    public void addSource(long transactionId, String name)
+    public SourceEntity addSource(long transactionId, String name, String url)
     {
-        dbi.useHandle(handle -> sourceHandler.addSource(handle, transactionId, name));
+        return dbi.withHandle(handle -> sourceHandler.addSource(handle, transactionId, name, url));
+    }
+
+    public List<String> getSourceHistory()
+    {
+        return dbi.withHandle(sourceHandler::listSourceUrls);
     }
 
     public void updateSourceStatistics(SourceEntity source)

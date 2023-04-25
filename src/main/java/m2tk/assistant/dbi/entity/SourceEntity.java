@@ -28,4 +28,5 @@ public class SourceEntity
     private int transportStreamId;
     private long packetCount;
     private String sourceName;
+    private String sourceUrl;
 }

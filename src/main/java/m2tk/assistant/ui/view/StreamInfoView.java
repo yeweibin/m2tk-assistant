@@ -44,7 +44,8 @@ import m2tk.assistant.ui.component.CASystemInfoPanel;
 import m2tk.assistant.ui.component.ProgramInfoPanel;
 import m2tk.assistant.ui.component.SourceInfoPanel;
 import m2tk.assistant.ui.component.StreamInfoPanel;
-import m2tk.assistant.ui.event.SourceChangedEvent;
+import m2tk.assistant.ui.event.SourceAttachedEvent;
+import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.util.RxChannelInputStream;
@@ -98,7 +99,7 @@ public class StreamInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer1.stop();
 
             querySourceInfo();
@@ -107,7 +108,7 @@ public class StreamInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer2.stop();
 
             queryProgramInfo();
@@ -116,7 +117,7 @@ public class StreamInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer3.stop();
 
             queryStreamInfo();
@@ -125,7 +126,7 @@ public class StreamInfoView extends JPanel implements InfoView
             if (!isVisible())
                 return; // 不在后台刷新
 
-            if (!Global.getStreamAnalyser().isRunning())
+            if (transactionId == -1)
                 timer4.stop();
 
             queryCASystemInfo();
@@ -174,6 +175,18 @@ public class StreamInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
+    @Subscribe
+    public void onSourceAttachedEvent(SourceAttachedEvent event)
+    {
+        transactionId = event.getSource().getTransactionId();
+    }
+
+    @Subscribe
+    public void onSourceDetachedEvent(SourceDetachedEvent event)
+    {
+        transactionId = -1;
+    }
+
     @Override
     public void refresh()
     {
@@ -181,12 +194,6 @@ public class StreamInfoView extends JPanel implements InfoView
         queryStreamInfo();
         queryProgramInfo();
         queryCASystemInfo();
-    }
-
-    @Subscribe
-    public void onSourceChanged(SourceChangedEvent event)
-    {
-        transactionId = event.getTransactionId();
     }
 
     private void playStream()
@@ -217,7 +224,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
 
-        RxChannel channel = ProtocolManager.openRxChannel(Global.getInputResource());
+        RxChannel channel = ProtocolManager.openRxChannel(Global.getCurrentSourceUrl());
         if (videoPid != 0x1FFF)
             AssistantApp.getInstance().playVideo(new RxChannelInputStream(channel), videoPid);
         else
@@ -256,14 +263,17 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'{}'，视频PID：{}，音频PID：{}", programName, videoPid, audioPid);
 
-        RxChannel channel = ProtocolManager.openRxChannel(Global.getInputResource());
+        RxChannel channel = ProtocolManager.openRxChannel(Global.getCurrentSourceUrl());
         AssistantApp.getInstance().playVideoAndAudio(new RxChannelInputStream(channel), videoPid, audioPid);
     }
 
     private void querySourceInfo()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
-        Supplier<SourceEntity> query = () -> Global.getDatabaseService().getSource(currentTransactionId);
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
+        Supplier<SourceEntity> query = () -> Global.getDatabaseService().getSource(currentTransaction);
         Consumer<SourceEntity> consumer = sourceInfoPanel::updateSourceInfo;
 
         AsyncQueryTask<SourceEntity> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -274,21 +284,24 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryProgramInfo()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
         Supplier<List<MPEGProgram>> query = () ->
         {
             DatabaseService databaseService = Global.getDatabaseService();
-            Map<Integer, StreamEntity> streamRegistry = databaseService.getStreamRegistry(currentTransactionId);
+            Map<Integer, StreamEntity> streamRegistry = databaseService.getStreamRegistry(currentTransaction);
 
             List<MPEGProgram> programs = new ArrayList<>();
-            Map<String, SIServiceEntity> serviceMap = databaseService.listServices(currentTransactionId)
+            Map<String, SIServiceEntity> serviceMap = databaseService.listServices(currentTransaction)
                                                                      .stream()
                                                                      .collect(toMap(service -> String.format("%d.%d",
                                                                                                              service.getTransportStreamId(),
                                                                                                              service.getServiceId()),
                                                                                     service -> service));
-            Map<ProgramEntity, List<ProgramStreamMappingEntity>> mappings = databaseService.getProgramMappings(currentTransactionId);
-            Map<Integer, List<CAStreamEntity>> ecmGroups = databaseService.listECMGroups(currentTransactionId);
+            Map<ProgramEntity, List<ProgramStreamMappingEntity>> mappings = databaseService.getProgramMappings(currentTransaction);
+            Map<Integer, List<CAStreamEntity>> ecmGroups = databaseService.listECMGroups(currentTransaction);
             for (Map.Entry<ProgramEntity, List<ProgramStreamMappingEntity>> mapping : mappings.entrySet())
             {
                 ProgramEntity program = mapping.getKey();
@@ -320,8 +333,11 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryStreamInfo()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
-        Supplier<List<StreamEntity>> query = () -> Global.getDatabaseService().listStreams(currentTransactionId);
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
+        Supplier<List<StreamEntity>> query = () -> Global.getDatabaseService().listStreams(currentTransaction);
         Consumer<List<StreamEntity>> consumer = streamInfoPanel::updateStreamList;
 
         AsyncQueryTask<List<StreamEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -332,8 +348,11 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryCASystemInfo()
     {
-        long currentTransactionId = (transactionId == -1) ? Global.getCurrentTransactionId() : transactionId;
-        Supplier<List<CAStreamEntity>> query = () -> Global.getDatabaseService().listCAStreams(currentTransactionId);
+        long currentTransaction = transactionId;
+        if (currentTransaction == -1)
+            return;
+
+        Supplier<List<CAStreamEntity>> query = () -> Global.getDatabaseService().listCAStreams(currentTransaction);
         Consumer<List<CAStreamEntity>> consumer = casInfoPanel::updateStreamList;
 
         AsyncQueryTask<List<CAStreamEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -349,7 +368,7 @@ public class StreamInfoView extends JPanel implements InfoView
         sourceInfoPanel.resetSourceInfo();
         casInfoPanel.resetStreamList();
 
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
         {
             timer1.restart();
             timer2.restart();
@@ -362,7 +381,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
     public void startRefreshing()
     {
-        if (Global.getStreamAnalyser().isRunning())
+        if (transactionId != -1)
         {
             timer1.start();
             timer2.start();

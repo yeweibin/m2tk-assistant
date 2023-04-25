@@ -43,7 +43,7 @@ public final class AssistantApp extends SingleFrameApplication
     }
 
     public static final String APP_NAME = "M2TK码流分析助手";
-    public static final String APP_VERSION = "1.6.2.1.2200";
+    public static final String APP_VERSION = "1.6.3.2230";
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;
     private MPEGTSPlayer player;

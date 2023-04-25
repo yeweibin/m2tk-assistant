@@ -89,11 +89,14 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
 
     private BufferedImage query()
     {
+        long currentTransaction = Global.getCurrentSourceTransactionId();
+        if (currentTransaction == -1)
+            return null;
+
         DatabaseService databaseService = Global.getDatabaseService();
-        long transactionId = Global.getCurrentTransactionId();
-        List<SINetworkEntity> networks = databaseService.listNetworks(transactionId);
-        List<SIMultiplexEntity> multiplexes = databaseService.listMultiplexes(transactionId);
-        List<SIServiceEntity> services = databaseService.listServices(transactionId);
+        List<SINetworkEntity> networks = databaseService.listNetworks(currentTransaction);
+        List<SIMultiplexEntity> multiplexes = databaseService.listMultiplexes(currentTransaction);
+        List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
 
         Context context = new Context();
         createNodes(context, networks, multiplexes, services);
