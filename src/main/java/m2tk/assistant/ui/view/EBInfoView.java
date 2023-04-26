@@ -85,6 +85,8 @@ public class EBInfoView extends JPanel implements InfoView
     public void onSourceAttachedEvent(SourceAttachedEvent event)
     {
         transactionId = event.getSource().getTransactionId();
+        timer.start();
+        refresh();
     }
 
     @Subscribe

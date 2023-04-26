@@ -179,6 +179,11 @@ public class StreamInfoView extends JPanel implements InfoView
     public void onSourceAttachedEvent(SourceAttachedEvent event)
     {
         transactionId = event.getSource().getTransactionId();
+        timer1.start();
+        timer2.start();
+        timer3.start();
+        timer4.start();
+        refresh();
     }
 
     @Subscribe

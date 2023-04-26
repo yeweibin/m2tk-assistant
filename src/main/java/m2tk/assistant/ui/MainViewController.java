@@ -573,6 +573,11 @@ public class MainViewController
         task.execute();
     }
 
+    public void setWillQuit()
+    {
+        willQuit = true;
+    }
+
     private void onAnalyzerStopped(DemuxStatus status)
     {
         if (status.isRunning())
@@ -609,11 +614,6 @@ public class MainViewController
         {
             return false;
         }
-    }
-
-    public void setWillQuit()
-    {
-        willQuit = true;
     }
 
     private void initFileChooserCurrentDirectory(JFileChooser fileChooser)
