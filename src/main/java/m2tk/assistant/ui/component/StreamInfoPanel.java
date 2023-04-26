@@ -53,7 +53,7 @@ public class StreamInfoPanel extends JPanel
         table.setModel(model);
         table.setRowSorter(rowSorter);
         table.getTableHeader().setReorderingAllowed(true);
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         table.addMouseListener(new MouseAdapter()
         {
             @Override
