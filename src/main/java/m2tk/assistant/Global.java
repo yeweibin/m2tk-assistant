@@ -24,7 +24,6 @@ import m2tk.assistant.dbi.entity.SourceEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public final class Global
 {
@@ -32,6 +31,8 @@ public final class Global
     private static final StreamAnalyzer streamAnalyser;
     private static final List<Integer> userPrivateSectionStreams;
     private static SourceEntity currentSource;
+    private static volatile long latestTransactionId = -1L;
+    private static String latestSourceUrl;
 
     private static final EventBus eventBus;
 
@@ -84,23 +85,24 @@ public final class Global
         return databaseService.getSourceHistory();
     }
 
-    public static String getCurrentSourceUrl()
+    public static String getLatestSourceUrl()
     {
-        return Optional.ofNullable(currentSource)
-                       .map(SourceEntity::getSourceUrl)
-                       .orElse(null);
+        return latestSourceUrl;
     }
 
-    public static long getCurrentSourceTransactionId()
+    public static long getLatestTransactionId()
     {
-        return Optional.ofNullable(currentSource)
-                       .map(SourceEntity::getTransactionId)
-                       .orElse(-1L);
+        return latestTransactionId;
     }
 
     public static void setCurrentSource(SourceEntity source)
     {
         currentSource = source;
+        if (source != null)
+        {
+            latestTransactionId = source.getTransactionId();
+            latestSourceUrl = source.getSourceUrl();
+        }
     }
 
     public static void postEvent(Object event)

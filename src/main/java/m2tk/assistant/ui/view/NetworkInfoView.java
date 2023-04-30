@@ -146,7 +146,7 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     private void queryNetworks()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 
@@ -206,7 +206,7 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     private void queryServices()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 
@@ -257,7 +257,7 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     private void queryNetworkTime()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 

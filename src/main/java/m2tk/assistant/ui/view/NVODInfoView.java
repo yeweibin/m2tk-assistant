@@ -125,7 +125,7 @@ public class NVODInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
-        long currentTransactionId = transactionId;
+        long currentTransactionId = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransactionId == -1)
             return;
 

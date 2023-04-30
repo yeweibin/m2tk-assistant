@@ -127,7 +127,7 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 

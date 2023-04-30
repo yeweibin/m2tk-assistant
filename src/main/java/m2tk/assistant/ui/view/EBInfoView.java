@@ -121,7 +121,7 @@ public class EBInfoView extends JPanel implements InfoView
 
     private void queryDatagrams()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 

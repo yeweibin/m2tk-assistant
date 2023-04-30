@@ -229,7 +229,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
 
-        RxChannel channel = ProtocolManager.openRxChannel(Global.getCurrentSourceUrl());
+        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
         if (videoPid != 0x1FFF)
             AssistantApp.getInstance().playVideo(new RxChannelInputStream(channel), videoPid);
         else
@@ -268,13 +268,13 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'{}'，视频PID：{}，音频PID：{}", programName, videoPid, audioPid);
 
-        RxChannel channel = ProtocolManager.openRxChannel(Global.getCurrentSourceUrl());
+        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
         AssistantApp.getInstance().playVideoAndAudio(new RxChannelInputStream(channel), videoPid, audioPid);
     }
 
     private void querySourceInfo()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 
@@ -289,7 +289,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryProgramInfo()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 
@@ -338,7 +338,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryStreamInfo()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 
@@ -353,7 +353,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryCASystemInfo()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 

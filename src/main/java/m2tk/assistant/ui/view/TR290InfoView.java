@@ -124,7 +124,7 @@ public class TR290InfoView extends JPanel implements InfoView
 
     private void queryTR290Events()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 

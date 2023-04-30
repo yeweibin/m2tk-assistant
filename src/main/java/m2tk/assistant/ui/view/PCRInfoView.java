@@ -152,7 +152,7 @@ public class PCRInfoView extends JPanel implements InfoView
 
     private void queryPCRStats()
     {
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1)
             return;
 
@@ -168,7 +168,7 @@ public class PCRInfoView extends JPanel implements InfoView
     private void queryPCRRecords()
     {
         PCRStatEntity target = selectedPCRStat;
-        long currentTransaction = transactionId;
+        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
         if (currentTransaction == -1 || target == null)
             return;
 

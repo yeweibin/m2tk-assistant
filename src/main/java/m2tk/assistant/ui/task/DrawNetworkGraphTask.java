@@ -89,7 +89,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
 
     private BufferedImage query()
     {
-        long currentTransaction = Global.getCurrentSourceTransactionId();
+        long currentTransaction = Global.getLatestTransactionId();
         if (currentTransaction == -1)
             return null;
 
