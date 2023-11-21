@@ -18,18 +18,18 @@
 
         <m2tk.version>1.2</m2tk.version>
         <bsaf.version>1.9.2</bsaf.version>
-        <jfreechart.version>1.5.3</jfreechart.version>
+        <jfreechart.version>1.5.4</jfreechart.version>
         <miglayout-swing.version>11.0</miglayout-swing.version>
         <guava.version>31.1-jre</guava.version>
-        <flatlaf.version>3.1.1</flatlaf.version>
-        <slf4j.version>2.0.3</slf4j.version>
-        <logback.version>1.4.4</logback.version>
-        <jackson.version>2.15.0</jackson.version>
+        <flatlaf.version>3.2.5</flatlaf.version>
+        <slf4j.version>2.0.5</slf4j.version>
+        <logback.version>1.4.7</logback.version>
+        <jackson.version>2.15.2</jackson.version>
         <hutool.version>5.8.18</hutool.version>
-        <h2.version>2.1.214</h2.version>
-        <hikari.version>4.0.3</hikari.version>
-        <caffeine.version>2.9.2</caffeine.version>
-        <lombok.version>1.18.24</lombok.version>
+        <h2.version>2.2.224</h2.version>
+        <hikari.version>5.0.1</hikari.version>
+        <caffeine.version>3.1.5</caffeine.version>
+        <lombok.version>1.18.26</lombok.version>
         <graphviz-java.version>0.18.1</graphviz-java.version>
         <image-viewer.version>1.2.3</image-viewer.version>
         <javacv.version>1.5.7</javacv.version>
