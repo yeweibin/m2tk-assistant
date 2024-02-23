@@ -342,7 +342,9 @@ public class MainViewController
     public void showAbout()
     {
         JOptionPane.showMessageDialog(frameView.getFrame(),
-                                      String.format("%s %s%n©2022 %s", AssistantApp.APP_NAME, AssistantApp.APP_VERSION, AssistantApp.APP_VENDOR),
+                                      String.format("%s %s%n©%s %s",
+                                                    AssistantApp.APP_NAME, AssistantApp.APP_VERSION,
+                                                    AssistantApp.APP_COPYRIGHT_YEAR, AssistantApp.APP_VENDOR),
                                       String.format("关于 %s", AssistantApp.APP_NAME),
                                       JOptionPane.INFORMATION_MESSAGE,
                                       frameView.getResourceMap().getIcon("Application.icon"));
