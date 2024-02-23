@@ -17,8 +17,7 @@
 package m2tk.assistant;
 
 import cn.hutool.core.thread.ThreadUtil;
-import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.ui.MainViewController;
 import org.jdesktop.application.FrameView;
@@ -43,7 +42,7 @@ public final class AssistantApp extends SingleFrameApplication
     }
 
     public static final String APP_NAME = "M2TK码流分析助手";
-    public static final String APP_VERSION = "1.6.3.2.1030";
+    public static final String APP_VERSION = "1.6.3.3.0223";
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;
     private MPEGTSPlayer player;
@@ -53,14 +52,14 @@ public final class AssistantApp extends SingleFrameApplication
     {
         Font treeFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Tree.font").getSize());
         Font tableFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Table.font").getSize());
-        FlatIntelliJLaf.setup();
+        FlatMacDarkLaf.setup();
         UIManager.put("TitlePane.showIconBesideTitle", true);
         UIManager.put("TabbedPane.showTabSeparators", true);
         UIManager.put("Table.paintOutsideAlternateRows", true);
         UIManager.put("Tree.font", treeFont);
         UIManager.put("Table.font", tableFont);
         UIManager.put("Table.cellMargins", new Insets(4, 6, 4, 6));
-        UIManager.put("Table.alternateRowColor", FlatLaf.isLafDark() ? new Color(0x626262) : new Color(0xEEEEEE));
+//        UIManager.put("Table.alternateRowColor", FlatLaf.isLafDark() ? new Color(0x626262) : new Color(0xEEEEEE));
     }
 
     @Override

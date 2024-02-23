@@ -19,10 +19,7 @@ package m2tk.assistant.ui.task;
 import guru.nidi.graphviz.attribute.GraphAttr;
 import guru.nidi.graphviz.attribute.Rank;
 import guru.nidi.graphviz.attribute.Records;
-import guru.nidi.graphviz.engine.Engine;
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.engine.GraphvizCmdLineEngine;
+import guru.nidi.graphviz.engine.*;
 import guru.nidi.graphviz.model.Factory;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.LinkSource;
@@ -109,9 +106,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
                              .linkAttr().with("class", "link-class")
                              .with(linkSources);
 
-        GraphvizCmdLineEngine engine = new GraphvizCmdLineEngine();
-        engine.timeout(60, TimeUnit.SECONDS);
-        Graphviz.useEngine(engine);
+        Graphviz.useEngine(new GraphvizV8Engine());
 
         return Graphviz.fromGraph(graph)
                        .engine(Engine.DOT)

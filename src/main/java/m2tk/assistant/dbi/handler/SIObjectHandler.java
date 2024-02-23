@@ -610,7 +610,7 @@ public class SIObjectHandler
 
     public List<SIMultiplexServiceCountView> listMultiplexServiceCounts(Handle handle, long transactionId)
     {
-        return handle.select("SELECT `ts_id`, `onet_id`, COUNT(srv_id) AS `srv_cnt` FROM T_SI_SERVICE " +
+        return handle.select("SELECT `transaction_id`, `ts_id`, `onet_id`, COUNT(srv_id) AS `srv_cnt` FROM T_SI_SERVICE " +
                              "WHERE `transaction_id` = ? " +
                              "GROUP BY `ts_id`, `onet_id`",
                              transactionId)

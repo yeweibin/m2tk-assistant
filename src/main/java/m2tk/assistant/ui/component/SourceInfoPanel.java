@@ -50,7 +50,7 @@ public class SourceInfoPanel extends JPanel
         fieldPacketCount.setEditable(false);
         fieldTransportStreamId.setEditable(false);
 
-        setLayout(new MigLayout("", "[50!][220!][50!][50!][10!]", ""));
+        setLayout(new MigLayout("", "[50!][100:200:][50!][50!][10!]", ""));
 
         add(new JLabel("输入源"), "left");
         add(fieldSourceName, "span 4, grow, wrap");
