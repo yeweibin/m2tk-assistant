@@ -25,19 +25,15 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class SectionDatagramPanel extends JPanel
 {
     private DefaultTreeModel model;
     private DefaultMutableTreeNode root;
-    private DefaultMutableTreeNode groupPSI;
-    private DefaultMutableTreeNode groupSI;
-    private DefaultMutableTreeNode groupPrivate;
     private DefaultMutableTreeNode groupPAT;
     private DefaultMutableTreeNode groupCAT;
     private DefaultMutableTreeNode groupPMT;
@@ -52,7 +48,12 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupEITScheduleOther;
     private DefaultMutableTreeNode groupTDT;
     private DefaultMutableTreeNode groupTOT;
-    private DefaultMutableTreeNode groupEMM;
+    private DefaultMutableTreeNode groupEMMPersonal;
+    private DefaultMutableTreeNode groupEMMGlobal;
+    private DefaultMutableTreeNode groupEMMActive;
+    private DefaultMutableTreeNode groupUserPrivate;
+
+    private Map<String, Set<TreeNode>> groups;
 
     public SectionDatagramPanel()
     {
@@ -79,9 +80,9 @@ public class SectionDatagramPanel extends JPanel
 
     private void constructTreeSkeleton()
     {
-        groupPSI = new DefaultMutableTreeNode("PSI");
-        groupSI = new DefaultMutableTreeNode("SI");
-        groupPrivate = new DefaultMutableTreeNode("私有数据");
+        DefaultMutableTreeNode groupPSI = new DefaultMutableTreeNode("PSI");
+        DefaultMutableTreeNode groupSI = new DefaultMutableTreeNode("SI");
+        DefaultMutableTreeNode groupPrivate = new DefaultMutableTreeNode("私有数据");
 
         groupPAT = new DefaultMutableTreeNode("PAT");
         groupCAT = new DefaultMutableTreeNode("CAT");
@@ -97,7 +98,10 @@ public class SectionDatagramPanel extends JPanel
         groupEITScheduleOther = new DefaultMutableTreeNode("EIT_Schedule_Other");
         groupTDT = new DefaultMutableTreeNode("TDT");
         groupTOT = new DefaultMutableTreeNode("TOT");
-        groupEMM = new DefaultMutableTreeNode("EMM");
+        groupEMMPersonal = new DefaultMutableTreeNode("个人EMM");
+        groupEMMGlobal = new DefaultMutableTreeNode("全局EMM");
+        groupEMMActive = new DefaultMutableTreeNode("激活EMM");
+        groupUserPrivate = new DefaultMutableTreeNode("其他");
 
         root.add(groupPSI);
         root.add(groupSI);
@@ -116,7 +120,20 @@ public class SectionDatagramPanel extends JPanel
         groupSI.add(groupEITScheduleOther);
         groupSI.add(groupTDT);
         groupSI.add(groupTOT);
-        groupPrivate.add(groupEMM);
+        groupPrivate.add(groupEMMPersonal);
+        groupPrivate.add(groupEMMGlobal);
+        groupPrivate.add(groupEMMActive);
+        groupPrivate.add(groupUserPrivate);
+
+        groups = Map.of("first-class", Set.of(groupPSI, groupSI, groupPrivate),
+                        "second-class", Set.of(groupPAT, groupCAT, groupPMT, groupBAT,
+                                               groupNITActual, groupNITOther,
+                                               groupSDTActual, groupSDTOther,
+                                               groupEITPFActual, groupEITPFOther,
+                                               groupEITScheduleActual, groupEITScheduleOther,
+                                               groupTDT, groupTOT,
+                                               groupEMMPersonal, groupEMMGlobal, groupEMMActive, groupUserPrivate));
+
         model.reload();
     }
 
@@ -136,7 +153,10 @@ public class SectionDatagramPanel extends JPanel
         addEITScheduleOtherSectionNodes(sectionGroups.getOrDefault("EIT_Schedule_Other", Collections.emptyList()));
         addTDTSectionNodes(sectionGroups.getOrDefault("TDT", Collections.emptyList()));
         addTOTSectionNodes(sectionGroups.getOrDefault("TOT", Collections.emptyList()));
-        addEMMSectionNodes(sectionGroups.getOrDefault("EMM", Collections.emptyList()));
+        addEMMPersonalSectionNodes(sectionGroups.getOrDefault("EMM.Personal", Collections.emptyList()));
+        addEMMGlobalSectionNodes(sectionGroups.getOrDefault("EMM.Global", Collections.emptyList()));
+        addEMMActiveSectionNodes(sectionGroups.getOrDefault("EMM.Active", Collections.emptyList()));
+        addUserPrivateSectionNodes(sectionGroups.getOrDefault("UserPrivate", Collections.emptyList()));
         model.reload();
     }
 
@@ -156,7 +176,10 @@ public class SectionDatagramPanel extends JPanel
         groupEITScheduleOther.removeAllChildren();
         groupTDT.removeAllChildren();
         groupTOT.removeAllChildren();
-        groupEMM.removeAllChildren();
+        groupEMMPersonal.removeAllChildren();
+        groupEMMGlobal.removeAllChildren();
+        groupEMMActive.removeAllChildren();
+        groupUserPrivate.removeAllChildren();
         model.reload();
     }
 
@@ -314,21 +337,72 @@ public class SectionDatagramPanel extends JPanel
         groupTOT.setUserObject(String.format("TOT（%d）", groupTOT.getChildCount()));
     }
 
-    private void addEMMSectionNodes(List<SectionEntity> sections)
+    private void addEMMPersonalSectionNodes(List<SectionEntity> sections)
     {
         PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
         sections.sort(Comparator.comparing(SectionEntity::getPosition));
 
-        groupEMM.removeAllChildren();
+        groupEMMPersonal.removeAllChildren();
         for (SectionEntity section : sections)
         {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) builder.build(Encoding.wrap(section.getEncoding()));
             node.setUserObject(String.format("%s @ pid = 0x%X",
                                              node.getUserObject(),
                                              section.getStream()));
-            groupEMM.add(node);
+            groupEMMPersonal.add(node);
         }
-        groupEMM.setUserObject(String.format("EMM（%d）", groupEMM.getChildCount()));
+        groupEMMPersonal.setUserObject(String.format("个人EMM（%d）", groupEMMPersonal.getChildCount()));
+    }
+
+    private void addEMMGlobalSectionNodes(List<SectionEntity> sections)
+    {
+        PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEMMGlobal.removeAllChildren();
+        for (SectionEntity section : sections)
+        {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) builder.build(Encoding.wrap(section.getEncoding()));
+            node.setUserObject(String.format("%s @ pid = 0x%X",
+                                             node.getUserObject(),
+                                             section.getStream()));
+            groupEMMGlobal.add(node);
+        }
+        groupEMMGlobal.setUserObject(String.format("全局EMM（%d）", groupEMMGlobal.getChildCount()));
+    }
+
+    private void addEMMActiveSectionNodes(List<SectionEntity> sections)
+    {
+        PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupEMMActive.removeAllChildren();
+        for (SectionEntity section : sections)
+        {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) builder.build(Encoding.wrap(section.getEncoding()));
+            node.setUserObject(String.format("%s @ pid = 0x%X",
+                                             node.getUserObject(),
+                                             section.getStream()));
+            groupEMMActive.add(node);
+        }
+        groupEMMActive.setUserObject(String.format("激活EMM（%d）", groupEMMActive.getChildCount()));
+    }
+
+    private void addUserPrivateSectionNodes(List<SectionEntity> sections)
+    {
+        PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
+        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+
+        groupUserPrivate.removeAllChildren();
+        for (SectionEntity section : sections)
+        {
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) builder.build(Encoding.wrap(section.getEncoding()));
+            node.setUserObject(String.format("%s @ pid = 0x%X",
+                                             node.getUserObject(),
+                                             section.getStream()));
+            groupUserPrivate.add(node);
+        }
+        groupUserPrivate.setUserObject(String.format("其他（%d）", groupUserPrivate.getChildCount()));
     }
 
     class SectionDatagramTreeCellRenderer extends DefaultTreeCellRenderer
@@ -350,15 +424,9 @@ public class SectionDatagramPanel extends JPanel
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             setToolTipText((String) node.getUserObject());
 
-            if (node == groupPSI || node == groupSI || node == groupPrivate)
+            if (groups.get("first-class").contains(node))
                 setIcon(SmallIcons.NODE_TREE);
-            else if (node == groupPAT || node == groupCAT || node == groupPMT ||
-                     node == groupBAT || node == groupNITActual || node == groupNITOther ||
-                     node == groupSDTActual || node == groupSDTOther ||
-                     node == groupEITPFActual || node == groupEITPFOther ||
-                     node == groupEITScheduleActual || node == groupEITScheduleOther ||
-                     node == groupTDT || node == groupTOT ||
-                     node == groupEMM)
+            else if (groups.get("second-class").contains(node))
                 setIcon(SmallIcons.TABLE);
             else
                 setIcon(SmallIcons.DOT_ORANGE);

@@ -52,6 +52,7 @@ public class ProgramInfoPanel extends JPanel
         root = new DefaultMutableTreeNode("/");
         model = new DefaultTreeModel(root);
         tree = new JTree(model);
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new ProgramTreeCellRenderer());
@@ -62,11 +63,7 @@ public class ProgramInfoPanel extends JPanel
             {
                 if (e.isPopupTrigger())
                 {
-                    TreePath selected = tree.getSelectionPath();
-                    TreePath path = (selected != null)
-                                    ? selected
-                                    : tree.getClosestPathForLocation(e.getX(), e.getY());
-
+                    TreePath path = tree.getSelectionPath();
                     if (path == null)
                         return;
 

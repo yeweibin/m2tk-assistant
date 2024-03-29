@@ -16,8 +16,10 @@
 
 package m2tk.assistant.analyzer.domain;
 
+import cn.hutool.core.util.StrUtil;
 import lombok.Getter;
 import m2tk.assistant.analyzer.presets.CASystems;
+import m2tk.assistant.analyzer.presets.StreamTypes;
 import m2tk.assistant.analyzer.util.ProgramStreamComparator;
 import m2tk.assistant.dbi.entity.CAStreamEntity;
 import m2tk.assistant.dbi.entity.ProgramEntity;
@@ -36,6 +38,7 @@ public class MPEGProgram
     private final int programNumber;
     private final int transportStreamId;
     private final boolean freeAccess;
+    private final boolean playable;
     private final int bandwidth;
     private final int pmtPid;
     private final int pcrPid;
@@ -85,6 +88,7 @@ public class MPEGProgram
             totalBitrate += (stream == null) ? 0 : stream.getBitrate();
         }
 
+        boolean hasAVStreams = false;
         boolean hasScrambledElement = false;
         for (ProgramStreamMappingEntity mapping : mappings)
         {
@@ -115,12 +119,17 @@ public class MPEGProgram
 
             if (es.isScrambled())
                 hasScrambledElement = true;
+
+            if (es.isPresent() &&
+                StrUtil.equalsAny(es.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO))
+                hasAVStreams = true;
         }
 
         ProgramStreamComparator comparator = new ProgramStreamComparator();
         elementList.sort(comparator);
 
         freeAccess = ecmList.isEmpty() && !hasScrambledElement;
+        playable = hasAVStreams && freeAccess;
         bandwidth = totalBitrate;
     }
 }

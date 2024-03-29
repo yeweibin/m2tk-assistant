@@ -21,16 +21,16 @@ import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class Global
 {
     private static final DatabaseService databaseService;
     private static final StreamAnalyzer streamAnalyser;
-    private static final List<Integer> userPrivateSectionStreams;
-    private static SourceEntity currentSource;
+    private static final Set<Integer> userPrivateSectionStreams;
     private static volatile long latestTransactionId = -1L;
     private static String latestSourceUrl;
 
@@ -40,7 +40,7 @@ public final class Global
     {
         databaseService = new DatabaseService();
         streamAnalyser = new StreamAnalyzer();
-        userPrivateSectionStreams = new ArrayList<>();
+        userPrivateSectionStreams = new HashSet<>();
         streamAnalyser.setDatabaseService(databaseService);
         eventBus = new EventBus();
     }
@@ -64,10 +64,14 @@ public final class Global
         return databaseService;
     }
 
-    public static void setUserPrivateSectionStreams(Collection<Integer> streams)
+    public static void addUserPrivateSectionStreams(Collection<Integer> streams)
+    {
+        userPrivateSectionStreams.addAll(streams);
+    }
+
+    public static void resetUserPrivateSectionStreams()
     {
         userPrivateSectionStreams.clear();
-        userPrivateSectionStreams.addAll(streams);
     }
 
     public static Collection<Integer> getUserPrivateSectionStreamList()
@@ -95,14 +99,10 @@ public final class Global
         return latestTransactionId;
     }
 
-    public static void setCurrentSource(SourceEntity source)
+    public static void updateSource(SourceEntity source)
     {
-        currentSource = source;
-        if (source != null)
-        {
-            latestTransactionId = source.getTransactionId();
-            latestSourceUrl = source.getSourceUrl();
-        }
+        latestTransactionId = source.getTransactionId();
+        latestSourceUrl = source.getSourceUrl();
     }
 
     public static void postEvent(Object event)
@@ -113,10 +113,5 @@ public final class Global
     public static void registerSubscriber(Object subscriber)
     {
         eventBus.register(subscriber);
-    }
-
-    public static void unregisterSubscriber(Object subscriber)
-    {
-        eventBus.unregister(subscriber);
     }
 }

@@ -361,6 +361,7 @@ public class MainViewController
             fileChooser.setCurrentDirectory(file.getParentFile());
             String input = file.getAbsolutePath();
 
+            Global.resetUserPrivateSectionStreams();
             boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
             if (!started)
             {
@@ -376,6 +377,7 @@ public class MainViewController
                 epgInfoView.reset();
                 nvodInfoView.reset();
                 datagramView.reset();
+                ebInfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -405,6 +407,7 @@ public class MainViewController
             return;
         }
 
+        Global.resetUserPrivateSectionStreams();
         boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
         if (!started)
         {
@@ -419,6 +422,7 @@ public class MainViewController
             epgInfoView.reset();
             nvodInfoView.reset();
             datagramView.reset();
+            ebInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -452,6 +456,7 @@ public class MainViewController
             epgInfoView.reset();
             nvodInfoView.reset();
             datagramView.reset();
+            ebInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -466,7 +471,7 @@ public class MainViewController
     public void reopenInput()
     {
         SourceHistoryDialog dialog = new SourceHistoryDialog(frameView.getFrame());
-        ComponentUtil.setPreferSizeAndLocateToCenter(dialog, 0.6, 0.4);
+        ComponentUtil.setPreferSizeAndLocateToCenter(dialog, 0.5, 0.4);
 
         String source = dialog.selectFromSourceHistory();
         if (source == null)
@@ -480,9 +485,12 @@ public class MainViewController
         {
             streamInfoView.reset();
             networkInfoView.reset();
-            epgInfoView.reset();
             tr290InfoView.reset();
             pcrStatsView.reset();
+            epgInfoView.reset();
+            nvodInfoView.reset();
+            datagramView.reset();
+            ebInfoView.reset();
             actionMap.get("openFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
@@ -509,6 +517,7 @@ public class MainViewController
         epgInfoView.stopRefreshing();
         nvodInfoView.stopRefreshing();
         datagramView.stopRefreshing();
+        ebInfoView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -523,6 +532,7 @@ public class MainViewController
         epgInfoView.startRefreshing();
         nvodInfoView.startRefreshing();
         datagramView.startRefreshing();
+        ebInfoView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }
@@ -598,9 +608,12 @@ public class MainViewController
 
         streamInfoView.stopRefreshing();
         networkInfoView.stopRefreshing();
-        epgInfoView.stopRefreshing();
         tr290InfoView.stopRefreshing();
         pcrStatsView.stopRefreshing();
+        epgInfoView.stopRefreshing();
+        nvodInfoView.startRefreshing();
+        datagramView.startRefreshing();
+        ebInfoView.startRefreshing();
     }
 
     private boolean isCorrectMulticastAddress(String input)

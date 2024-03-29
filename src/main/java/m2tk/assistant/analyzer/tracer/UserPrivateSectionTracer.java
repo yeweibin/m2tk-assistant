@@ -66,7 +66,7 @@ public class UserPrivateSectionTracer implements Tracer
         if (secCounts[payload.getStreamPID()] < limitPerStream)
         {
             databaseService.addSection(transactionId,
-                                         "user-private",
+                                         "UserPrivate",
                                        payload.getStreamPID(),
                                        payload.getFinishPacketCounter(),
                                        payload.getEncoding().getBytes());

@@ -35,7 +35,6 @@ import java.util.function.BiConsumer;
 public class StreamInfoPanel extends JPanel
 {
     private StreamInfoTableModel model;
-    private transient TableRowSorter<StreamInfoTableModel> rowSorter;
     private transient BiConsumer<MouseEvent, StreamEntity> popupListener;
 
     public StreamInfoPanel()
@@ -46,11 +45,13 @@ public class StreamInfoPanel extends JPanel
     private void initUI()
     {
         model = new StreamInfoTableModel();
-        rowSorter = new TableRowSorter<>(model);
+        TableRowSorter<StreamInfoTableModel> rowSorter = new TableRowSorter<>(model);
         rowSorter.addRowSorterListener(new ThreeStateRowSorterListener(rowSorter));
 
         JTable table = new JTable();
         table.setModel(model);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setRowSelectionAllowed(true);
         table.setRowSorter(rowSorter);
         table.getTableHeader().setReorderingAllowed(true);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -62,7 +63,8 @@ public class StreamInfoPanel extends JPanel
                 if (e.isPopupTrigger())
                 {
                     int selectedRow = table.getSelectedRow();
-                    if (selectedRow != -1 && popupListener != null)
+                    int rowAtPoint = table.rowAtPoint(e.getPoint());
+                    if (selectedRow == rowAtPoint && popupListener != null)
                     {
                         try
                         {

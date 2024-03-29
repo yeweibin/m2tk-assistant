@@ -453,6 +453,11 @@ public class DatabaseService
         dbi.useHandle(handle -> sectionHandler.addSection(handle, transactionId, tag, pid, position, encoding));
     }
 
+    public int removeSections(long transactionId, String tag, int pid, int count)
+    {
+        return dbi.withHandle(handle -> sectionHandler.removeSections(handle, transactionId, tag, pid, count));
+    }
+
     public List<SectionEntity> getSectionGroups(long transactionId, String tagPrefix)
     {
         return dbi.withHandle(handle -> sectionHandler.getSections(handle, transactionId, tagPrefix));

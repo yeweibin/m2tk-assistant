@@ -58,6 +58,17 @@ public class SectionHandler
                        idGenerator.next(), transactionId, tag, pid, position, encoding);
     }
 
+    public int removeSections(Handle handle, long transactionId, String tag, int pid, int count)
+    {
+        String script = "DELETE FROM T_SECTION WHERE `transaction_id` = ? AND `tag` = ? AND `stream` = ? FETCH FIRST ? ROWS ONLY";
+        if (tag.contains("*"))
+        {
+            tag = tag.replace("*", "%");
+            script = "DELETE FROM T_SECTION WHERE `transaction_id` = ? AND `tag` LIKE ? AND `stream` = ? FETCH FIRST ? ROWS ONLY";
+        }
+        return handle.execute(script, transactionId, tag, pid, count);
+    }
+
     public Map<String, List<SectionEntity>> getSectionGroups(Handle handle, long transactionId)
     {
         return handle.select("SELECT * FROM T_SECTION WHERE `transaction_id` = ?", transactionId)

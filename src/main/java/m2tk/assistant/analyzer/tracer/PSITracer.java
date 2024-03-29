@@ -313,14 +313,29 @@ public class PSITracer implements Tracer
         if (payload.getType() != TSDemuxPayload.Type.SECTION)
             return;
 
+        int tableId = payload.getEncoding().readUINT8(0);
+        if (tableId != 0x83 && tableId != 0x84 && tableId != 0x87)
+            return;
+
         int pid = payload.getStreamPID();
-        if (emmCounts[pid] < Global.getPrivateSectionFilteringLimit())
+        if (emmCounts[pid] >= Global.getPrivateSectionFilteringLimit())
         {
-            databaseService.addSection(transactionId, "EMM",
-                                       payload.getStreamPID(),
-                                       payload.getFinishPacketCounter(),
-                                       payload.getEncoding().getBytes());
-            emmCounts[pid] += 1;
+            int drops = Global.getPrivateSectionFilteringLimit() / 10;
+            drops = databaseService.removeSections(transactionId, "EMM*", payload.getStreamPID(), drops);
+            emmCounts[pid] -= drops;
+            log.info("丢弃 {} 个EMM分段记录", drops);
         }
+
+        String tag = "EMM.Personal";
+        if (tableId == 0x84)
+            tag = "EMM.Global";
+        if (tableId == 0x87)
+            tag = "EMM.Active";
+
+        databaseService.addSection(transactionId, tag,
+                                   payload.getStreamPID(),
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
+        emmCounts[pid] += 1;
     }
 }

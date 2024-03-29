@@ -89,11 +89,10 @@ public class StreamAnalyzer
 
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
         demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxerStopped));
-        //        demuxer.registerEventListener(new EventFilter<>(DemuxStatus.class, new SectionPrinter(databaseService)));
 
         demuxer.attach(input);
 
-        Global.setCurrentSource(source);
+        Global.updateSource(source);
         Global.postEvent(new SourceAttachedEvent(source));
 
         log.info("开始分析");

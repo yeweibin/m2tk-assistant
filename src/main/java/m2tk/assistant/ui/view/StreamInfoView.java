@@ -31,6 +31,7 @@
 
 package m2tk.assistant.ui.view;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.AssistantApp;
@@ -75,7 +76,8 @@ public class StreamInfoView extends JPanel implements InfoView
     private StreamInfoPanel streamInfoPanel;
     private CASystemInfoPanel casInfoPanel;
     private JPopupMenu streamContextMenu;
-    private JMenuItem streamContextMenuItem;
+    private JMenuItem streamContextMenuItem1;
+    private JMenuItem streamContextMenuItem2;
     private JPopupMenu programContextMenu;
     private JMenuItem programContextMenuItem;
 
@@ -132,11 +134,14 @@ public class StreamInfoView extends JPanel implements InfoView
             queryCASystemInfo();
         });
 
-        streamContextMenuItem = new JMenuItem();
-        streamContextMenuItem.addActionListener(e -> playStream());
+        streamContextMenuItem1 = new JMenuItem();
+        streamContextMenuItem1.addActionListener(e -> playStream());
+        streamContextMenuItem2 = new JMenuItem();
+        streamContextMenuItem2.addActionListener(e -> filterPrivateSection());
         streamContextMenu = new JPopupMenu();
         streamContextMenu.setLabel("播放");
-        streamContextMenu.add(streamContextMenuItem);
+        streamContextMenu.add(streamContextMenuItem1);
+        streamContextMenu.add(streamContextMenuItem2);
 
         programContextMenuItem = new JMenuItem();
         programContextMenuItem.addActionListener(e -> playProgram());
@@ -270,6 +275,34 @@ public class StreamInfoView extends JPanel implements InfoView
 
         RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
         AssistantApp.getInstance().playVideoAndAudio(new RxChannelInputStream(channel), videoPid, audioPid);
+    }
+
+    private void filterPrivateSection()
+    {
+        if (selectedStream.isScrambled())
+        {
+            String text = String.format("流%d 被加扰，无法解码", selectedStream.getPid());
+            JOptionPane.showMessageDialog(frameView.getFrame(), text);
+            log.info(text);
+            return;
+        }
+
+        int pid = 0x1FFF;
+        if (StreamTypes.CATEGORY_DATA.equals(selectedStream.getCategory()) ||
+            StreamTypes.CATEGORY_USER_PRIVATE.equals(selectedStream.getCategory()))
+            pid = selectedStream.getPid();
+
+        if (pid == 0x1FFF)
+        {
+            String text = String.format("不支持的流类型：%s", selectedStream.getDescription());
+            JOptionPane.showMessageDialog(frameView.getFrame(), text);
+            log.info(text);
+            return;
+        }
+
+        log.info("添加私有段过滤器：'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
+
+        Global.addUserPrivateSectionStreams(List.of(pid));
     }
 
     private void querySourceInfo()
@@ -410,8 +443,18 @@ public class StreamInfoView extends JPanel implements InfoView
     private void showStreamPopupMenu(MouseEvent event, StreamEntity stream)
     {
         selectedStream = stream;
-        streamContextMenuItem.setText("播放 " + selectedStream.getDescription());
-        streamContextMenu.show(event.getComponent(), event.getX(), event.getY());
+        streamContextMenuItem1.setText("播放 " + selectedStream.getDescription());
+        streamContextMenuItem2.setText("过滤私有段");
+
+        boolean playable = !stream.isScrambled() &&
+                           StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO);
+        boolean filterable = !stream.isScrambled() &&
+                             StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_DATA, StreamTypes.CATEGORY_USER_PRIVATE);
+        streamContextMenuItem1.setVisible(playable);
+        streamContextMenuItem2.setVisible(filterable);
+
+        if (playable || filterable)
+            streamContextMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 
     private void showProgramPopupMenu(MouseEvent event, MPEGProgram program)
@@ -421,6 +464,8 @@ public class StreamInfoView extends JPanel implements InfoView
                       ? String.format("播放 节目%d", selectedProgram.getProgramNumber())
                       : String.format("播放 %s", selectedProgram.getProgramName());
         programContextMenuItem.setText(text);
-        programContextMenu.show(event.getComponent(), event.getX(), event.getY());
+
+        if (program.isPlayable())
+            programContextMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 }
