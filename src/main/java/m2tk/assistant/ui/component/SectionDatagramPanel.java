@@ -390,7 +390,7 @@ public class SectionDatagramPanel extends JPanel
 
     private void addUserPrivateSectionNodes(List<SectionEntity> sections)
     {
-        PrivateSectionNodeBuilder builder = new PrivateSectionNodeBuilder();
+        PrivateSectionNodeBuilder2 builder = new PrivateSectionNodeBuilder2();
         sections.sort(Comparator.comparing(SectionEntity::getPosition));
 
         groupUserPrivate.removeAllChildren();

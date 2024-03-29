@@ -82,6 +82,10 @@ public class SourceHistoryDialog extends JDialog
         open.setEnabled(false);
         JButton close = new JButton("取消");
         close.addActionListener(e -> closeDialog());
+        ButtonGroup group = new ButtonGroup();
+        group.add(open);
+        group.add(close);
+
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         control.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         control.add(open);
@@ -91,7 +95,13 @@ public class SourceHistoryDialog extends JDialog
 
         list.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting())
-                open.setEnabled(list.getSelectedValue() != null);
+            {
+                boolean selectable = list.getSelectedValue() != null;
+                open.setEnabled(selectable);
+                group.setSelected(open.getModel(), selectable);
+                if (selectable)
+                    open.requestFocus(true);
+            }
         });
 
         setContentPane(root);

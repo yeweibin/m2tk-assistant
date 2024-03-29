@@ -17,15 +17,25 @@
 package m2tk.assistant;
 
 import com.google.common.eventbus.EventBus;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
+import m2tk.template.TemplateReader;
+import m2tk.template.decoder.DescriptorDecoder;
+import m2tk.template.decoder.SectionDecoder;
+import m2tk.template.definition.M2TKTemplate;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
+@Slf4j
 public final class Global
 {
     private static final DatabaseService databaseService;
@@ -57,6 +67,26 @@ public final class Global
     public static void init()
     {
         databaseService.initDatabase();
+        loadUserDefinedTemplates();
+    }
+
+    private static void loadUserDefinedTemplates()
+    {
+        Path folder = Paths.get(System.getProperty("user.dir"), "template");
+
+        try (Stream<Path> stream = Files.list(folder))
+        {
+            TemplateReader reader = new TemplateReader();
+            stream.filter(path -> path.getFileName().toString().endsWith(".xml"))
+                  .forEach(file -> {
+                      M2TKTemplate template = reader.parse(file.toFile());
+                      template.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+                      template.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+                  });
+        } catch (Exception ex)
+        {
+            log.warn("加载自定义解析模板时异常：{}", ex.getMessage());
+        }
     }
 
     public static DatabaseService getDatabaseService()

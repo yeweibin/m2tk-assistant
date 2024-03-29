@@ -67,6 +67,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>mpeg2-toolkit</groupId>
+            <artifactId>template-engine</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
             <artifactId>bsaf</artifactId>
             <version>${bsaf.version}</version>

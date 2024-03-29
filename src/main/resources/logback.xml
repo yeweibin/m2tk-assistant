@@ -44,4 +44,7 @@
     <logger name="m2tk.assistant.ui.view.StreamInfoView" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
+    <logger name="m2tk.template" level="INFO">
+        <appender-ref ref="FileAppender" />
+    </logger>
 </configuration>

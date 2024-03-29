@@ -42,7 +42,7 @@ public final class AssistantApp extends SingleFrameApplication
     }
 
     public static final String APP_NAME = "M2TK码流分析助手";
-    public static final String APP_VERSION = "1.6.5.1413";
+    public static final String APP_VERSION = "1.7.0.1800";
     public static final String APP_COPYRIGHT_YEAR = "2024";
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;

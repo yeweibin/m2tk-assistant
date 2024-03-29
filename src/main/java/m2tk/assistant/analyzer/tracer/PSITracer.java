@@ -320,7 +320,7 @@ public class PSITracer implements Tracer
         int pid = payload.getStreamPID();
         if (emmCounts[pid] >= Global.getPrivateSectionFilteringLimit())
         {
-            int drops = Global.getPrivateSectionFilteringLimit() / 10;
+            int drops = Global.getPrivateSectionFilteringLimit() / 2;
             drops = databaseService.removeSections(transactionId, "EMM*", payload.getStreamPID(), drops);
             emmCounts[pid] -= drops;
             log.info("丢弃 {} 个EMM分段记录", drops);

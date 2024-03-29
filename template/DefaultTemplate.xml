@@ -1,0 +1,255 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<M2TKTemplate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:noNamespaceSchemaLocation="/schema/M2TKTemplate.xsd">
+    <TableTemplate name="program_association_section" standard="mpeg">
+        <TableId id="0">
+            <DisplayName str="PAT"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="0" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf"/>
+            <Field name="transport_stream_id" length="16" encoding="uimsbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf"/>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf"/>
+            <Field name="last_section_number" length="8" encoding="uimsbf"/>
+            <Loop name="program_association_loop" length_field="implicit" length_correction="-4">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="无节目描述"/>
+                    <LoopEntry>
+                        <Prefix str="节目映射"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="program_number" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="节目号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved" length="3" encoding="bslbf"/>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="program_number" comp_op="equals" const="0"/>
+                        </Condition>
+                        <Then>
+                            <Field name="network_pid" length="13" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="NIT PID"/>
+                                    <Format str="0x%04X"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                        <Else>
+                            <Field name="program_map_pid" length="13" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="PMT PID"/>
+                                    <Format str="0x%04X"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Else>
+                    </If>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="uimsbf"/>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="transport_stream_id"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="conditional_access_section" standard="mpeg">
+        <TableId id="1">
+            <DisplayName str="CAT"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="0" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf"/>
+            <Field name="reserved" length="18" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf"/>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf"/>
+            <Field name="last_section_number" length="8" encoding="uimsbf"/>
+            <Loop name="ca_descriptor_loop" length_field="implicit" length_correction="-4">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="无条件接收描述符"/>
+                </LoopPresentation>
+                <Body>
+                    <Descriptor/>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="uimsbf"/>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="program_map_section" standard="mpeg">
+        <TableId id="2">
+            <DisplayName str="PMT"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Table id"/>
+                    <Format str="0x%02x"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="Section syntax indicator"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="0" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Section length"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="program_number" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Program number"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="Version"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="Current"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Section number"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Last section number"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="3" encoding="bslbf"/>
+            <Field name="PCR_PID" length="13" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="PCR pid"/>
+                    <Format str="0x%04X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="4" encoding="bslbf"/>
+            <Field name="program_info_length" length="12" encoding="uimsbf"/>
+            <Loop name="program_info_loop" length_field="program_info_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="无节目信息描述符"/>
+                </LoopPresentation>
+                <Body>
+                    <Descriptor/>
+                </Body>
+            </Loop>
+            <Loop name="elementary_stream_loop" length_field="implicit" length_correction="-4">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="无节目ES信息描述"/>
+                    <LoopEntry>
+                        <Prefix str="基本流"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="stream_type" length="8" encoding="uimsbf"/>
+                    <Field name="reserved" length="3" encoding="bslbf"/>
+                    <Field name="elementary_PID" length="13" encoding="uimsbf"/>
+                    <Field name="reserved" length="4" encoding="bslbf"/>
+                    <Field name="ES_info_length" length="12" encoding="uimsbf"/>
+                    <Loop name="ES_info_loop" length_field="ES_info_length">
+                        <LoopPresentation>
+                            <NoLoopHeader/>
+                            <LoopEmpty str="无基本流信息描述符"/>
+                        </LoopPresentation>
+                        <Body>
+                            <Descriptor/>
+                        </Body>
+                    </Loop>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="uimsbf">
+                <FieldPresentation>
+                    <Format str="%08x"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+    </TableTemplate>
+    <DescriptorTemplate tag="255" name="private_descriptor" standard="mpeg">
+        <DisplayName str="Private Descriptor"/>
+        <DescriptorBody>
+            <Field length="8" name="descriptor_tag" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Tag"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field length="8" name="descriptor_length" encoding="uimsbf"/>
+            <Field length="n/a" name="descriptor_payload" encoding="octets" length_field="descriptor_length">
+                <FieldPresentation>
+                    <Prefix str="Payload"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="9" name="ca_descriptor" standard="mpeg">
+        <DisplayName str="CA Descriptor"/>
+        <DescriptorBody>
+            <Field length="8" name="descriptor_tag" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="Tag"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field length="8" name="descriptor_length" encoding="uimsbf"/>
+            <Field length="16" name="CAS_ID" encoding="uimsbf">
+                <FieldPresentation>
+                    <Format str="%04x (%s)"/>
+                    <Mapping>
+                        <Value value="19190">
+                            <ValString str="Pay4View CAS"/>
+                        </Value>
+                        <ValueRange val_min="19200" val_max="19203">
+                            <ValString str="Pay4View CAS"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field length="3" name="reserved" encoding="bslbf"/>
+            <Field length="13" name="CA_PID" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="ECM PID"/>
+                    <Format str="0x%04X"/>
+                </FieldPresentation>
+            </Field>
+            <Field length="n/a" name="private_data" encoding="octets" length_field="implicit"/>
+        </DescriptorBody>
+    </DescriptorTemplate>
+</M2TKTemplate>
