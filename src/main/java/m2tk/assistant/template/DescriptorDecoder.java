@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.template.decoder;
+package m2tk.assistant.template;
 
 import m2tk.assistant.template.definition.DataFieldDefinition;
 import m2tk.assistant.template.definition.DescriptorTemplate;
@@ -28,6 +28,7 @@ public class DescriptorDecoder
 {
     private static final Map<String, DescriptorTemplate> TEMPLATE_MAP = new HashMap<>();
     private static final DescriptorTemplate DEFAULT_DESCRIPTOR_TEMPLATE;
+    private static final SyntaxDecoder SYNTAX_DECODER = new SyntaxDecoder();
 
     static
     {
@@ -69,13 +70,15 @@ public class DescriptorDecoder
         String key = (tag == 0x7F) ? String.format("%02x.%02x", tag, tagExt) : String.format("%02x", tag);
         DescriptorTemplate template = TEMPLATE_MAP.getOrDefault(key, DEFAULT_DESCRIPTOR_TEMPLATE);
 
-        SyntaxField descriptor = SyntaxField.complex(template.getName());
+        SyntaxField descriptor = SyntaxField.complex(template.getName(),
+                                                     Optional.ofNullable(template.getDisplayName())
+                                                             .map(Label::getText)
+                                                             .orElse(template.getName()));
 
         int bitOffset = 0;
         for (SyntaxFieldDefinition fieldDefinition : template.getDescriptorSyntax())
         {
-            SyntaxFieldDecoder decoder = SyntaxFieldDecoder.of(fieldDefinition);
-            int decodedBits = decoder.decode(fieldDefinition, encoding, position, bitOffset, limit, descriptor);
+            int decodedBits = SYNTAX_DECODER.decode(fieldDefinition, encoding, position, bitOffset, limit, descriptor);
 
             position = position + (bitOffset + decodedBits) / 8;
             bitOffset = (bitOffset + decodedBits) % 8;

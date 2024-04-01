@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.template.decoder;
+package m2tk.assistant.template;
 
 import cn.hutool.core.util.StrUtil;
 import m2tk.util.Bytes;
@@ -25,20 +25,19 @@ public class SyntaxField
 {
     public enum Type
     {
-        NUMBER, CHECKSUM, TEXT, BITS, NIBBLES, OCTETS, COMPLEX, LOOP_HEADER, LOOP_ENTRY
+        NUMBER, CHECKSUM, TEXT, BITS, NIBBLES, OCTETS, COMPLEX, LOOP_HEADER, LOOP_ENTRY_HEADER
     }
-
-    private static final byte[] EMPTY_BYTES = new byte[0];
 
     private final Type type;
     private final String name;
 
     private final Object rawValue;
+    private final String mappedValue;
     private final boolean visible;
 
     private final String prefixText;
     private final String prefixColor;
-    private final String labelText;
+    private final String labelFormat;
     private final String labelColor;
     private final boolean bold;
 
@@ -46,10 +45,12 @@ public class SyntaxField
     private SyntaxField sibling;
     private LinkedList<SyntaxField> children;
 
-    public static SyntaxField complex(String name)
+    public static SyntaxField complex(String name, String label)
     {
         Objects.requireNonNull(name);
-        return new SyntaxField(Type.COMPLEX, name, null, true,
+        Objects.requireNonNull(label);
+
+        return new SyntaxField(Type.COMPLEX, name, null, label, true,
                                null, null,
                                null, null, false);
     }
@@ -58,84 +59,59 @@ public class SyntaxField
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
-        return new SyntaxField(Type.LOOP_HEADER, name, null, true,
+
+        return new SyntaxField(Type.LOOP_HEADER, name, null, label, true,
                                null, null,
-                               label, null, false);
+                               null, null, false);
     }
 
-    public static SyntaxField loopEntry(String name, String label)
+    public static SyntaxField loopEntryHeader(String name, String label)
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
-        return new SyntaxField(Type.LOOP_ENTRY, name, null, true,
+
+        return new SyntaxField(Type.LOOP_ENTRY_HEADER, name, null, label, true,
                                null, null,
-                               label, null, false);
+                               null, null, false);
     }
 
     public static SyntaxField invisible(Type type, String name, Object rawValue)
     {
         Objects.requireNonNull(type);
         Objects.requireNonNull(name);
+        Objects.requireNonNull(rawValue);
 
-        return new SyntaxField(type, name, rawValue, false,
+        return new SyntaxField(type, name, rawValue, null, false,
                                null, null,
                                null, null, false);
     }
 
-    public static SyntaxField visible(Type type, String name, Object rawValue)
-    {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(name);
-
-        return new SyntaxField(type, name, rawValue, true,
-                               name, null,
-                               formatRawValueAsString(type, rawValue), null,
-                               false);
-    }
-
-    public static SyntaxField visible(Type type, String name, Object rawValue,
-                                      String labelText, String labelColor,
-                                      boolean bold)
-    {
-        Objects.requireNonNull(type);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(labelText);
-
-        if (labelColor != null && !labelColor.matches("[0-9a-fA-F]{6}"))
-            throw new IllegalArgumentException("无效的颜色参数：" + labelColor);
-
-        return new SyntaxField(type, name, rawValue, true,
-                               name, null,
-                               labelText, labelColor, bold);
-    }
-
-    public static SyntaxField visible(Type type, String name, Object rawValue,
+    public static SyntaxField visible(Type type, String name, Object rawValue, String mappedValue,
                                       String prefixText, String prefixColor,
-                                      String labelText, String labelColor,
-                                      boolean bold)
+                                      String labelFormat, String labelColor, boolean bold)
     {
         Objects.requireNonNull(type);
         Objects.requireNonNull(name);
-        Objects.requireNonNull(prefixText);
-        Objects.requireNonNull(labelText);
+        Objects.requireNonNull(rawValue);
 
         if (prefixColor != null && !prefixColor.matches("[0-9a-fA-F]{6}"))
             throw new IllegalArgumentException("无效的颜色参数：" + prefixColor);
         if (labelColor != null && !labelColor.matches("[0-9a-fA-F]{6}"))
             throw new IllegalArgumentException("无效的颜色参数：" + labelColor);
 
-        return new SyntaxField(type, name, rawValue, true,
+        return new SyntaxField(type, name, rawValue, mappedValue, true,
                                prefixText, prefixColor,
-                               labelText, labelColor, bold);
+                               labelFormat, labelColor, bold);
     }
 
     private SyntaxField(Type type,
                         String name,
                         Object rawValue,
+                        String mappedValue,
                         boolean visible,
                         String prefixText,
                         String prefixColor,
-                        String labelText,
+                        String labelFormat,
                         String labelColor,
                         boolean bold)
     {
@@ -146,11 +122,12 @@ public class SyntaxField
         this.type = type;
         this.name = name;
         this.rawValue = rawValue;
+        this.mappedValue = mappedValue;
         this.visible = visible;
 
         this.prefixText = prefixText;
         this.prefixColor = prefixColor;
-        this.labelText = labelText;
+        this.labelFormat = labelFormat;
         this.labelColor = labelColor;
         this.bold = bold;
     }
@@ -170,6 +147,11 @@ public class SyntaxField
         return rawValue;
     }
 
+    public String getMappedValue()
+    {
+        return mappedValue;
+    }
+
     public boolean isVisible()
     {
         return visible;
@@ -185,9 +167,9 @@ public class SyntaxField
         return prefixColor;
     }
 
-    public String getLabelText()
+    public String getLabelFormat()
     {
-        return labelText;
+        return labelFormat;
     }
 
     public String getLabelColor()
@@ -341,11 +323,11 @@ public class SyntaxField
         if (!visible)
             return getName() + ": [***]";
 
-        if (StrUtil.isEmpty(labelText))
+        if (StrUtil.isEmpty(labelFormat))
             return getName() + ": " + getValueAsString();
 
-        return StrUtil.isEmpty(prefixText) ? labelText
-                                           : prefixText + ": " + labelText;
+        return StrUtil.isEmpty(prefixText) ? labelFormat
+                                           : prefixText + ": " + labelFormat;
     }
 
     private static String formatRawValueAsString(Type type, Object rawValue)
@@ -369,7 +351,7 @@ public class SyntaxField
                 yield '[' + Bytes.toHexStringPrettyPrint(bytes) + ']';
             }
             case TEXT -> (String) rawValue;
-            case COMPLEX, LOOP_HEADER, LOOP_ENTRY -> "";
+            case COMPLEX, LOOP_HEADER, LOOP_ENTRY_HEADER -> "";
             default -> String.valueOf(rawValue);
         };
     }

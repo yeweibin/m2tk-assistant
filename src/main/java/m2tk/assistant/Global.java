@@ -22,8 +22,8 @@ import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
 import m2tk.assistant.template.TemplateReader;
-import m2tk.assistant.template.decoder.DescriptorDecoder;
-import m2tk.assistant.template.decoder.SectionDecoder;
+import m2tk.assistant.template.DescriptorDecoder;
+import m2tk.assistant.template.SectionDecoder;
 import m2tk.assistant.template.definition.M2TKTemplate;
 
 import java.nio.file.Files;

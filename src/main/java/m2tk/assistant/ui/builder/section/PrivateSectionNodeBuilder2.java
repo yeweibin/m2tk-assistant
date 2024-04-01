@@ -16,39 +16,23 @@
 
 package m2tk.assistant.ui.builder.section;
 
-import m2tk.assistant.template.decoder.SectionDecoder;
-import m2tk.assistant.template.decoder.SyntaxField;
+import m2tk.assistant.template.PlainTreeNodeSyntaxPresenter;
+import m2tk.assistant.template.SectionDecoder;
+import m2tk.assistant.template.SyntaxField;
 import m2tk.assistant.ui.builder.TreeNodeBuilder;
 import m2tk.encoding.Encoding;
 
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 
 public class PrivateSectionNodeBuilder2 implements TreeNodeBuilder
 {
     private final SectionDecoder decoder = new SectionDecoder();
+    private final PlainTreeNodeSyntaxPresenter presenter = new PlainTreeNodeSyntaxPresenter();
 
     @Override
     public MutableTreeNode build(Encoding encoding)
     {
         SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
-
-        DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-        node.setUserObject(syntax.getName());
-
-        for (SyntaxField child : syntax.getChildren())
-        {
-            visit(node, child);
-        }
-
-        return node;
-    }
-
-    private void visit(DefaultMutableTreeNode node, SyntaxField child)
-    {
-        DefaultMutableTreeNode subNode = new DefaultMutableTreeNode(child.toString());
-        node.add(subNode);
-        for (SyntaxField sub : child.getChildren())
-            visit(subNode, sub);
+        return presenter.render(syntax);
     }
 }

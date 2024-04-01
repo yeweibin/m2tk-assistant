@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package m2tk.assistant.template.decoder;
+package m2tk.assistant.template;
 
 import m2tk.assistant.template.definition.*;
 import m2tk.encoding.Encoding;
@@ -25,6 +25,8 @@ public class SectionDecoder
 {
     private static final Map<String, TableTemplate> TEMPLATE_MAP = new HashMap<>();
     private static final TableTemplate DEFAULT_TABLE_TEMPLATE;
+    private static final SyntaxDecoder SYNTAX_DECODER = new SyntaxDecoder();
+
 
     static
     {
@@ -67,13 +69,12 @@ public class SectionDecoder
         String key = String.format("%02x", tableId);
         TableTemplate template = TEMPLATE_MAP.getOrDefault(key, DEFAULT_TABLE_TEMPLATE);
 
-        SyntaxField section = SyntaxField.complex(template.getName());
+        SyntaxField section = SyntaxField.complex(template.getName(), template.getName());
 
         int bitOffset = 0;
         for (SyntaxFieldDefinition fieldDefinition : template.getTableSyntax())
         {
-            SyntaxFieldDecoder decoder = SyntaxFieldDecoder.of(fieldDefinition);
-            int decodedBits = decoder.decode(fieldDefinition, encoding, position, bitOffset, limit, section);
+            int decodedBits = SYNTAX_DECODER.decode(fieldDefinition, encoding, position, bitOffset, limit, section);
 
             position = position + (bitOffset + decodedBits) / 8;
             bitOffset = (bitOffset + decodedBits) % 8;

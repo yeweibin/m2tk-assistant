@@ -1,12 +1,16 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
-<M2TKTemplate xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:noNamespaceSchemaLocation="/schema/M2TKTemplate.xsd">
+<M2TKTemplate>
     <TableTemplate name="program_association_section" standard="mpeg">
         <TableId id="0">
             <DisplayName str="PAT"/>
         </TableId>
         <TableBody>
-            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="table_id" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="TableID"/>
+                    <Format str="0x%02X (%d)"/>
+                </FieldPresentation>
+            </Field>
             <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
             <Field name="0" length="1" encoding="bslbf"/>
             <Field name="reserved" length="2" encoding="bslbf"/>
@@ -55,7 +59,11 @@
                     </If>
                 </Body>
             </Loop>
-            <Field name="CRC_32" length="32" encoding="uimsbf"/>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08x"/>
+                </FieldPresentation>
+            </Field>
         </TableBody>
         <UniqueKey>
             <FieldRef field="table_id"/>
@@ -88,7 +96,11 @@
                     <Descriptor/>
                 </Body>
             </Loop>
-            <Field name="CRC_32" length="32" encoding="uimsbf"/>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08x"/>
+                </FieldPresentation>
+            </Field>
         </TableBody>
         <UniqueKey>
             <FieldRef field="table_id"/>
@@ -195,7 +207,7 @@
                     </Loop>
                 </Body>
             </Loop>
-            <Field name="CRC_32" length="32" encoding="uimsbf">
+            <Field name="CRC_32" length="32" encoding="checksum">
                 <FieldPresentation>
                     <Format str="%08x"/>
                 </FieldPresentation>
@@ -231,7 +243,7 @@
             <Field length="8" name="descriptor_length" encoding="uimsbf"/>
             <Field length="16" name="CAS_ID" encoding="uimsbf">
                 <FieldPresentation>
-                    <Format str="%04x (%s)"/>
+                    <Format str="0x%04X"/>
                     <Mapping>
                         <Value value="19190">
                             <ValString str="Pay4View CAS"/>
@@ -249,7 +261,11 @@
                     <Format str="0x%04X"/>
                 </FieldPresentation>
             </Field>
-            <Field length="n/a" name="private_data" encoding="octets" length_field="implicit"/>
+            <Field length="n/a" name="private_data" encoding="octets" length_field="implicit">
+                <FieldPresentation>
+                    <Format str="lowercase"/>
+                </FieldPresentation>
+            </Field>
         </DescriptorBody>
     </DescriptorTemplate>
 </M2TKTemplate>

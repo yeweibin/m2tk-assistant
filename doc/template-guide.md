@@ -334,7 +334,8 @@
 &lt;Format&gt; 标签里的格式化模板，需要遵循：
 
 - 当应用于数值时，应符合Java语言里的字符串格式化模板，并且只接收一个输入参数，即字段的值。
-- nibbles和octets流，不适用格式化模板，但可以添加格式化说明，包括：prefix={}，suffix={}，separator={}，lowercase，compact，顺序任意，逗号分隔。例如：str="prefix=', suffix=', separator=:, compact"。默认的显示格式为：单个半字/字节按空格分隔，全部大写，被[、]包围。注意，自定义分隔符不允许使用半角逗号。 
+- 当应用于nibbles流时，可以添加格式化说明：compact|lowercase（顺序任意，逗号分隔）。compact表示用字符串形式展示（默认是数组形式），lowercase表示字符以小写形式展示（默认大写）。
+- 当应用与octets流时，可以添加格式化说明：compact|lowercase（顺序任意，逗号分隔）。compact表示以连续十六进制数字符串表示，且无前后括号包围（默认以数组形式展示），lowercase表示字符以小写形式展示（默认大写）。 
 
 格式化标签不适用于文本内容。
 

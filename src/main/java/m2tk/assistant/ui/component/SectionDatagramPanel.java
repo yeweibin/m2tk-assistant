@@ -397,6 +397,9 @@ public class SectionDatagramPanel extends JPanel
         for (SectionEntity section : sections)
         {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) builder.build(Encoding.wrap(section.getEncoding()));
+            if (node == null)
+                continue;
+
             node.setUserObject(String.format("%s @ pid = 0x%X",
                                              node.getUserObject(),
                                              section.getStream()));
