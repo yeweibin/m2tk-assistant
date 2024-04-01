@@ -22,6 +22,16 @@
             <fileMode>0755</fileMode>
         </fileSet>
 
+        <!-- 打包模板文件 -->
+        <fileSet>
+            <directory>${basedir}/template</directory>
+            <outputDirectory>template</outputDirectory>
+            <fileMode>0755</fileMode>
+            <includes>
+                <include>*.xml</include>
+            </includes>
+        </fileSet>
+
         <!-- 将第三方依赖打包到lib目录中 -->
         <!-- 第三方依赖已经通过 maven-dependency-plugin 复制到了 target/lib 中 -->
         <fileSet>
