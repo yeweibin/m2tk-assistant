@@ -21,10 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
-import m2tk.template.TemplateReader;
-import m2tk.template.decoder.DescriptorDecoder;
-import m2tk.template.decoder.SectionDecoder;
-import m2tk.template.definition.M2TKTemplate;
+import m2tk.assistant.template.TemplateReader;
+import m2tk.assistant.template.decoder.DescriptorDecoder;
+import m2tk.assistant.template.decoder.SectionDecoder;
+import m2tk.assistant.template.definition.M2TKTemplate;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,6 +80,12 @@ public final class Global
             stream.filter(path -> path.getFileName().toString().endsWith(".xml"))
                   .forEach(file -> {
                       M2TKTemplate template = reader.parse(file.toFile());
+                      if (template == null)
+                      {
+                          log.warn("无法加载模板：{}", file);
+                          return;
+                      }
+
                       template.getTableTemplates().forEach(SectionDecoder::registerTemplate);
                       template.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
                   });

@@ -33,6 +33,8 @@
         <graphviz-java.version>0.18.1</graphviz-java.version>
         <image-viewer.version>1.2.3</image-viewer.version>
         <javacv.version>1.5.7</javacv.version>
+        <eaxy.version>0.2.2</eaxy.version>
+        <jaxp-api.version>1.4.5</jaxp-api.version>
     </properties>
 
     <scm>
@@ -59,17 +61,6 @@
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-multiplex</artifactId>
             <version>${m2tk.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>mpeg2-toolkit</groupId>
-            <artifactId>template-engine</artifactId>
-            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
@@ -172,6 +163,17 @@
             <artifactId>javacv-platform</artifactId>
             <version>${javacv.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eaxy</groupId>
+            <artifactId>eaxy</artifactId>
+            <version>${eaxy.version}</version>
+        </dependency>
+        <dependency>
+            <!--XML Schema校验-->
+            <groupId>javax.xml.parsers</groupId>
+            <artifactId>jaxp-api</artifactId>
+            <version>${jaxp-api.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -202,7 +204,7 @@
                         </goals>
                         <configuration>
                             <!-- 第三方依赖要求11+，所以这里也得保证11+ -->
-                            <release>11</release>
+                            <release>21</release>
                             <compileSourceRoots>
                                 <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
                             </compileSourceRoots>
@@ -210,6 +212,10 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
             </plugin>
 
             <plugin>

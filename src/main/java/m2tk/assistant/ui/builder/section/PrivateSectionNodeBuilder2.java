@@ -16,10 +16,10 @@
 
 package m2tk.assistant.ui.builder.section;
 
+import m2tk.assistant.template.decoder.SectionDecoder;
+import m2tk.assistant.template.decoder.SyntaxField;
 import m2tk.assistant.ui.builder.TreeNodeBuilder;
 import m2tk.encoding.Encoding;
-import m2tk.template.decoder.SectionDecoder;
-import m2tk.template.decoder.SyntaxField;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
