@@ -7,20 +7,36 @@
         <TableBody>
             <Field name="table_id" length="8" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="TableID"/>
+                    <Prefix str="Table ID"/>
                     <Format str="0x%02X (%d)"/>
                 </FieldPresentation>
             </Field>
             <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
             <Field name="0" length="1" encoding="bslbf"/>
             <Field name="reserved" length="2" encoding="bslbf"/>
-            <Field name="section_length" length="12" encoding="uimsbf"/>
-            <Field name="transport_stream_id" length="16" encoding="uimsbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="传输流号"/>
+                </FieldPresentation>
+            </Field>
             <Field name="reserved" length="2" encoding="bslbf"/>
             <Field name="version_number" length="5" encoding="bslbf"/>
             <Field name="current_next_indicator" length="1" encoding="bslbf"/>
-            <Field name="section_number" length="8" encoding="uimsbf"/>
-            <Field name="last_section_number" length="8" encoding="uimsbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
             <Loop name="program_association_loop" length_field="implicit" length_correction="-4">
                 <LoopPresentation>
                     <NoLoopHeader/>
@@ -60,9 +76,7 @@
                 </Body>
             </Loop>
             <Field name="CRC_32" length="32" encoding="checksum">
-                <FieldPresentation>
-                    <Format str="%08x"/>
-                </FieldPresentation>
+                <FieldPresentation/>
             </Field>
         </TableBody>
         <UniqueKey>
@@ -85,8 +99,16 @@
             <Field name="reserved" length="18" encoding="bslbf"/>
             <Field name="version_number" length="5" encoding="bslbf"/>
             <Field name="current_next_indicator" length="1" encoding="bslbf"/>
-            <Field name="section_number" length="8" encoding="uimsbf"/>
-            <Field name="last_section_number" length="8" encoding="uimsbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
             <Loop name="ca_descriptor_loop" length_field="implicit" length_correction="-4">
                 <LoopPresentation>
                     <NoLoopHeader/>
@@ -97,9 +119,7 @@
                 </Body>
             </Loop>
             <Field name="CRC_32" length="32" encoding="checksum">
-                <FieldPresentation>
-                    <Format str="%08x"/>
-                </FieldPresentation>
+                <FieldPresentation/>
             </Field>
         </TableBody>
         <UniqueKey>
@@ -115,7 +135,7 @@
         <TableBody>
             <Field name="table_id" length="8" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="Table id"/>
+                    <Prefix str="Table ID"/>
                     <Format str="0x%02x"/>
                 </FieldPresentation>
             </Field>
@@ -129,45 +149,31 @@
             <Field name="reserved" length="2" encoding="bslbf"/>
             <Field name="section_length" length="12" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="Section length"/>
-                    <Format str="%d"/>
+                    <Prefix str="分段长度"/>
                 </FieldPresentation>
             </Field>
             <Field name="program_number" length="16" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="Program number"/>
-                    <Format str="%d"/>
+                    <Prefix str="节目号"/>
                 </FieldPresentation>
             </Field>
             <Field name="reserved" length="2" encoding="bslbf"/>
-            <Field name="version_number" length="5" encoding="bslbf">
-                <FieldPresentation>
-                    <Prefix str="Version"/>
-                    <Format str="%d"/>
-                </FieldPresentation>
-            </Field>
-            <Field name="current_next_indicator" length="1" encoding="bslbf">
-                <FieldPresentation>
-                    <Prefix str="Current"/>
-                    <Format str="%d"/>
-                </FieldPresentation>
-            </Field>
+            <Field name="version_number" length="5" encoding="bslbf"/>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
             <Field name="section_number" length="8" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="Section number"/>
-                    <Format str="%d"/>
+                    <Prefix str="当前分段号"/>
                 </FieldPresentation>
             </Field>
             <Field name="last_section_number" length="8" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="Last section number"/>
-                    <Format str="%d"/>
+                    <Prefix str="最后分段号"/>
                 </FieldPresentation>
             </Field>
             <Field name="reserved" length="3" encoding="bslbf"/>
-            <Field name="PCR_PID" length="13" encoding="uimsbf">
+            <Field name="pcr_pid" length="13" encoding="uimsbf">
                 <FieldPresentation>
-                    <Prefix str="PCR pid"/>
+                    <Prefix str="PCR PID"/>
                     <Format str="0x%04X"/>
                 </FieldPresentation>
             </Field>
@@ -191,9 +197,39 @@
                     </LoopEntry>
                 </LoopPresentation>
                 <Body>
-                    <Field name="stream_type" length="8" encoding="uimsbf"/>
+                    <Field name="stream_type" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="流类型"/>
+                            <Format str="%d"/>
+                            <Mapping>
+                                <Value value="1">
+                                    <ValString str="MPEG-1 视频"/>
+                                </Value>
+                                <Value value="2">
+                                    <ValString str="MPEG-2 视频"/>
+                                </Value>
+                                <Value value="3">
+                                    <ValString str="MPEG-1 音频"/>
+                                </Value>
+                                <Value value="4">
+                                    <ValString str="MPEG-2 音频"/>
+                                </Value>
+                                <Value value="5">
+                                    <ValString str="ISO 13818-1 私有段"/>
+                                </Value>
+                                <Value value="6">
+                                    <ValString str="ISO 13818-1 PES包"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
                     <Field name="reserved" length="3" encoding="bslbf"/>
-                    <Field name="elementary_PID" length="13" encoding="uimsbf"/>
+                    <Field name="elementary_PID" length="13" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="ES PID"/>
+                            <Format str="0x%04X (%d)"/>
+                        </FieldPresentation>
+                    </Field>
                     <Field name="reserved" length="4" encoding="bslbf"/>
                     <Field name="ES_info_length" length="12" encoding="uimsbf"/>
                     <Loop name="ES_info_loop" length_field="ES_info_length">
@@ -214,35 +250,23 @@
             </Field>
         </TableBody>
     </TableTemplate>
-    <DescriptorTemplate tag="255" name="private_descriptor" standard="mpeg">
-        <DisplayName str="Private Descriptor"/>
-        <DescriptorBody>
-            <Field length="8" name="descriptor_tag" encoding="uimsbf">
-                <FieldPresentation>
-                    <Prefix str="Tag"/>
-                    <Format str="0x%02X"/>
-                </FieldPresentation>
-            </Field>
-            <Field length="8" name="descriptor_length" encoding="uimsbf"/>
-            <Field length="n/a" name="descriptor_payload" encoding="octets" length_field="descriptor_length">
-                <FieldPresentation>
-                    <Prefix str="Payload"/>
-                </FieldPresentation>
-            </Field>
-        </DescriptorBody>
-    </DescriptorTemplate>
-    <DescriptorTemplate tag="9" name="ca_descriptor" standard="mpeg">
+    <DescriptorTemplate tag="9" name="ca_descriptor">
         <DisplayName str="CA Descriptor"/>
         <DescriptorBody>
-            <Field length="8" name="descriptor_tag" encoding="uimsbf">
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
                 <FieldPresentation>
                     <Prefix str="Tag"/>
                     <Format str="0x%02X"/>
                 </FieldPresentation>
             </Field>
-            <Field length="8" name="descriptor_length" encoding="uimsbf"/>
-            <Field length="16" name="CAS_ID" encoding="uimsbf">
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
                 <FieldPresentation>
+                    <Prefix str="Length"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="ca_system_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="CAS ID"/>
                     <Format str="0x%04X"/>
                     <Mapping>
                         <Value value="19190">
@@ -254,15 +278,16 @@
                     </Mapping>
                 </FieldPresentation>
             </Field>
-            <Field length="3" name="reserved" encoding="bslbf"/>
-            <Field length="13" name="CA_PID" encoding="uimsbf">
+            <Field name="reserved" length="3" encoding="bslbf"/>
+            <Field name="ca_pid" length="13" encoding="uimsbf">
                 <FieldPresentation>
                     <Prefix str="ECM PID"/>
                     <Format str="0x%04X"/>
                 </FieldPresentation>
             </Field>
-            <Field length="n/a" name="private_data" encoding="octets" length_field="implicit">
+            <Field name="private_data" encoding="octets" length_field="implicit">
                 <FieldPresentation>
+                    <Prefix str="Private data"/>
                     <Format str="lowercase"/>
                 </FieldPresentation>
             </Field>

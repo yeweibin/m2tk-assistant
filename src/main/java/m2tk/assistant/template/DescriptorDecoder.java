@@ -16,10 +16,7 @@
 
 package m2tk.assistant.template;
 
-import m2tk.assistant.template.definition.DataFieldDefinition;
-import m2tk.assistant.template.definition.DescriptorTemplate;
-import m2tk.assistant.template.definition.Label;
-import m2tk.assistant.template.definition.SyntaxFieldDefinition;
+import m2tk.assistant.template.definition.*;
 import m2tk.encoding.Encoding;
 
 import java.util.*;
@@ -37,11 +34,11 @@ public class DescriptorDecoder
         template.setTagExtension(0);
         template.setName("private_descriptor");
         template.setStandard("mpeg2");
-        template.setDisplayName(Label.plain("Private Descriptor"));
+        template.setDisplayName(Label.plain("私有描述符"));
         template.setMayOccurIns(Collections.emptyList());
-        template.setDescriptorSyntax(List.of(DataFieldDefinition.number("descriptor_tag", "uimsbf", "8", null),
-                                             DataFieldDefinition.number("descriptor_length", "uimsbf", "8", null),
-                                             DataFieldDefinition.bytes("descriptor_payload", "descriptor_length", null, null)));
+        template.setDescriptorSyntax(List.of(DataFieldDefinition.number("descriptor_tag", "uimsbf", "8", FieldPresentation.of("描述符标签", "0x%02X")),
+                                             DataFieldDefinition.number("descriptor_length", "uimsbf", "8", FieldPresentation.of("描述符长度")),
+                                             DataFieldDefinition.bytes("descriptor_payload", "descriptor_length", null, FieldPresentation.of("负载数据"))));
 
         DEFAULT_DESCRIPTOR_TEMPLATE = template;
     }

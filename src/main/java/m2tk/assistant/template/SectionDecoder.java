@@ -16,6 +16,7 @@
 
 package m2tk.assistant.template;
 
+import cn.hutool.core.collection.CollUtil;
 import m2tk.assistant.template.definition.*;
 import m2tk.encoding.Encoding;
 
@@ -32,14 +33,14 @@ public class SectionDecoder
     {
         TableTemplate template = new TableTemplate();
         template.setName("private_section");
-        template.setStandard("mpeg");
+        template.setStandard("mpeg2");
         template.setTableIds(Collections.emptyList());
-        template.setTableSyntax(List.of(DataFieldDefinition.number("table_id", "uimsbf", "8", FieldPresentation.of("TableId", "0x%02X")),
+        template.setTableSyntax(List.of(DataFieldDefinition.number("table_id", "uimsbf", "8", FieldPresentation.of("Table ID", "0x%02X")),
                                         DataFieldDefinition.number("section_syntax_indicator", "bslbf", "1", null),
                                         DataFieldDefinition.number("private_indicator", "bslbf", "1", null),
                                         DataFieldDefinition.number("reserved", "bslbf", "2", null),
-                                        DataFieldDefinition.number("private_section_length", "bslbf", "12", FieldPresentation.of("Section Length", "%d")),
-                                        DataFieldDefinition.bytes("private_data", "private_section_length", "0", FieldPresentation.of("Section Payload"))));
+                                        DataFieldDefinition.number("private_section_length", "bslbf", "12", FieldPresentation.of("段长度", "%d")),
+                                        DataFieldDefinition.bytes("private_data", "private_section_length", "0", FieldPresentation.of("段负载"))));
         template.setUniqueKey(UniqueKey.of("table_id"));
 
         DEFAULT_TABLE_TEMPLATE = template;
@@ -69,7 +70,20 @@ public class SectionDecoder
         String key = String.format("%02x", tableId);
         TableTemplate template = TEMPLATE_MAP.getOrDefault(key, DEFAULT_TABLE_TEMPLATE);
 
-        SyntaxField section = SyntaxField.complex(template.getName(), template.getName());
+        String displayName = "私有数据段";
+        if (CollUtil.isNotEmpty(template.getTableIds()))
+        {
+            for (TableId tid : template.getTableIds())
+            {
+                if (tid.getId() == tableId)
+                {
+                    displayName = tid.getDisplayName().getText();
+                    break;
+                }
+            }
+        }
+
+        SyntaxField section = SyntaxField.complex(template.getName(), displayName);
 
         int bitOffset = 0;
         for (SyntaxFieldDefinition fieldDefinition : template.getTableSyntax())

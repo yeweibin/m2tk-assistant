@@ -40,4 +40,12 @@ public class TableId
     {
         this.displayName = displayName;
     }
+
+    public static TableId of(int id, String name)
+    {
+        TableId tableId = new TableId();
+        tableId.setId(id);
+        tableId.setDisplayName(Label.plain(name));
+        return tableId;
+    }
 }
