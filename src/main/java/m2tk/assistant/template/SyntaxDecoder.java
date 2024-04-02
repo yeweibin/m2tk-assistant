@@ -618,14 +618,21 @@ public class SyntaxDecoder
         if (presentation == null)
         {
             // 默认循环展示方式
-            presentation = LoopPresentation.forEmptyLoop("空循环");
+            presentation = new LoopPresentation();
+            presentation.setLoopHeader(Label.plain(definition.getName()));
+            presentation.setLoopEmpty(Label.plain("空循环"));
         }
 
-        SyntaxField loopRoot = SyntaxField.loopHeader(definition.getName(),
-                                                      presentation.isNoLoopHeader() ? definition.getName()
-                                                                                    : presentation.getLoopHeader().getText());
-        if (parent != null)
-            parent.appendChild(loopRoot);
+        SyntaxField loopRoot;
+        if (presentation.isNoLoopHeader())
+            loopRoot = parent;
+        else
+        {
+            loopRoot = SyntaxField.loopHeader(definition.getName(),
+                                              presentation.getLoopHeader().getText());
+            if (parent != null)
+                parent.appendChild(loopRoot);
+        }
 
         SyntaxField refNode = findPrerequisiteField(parent, definition.getLengthField());
         if (refNode == null)
@@ -695,14 +702,21 @@ public class SyntaxDecoder
         if (presentation == null)
         {
             // 默认循环展示方式
-            presentation = LoopPresentation.forEmptyLoop("空循环");
+            presentation = new LoopPresentation();
+            presentation.setLoopHeader(Label.plain(definition.getName()));
+            presentation.setLoopEmpty(Label.plain("空循环"));
         }
 
-        SyntaxField loopRoot = SyntaxField.loopHeader(definition.getName(),
-                                                      presentation.isNoLoopHeader() ? definition.getName()
-                                                                                    : presentation.getLoopHeader().getText());
-        if (parent != null)
-            parent.appendChild(loopRoot);
+        SyntaxField loopRoot;
+        if (presentation.isNoLoopHeader())
+            loopRoot = parent;
+        else
+        {
+            loopRoot = SyntaxField.loopHeader(definition.getName(),
+                                              presentation.getLoopHeader().getText());
+            if (parent != null)
+                parent.appendChild(loopRoot);
+        }
 
         // 默认边界为最大可解码范围
         int byteLength = limit - position;

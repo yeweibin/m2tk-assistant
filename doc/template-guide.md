@@ -22,13 +22,19 @@
     - [2.5.1 \<Field\> 标签](#251-field-标签)
       - [2.5.1.1 \<FieldPresentation\> 标签](#2511-fieldpresentation-标签)
     - [2.5.2 \<If\> 标签](#252-if-标签)
+      - [2.5.2.1 单值比较标签（\<CompareWithConst\>）](#2521-单值比较标签comparewithconst)
+      - [2.5.2.2 多值比较标签（\<CompareWithConstMulti\>）](#2522-多值比较标签comparewithconstmulti)
+    - [2.5.3 \<Loop\> 标签](#253-loop-标签)
+      - [2.5.3.1 \<LoopPresentation\> 标签](#2531-looppresentation-标签)
+      - [2.5.3.2 \<Body\> 标签](#2532-body-标签)
+    - [2.5.4 \<Descriptor\> 标签](#254-descriptor-标签)
 
 
 ## 一、介绍
 
 ### 1.1 文档编写目的
 
-本文档将详细介绍构造M2TK解析模板的步骤，以及M2TK解析模板的各元素含义和使用约束，帮助读者写出正确的数据解析模板文件。
+本文档将详细介绍构造M2TK解析模板的步骤，以及M2TK解析模板的各元素含义和使用约束，帮助读者写出正确的数据解析模板。
 
 ### 1.2 文档面向人群
 
@@ -69,7 +75,7 @@
 
 ```xml
 <!-- TableTemplate示例 -->
-<TableTemplate name="program_association_section" standard="mpeg">
+<TableTemplate name="program_association_section" standard="mpeg" group="PSI">
     <TableId id="0">
         <DisplayName str="PAT"/>
     </TableId>
@@ -148,8 +154,9 @@
 
 - name：当前段结构的索引名称，可用于描述符定位（详见描述符模板中的MayOccurIn标签）。
 - standard：来源标准。可选值有：mpeg（ISO标准）、dvb（DVB标准）、private（其他标准或自定义数据）。
+- group：展示分段结构时，节点所在的结构树的分支名称。
 
-【要求】name是必要属性，standard是可选属性。
+【要求】name是必要属性，其他是可选属性。
 
 
 #### 2.3.1 &lt;TableId&gt; 标签
@@ -286,6 +293,7 @@
 - Field标签：描述具体的单项数据字段。
 - If标签：描述在某些情况下存在的数据字段（或字段组合）。
 - Loop标签：描述循环出现的数据字段（或字段组合）。
+- Descriptor标签：描述符占位符。
 
 解码器按照Syntax标签里元素定义的顺序进行解码，对于字段引用，解码器在当前字段的前序字段（即已出现的字段）中查找引用本体。对于循环中出现的引用，则仅在【当前循环内】和【整个循环体】的前序字段中寻找引用本体。
 
@@ -309,7 +317,7 @@
 - encoding：编码方式，包括：bslbf（比特流，最高位在前），uimsbf（无符号整数，最高位在前），checksum（校验码，高位在前），nibbles（半字节流），octets（字节流），text（文本）。
 - string_type：文本类型，包括：dvb_text（DVB方式编码的字符串），utf16/utf8，ascii，gb2312/gbk/gb18030（中文编码）。
 - length：字段长度，表示字段的编码长度（单位：比特）。通常用于描述数值，或较短的字节流、半字节流。有效范围：[1, 64]。
-- length_field：长度引用字段，表示当前字段的编码长度需要用被引用的字段的值间接表示（单位：字节）。
+- length_field：长度引用字段，表示当前字段的编码长度需要用被引用的字段的值间接表示（单位：字节）。当字段长度不固定，但会一直延续到编码末尾时，可以用length_field="implicit"表示。
 - length_correction：长度修正，表示当前字段长度需要进行额外的修正（单位：字节）。仅在使用间接长度时存在，修正值可以是负数，表示需要减去的字节数。
 
 【要求】name、encoding是必要属性，其他是可选属性。当字段类型为text时，必须提供合适的string_type描述。
@@ -325,19 +333,159 @@
 - &lt;Prefix&gt; 标签：展示字段时，需要添加在内容前面的前缀部分。默认以当前字段的名称加冒号作为前缀显示。
 - &lt;Format&gt; 标签：展示字段时，字段值的显示样式。
 
-一个 **Label** 标签包含三个属性：
+一个 **Label** 标签包含以下属性：
 
 - str：表示要显示的文字或格式化模板（仅对Format标签适用）。
-- color：显示内容的颜色，以“#rrggbb”的编码格式表示，其中r、g、b分别代表红、绿、蓝的颜色代码。注意，这里的颜色是前景色，而不是背景色。暂不支持设置背景色。如果没有定义color，则使用默认的前景色。
-- bold：显示内容是否加粗（bool值，true/false）。
 
 &lt;Format&gt; 标签里的格式化模板，需要遵循：
 
-- 当应用于数值时，应符合Java语言里的字符串格式化模板，并且只接收一个输入参数，即字段的值。
-- 当应用于nibbles流时，可以添加格式化说明：compact|lowercase（顺序任意，逗号分隔）。compact表示用字符串形式展示（默认是数组形式），lowercase表示字符以小写形式展示（默认大写）。
-- 当应用与octets流时，可以添加格式化说明：compact|lowercase（顺序任意，逗号分隔）。compact表示以连续十六进制数字符串表示，且无前后括号包围（默认以数组形式展示），lowercase表示字符以小写形式展示（默认大写）。 
+- 当应用于数值时，应符合Java语言里的字符串格式化模板，模板可以接收多个输入，但所有输入值都是字段的值。例如：str="0x%02X (%d)"，节点值将传两遍给格式化模板。
+- 当应用于nibbles流时，可以添加格式化说明：compact、lowercase（顺序任意，逗号分隔）。compact表示用字符串形式展示（默认是数组形式），lowercase表示字符以小写形式展示（默认大写）。
+- 当应用与octets流时，可以添加格式化说明：compact、lowercase（顺序任意，逗号分隔）。compact表示以连续十六进制数字符串表示，且无前后括号包围（默认以数组形式展示），lowercase表示字符以小写形式展示（默认大写）。 
 
 格式化标签不适用于文本内容。
 
+
 #### 2.5.2 &lt;If&gt; 标签
 
+```xml
+<!-- If示例 -->
+<If>
+  <Condition>
+    <CompareWithConst field="program_number" comp_op="equals" const="0"/>
+  </Condition>
+  <Then>
+    <Field name="network_pid" length="13" encoding="uimsbf">
+      <FieldPresentation>
+        <Prefix str="NIT PID"/>
+        <Format str="0x%04X（%d）"/>
+      </FieldPresentation>
+    </Field>
+  </Then>
+  <Else>
+    <Field name="program_map_pid" length="13" encoding="uimsbf">
+      <FieldPresentation>
+        <Prefix str="PMT PID"/>
+        <Format str="0x%04X（%d）"/>
+      </FieldPresentation>
+    </Field>
+  </Else>
+</If>
+```
+
+&lt;If&gt; 标签表示根据某个条件而动态存在的可选结构定义。当比较结果为真（true）时，&lt;Then&gt; 标签中的字段生效；当比较结果为假（false）时，&lt;Else&gt; 标签中的字段生效。
+
+&lt;Then&gt; 标签和 &lt;Else&gt; 标签里可以携带一个或以上的Syntax标签。&lt;Then&gt; 标签为必要标签，&lt;Else&gt; 标签为可选标签。
+
+【注意】待比较对象（字段）应是数值类型，否则会造成解码错误。
+
+目前条件判断为对某个字段的值进行比较操作，比较的方法可以是：
+
+- 【单值比较】等于（equals）
+- 【单值比较】不等于（not_equals）
+- 【单值比较】大于（larger_then）
+- 【单值比较】小于（smaller_then）
+- 【多值比较】等于其中某值（equals_any）
+- 【多值比较】不等于指定值（not_equals_all）
+
+##### 2.5.2.1 单值比较标签（&lt;CompareWithConst&gt;）
+
+```xml
+<CompareWithConst field="program_number" comp_op="equals" const="0"/>
+```
+
+包括以下属性：
+
+- field：待比较的字段名
+- comp_op：比较方法
+- const：比较值
+
+##### 2.5.2.2 多值比较标签（&lt;CompareWithConstMulti&gt;）
+
+```xml
+<CompareWithConstMulti field="program_number" comp_op="equals_any">
+  <ConstValue const="0"/>
+  <ConstValue const="1"/>
+  ...
+</CompareWithConstMulti>
+```
+
+包括以下属性：
+
+- field：待比较的字段名
+- comp_op：比较方法
+
+多个参考值写在 &lt;ConstValue&gt; 标签列表里。
+
+
+#### 2.5.3 &lt;Loop&gt; 标签
+
+```xml
+<!-- Loop示例 -->
+<Loop name="elementary_stream_loop" length_field="implicit" length_correction="-4">
+    <LoopPresentation>
+        <NoLoopHeader/>
+        <LoopEmpty str="无节目ES信息描述"/>
+        <LoopEntry>
+            <Prefix str="基本流"/>
+        </LoopEntry>
+    </LoopPresentation>
+    <Body>
+        <Field name="stream_type" length="8" encoding="uimsbf">
+            <FieldPresentation>
+                <Prefix str="流类型"/>
+                <Format str="%d"/>
+            </FieldPresentation>
+        </Field>
+        <Field name="reserved" length="3" encoding="bslbf"/>
+        <Field name="elementary_PID" length="13" encoding="uimsbf">
+            <FieldPresentation>
+                <Prefix str="ES PID"/>
+                <Format str="0x%04X (%d)"/>
+            </FieldPresentation>
+        </Field>
+        <Field name="reserved" length="4" encoding="bslbf"/>
+        <Field name="ES_info_length" length="12" encoding="uimsbf"/>
+        <Loop name="ES_info_loop" length_field="ES_info_length">
+            <LoopPresentation>
+                <NoLoopHeader/>
+                <LoopEmpty str="无基本流信息描述符"/>
+            </LoopPresentation>
+            <Body>
+                <Descriptor/>
+            </Body>
+        </Loop>
+    </Body>
+</Loop>
+```
+
+&lt;Loop&gt; 标签包含可选的 &lt;LoopPresentation&gt; 标签和强制的 &lt;Body&gt; 标签。&lt;Body&gt; 标签描述循环体的结构。当循环为描述符循环时，只需定义一个描述占位符（&lt;Descriptor&gt;）。
+
+##### 2.5.3.1 &lt;LoopPresentation&gt; 标签
+
+```xml
+<LoopPresentation>
+    <NoLoopHeader/>
+    <LoopEmpty str="无节目ES信息描述"/>
+    <LoopEntry>
+        <Prefix str="基本流"/>
+    </LoopEntry>
+</LoopPresentation>
+```
+&lt;LoopPresentation&gt; 标签定义循环头标题、循环体标题，以及当循环为空时的标题。也可以设置循环为无头循环（无标题），这样可以减少一层循环展示深度。
+
+&lt;NoLoopHeader&gt; 声明无循环头
+&lt;LoopEmpty&gt; 同 &lt;Label&gt; 标签，声明当循环为空时显示的内容。
+&lt;LoopEntry&gt; 声明每个循环体的标题。它可以包含以下之一的 &lt;Label&gt; 标签：
+
+- &lt;Fixed&gt;：所有循环体都使用相同的标题。
+- &lt;Prefix&gt;：每个循环体使用“前缀+序号”作为标题。序号从1开始。
+
+##### 2.5.3.2 &lt;Body&gt; 标签
+
+&lt;Body&gt; 标签定义循环体结构，可以由一个或以上的 &lt;Syntax&gt; 标签构成，也可以有一个 &lt;Descriptor&gt; 占位符标签构成。当循环为描述符循环时，不再额外添加循环体标题节点。
+
+
+#### 2.5.4 &lt;Descriptor&gt; 标签
+
+&lt;Descriptor&gt; 标签仅用在循环体定义中，作为任意描述符的占位符。描述符的具体结构由 &lt;DescriptorTemplate&gt; 模板定义。
