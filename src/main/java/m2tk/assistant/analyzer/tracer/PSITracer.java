@@ -17,7 +17,6 @@
 package m2tk.assistant.analyzer.tracer;
 
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.Global;
 import m2tk.assistant.analyzer.presets.CASystems;
 import m2tk.assistant.analyzer.presets.StreamTypes;
 import m2tk.assistant.dbi.DatabaseService;
@@ -51,8 +50,6 @@ public class PSITracer implements Tracer
     private final Map<Integer, Integer> pmtVersions;
     private final Map<Integer, ProgramContext> programs;
 
-    private final int[] emmCounts;
-
     private int[] patSections;
     private int[] catSections;
     private int tsid;
@@ -77,7 +74,6 @@ public class PSITracer implements Tracer
         programs = new HashMap<>();
         pmtVersions = new HashMap<>();
 
-        emmCounts = new int[8192];
         patSections = new int[0];
         catSections = new int[0];
         tsid = -1;
@@ -183,24 +179,18 @@ public class PSITracer implements Tracer
         {
             catSections = new int[total];
             Arrays.fill(catSections, -1);
-            Arrays.fill(emmCounts, 0);
         }
 
-        TSDemux demux = payload.getChannel().getHost();
         descloop.attach(cat.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, descriptor -> {
             cad.attach(descriptor);
             int emm = cad.getConditionalAccessStreamPID();
-            int casid = cad.getConditionalAccessSystemID();
-            byte[] privateData = cad.getPrivateDataBytes();
-            String vendor = CASystems.vendor(casid);
-            String description = String.format("EMM，系统号：%04X", casid);
+            int systemId = cad.getConditionalAccessSystemID();
+            String vendor = CASystems.vendor(systemId);
+            String description = String.format("EMM，系统号：%04X", systemId);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
             databaseService.updateStreamUsage(transactionId, emm, StreamTypes.CATEGORY_DATA, description);
-            databaseService.addEMMStream(transactionId, casid, emm, privateData);
-
-            demux.registerSectionChannel(emm, this::processEMM);
         });
 
         catSections[secnum] = version;
@@ -253,14 +243,14 @@ public class PSITracer implements Tracer
             program.setFreeAccess(false);
             cad.attach(encoding);
             int ecm = cad.getConditionalAccessStreamPID();
-            int casid = cad.getConditionalAccessSystemID();
+            int systemId = cad.getConditionalAccessSystemID();
             byte[] privateData = cad.getPrivateDataBytes();
-            String vendor = CASystems.vendor(casid);
-            String description = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), casid);
+            String vendor = CASystems.vendor(systemId);
+            String description = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), systemId);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
             databaseService.updateStreamUsage(transactionId, ecm, StreamTypes.CATEGORY_DATA, description);
-            databaseService.addECMStream(transactionId, casid, ecm, privateData, program.getProgramNumber(), 8191);
+            databaseService.addECMStream(transactionId, systemId, ecm, privateData, program.getProgramNumber(), 8191);
         });
 
         pmt.forEachProgramElement(encoding -> {
@@ -282,17 +272,17 @@ public class PSITracer implements Tracer
                 program.setFreeAccess(false);
                 cad.attach(descriptor);
                 int ecm = cad.getConditionalAccessStreamPID();
-                int casid = cad.getConditionalAccessSystemID();
+                int systemId = cad.getConditionalAccessSystemID();
                 byte[] privateData = cad.getPrivateDataBytes();
-                String vendor = CASystems.vendor(casid);
+                String vendor = CASystems.vendor(systemId);
                 String description = String.format("ECM（节目号：%d，目标ES：0x%X），系统号：%04X",
                                                    program.getProgramNumber(),
                                                    esPid,
-                                                   casid);
+                                                   systemId);
                 if (!vendor.isEmpty())
                     description += "，提供商：" + vendor;
                 databaseService.updateStreamUsage(transactionId, ecm, StreamTypes.CATEGORY_DATA, description);
-                databaseService.addECMStream(transactionId, casid, ecm, privateData, program.getProgramNumber(), esPid);
+                databaseService.addECMStream(transactionId, systemId, ecm, privateData, program.getProgramNumber(), esPid);
             });
         });
 
@@ -306,36 +296,5 @@ public class PSITracer implements Tracer
                                    payload.getStreamPID(),
                                    payload.getFinishPacketCounter(),
                                    payload.getEncoding().getBytes());
-    }
-
-    private void processEMM(TSDemuxPayload payload)
-    {
-        if (payload.getType() != TSDemuxPayload.Type.SECTION)
-            return;
-
-        int tableId = payload.getEncoding().readUINT8(0);
-        if (tableId != 0x83 && tableId != 0x84 && tableId != 0x87)
-            return;
-
-        int pid = payload.getStreamPID();
-        if (emmCounts[pid] >= Global.getPrivateSectionFilteringLimit())
-        {
-            int drops = Global.getPrivateSectionFilteringLimit() / 2;
-            drops = databaseService.removeSections(transactionId, "EMM*", payload.getStreamPID(), drops);
-            emmCounts[pid] -= drops;
-            log.info("丢弃 {} 个EMM分段记录", drops);
-        }
-
-        String tag = "EMM.Personal";
-        if (tableId == 0x84)
-            tag = "EMM.Global";
-        if (tableId == 0x87)
-            tag = "EMM.Active";
-
-        databaseService.addSection(transactionId, tag,
-                                   payload.getStreamPID(),
-                                   payload.getFinishPacketCounter(),
-                                   payload.getEncoding().getBytes());
-        emmCounts[pid] += 1;
     }
 }

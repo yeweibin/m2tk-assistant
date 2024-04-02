@@ -25,11 +25,15 @@ public class SyntaxField
 {
     public enum Type
     {
-        NUMBER, CHECKSUM, TEXT, BITS, NIBBLES, OCTETS, COMPLEX, LOOP_HEADER, LOOP_ENTRY_HEADER
+        NUMBER, CHECKSUM, TEXT, BITS, NIBBLES, OCTETS,
+        LOOP_HEADER, LOOP_ENTRY_HEADER,
+        DESCRIPTOR,
+        SECTION
     }
 
     private final Type type;
     private final String name;
+    private final String group;
 
     private final Object rawValue;
     private final String mappedValue;
@@ -45,12 +49,22 @@ public class SyntaxField
     private SyntaxField sibling;
     private LinkedList<SyntaxField> children;
 
-    public static SyntaxField complex(String name, String label)
+    public static SyntaxField descriptor(String name, String label)
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
-        return new SyntaxField(Type.COMPLEX, name, null, label, true,
+        return new SyntaxField(Type.DESCRIPTOR, name, null, null, label, true,
+                               null, null,
+                               null, null, false);
+    }
+
+    public static SyntaxField section(String name, String label, String group)
+    {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(label);
+
+        return new SyntaxField(Type.SECTION, name, group, null, label, true,
                                null, null,
                                null, null, false);
     }
@@ -60,7 +74,7 @@ public class SyntaxField
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
-        return new SyntaxField(Type.LOOP_HEADER, name, null, label, true,
+        return new SyntaxField(Type.LOOP_HEADER, name, null, null, label, true,
                                null, null,
                                null, null, false);
     }
@@ -70,7 +84,7 @@ public class SyntaxField
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
-        return new SyntaxField(Type.LOOP_ENTRY_HEADER, name, null, label, true,
+        return new SyntaxField(Type.LOOP_ENTRY_HEADER, name, null, null, label, true,
                                null, null,
                                null, null, false);
     }
@@ -81,7 +95,7 @@ public class SyntaxField
         Objects.requireNonNull(name);
         Objects.requireNonNull(rawValue);
 
-        return new SyntaxField(type, name, rawValue, null, false,
+        return new SyntaxField(type, name, null, rawValue, null, false,
                                null, null,
                                null, null, false);
     }
@@ -99,13 +113,14 @@ public class SyntaxField
         if (labelColor != null && !labelColor.matches("[0-9a-fA-F]{6}"))
             throw new IllegalArgumentException("无效的颜色参数：" + labelColor);
 
-        return new SyntaxField(type, name, rawValue, mappedValue, true,
+        return new SyntaxField(type, name, null, rawValue, mappedValue, true,
                                prefixText, prefixColor,
                                labelFormat, labelColor, bold);
     }
 
     private SyntaxField(Type type,
                         String name,
+                        String group,
                         Object rawValue,
                         String mappedValue,
                         boolean visible,
@@ -121,6 +136,7 @@ public class SyntaxField
 
         this.type = type;
         this.name = name;
+        this.group = group;
         this.rawValue = rawValue;
         this.mappedValue = mappedValue;
         this.visible = visible;
@@ -140,6 +156,11 @@ public class SyntaxField
     public String getName()
     {
         return name;
+    }
+
+    public String getGroup()
+    {
+        return group;
     }
 
     public Object getRawValue()
@@ -351,7 +372,7 @@ public class SyntaxField
                 yield '[' + Bytes.toHexStringPrettyPrint(bytes) + ']';
             }
             case TEXT -> (String) rawValue;
-            case COMPLEX, LOOP_HEADER, LOOP_ENTRY_HEADER -> "";
+            case LOOP_HEADER, LOOP_ENTRY_HEADER, DESCRIPTOR, SECTION -> "";
             default -> String.valueOf(rawValue);
         };
     }

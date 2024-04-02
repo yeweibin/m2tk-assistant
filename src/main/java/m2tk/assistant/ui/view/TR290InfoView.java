@@ -61,8 +61,8 @@ public class TR290InfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer.stop();
-
-            queryTR290Events();
+            else
+                queryTR290Events();
         });
 
         tr290StatsPanel = new TR290StatsPanel();

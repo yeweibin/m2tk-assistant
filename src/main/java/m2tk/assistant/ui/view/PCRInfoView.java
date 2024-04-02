@@ -61,8 +61,8 @@ public class PCRInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer.stop();
-
-            queryPCRStats();
+            else
+                queryPCRStats();
         });
 
         pcrStatsPanel = new PCRStatsPanel();

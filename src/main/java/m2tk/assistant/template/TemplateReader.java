@@ -98,6 +98,7 @@ public final class TemplateReader
         TableTemplate template = new TableTemplate();
         template.setName(element.attr("name"));
         template.setStandard(element.attr("standard"));
+        template.setGroup(element.attr("group"));
         template.setTableIds(StreamSupport.stream(element.find("TableId").spliterator(), false)
                                           .map(TemplateReader::interpretTableId)
                                           .toList());

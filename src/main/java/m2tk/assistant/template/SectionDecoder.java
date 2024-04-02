@@ -33,7 +33,7 @@ public class SectionDecoder
     {
         TableTemplate template = new TableTemplate();
         template.setName("private_section");
-        template.setStandard("mpeg2");
+        template.setStandard("mpeg");
         template.setTableIds(Collections.emptyList());
         template.setTableSyntax(List.of(DataFieldDefinition.number("table_id", "uimsbf", "8", FieldPresentation.of("Table ID", "0x%02X")),
                                         DataFieldDefinition.number("section_syntax_indicator", "bslbf", "1", null),
@@ -70,7 +70,7 @@ public class SectionDecoder
         String key = String.format("%02x", tableId);
         TableTemplate template = TEMPLATE_MAP.getOrDefault(key, DEFAULT_TABLE_TEMPLATE);
 
-        String displayName = "私有数据段";
+        String displayName = String.format("私有数据段（table_id: 0x%02X）", tableId);
         if (CollUtil.isNotEmpty(template.getTableIds()))
         {
             for (TableId tid : template.getTableIds())
@@ -83,7 +83,7 @@ public class SectionDecoder
             }
         }
 
-        SyntaxField section = SyntaxField.complex(template.getName(), displayName);
+        SyntaxField section = SyntaxField.section(template.getName(), displayName, template.getGroup());
 
         int bitOffset = 0;
         for (SyntaxFieldDefinition fieldDefinition : template.getTableSyntax())

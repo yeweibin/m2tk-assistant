@@ -40,9 +40,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
-
 public class EPGInfoView extends JPanel implements InfoView
 {
     private final transient FrameView frameView;
@@ -64,8 +61,8 @@ public class EPGInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer.stop();
-
-            queryServiceAndEvents();
+            else
+                queryServiceAndEvents();
         });
 
         serviceEventGuidePanel = new ServiceEventGuidePanel();
@@ -183,14 +180,16 @@ public class EPGInfoView extends JPanel implements InfoView
                                             event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
                                             event.isPresentEvent()))
                   .sorted(comparator2)
-                  .collect(groupingBy(event -> new SIService(event.getTransportStreamId(),
-                                                             event.getOriginalNetworkId(),
-                                                             event.getServiceId(),
-                                                             "数字电视业务",
-                                                             String.format("未知业务（业务号：%d）", event.getServiceId()),
-                                                             "未知提供商"),
-                                      () -> eventRegistry,
-                                      toList()));
+                  .forEach(event -> {
+                      SIService service = new SIService(event.getTransportStreamId(),
+                                                        event.getOriginalNetworkId(),
+                                                        event.getServiceId(),
+                                                        "数字电视业务",
+                                                        String.format("未知业务（业务号：%d）", event.getServiceId()),
+                                                        "未知提供商");
+                      List<SIEvent> eventList = eventRegistry.computeIfAbsent(service, any -> new ArrayList<>());
+                      eventList.add(event);
+                  });
 
             return null;
         };

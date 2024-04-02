@@ -22,6 +22,7 @@ public class TableTemplate implements TemplateDefinition
 {
     private String name;
     private String standard;
+    private String group;
     private List<TableId> tableIds;
     private List<SyntaxFieldDefinition> tableSyntax;
     private UniqueKey uniqueKey;
@@ -44,6 +45,16 @@ public class TableTemplate implements TemplateDefinition
     public void setStandard(String standard)
     {
         this.standard = standard;
+    }
+
+    public String getGroup()
+    {
+        return group;
+    }
+
+    public void setGroup(String group)
+    {
+        this.group = group;
     }
 
     public List<TableId> getTableIds()

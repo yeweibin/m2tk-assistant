@@ -48,7 +48,7 @@ public class PlainTreeNodeSyntaxPresenter
             case NIBBLES -> renderNibbles(field);
             case OCTETS -> renderOctets(field);
             case TEXT -> renderText(field);
-            case COMPLEX, LOOP_HEADER, LOOP_ENTRY_HEADER -> field.getMappedValue();
+            default -> field.getMappedValue();
         };
     }
 

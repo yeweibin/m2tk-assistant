@@ -103,8 +103,8 @@ public class StreamInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer1.stop();
-
-            querySourceInfo();
+            else
+                querySourceInfo();
         });
         timer2 = new Timer(500, e -> {
             if (!isVisible())
@@ -112,8 +112,8 @@ public class StreamInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer2.stop();
-
-            queryProgramInfo();
+            else
+                queryProgramInfo();
         });
         timer3 = new Timer(500, e -> {
             if (!isVisible())
@@ -121,8 +121,8 @@ public class StreamInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer3.stop();
-
-            queryStreamInfo();
+            else
+                queryStreamInfo();
         });
         timer4 = new Timer(500, e -> {
             if (!isVisible())
@@ -130,8 +130,8 @@ public class StreamInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer4.stop();
-
-            queryCASystemInfo();
+            else
+                queryCASystemInfo();
         });
 
         streamContextMenuItem1 = new JMenuItem();

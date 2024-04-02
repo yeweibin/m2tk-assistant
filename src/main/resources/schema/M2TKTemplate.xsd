@@ -44,6 +44,11 @@
                 </xsd:annotation>
             </xsd:attribute>
             <xsd:attribute name="standard" type="standard_type"/>
+            <xsd:attribute name="group" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation>组：解析后的节点出现的表分组</xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="DescriptorTemplate">

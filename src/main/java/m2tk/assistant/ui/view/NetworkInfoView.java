@@ -72,8 +72,8 @@ public class NetworkInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer1.stop();
-
-            queryNetworks();
+            else
+                queryNetworks();
         });
         timer2 = new Timer(2000, e -> {
             if (!isVisible())
@@ -81,8 +81,8 @@ public class NetworkInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer2.stop();
-
-            queryServices();
+            else
+                queryServices();
         });
         timer3 = new Timer(1000, e -> {
             if (!isVisible())
@@ -90,8 +90,8 @@ public class NetworkInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer3.stop();
-
-            queryNetworkTime();
+            else
+                queryNetworkTime();
         });
 
         networkTimePanel = new NetworkTimePanel();

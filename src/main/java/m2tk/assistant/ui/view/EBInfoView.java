@@ -58,8 +58,8 @@ public class EBInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer.stop();
-
-            queryDatagrams();
+            else
+                queryDatagrams();
         });
 
         sectionDatagramPanel = new EBSectionDatagramPanel();

@@ -1,6 +1,6 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 <M2TKTemplate>
-    <TableTemplate name="program_association_section" standard="mpeg">
+    <TableTemplate name="program_association_section" standard="mpeg" group="PSI">
         <TableId id="0">
             <DisplayName str="PAT"/>
         </TableId>
@@ -11,7 +11,19 @@
                     <Format str="0x%02X (%d)"/>
                 </FieldPresentation>
             </Field>
-            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Format str="%d"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="私有段"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="扩展私有段"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
             <Field name="0" length="1" encoding="bslbf"/>
             <Field name="reserved" length="2" encoding="bslbf"/>
             <Field name="section_length" length="12" encoding="uimsbf">
@@ -86,7 +98,7 @@
             <FieldRef field="section_number"/>
         </UniqueKey>
     </TableTemplate>
-    <TableTemplate name="conditional_access_section" standard="mpeg">
+    <TableTemplate name="conditional_access_section" standard="mpeg" group="PSI">
         <TableId id="1">
             <DisplayName str="CAT"/>
         </TableId>

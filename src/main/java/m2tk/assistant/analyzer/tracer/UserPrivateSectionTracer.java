@@ -20,6 +20,8 @@ import m2tk.assistant.dbi.DatabaseService;
 import m2tk.mpeg2.decoder.SectionDecoder;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxPayload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +29,7 @@ import java.util.Set;
 
 public class UserPrivateSectionTracer implements Tracer
 {
+    private static final Logger logger = LoggerFactory.getLogger(UserPrivateSectionTracer.class);
     private final DatabaseService databaseService;
     private final long transactionId;
 
@@ -63,14 +66,18 @@ public class UserPrivateSectionTracer implements Tracer
             !sec.isAttachable(payload.getEncoding()))
             return;
 
-        if (secCounts[payload.getStreamPID()] < limitPerStream)
+        int pid = payload.getStreamPID();
+        if (secCounts[pid] >= limitPerStream)
         {
-            databaseService.addSection(transactionId,
-                                         "UserPrivate",
-                                       payload.getStreamPID(),
-                                       payload.getFinishPacketCounter(),
-                                       payload.getEncoding().getBytes());
-            secCounts[payload.getStreamPID()] += 1;
+            int drops = (int) (limitPerStream * 0.25);
+            drops = databaseService.removeSections(transactionId, "UserPrivate", pid, drops);
+            secCounts[pid] -= drops;
+            logger.info("丢弃位于流 {} 上的 {} 个私有分段记录", pid, drops);
         }
+
+        databaseService.addSection(transactionId, "UserPrivate", pid,
+                                   payload.getFinishPacketCounter(),
+                                   payload.getEncoding().getBytes());
+        secCounts[pid] += 1;
     }
 }

@@ -62,8 +62,8 @@ public class NVODInfoView extends JPanel implements InfoView
 
             if (transactionId == -1)
                 timer.stop();
-
-            queryServiceAndEvents();
+            else
+                queryServiceAndEvents();
         });
 
         serviceEventGuidePanel = new NVODServiceEventGuidePanel();
