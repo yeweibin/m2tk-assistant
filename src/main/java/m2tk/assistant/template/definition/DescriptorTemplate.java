@@ -23,7 +23,6 @@ public class DescriptorTemplate implements TemplateDefinition
     private int tag;
     private int tagExtension;
     private String name;
-    private String standard;
     private Label displayName;
     private List<String> mayOccurIns;
     private List<SyntaxFieldDefinition> descriptorSyntax;
@@ -56,16 +55,6 @@ public class DescriptorTemplate implements TemplateDefinition
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public String getStandard()
-    {
-        return standard;
-    }
-
-    public void setStandard(String standard)
-    {
-        this.standard = standard;
     }
 
     public Label getDisplayName()

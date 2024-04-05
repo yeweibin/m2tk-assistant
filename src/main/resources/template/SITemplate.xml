@@ -1,0 +1,705 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<M2TKTemplate>
+    <TableTemplate name="bouquet_association_section" group="SI/BAT">
+        <TableId id="74">
+            <DisplayName str="业务群关联表 (BAT)"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="reserved_future_use" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="bouquet_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="业务群号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+            <Field name="bouquet_descriptors_length" length="12" encoding="uimsbf"/>
+            <Loop name="bouquet_descriptor_loop" length_field="bouquet_descriptors_length">
+                <LoopPresentation>
+                    <LoopHeader str="业务群描述"/>
+                    <LoopEmpty str="***无业务群描述***"/>
+                </LoopPresentation>
+                <Body>
+                    <Descriptor/>
+                </Body>
+            </Loop>
+            <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+            <Field name="transport_stream_loop_length" length="12" encoding="uimsbf"/>
+            <Loop name="transport_stream_loop" length_field="transport_stream_loop_length">
+                <LoopPresentation>
+                    <LoopHeader str="传输流描述"/>
+                    <LoopEmpty str="***无传输流描述***"/>
+                    <LoopEntry>
+                        <Prefix str="传输流"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="传输流号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="original_network_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="原始网络号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+                    <Field name="transport_descriptors_length" length="12" encoding="uimsbf"/>
+                    <Loop name="transport_descriptor_loop" length_field="transport_descriptors_length">
+                        <LoopPresentation>
+                            <LoopHeader str="传输流描述"/>
+                            <LoopEmpty str="***无传输流描述***"/>
+                        </LoopPresentation>
+                        <Body>
+                            <Descriptor/>
+                        </Body>
+                    </Loop>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="bouquet_id"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="network_information_section" group="SI/NIT">
+        <TableId id="64">
+            <DisplayName str="网络信息表——当前网络 (NIT_Actual)"/>
+        </TableId>
+        <TableId id="65">
+            <DisplayName str="网络信息表——其他网络 (NIT_Other)"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="reserved_future_use" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="network_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="网络号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+            <Field name="network_descriptors_length" length="12" encoding="uimsbf"/>
+            <Loop name="network_descriptor_loop" length_field="network_descriptors_length">
+                <LoopPresentation>
+                    <LoopHeader str="网络描述"/>
+                    <LoopEmpty str="***无网络描述***"/>
+                </LoopPresentation>
+                <Body>
+                    <Descriptor/>
+                </Body>
+            </Loop>
+            <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+            <Field name="transport_stream_loop_length" length="12" encoding="uimsbf"/>
+            <Loop name="transport_stream_loop" length_field="transport_stream_loop_length">
+                <LoopPresentation>
+                    <LoopHeader str="传输流描述"/>
+                    <LoopEmpty str="***无传输流描述***"/>
+                    <LoopEntry>
+                        <Prefix str="传输流"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="传输流号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="original_network_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="原始网络号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+                    <Field name="transport_descriptors_length" length="12" encoding="uimsbf"/>
+                    <Loop name="transport_descriptor_loop" length_field="transport_descriptors_length">
+                        <LoopPresentation>
+                            <LoopHeader str="传输流描述"/>
+                            <LoopEmpty str="***无传输流描述***"/>
+                        </LoopPresentation>
+                        <Body>
+                            <Descriptor/>
+                        </Body>
+                    </Loop>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="network_id"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="service_description_section" group="SI/SDT">
+        <TableId id="66">
+            <DisplayName str="业务描述表——当前传输流 (SDT_Actual)"/>
+        </TableId>
+        <TableId id="70">
+            <DisplayName str="业务描述表——其他传输流 (SDT_Other)"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="reserved_future_use" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="传输流号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="original_network_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="原始网络号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="8" encoding="bslbf"/>
+            <Loop name="service_loop" length_field="implicit" length_correction="-4">
+                <LoopPresentation>
+                    <LoopHeader str="业务描述"/>
+                    <LoopEmpty str="***无业务描述***"/>
+                    <LoopEntry>
+                        <Prefix str="业务"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="service_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="业务号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved_future_use" length="6" encoding="bslbf"/>
+                    <Field name="EIT_schedule_flag" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="EIT排期表状态"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="不发送"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="发送"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="EIT_present_following_flag" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="EIT当前后续表状态"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="不发送"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="发送"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="running_status" length="3" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="运行状态"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="未定义"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="未运行"/>
+                                </Value>
+                                <Value value="2">
+                                    <ValString str="即将开始"/>
+                                </Value>
+                                <Value value="3">
+                                    <ValString str="暂停中"/>
+                                </Value>
+                                <Value value="4">
+                                    <ValString str="运行中"/>
+                                </Value>
+                                <Value value="5">
+                                    <ValString str="已结束"/>
+                                </Value>
+                                <ValueRange min="6" max="7">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="free_CA_mode" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="条件接收状态"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="未加扰"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="加扰"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="descriptors_loop_length" length="12" encoding="uimsbf"/>
+                    <Loop name="descriptor_loop" length_field="descriptors_loop_length">
+                        <LoopPresentation>
+                            <LoopHeader str="业务描述"/>
+                            <LoopEmpty str="***无业务描述***"/>
+                        </LoopPresentation>
+                        <Body>
+                            <Descriptor/>
+                        </Body>
+                    </Loop>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="transport_stream_id"/>
+            <FieldRef field="original_network_id"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="event_information_section" group="SI/EIT">
+        <TableId id="78">
+            <DisplayName str="事件信息表——当前传输流，当前/后续 (EIT_Actual_pnf)"/>
+        </TableId>
+        <TableId id="79">
+            <DisplayName str="事件信息表——其他传输流，当前/后续 (EIT_Other_pnf)"/>
+        </TableId>
+        <TableId id="80">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="81">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="82">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="83">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="84">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="85">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="86">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="87">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="88">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="89">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="90">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="91">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="92">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="93">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="94">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="95">
+            <DisplayName str="事件信息表——当前传输流，排期 (EIT_Actual_schedule)"/>
+        </TableId>
+        <TableId id="96">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="97">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="98">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="99">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="100">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="101">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="102">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="103">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="104">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="105">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="106">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="107">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="108">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="109">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="110">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableId id="111">
+            <DisplayName str="事件信息表——其他传输流，排期 (EIT_Other_schedule)"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="TableID"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="reserved_future_use" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="service_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="业务号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="传输流号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="original_network_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="原始网络号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="segment_last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="切片最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_table_id" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后TableID"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="event_loop" length_field="implicit" length_correction="-4">
+                <LoopPresentation>
+                    <LoopHeader str="事件描述"/>
+                    <LoopEmpty str="***无事件描述***"/>
+                    <LoopEntry>
+                        <Prefix str="事件"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="event_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="业务号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="start_time" length="40" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="开始时间(UTC)"/>
+                            <Format str="%010X"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="duration" length="24" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="持续时长"/>
+                            <Format str="%d 秒"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="running_status" length="3" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="运行状态"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="未定义"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="未运行"/>
+                                </Value>
+                                <Value value="2">
+                                    <ValString str="即将开始"/>
+                                </Value>
+                                <Value value="3">
+                                    <ValString str="暂停中"/>
+                                </Value>
+                                <Value value="4">
+                                    <ValString str="运行中"/>
+                                </Value>
+                                <Value value="5">
+                                    <ValString str="已结束"/>
+                                </Value>
+                                <ValueRange min="6" max="7">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="free_CA_mode" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="条件接收状态"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="未加扰"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="加扰"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="descriptors_loop_length" length="12" encoding="uimsbf"/>
+                    <Loop name="descriptor_loop" length_field="descriptors_loop_length">
+                        <LoopPresentation>
+                            <LoopHeader str="事件描述"/>
+                            <LoopEmpty str="***无事件描述***"/>
+                        </LoopPresentation>
+                        <Body>
+                            <Descriptor/>
+                        </Body>
+                    </Loop>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="service_id"/>
+            <FieldRef field="transport_stream_id"/>
+            <FieldRef field="original_network_id"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="time_date_table" group="SI/TDT">
+        <TableId id="112">
+            <DisplayName str="时间日期表 (TDT)"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="bslbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="reserved_future_use" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="UTC_time" length="40" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="UTC时间"/>
+                    <Format str="%010X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="time_offset_table" group="SI/TOT">
+        <TableId id="115">
+            <DisplayName str="时间偏移表 (TOT)"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="bslbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="reserved_future_use" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="UTC_time" length="40" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="UTC时间"/>
+                    <Format str="%010X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="4" encoding="bslbf"/>
+            <Field name="descriptors_loop_length" length="12" encoding="uimsbf"/>
+            <Loop name="descriptor_loop" length_field="descriptors_loop_length">
+                <LoopPresentation>
+                    <LoopHeader str="时间偏移描述"/>
+                    <LoopEmpty str="***无时间偏移描述***"/>
+                </LoopPresentation>
+                <Body>
+                    <Descriptor/>
+                </Body>
+            </Loop>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+        </UniqueKey>
+    </TableTemplate>
+<!--    <DescriptorTemplate tag="9" name="ca_descriptor">-->
+<!--        <DisplayName str="条件接收描述符"/>-->
+<!--        <DescriptorBody>-->
+<!--            <Field name="descriptor_tag" length="8" encoding="uimsbf">-->
+<!--                <FieldPresentation>-->
+<!--                    <Prefix str="Tag"/>-->
+<!--                    <Format str="0x%02X"/>-->
+<!--                </FieldPresentation>-->
+<!--            </Field>-->
+<!--            <Field name="descriptor_length" length="8" encoding="uimsbf">-->
+<!--                <FieldPresentation>-->
+<!--                    <Prefix str="Length"/>-->
+<!--                </FieldPresentation>-->
+<!--            </Field>-->
+<!--            <Field name="ca_system_id" length="16" encoding="uimsbf">-->
+<!--                <FieldPresentation>-->
+<!--                    <Prefix str="CA系统号"/>-->
+<!--                    <Format str="%04X（%d）"/>-->
+<!--                </FieldPresentation>-->
+<!--            </Field>-->
+<!--            <Field name="reserved" length="3" encoding="bslbf"/>-->
+<!--            <Field name="ca_pid" length="13" encoding="uimsbf">-->
+<!--                <FieldPresentation>-->
+<!--                    <Prefix str="CA数据流"/>-->
+<!--                    <Format str="0x%04X（%d）"/>-->
+<!--                </FieldPresentation>-->
+<!--            </Field>-->
+<!--            <Field name="private_data" encoding="octets" length_field="implicit">-->
+<!--                <FieldPresentation>-->
+<!--                    <Prefix str="私有数据"/>-->
+<!--                    <Format str="lowercase"/>-->
+<!--                </FieldPresentation>-->
+<!--            </Field>-->
+<!--        </DescriptorBody>-->
+<!--    </DescriptorTemplate>-->
+</M2TKTemplate>

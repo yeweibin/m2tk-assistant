@@ -43,7 +43,6 @@
                     <xsd:documentation>索引名：描述符模板可以通过索引名声明它们可以出现在当前表内</xsd:documentation>
                 </xsd:annotation>
             </xsd:attribute>
-            <xsd:attribute name="standard" type="standard_type"/>
             <xsd:attribute name="group" type="xsd:string">
                 <xsd:annotation>
                     <xsd:documentation>组：解析后的节点出现的表分组</xsd:documentation>
@@ -59,7 +58,7 @@
                     <xsd:complexType>
                         <xsd:attribute name="table" use="required" type="xsd:string">
                             <xsd:annotation>
-                                <xsd:documentation>可以使用当前描述符的表的索引名。</xsd:documentation>
+                                <xsd:documentation>可能承载描述符的表名称。</xsd:documentation>
                             </xsd:annotation>
                         </xsd:attribute>
                     </xsd:complexType>
@@ -69,7 +68,6 @@
             <xsd:attribute name="tag" use="required" type="xsd:unsignedByte"/>
             <xsd:attribute name="tag_ext" type="xsd:unsignedByte"/>
             <xsd:attribute name="name" use="required" type="xsd:string"/>
-            <xsd:attribute name="standard" type="standard_type"/>
         </xsd:complexType>
     </xsd:element>
     <xsd:complexType name="Syntax">
@@ -262,13 +260,6 @@
             <xsd:pattern value="(n/a)|(0|-?[1-9][0-9]*)"/>
         </xsd:restriction>
     </xsd:simpleType>
-    <xsd:simpleType name="standard_type">
-        <xsd:restriction base="xsd:string">
-            <xsd:enumeration value="mpeg"/>
-            <xsd:enumeration value="dvb"/>
-            <xsd:enumeration value="private"/>
-        </xsd:restriction>
-    </xsd:simpleType>
     <xsd:simpleType name="color_code">
         <xsd:restriction base="xsd:string">
             <xsd:pattern value="#[0-9A-Fa-f]{6}"/>
@@ -295,8 +286,8 @@
                         <xsd:sequence>
                             <xsd:element name="ValString" type="Label"/>
                         </xsd:sequence>
-                        <xsd:attribute name="val_min" use="required" type="xsd:nonNegativeInteger"/>
-                        <xsd:attribute name="val_max" use="required" type="xsd:nonNegativeInteger"/>
+                        <xsd:attribute name="min" use="required" type="xsd:nonNegativeInteger"/>
+                        <xsd:attribute name="max" use="required" type="xsd:nonNegativeInteger"/>
                     </xsd:complexType>
                 </xsd:element>
             </xsd:choice>

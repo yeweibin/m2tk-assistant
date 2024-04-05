@@ -21,7 +21,6 @@ import java.util.List;
 public class TableTemplate implements TemplateDefinition
 {
     private String name;
-    private String standard;
     private String group;
     private List<TableId> tableIds;
     private List<SyntaxFieldDefinition> tableSyntax;
@@ -35,16 +34,6 @@ public class TableTemplate implements TemplateDefinition
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public String getStandard()
-    {
-        return standard;
-    }
-
-    public void setStandard(String standard)
-    {
-        this.standard = standard;
     }
 
     public String getGroup()

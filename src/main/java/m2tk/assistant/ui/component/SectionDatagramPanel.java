@@ -21,14 +21,17 @@ import m2tk.assistant.dbi.entity.SectionEntity;
 import m2tk.assistant.template.PlainTreeNodeSyntaxPresenter;
 import m2tk.assistant.template.SectionDecoder;
 import m2tk.assistant.template.SyntaxField;
-import m2tk.assistant.ui.builder.section.*;
+import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
 
 import javax.swing.*;
-import javax.swing.tree.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
-import java.util.*;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.*;
 
 public class SectionDatagramPanel extends JPanel
 {
@@ -52,7 +55,10 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupTDT;
     private DefaultMutableTreeNode groupTOT;
 
-    private Map<String, Set<TreeNode>> groups;
+    private SectionDecoder decoder;
+    private PlainTreeNodeSyntaxPresenter presenter;
+
+    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
     public SectionDatagramPanel()
     {
@@ -63,6 +69,9 @@ public class SectionDatagramPanel extends JPanel
     {
         root = new DefaultMutableTreeNode("/");
         model = new DefaultTreeModel(root);
+
+        decoder = new SectionDecoder();
+        presenter = new PlainTreeNodeSyntaxPresenter();
 
         JTree tree = new JTree(model);
         tree.setRootVisible(false);
@@ -81,7 +90,7 @@ public class SectionDatagramPanel extends JPanel
     {
         groupPSI = new DefaultMutableTreeNode("PSI");
         groupSI = new DefaultMutableTreeNode("SI");
-        groupPrivate = new DefaultMutableTreeNode("私有数据");
+        groupPrivate = new DefaultMutableTreeNode("UserPrivate");
 
         groupPAT = new DefaultMutableTreeNode("PAT");
         groupCAT = new DefaultMutableTreeNode("CAT");
@@ -115,14 +124,6 @@ public class SectionDatagramPanel extends JPanel
         groupSI.add(groupEITScheduleOther);
         groupSI.add(groupTDT);
         groupSI.add(groupTOT);
-
-        groups = Map.of("first-class", Set.of(groupPSI, groupSI, groupPrivate),
-                        "second-class", Set.of(groupPAT, groupCAT, groupPMT, groupBAT,
-                                               groupNITActual, groupNITOther,
-                                               groupSDTActual, groupSDTOther,
-                                               groupEITPFActual, groupEITPFOther,
-                                               groupEITScheduleActual, groupEITScheduleOther,
-                                               groupTDT, groupTOT));
 
         model.reload();
     }
@@ -169,163 +170,295 @@ public class SectionDatagramPanel extends JPanel
 
     private void addPATSectionNodes(List<SectionEntity> sections)
     {
-        PATNodeBuilder builder = new PATNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupPAT.removeAllChildren();
         for (SectionEntity section : sections)
-            groupPAT.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupPAT.setUserObject(String.format("PAT（%d）", groupPAT.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 传输流号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "transport_stream_id")));
+            groupPAT.add(node);
+        }
+
+        groupPAT.setUserObject(String.format("PAT (%d)", groupPAT.getChildCount()));
     }
 
     private void addCATSectionNodes(List<SectionEntity> sections)
     {
-        CATNodeBuilder builder = new CATNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupCAT.removeAllChildren();
         for (SectionEntity section : sections)
-            groupCAT.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupCAT.setUserObject(String.format("CAT（%d）", groupCAT.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x]",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number")));
+            groupCAT.add(node);
+        }
+
+        groupCAT.setUserObject(String.format("CAT (%d)", groupCAT.getChildCount()));
     }
 
     private void addPMTSectionNodes(List<SectionEntity> sections)
     {
-        PMTNodeBuilder builder = new PMTNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupPMT.removeAllChildren();
         for (SectionEntity section : sections)
-            groupPMT.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupPMT.setUserObject(String.format("PMT（%d）", groupPMT.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 节目号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "program_number")));
+            groupPMT.add(node);
+        }
+
+        groupPMT.setUserObject(String.format("PMT (%d)", groupPMT.getChildCount()));
     }
 
     private void addBATSectionNodes(List<SectionEntity> sections)
     {
-        BATNodeBuilder builder = new BATNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupBAT.removeAllChildren();
         for (SectionEntity section : sections)
-            groupBAT.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupBAT.setUserObject(String.format("BAT（%d）", groupBAT.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务群号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "bouquet_id")));
+            groupBAT.add(node);
+        }
+
+        groupBAT.setUserObject(String.format("BAT (%d)", groupBAT.getChildCount()));
     }
 
     private void addNITActualSectionNodes(List<SectionEntity> sections)
     {
-        NITNodeBuilder builder = new NITNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupNITActual.removeAllChildren();
         for (SectionEntity section : sections)
-            groupNITActual.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupNITActual.setUserObject(String.format("NIT_Actual（%d）", groupNITActual.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 网络号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "network_id")));
+            groupNITActual.add(node);
+        }
+
+        groupNITActual.setUserObject(String.format("NIT_Actual (%d)", groupNITActual.getChildCount()));
     }
 
     private void addNITOtherSectionNodes(List<SectionEntity> sections)
     {
-        NITNodeBuilder builder = new NITNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupNITOther.removeAllChildren();
         for (SectionEntity section : sections)
-            groupNITOther.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupNITOther.setUserObject(String.format("NIT_Other（%d）", groupNITOther.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 网络号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "network_id")));
+            groupNITOther.add(node);
+        }
+
+        groupNITOther.setUserObject(String.format("NIT_Other (%d)", groupNITOther.getChildCount()));
     }
 
     private void addSDTActualSectionNodes(List<SectionEntity> sections)
     {
-        SDTNodeBuilder builder = new SDTNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupSDTActual.removeAllChildren();
         for (SectionEntity section : sections)
-            groupSDTActual.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupSDTActual.setUserObject(String.format("SDT_Actual（%d）", groupSDTActual.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 传输流号：%d，原始网络号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "transport_stream_id"),
+                                             getFieldValue(syntax, "original_network_id")));
+            groupSDTActual.add(node);
+        }
+
+        groupSDTActual.setUserObject(String.format("SDT_Actual (%d)", groupSDTActual.getChildCount()));
     }
 
     private void addSDTOtherSectionNodes(List<SectionEntity> sections)
     {
-        SDTNodeBuilder builder = new SDTNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupSDTOther.removeAllChildren();
         for (SectionEntity section : sections)
-            groupSDTOther.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupSDTOther.setUserObject(String.format("SDT_Other（%d）", groupSDTOther.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 传输流号：%d，原始网络号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "transport_stream_id"),
+                                             getFieldValue(syntax, "original_network_id")));
+            groupSDTOther.add(node);
+        }
+
+        groupSDTOther.setUserObject(String.format("SDT_Other (%d)", groupSDTOther.getChildCount()));
     }
 
     private void addEITPFActualSectionNodes(List<SectionEntity> sections)
     {
-        EITNodeBuilder builder = new EITNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupEITPFActual.removeAllChildren();
         for (SectionEntity section : sections)
-            groupEITPFActual.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupEITPFActual.setUserObject(String.format("EIT_PF_Actual（%d）", groupEITPFActual.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "service_id")));
+            groupEITPFActual.add(node);
+        }
+
+        groupEITPFActual.setUserObject(String.format("EIT_PF_Actual (%d)", groupEITPFActual.getChildCount()));
     }
 
     private void addEITPFOtherSectionNodes(List<SectionEntity> sections)
     {
-        EITNodeBuilder builder = new EITNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupEITPFOther.removeAllChildren();
         for (SectionEntity section : sections)
-            groupEITPFOther.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupEITPFOther.setUserObject(String.format("EIT_PF_Other（%d）", groupEITPFOther.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "service_id")));
+            groupEITPFOther.add(node);
+        }
+
+        groupEITPFOther.setUserObject(String.format("EIT_PF_Other (%d)", groupEITPFOther.getChildCount()));
     }
 
     private void addEITScheduleActualSectionNodes(List<SectionEntity> sections)
     {
-        EITNodeBuilder builder = new EITNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupEITScheduleActual.removeAllChildren();
         for (SectionEntity section : sections)
-            groupEITScheduleActual.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupEITScheduleActual.setUserObject(String.format("EIT_Schedule_Actual（%d）", groupEITScheduleActual.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "service_id")));
+            groupEITScheduleActual.add(node);
+        }
+
+        groupEITScheduleActual.setUserObject(String.format("EIT_Schedule_Actual (%d)", groupEITScheduleActual.getChildCount()));
     }
 
     private void addEITScheduleOtherSectionNodes(List<SectionEntity> sections)
     {
-        EITNodeBuilder builder = new EITNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupEITScheduleOther.removeAllChildren();
         for (SectionEntity section : sections)
-            groupEITScheduleOther.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupEITScheduleOther.setUserObject(String.format("EIT_Schedule_Other（%d）", groupEITScheduleOther.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+                                             getFieldValue(syntax, "version_number"),
+                                             getFieldValue(syntax, "section_number"),
+                                             getFieldValue(syntax, "last_section_number"),
+                                             getFieldValue(syntax, "service_id")));
+            groupEITScheduleOther.add(node);
+        }
+
+        groupEITScheduleOther.setUserObject(String.format("EIT_Schedule_Other (%d)", groupEITScheduleOther.getChildCount()));
     }
 
     private void addTDTSectionNodes(List<SectionEntity> sections)
     {
-        TDTNodeBuilder builder = new TDTNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupTDT.removeAllChildren();
         for (SectionEntity section : sections)
-            groupTDT.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupTDT.setUserObject(String.format("TDT（%d）", groupTDT.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("本地时间：%s",
+                                             translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
+            groupTDT.add(node);
+        }
+
+        groupTDT.setUserObject(String.format("TDT (%d)", groupTDT.getChildCount()));
     }
 
     private void addTOTSectionNodes(List<SectionEntity> sections)
     {
-        TOTNodeBuilder builder = new TOTNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
-
-        groupTOT.removeAllChildren();
         for (SectionEntity section : sections)
-            groupTOT.add(builder.build(Encoding.wrap(section.getEncoding())));
-        groupTOT.setUserObject(String.format("TOT（%d）", groupTOT.getChildCount()));
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            node.setUserObject(String.format("本地时间：%s",
+                                             translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
+            groupTOT.add(node);
+        }
+
+        groupTOT.setUserObject(String.format("TOT (%d)", groupTOT.getChildCount()));
     }
 
     private void addUserPrivateSectionNodes(List<SectionEntity> sections)
     {
-        SectionDecoder decoder = new SectionDecoder();
-        PlainTreeNodeSyntaxPresenter presenter = new PlainTreeNodeSyntaxPresenter();
-
         Map<String, DefaultMutableTreeNode> namedGroups = new HashMap<>();
         DefaultMutableTreeNode defaultGroup = new DefaultMutableTreeNode();
 
@@ -366,6 +499,17 @@ public class SectionDatagramPanel extends JPanel
         }
     }
 
+    private long getFieldValue(SyntaxField syntax, String name)
+    {
+        SyntaxField field = syntax.findLastChild(name);
+        return (field != null) ? field.getValueAsLong() : 0;
+    }
+
+    private String translateTimepoint2Local(long timepoint)
+    {
+        return DVB.decodeTimepointIntoLocalDateTime(timepoint).format(timeFormatter);
+    }
+
     class SectionDatagramTreeCellRenderer extends DefaultTreeCellRenderer
     {
         @Override
@@ -385,10 +529,8 @@ public class SectionDatagramPanel extends JPanel
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             setToolTipText((String) node.getUserObject());
 
-            if (groups.get("first-class").contains(node))
+            if (root.isNodeChild(node))
                 setIcon(SmallIcons.NODE_TREE);
-            else if (groups.get("second-class").contains(node))
-                setIcon(SmallIcons.TABLE);
             else if (groupPrivate.isNodeChild(node))
                 setIcon(SmallIcons.TABLE);
             else

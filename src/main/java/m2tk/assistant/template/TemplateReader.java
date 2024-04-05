@@ -58,7 +58,7 @@ public final class TemplateReader
         }
     }
 
-    public M2TKTemplate parse(File file)
+    public M2TKTemplate parse(URL file)
     {
         try
         {
@@ -93,11 +93,22 @@ public final class TemplateReader
         }
     }
 
+    public M2TKTemplate parse(File file)
+    {
+        try
+        {
+            return parse(file.toURI().toURL());
+        } catch (Exception ex)
+        {
+            logger.warn("执行异常：{}", ex.getMessage(), ex);
+            return null;
+        }
+    }
+
     private static TableTemplate interpretTableTemplate(Element element)
     {
         TableTemplate template = new TableTemplate();
         template.setName(element.attr("name"));
-        template.setStandard(element.attr("standard"));
         template.setGroup(element.attr("group"));
         template.setTableIds(StreamSupport.stream(element.find("TableId").spliterator(), false)
                                           .map(TemplateReader::interpretTableId)
@@ -140,7 +151,6 @@ public final class TemplateReader
         template.setTag(Integer.parseInt(element.attr("tag")));
         template.setTagExtension(Integer.parseInt(StrUtil.nullToDefault(element.attr("tag_ext"), "-1")));
         template.setName(element.attr("name"));
-        template.setStandard(element.attr("standard"));
         template.setDisplayName(interpretLabel(element.select("DisplayName")));
         template.setMayOccurIns(StreamSupport.stream(element.find("MayOccurIn").spliterator(), false)
                                              .map(mayOccurIn -> mayOccurIn.attr("table"))
@@ -319,8 +329,8 @@ public final class TemplateReader
                       {
                           case "Value" -> ValueMapping.mono(Integer.parseUnsignedInt(e.attr("value")),
                                                             e.select("ValString").attr("str"));
-                          case "ValueRange" -> ValueMapping.range(Integer.parseUnsignedInt(e.attr("val_min")),
-                                                                  Integer.parseUnsignedInt(e.attr("val_max")),
+                          case "ValueRange" -> ValueMapping.range(Integer.parseUnsignedInt(e.attr("min")),
+                                                                  Integer.parseUnsignedInt(e.attr("max")),
                                                                   e.select("ValString").attr("str"));
                           default -> null;
                       })

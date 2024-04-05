@@ -18,6 +18,7 @@ package m2tk.assistant;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.ui.MainViewController;
 import org.jdesktop.application.FrameView;
@@ -51,9 +52,14 @@ public final class AssistantApp extends SingleFrameApplication
     @Override
     protected void initialize(String[] args)
     {
+        if (Global.requiresLightTheme())
+            FlatMacLightLaf.setup();
+        else
+            FlatMacDarkLaf.setup();
+
         Font treeFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Tree.font").getSize());
         Font tableFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Table.font").getSize());
-        FlatMacDarkLaf.setup();
+
         UIManager.put("TitlePane.showIconBesideTitle", true);
         UIManager.put("TabbedPane.showTabSeparators", true);
         UIManager.put("Table.paintOutsideAlternateRows", true);

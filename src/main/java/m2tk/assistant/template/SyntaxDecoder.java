@@ -61,82 +61,85 @@ public class SyntaxDecoder
         if (bitOffset < 0 || bitOffset > 7)
             throw new IllegalArgumentException("无效的位偏移量：" + bitOffset);
 
-        if (definition instanceof DataFieldDefinition field)
+        switch (definition)
         {
-            return switch (field.getEncoding())
+            case DataFieldDefinition field ->
             {
-                case "bslbf" -> decodeBitstream(field, encoding, position, bitOffset, limit, parent);
-                case "uimsbf" -> decodeUnsignedInteger(field, encoding, position, bitOffset, limit, parent);
-                case "checksum" -> decodeChecksum(field, encoding, position, bitOffset, limit, parent);
-                case "nibbles" -> decodeNibbleArray(field, encoding, position, bitOffset, limit, parent);
-                case "octets" -> decodeOctetArray(field, encoding, position, bitOffset, limit, parent);
-                case "text" -> decodeText(field, encoding, position, bitOffset, limit, parent);
-                default -> throw new IllegalArgumentException("无效的字段格式");
-            };
-        }
-
-        if (definition instanceof ConditionalFieldDefinition field)
-        {
-            int totalBits = 0;
-
-            List<SyntaxFieldDefinition> bodyFields = getConditionBodyFields(field, parent);
-            for (SyntaxFieldDefinition bodyField : bodyFields)
-            {
-                int decodedBits = decode(bodyField, encoding, position, bitOffset, limit, parent);
-
-                totalBits += decodedBits;
-                position = position + (bitOffset + decodedBits) / 8;
-                bitOffset = (bitOffset + decodedBits) % 8;
+                return switch (field.getEncoding())
+                {
+                    case "bslbf" -> decodeBitstream(field, encoding, position, bitOffset, limit, parent);
+                    case "uimsbf" -> decodeUnsignedInteger(field, encoding, position, bitOffset, limit, parent);
+                    case "checksum" -> decodeChecksum(field, encoding, position, bitOffset, limit, parent);
+                    case "nibbles" -> decodeNibbleArray(field, encoding, position, bitOffset, limit, parent);
+                    case "octets" -> decodeOctetArray(field, encoding, position, bitOffset, limit, parent);
+                    case "text" -> decodeText(field, encoding, position, bitOffset, limit, parent);
+                    default -> throw new IllegalArgumentException("无效的字段格式");
+                };
             }
-
-            return totalBits;
-        }
-
-        if (definition instanceof LoopFieldDefinition field)
-        {
-            // Loop解码规则
-            //    length_type：表明当前循环的length字段的值类型：字节长度（length_in_bytes）或循环次数（count）。
-            //                 如果length_type未定义（空值），则按字节长度处理。
-            //    length_field：提供字段长度的字段名。如果length_field="implicit"，则假设当前循环到limit位置结束。
-            //    循环体可以为空，空循环的返回内容需根据loop_presentation定义确定。
-            //    loop_presentation：循环头标签（LoopHeader）仅在非空循环时且存在LoopHeader定义时使用。
-            //                 循环体标签（LoopEntryHeader），由固定标签（Fixed）或字段标签（EntryField）决定。
-            //                  EntryField是LoopBody中（可能的多个Field中的）某个Field，由field_name标识。
-            //                  如果定义了LoopEntry，则需要为循环体外包一层Node；没有则不用外包。
-            //                 对于描述符循环，描述符的显示由描述符模板确定，建议不要定义LoopEntry，但这里不做强制约束。
-
-            if (bitOffset != 0)
+            case ConditionalFieldDefinition field ->
             {
-                logger.error("字段未对齐：bitOffset={}", bitOffset);
-                throw new IllegalStateException("错误的字段起始位置（未对齐）");
+                int totalBits = 0;
+
+                List<SyntaxFieldDefinition> bodyFields = getConditionBodyFields(field, parent);
+                for (SyntaxFieldDefinition bodyField : bodyFields)
+                {
+                    int decodedBits = decode(bodyField, encoding, position, bitOffset, limit, parent);
+
+                    totalBits += decodedBits;
+                    position = position + (bitOffset + decodedBits) / 8;
+                    bitOffset = (bitOffset + decodedBits) % 8;
+                }
+
+                return totalBits;
             }
-
-            String lengthType = StrUtil.emptyToDefault(field.getLengthType(), "length_in_bytes");
-            return lengthType.equals("count")
-                   ? decodeLoopInCount(field, encoding, position, bitOffset, limit, parent)
-                   : decodeLoopInLength(field, encoding, position, bitOffset, limit, parent);
-        }
-
-        if (definition instanceof DescriptorFieldDefinition)
-        {
-            if (bitOffset != 0)
+            case LoopFieldDefinition field ->
             {
-                logger.error("字段未对齐：bitOffset={}", bitOffset);
-                throw new IllegalStateException("错误的字段起始位置（未对齐）");
-            }
+                // Loop解码规则
+                //    length_type：表明当前循环的length字段的值类型：字节长度（length_in_bytes）或循环次数（count）。
+                //                 如果length_type未定义（空值），则按字节长度处理。
+                //    length_field：提供字段长度的字段名。如果length_field="implicit"，则假设当前循环到limit位置结束。
+                //    循环体可以为空，空循环的返回内容需根据loop_presentation定义确定。
+                //    loop_presentation：循环头标签（LoopHeader）仅在非空循环时且存在LoopHeader定义时使用。
+                //                 循环体标签（LoopEntryHeader），由固定标签（Fixed）或字段标签（EntryField）决定。
+                //                  EntryField是LoopBody中（可能的多个Field中的）某个Field，由field_name标识。
+                //                  如果定义了LoopEntry，则需要为循环体外包一层Node；没有则不用外包。
+                //                 对于描述符循环，描述符的显示由描述符模板确定，建议不要定义LoopEntry，但这里不做强制约束。
 
-            int len = encoding.readUINT8(position + 1);
-            if (len + 2 > limit)
+                if (bitOffset != 0)
+                {
+                    logger.error("Loop字段未对齐：bitOffset={}", bitOffset);
+                    throw new IllegalStateException("错误的Loop字段起始位置（未对齐）");
+                }
+
+                String lengthType = StrUtil.emptyToDefault(field.getLengthType(), "length_in_bytes");
+                return lengthType.equals("count")
+                       ? decodeLoopInCount(field, encoding, position, bitOffset, limit, parent)
+                       : decodeLoopInLength(field, encoding, position, bitOffset, limit, parent);
+            }
+            case DescriptorFieldDefinition ignored ->
             {
-                logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, len + 2);
-                throw new IndexOutOfBoundsException("字段超出可解码范围");
+                if (bitOffset != 0)
+                {
+                    logger.error("Descriptor字段未对齐：bitOffset={}", bitOffset);
+                    throw new IllegalStateException("错误的Descriptor字段起始位置（未对齐）");
+                }
+
+                int len = encoding.readUINT8(position + 1);
+                if (len + 2 > limit)
+                {
+                    logger.error("Descriptor字段超限：start={}, limit={}, field_size={}", position, limit, len + 2);
+                    throw new IndexOutOfBoundsException("Descriptor字段超出可解码范围");
+                }
+
+                SyntaxField field = DESCRIPTOR_DECODER.decode(encoding, position, position + len + 2);
+                if (parent != null)
+                    parent.appendChild(field);
+
+                return (len + 2) * 8;
             }
-
-            SyntaxField field = DESCRIPTOR_DECODER.decode(encoding, position, position + len + 2);
-            if (parent != null)
-                parent.appendChild(field);
-
-            return (len + 2) * 8;
+            default ->
+            {
+            }
         }
 
         throw new IllegalArgumentException("无效的定义类型：type=" + definition.type());
@@ -163,8 +166,8 @@ public class SyntaxDecoder
         int bitLength = Integer.parseUnsignedInt(definition.getLength());
         if (bitLength > 64)
         {
-            logger.error("字段长度超过可解析范围：length={}", bitLength);
-            throw new IllegalArgumentException("字段长度超过可解析范围");
+            logger.error("bslbf字段长度超过可解析范围：length={}", bitLength);
+            throw new IllegalArgumentException("bslbf字段长度超过可解析范围");
         }
 
         int bits = bitOffset + bitLength;
@@ -172,8 +175,8 @@ public class SyntaxDecoder
         int tailZeros = bytes * 8 - bits; // 末位距离所在字节末尾的位数，大小应在 0~7 之间。
         if (position + bytes > limit)
         {
-            logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
-            throw new IndexOutOfBoundsException("字段超出可解码范围");
+            logger.error("bslbf字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
+            throw new IndexOutOfBoundsException("bslbf字段超出可解码范围");
         }
 
         long byte1 = encoding.readBits(position, 0xFF >>> bitOffset);
@@ -216,22 +219,22 @@ public class SyntaxDecoder
         int bitLength = Integer.parseUnsignedInt(definition.getLength());
         if (bitLength > 64)
         {
-            logger.error("字段长度超过可解析范围：length={}", bitLength);
-            throw new IllegalArgumentException("字段长度超过可解析范围");
+            logger.error("uimsbf字段长度超过可解析范围：length={}", bitLength);
+            throw new IllegalArgumentException("uimsbf字段长度超过可解析范围");
         }
 
         int bits = bitOffset + bitLength;
         if (bits % 8 != 0)
         {
-            logger.error("字段没有向右对齐：start={}, bits={}, unaligned={}", bitOffset, bitLength, bits % 8);
-            throw new IllegalStateException("字段没有向右对齐");
+            logger.error("uimsbf字段没有向右对齐：start={}, bits={}, unaligned={}", bitOffset, bitLength, bits % 8);
+            throw new IllegalStateException("uimsbf字段没有向右对齐");
         }
 
         int bytes = bits / 8; // 算上偏移量后的全部位长度，大小应在 1~8 字节之间。
         if (position + bytes > limit)
         {
-            logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
-            throw new IndexOutOfBoundsException("字段超出可解码范围");
+            logger.error("uimsbf字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
+            throw new IndexOutOfBoundsException("uimsbf字段超出可解码范围");
         }
 
         // 由于字段是向右对齐的（且小于等于64位），所以这里可以直接计算数值。
@@ -267,21 +270,21 @@ public class SyntaxDecoder
         int bitLength = definition.getLengthValue();
         if (bitLength != 8 && bitLength != 16 && bitLength != 32 && bitLength != 64)
         {
-            logger.error("无效的字段长度：length={}", bitLength);
-            throw new IllegalArgumentException("字段长度无效");
+            logger.error("checksum无效的字段长度：length={}", bitLength);
+            throw new IllegalArgumentException("checksum字段长度无效");
         }
 
         if (bitOffset != 0)
         {
-            logger.error("字段没有向左对齐");
-            throw new IllegalStateException("字段没有向左对齐");
+            logger.error("checksum字段没有向左对齐");
+            throw new IllegalStateException("checksum字段没有向左对齐");
         }
 
         int bytes = bitLength / 8; // 算上偏移量后的全部位长度，大小应在 1~8 字节之间。
         if (position + bytes > limit)
         {
-            logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
-            throw new IndexOutOfBoundsException("字段超出可解码范围");
+            logger.error("checksum字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
+            throw new IndexOutOfBoundsException("checksum字段超出可解码范围");
         }
 
         // 由于字段是按字节对齐的（且小于等于64位），所以这里可以直接计算数值。
@@ -293,7 +296,7 @@ public class SyntaxDecoder
             case 2 -> String.format("%04x", value);
             case 4 -> String.format("%08x", value);
             case 8 -> String.format("%016x", value);
-            default -> String.format("%x", value);
+            default -> "";
         };
 
         FieldPresentation presentation = definition.getPresentation();
@@ -328,8 +331,8 @@ public class SyntaxDecoder
 
         if (bitOffset != 0 && bitOffset != 4)
         {
-            logger.error("字段未对齐：bitOffset={}", bitOffset);
-            throw new IllegalStateException("错误的字段起始位置（未对齐）");
+            logger.error("nibbles字段未对齐：bitOffset={}", bitOffset);
+            throw new IllegalStateException("错误的nibbles字段起始位置（未对齐）");
         }
 
         int nibbleCount = definition.getLengthValue();
@@ -337,8 +340,8 @@ public class SyntaxDecoder
         {
             if (!definition.isImplicitLength() && parent == null)
             {
-                logger.error("无法确定字段长度");
-                throw new IllegalArgumentException("无法确定字段长度");
+                logger.error("无法确定nibbles字段长度");
+                throw new IllegalArgumentException("无法确定nibbles字段长度");
             }
 
             if (definition.isImplicitLength())
@@ -349,8 +352,8 @@ public class SyntaxDecoder
                 SyntaxField refNode = findPrerequisiteField(parent, definition.getLengthField());
                 if (refNode == null)
                 {
-                    logger.error("无法确定字段长度");
-                    throw new IllegalArgumentException("无法确定字段长度");
+                    logger.error("找不到nibbles引用的长度字段");
+                    throw new IllegalArgumentException("无法确定nibbles字段长度");
                 }
                 nibbleCount = Math.toIntExact(refNode.getValueAsLong());
             }
@@ -365,8 +368,8 @@ public class SyntaxDecoder
         int bytes = nibbleCount / 2 + nibbleCount % 2;
         if (position + bytes > limit)
         {
-            logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
-            throw new IndexOutOfBoundsException("字段超出可解码范围");
+            logger.error("nibbles字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
+            throw new IndexOutOfBoundsException("nibbles字段超出可解码范围");
         }
 
         int[] nibbles = encoding.readNibbles(position, nibbleCount);
@@ -406,8 +409,8 @@ public class SyntaxDecoder
 
         if (bitOffset != 0)
         {
-            logger.error("字段未对齐：bitOffset={}", bitOffset);
-            throw new IllegalStateException("错误的字段起始位置（未对齐）");
+            logger.error("octets字段未对齐：bitOffset={}", bitOffset);
+            throw new IllegalStateException("错误的octets字段起始位置（未对齐）");
         }
 
         int octetCount = definition.getLengthValue();
@@ -415,8 +418,8 @@ public class SyntaxDecoder
         {
             if (!definition.isImplicitLength() && parent == null)
             {
-                logger.error("无法确定字段长度");
-                throw new IllegalArgumentException("无法确定字段长度");
+                logger.error("无法确定octets字段长度");
+                throw new IllegalArgumentException("无法确定octets字段长度");
             }
 
             if (definition.isImplicitLength())
@@ -427,8 +430,8 @@ public class SyntaxDecoder
                 SyntaxField refNode = findPrerequisiteField(parent, definition.getLengthField());
                 if (refNode == null)
                 {
-                    logger.error("无法确定字段长度");
-                    throw new IllegalArgumentException("无法确定字段长度");
+                    logger.error("找不到octets引用的长度字段");
+                    throw new IllegalArgumentException("无法确定octets字段长度");
                 }
                 octetCount = Math.toIntExact(refNode.getValueAsLong());
             }
@@ -442,8 +445,8 @@ public class SyntaxDecoder
         int bytes = octetCount;
         if (position + bytes > limit)
         {
-            logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
-            throw new IndexOutOfBoundsException("字段超出可解码范围");
+            logger.error("octets字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
+            throw new IndexOutOfBoundsException("octets字段超出可解码范围");
         }
 
         int[] value = encoding.readOctets(position, bytes);
@@ -482,8 +485,8 @@ public class SyntaxDecoder
 
         if (bitOffset != 0)
         {
-            logger.error("字段未对齐：bitOffset={}", bitOffset);
-            throw new IllegalStateException("错误的字段起始位置（未对齐）");
+            logger.error("text字段未对齐：bitOffset={}", bitOffset);
+            throw new IllegalStateException("错误的text字段起始位置（未对齐）");
         }
 
         String stringType = definition.getStringType();
@@ -498,8 +501,8 @@ public class SyntaxDecoder
         {
             if (!definition.isImplicitLength() && parent == null)
             {
-                logger.error("无法确定字段长度");
-                throw new IllegalArgumentException("无法确定字段长度");
+                logger.error("无法确定text字段长度");
+                throw new IllegalArgumentException("无法确定text字段长度");
             }
 
             if (definition.isImplicitLength())
@@ -510,8 +513,8 @@ public class SyntaxDecoder
                 SyntaxField refNode = findPrerequisiteField(parent, definition.getLengthField());
                 if (refNode == null)
                 {
-                    logger.error("无法确定字段长度");
-                    throw new IllegalArgumentException("无法确定字段长度");
+                    logger.error("找不到text引用的长度字段");
+                    throw new IllegalArgumentException("找不到text引用的长度字段");
                 }
                 bytes = Math.toIntExact(refNode.getValueAsLong());
             }
@@ -522,8 +525,8 @@ public class SyntaxDecoder
 
         if (position + bytes > limit)
         {
-            logger.error("字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
-            throw new IndexOutOfBoundsException("字段超出可解码范围");
+            logger.error("text字段超限：start={}, limit={}, field_size={}", position, limit, bytes);
+            throw new IndexOutOfBoundsException("text字段超出可解码范围");
         }
 
         int bitLength = bytes * 8;
@@ -572,8 +575,8 @@ public class SyntaxDecoder
         SyntaxField refNode = findPrerequisiteField(parent, condition.getField());
         if (refNode == null)
         {
-            logger.error("无法获取前置条件字段");
-            throw new IllegalStateException("无法获取前置条件字段");
+            logger.error("无法获取条件引用字段");
+            throw new IllegalStateException("无法获取条件引用字段");
         }
 
         boolean matches = false;
@@ -630,22 +633,22 @@ public class SyntaxDecoder
         {
             loopRoot = SyntaxField.loopHeader(definition.getName(),
                                               presentation.getLoopHeader().getText());
-            if (parent != null)
-                parent.appendChild(loopRoot);
+            parent.appendChild(loopRoot);
         }
 
         SyntaxField refNode = findPrerequisiteField(parent, definition.getLengthField());
         if (refNode == null)
         {
-            logger.error("无法获取前置条件字段");
-            throw new IllegalStateException("无法获取前置条件字段");
+            logger.error("无法获取循环次数");
+            throw new IllegalStateException("无法获取循环次数");
         }
 
         int count = Math.toIntExact(refNode.getValueAsLong());
         if (count == 0)
         {
+            parent.removeChild(loopRoot);
             SyntaxField loopEntry = SyntaxField.loopEntryHeader("loop_entry", presentation.getLoopEmpty().getText());
-            loopRoot.appendChild(loopEntry);
+            parent.appendChild(loopEntry);
             return 0;
         }
 
@@ -714,8 +717,7 @@ public class SyntaxDecoder
         {
             loopRoot = SyntaxField.loopHeader(definition.getName(),
                                               presentation.getLoopHeader().getText());
-            if (parent != null)
-                parent.appendChild(loopRoot);
+            parent.appendChild(loopRoot);
         }
 
         // 默认边界为最大可解码范围
@@ -727,8 +729,8 @@ public class SyntaxDecoder
             SyntaxField refNode = findPrerequisiteField(parent, definition.getLengthField());
             if (refNode == null)
             {
-                logger.error("无法获取前置条件字段");
-                throw new IllegalStateException("无法获取前置条件字段");
+                logger.error("无法获取循环长度");
+                throw new IllegalStateException("无法获取循环长度");
             }
             byteLength = Math.toIntExact(refNode.getValueAsLong());
         }
@@ -737,8 +739,9 @@ public class SyntaxDecoder
 
         if (byteLength == 0)
         {
+            parent.removeChild(loopRoot);
             SyntaxField loopEntry = SyntaxField.loopEntryHeader("loop_entry", presentation.getLoopEmpty().getText());
-            loopRoot.appendChild(loopEntry);
+            parent.appendChild(loopEntry);
             return 0;
         }
 

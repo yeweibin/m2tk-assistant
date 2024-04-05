@@ -24,7 +24,7 @@
         <flatlaf.version>3.4</flatlaf.version>
         <slf4j.version>2.0.12</slf4j.version>
         <logback.version>1.4.14</logback.version>
-        <jackson.version>2.15.2</jackson.version>
+        <jackson.version>2.16.2</jackson.version>
         <hutool.version>5.8.26</hutool.version>
         <h2.version>2.2.224</h2.version>
         <hikari.version>5.0.1</hikari.version>

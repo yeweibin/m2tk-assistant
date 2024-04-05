@@ -33,7 +33,6 @@ public class DescriptorDecoder
         template.setTag(0);
         template.setTagExtension(0);
         template.setName("private_descriptor");
-        template.setStandard("mpeg");
         template.setMayOccurIns(Collections.emptyList());
         template.setDescriptorSyntax(List.of(DataFieldDefinition.number("descriptor_tag", "uimsbf", "8", FieldPresentation.of("描述符标签", "0x%02X")),
                                              DataFieldDefinition.number("descriptor_length", "uimsbf", "8", FieldPresentation.of("描述符长度")),
@@ -66,7 +65,7 @@ public class DescriptorDecoder
         String key = (tag == 0x7F) ? String.format("%02x.%02x", tag, tagExt) : String.format("%02x", tag);
         DescriptorTemplate template = TEMPLATE_MAP.getOrDefault(key, DEFAULT_DESCRIPTOR_TEMPLATE);
 
-        String displayName = String.format("私有描述符（tag: 0x%02X）", tag);
+        String displayName = String.format("私有描述符（Tag: 0x%02X）", tag);
         SyntaxField descriptor = SyntaxField.descriptor(template.getName(),
                                                         Optional.ofNullable(template.getDisplayName())
                                                                 .map(Label::getText)

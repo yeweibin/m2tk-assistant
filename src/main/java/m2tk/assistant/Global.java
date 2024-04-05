@@ -16,14 +16,17 @@
 
 package m2tk.assistant;
 
+import cn.hutool.core.util.StrUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.EventBus;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.analyzer.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
-import m2tk.assistant.template.TemplateReader;
 import m2tk.assistant.template.DescriptorDecoder;
 import m2tk.assistant.template.SectionDecoder;
+import m2tk.assistant.template.TemplateReader;
 import m2tk.assistant.template.definition.M2TKTemplate;
 
 import java.nio.file.Files;
@@ -42,9 +45,12 @@ public final class Global
     private static final StreamAnalyzer streamAnalyser;
     private static final Set<Integer> userPrivateSectionStreams;
     private static volatile long latestTransactionId = -1L;
+    private static volatile int maxDatagramPerStream = -1;
+    private static boolean requiresLightTheme;
     private static String latestSourceUrl;
 
     private static final EventBus eventBus;
+    private static final ObjectMapper objectMapper;
 
     static
     {
@@ -53,6 +59,14 @@ public final class Global
         userPrivateSectionStreams = new HashSet<>();
         streamAnalyser.setDatabaseService(databaseService);
         eventBus = new EventBus();
+        objectMapper = new ObjectMapper();
+    }
+
+    @Data
+    public static class AppConfig
+    {
+        private String appTheme;
+        private int datagramFilteringLimitPerStream;
     }
 
     private Global()
@@ -67,7 +81,52 @@ public final class Global
     public static void init()
     {
         databaseService.initDatabase();
+        loadUserConfigs();
+        loadInternalTemplates();
         loadUserDefinedTemplates();
+    }
+
+    private static void loadUserConfigs()
+    {
+        Path cfg = Paths.get(System.getProperty("user.dir"), "user.cfg");
+
+        try
+        {
+            // 默认设置
+            requiresLightTheme = false;
+            maxDatagramPerStream = 1000;
+
+            AppConfig config = objectMapper.readValue(cfg.toFile(), AppConfig.class);
+            if (config != null)
+            {
+                requiresLightTheme = StrUtil.equalsIgnoreCase(config.getAppTheme(), "light");
+                maxDatagramPerStream = config.getDatagramFilteringLimitPerStream();
+            }
+        } catch (Exception ex)
+        {
+            log.warn("加载用户配置时异常：{}", ex.getMessage());
+
+            // 使用默认设置
+            requiresLightTheme = false;
+            maxDatagramPerStream = 1000;
+        }
+    }
+
+    private static void loadInternalTemplates()
+    {
+        TemplateReader reader = new TemplateReader();
+        M2TKTemplate psiTemplate = reader.parse(Global.class.getResource("/template/PSITemplate.xml"));
+        if (psiTemplate != null)
+        {
+            psiTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+            psiTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        }
+        M2TKTemplate siTemplate = reader.parse(Global.class.getResource("/template/SITemplate.xml"));
+        if (siTemplate != null)
+        {
+            siTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+            siTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        }
     }
 
     private static void loadUserDefinedTemplates()
@@ -79,25 +138,28 @@ public final class Global
             TemplateReader reader = new TemplateReader();
             stream.filter(path -> path.getFileName().toString().endsWith(".xml"))
                   .forEach(file -> {
-                      M2TKTemplate template = reader.parse(file.toFile());
-                      if (template == null)
+                      M2TKTemplate userTemplate = reader.parse(file.toFile());
+                      if (userTemplate != null)
                       {
-                          log.warn("无法加载模板：{}", file);
-                          return;
+                          userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+                          userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+                          log.info("加载自定义模板：{}", file);
                       }
-
-                      template.getTableTemplates().forEach(SectionDecoder::registerTemplate);
-                      template.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
                   });
         } catch (Exception ex)
         {
-            log.warn("加载自定义解析模板时异常：{}", ex.getMessage());
+            log.warn("加载自定义模板时异常：{}", ex.getMessage());
         }
     }
 
     public static DatabaseService getDatabaseService()
     {
         return databaseService;
+    }
+
+    public static boolean requiresLightTheme()
+    {
+        return requiresLightTheme;
     }
 
     public static void addUserPrivateSectionStreams(Collection<Integer> streams)
@@ -117,7 +179,7 @@ public final class Global
 
     public static int getPrivateSectionFilteringLimit()
     {
-        return 1000;
+        return maxDatagramPerStream;
     }
 
     public static List<String> getSourceHistory()
