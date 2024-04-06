@@ -170,6 +170,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addPATSectionNodes(List<SectionEntity> sections)
     {
+        groupPAT.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -191,6 +193,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addCATSectionNodes(List<SectionEntity> sections)
     {
+        groupCAT.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -211,6 +215,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addPMTSectionNodes(List<SectionEntity> sections)
     {
+        groupPMT.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -232,6 +238,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addBATSectionNodes(List<SectionEntity> sections)
     {
+        groupBAT.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -253,6 +261,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addNITActualSectionNodes(List<SectionEntity> sections)
     {
+        groupNITActual.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -274,6 +284,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addNITOtherSectionNodes(List<SectionEntity> sections)
     {
+        groupNITOther.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -295,6 +307,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addSDTActualSectionNodes(List<SectionEntity> sections)
     {
+        groupSDTActual.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -317,6 +331,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addSDTOtherSectionNodes(List<SectionEntity> sections)
     {
+        groupSDTOther.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -339,6 +355,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addEITPFActualSectionNodes(List<SectionEntity> sections)
     {
+        groupEITPFActual.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -360,6 +378,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addEITPFOtherSectionNodes(List<SectionEntity> sections)
     {
+        groupEITPFOther.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -381,6 +401,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addEITScheduleActualSectionNodes(List<SectionEntity> sections)
     {
+        groupEITScheduleActual.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -402,6 +424,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addEITScheduleOtherSectionNodes(List<SectionEntity> sections)
     {
+        groupEITScheduleOther.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -423,6 +447,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addTDTSectionNodes(List<SectionEntity> sections)
     {
+        groupTDT.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
@@ -441,6 +467,8 @@ public class SectionDatagramPanel extends JPanel
 
     private void addTOTSectionNodes(List<SectionEntity> sections)
     {
+        groupTOT.removeAllChildren();
+
         for (SectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());

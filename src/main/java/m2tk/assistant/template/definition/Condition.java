@@ -21,8 +21,8 @@ public class Condition
     private String type;
     private String field;
     private String operation;
-    private int value;
-    private int[] values;
+    private long value;
+    private long[] values;
 
     public String getType()
     {
@@ -54,22 +54,22 @@ public class Condition
         this.operation = operation;
     }
 
-    public int getValue()
+    public long getValue()
     {
         return value;
     }
 
-    public void setValue(int value)
+    public void setValue(long value)
     {
         this.value = value;
     }
 
-    public int[] getValues()
+    public long[] getValues()
     {
         return values;
     }
 
-    public void setValues(int[] values)
+    public void setValues(long[] values)
     {
         this.values = values;
     }

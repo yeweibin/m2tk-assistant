@@ -132,7 +132,7 @@ public final class TemplateReader
     private static TableId interpretTableId(Element element)
     {
         TableId tableId = new TableId();
-        tableId.setId(Integer.parseInt(element.attr("id")));
+        tableId.setId(Integer.decode(element.attr("id")));
         tableId.setDisplayName(interpretLabel(element.select("DisplayName")));
         return tableId;
     }
@@ -148,8 +148,8 @@ public final class TemplateReader
     private static DescriptorTemplate interpretDescriptorTemplate(Element element)
     {
         DescriptorTemplate template = new DescriptorTemplate();
-        template.setTag(Integer.parseInt(element.attr("tag")));
-        template.setTagExtension(Integer.parseInt(StrUtil.nullToDefault(element.attr("tag_ext"), "-1")));
+        template.setTag(Integer.decode(element.attr("tag")));
+        template.setTagExtension(Integer.decode(StrUtil.nullToDefault(element.attr("tag_ext"), "-1")));
         template.setName(element.attr("name"));
         template.setDisplayName(interpretLabel(element.select("DisplayName")));
         template.setMayOccurIns(StreamSupport.stream(element.find("MayOccurIn").spliterator(), false)
@@ -224,7 +224,7 @@ public final class TemplateReader
             condition.setType("CompareWithConst");
             condition.setField(e1.attr("field"));
             condition.setOperation(e1.attr("comp_op"));
-            condition.setValue(Integer.parseInt(e1.attr("const")));
+            condition.setValue(Long.decode(e1.attr("const")));
         }
         if (e2 != null)
         {
@@ -233,7 +233,7 @@ public final class TemplateReader
             condition.setField(e2.attr("field"));
             condition.setOperation(e2.attr("comp_op"));
             condition.setValues(StreamSupport.stream(e2.find("ConstValue").spliterator(), false)
-                                             .mapToInt(value -> Integer.parseInt(value.attr("const")))
+                                             .mapToLong(value -> Long.decode(value.attr("const")))
                                              .toArray());
         }
 
@@ -327,11 +327,14 @@ public final class TemplateReader
         return element.elements().stream()
                       .map(e -> (ValueMapping) switch (e.tagName())
                       {
-                          case "Value" -> ValueMapping.mono(Integer.parseUnsignedInt(e.attr("value")),
+                          case "Value" -> ValueMapping.mono(Long.decode(e.attr("value")),
                                                             e.select("ValString").attr("str"));
-                          case "ValueRange" -> ValueMapping.range(Integer.parseUnsignedInt(e.attr("min")),
-                                                                  Integer.parseUnsignedInt(e.attr("max")),
+                          case "ValueRange" -> ValueMapping.range(Long.decode(e.attr("min")),
+                                                                  Long.decode(e.attr("max")),
                                                                   e.select("ValString").attr("str"));
+                          case "DVBTime" -> ValueMapping.dvbTime();
+                          case "Duration" -> ValueMapping.duration();
+                          case "ThreeLetterCode" -> ValueMapping.threeLetterCode();
                           default -> null;
                       })
                       .filter(Objects::nonNull)

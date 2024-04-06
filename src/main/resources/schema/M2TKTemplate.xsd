@@ -21,7 +21,7 @@
                         <xsd:sequence>
                             <xsd:element name="DisplayName" type="Label"/>
                         </xsd:sequence>
-                        <xsd:attribute name="id" use="required" type="xsd:unsignedByte"/>
+                        <xsd:attribute name="id" use="required" type="hex_or_decimal_value_type"/>
                     </xsd:complexType>
                 </xsd:element>
                 <xsd:element name="TableBody" type="Syntax"/>
@@ -38,11 +38,6 @@
                 </xsd:element>
             </xsd:sequence>
             <xsd:attribute name="name" use="required" type="xsd:string"/>
-            <xsd:attribute name="ref_name" type="xsd:string">
-                <xsd:annotation>
-                    <xsd:documentation>索引名：描述符模板可以通过索引名声明它们可以出现在当前表内</xsd:documentation>
-                </xsd:annotation>
-            </xsd:attribute>
             <xsd:attribute name="group" type="xsd:string">
                 <xsd:annotation>
                     <xsd:documentation>组：解析后的节点出现的表分组</xsd:documentation>
@@ -65,8 +60,8 @@
                 </xsd:element>
                 <xsd:element name="DescriptorBody" type="Syntax"/>
             </xsd:sequence>
-            <xsd:attribute name="tag" use="required" type="xsd:unsignedByte"/>
-            <xsd:attribute name="tag_ext" type="xsd:unsignedByte"/>
+            <xsd:attribute name="tag" use="required" type="hex_or_decimal_value_type"/>
+            <xsd:attribute name="tag_ext" type="hex_or_decimal_value_type"/>
             <xsd:attribute name="name" use="required" type="xsd:string"/>
         </xsd:complexType>
     </xsd:element>
@@ -147,7 +142,7 @@
                                                     </xsd:restriction>
                                                 </xsd:simpleType>
                                             </xsd:attribute>
-                                            <xsd:attribute name="const" use="required" type="xsd:int"/>
+                                            <xsd:attribute name="const" use="required" type="hex_or_decimal_value_type"/>
                                         </xsd:complexType>
                                     </xsd:element>
                                     <xsd:element name="CompareWithConstMulti">
@@ -155,7 +150,7 @@
                                             <xsd:sequence>
                                                 <xsd:element name="ConstValue" maxOccurs="unbounded">
                                                     <xsd:complexType>
-                                                        <xsd:attribute name="const" use="required" type="xsd:int"/>
+                                                        <xsd:attribute name="const" use="required" type="hex_or_decimal_value_type"/>
                                                     </xsd:complexType>
                                                 </xsd:element>
                                             </xsd:sequence>
@@ -265,6 +260,11 @@
             <xsd:pattern value="#[0-9A-Fa-f]{6}"/>
         </xsd:restriction>
     </xsd:simpleType>
+    <xsd:simpleType name="hex_or_decimal_value_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="(0x[0-9A-Fa-f]{1,16})|([0-9]+)"/>
+        </xsd:restriction>
+    </xsd:simpleType>
     <xsd:complexType name="Label">
         <xsd:attribute name="str" use="required" type="xsd:string"/>
         <xsd:attribute name="color" type="color_code"/>
@@ -278,7 +278,7 @@
                         <xsd:sequence>
                             <xsd:element name="ValString" type="Label"/>
                         </xsd:sequence>
-                        <xsd:attribute name="value" use="required" type="xsd:nonNegativeInteger"/>
+                        <xsd:attribute name="value" use="required" type="hex_or_decimal_value_type"/>
                     </xsd:complexType>
                 </xsd:element>
                 <xsd:element name="ValueRange">
@@ -286,9 +286,27 @@
                         <xsd:sequence>
                             <xsd:element name="ValString" type="Label"/>
                         </xsd:sequence>
-                        <xsd:attribute name="min" use="required" type="xsd:nonNegativeInteger"/>
-                        <xsd:attribute name="max" use="required" type="xsd:nonNegativeInteger"/>
+                        <xsd:attribute name="min" use="required" type="hex_or_decimal_value_type"/>
+                        <xsd:attribute name="max" use="required" type="hex_or_decimal_value_type"/>
                     </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="DVBTime">
+                    <xsd:annotation>
+                        <xsd:documentation>按照MJD-UTC格式的转义时间。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
+                </xsd:element>
+                <xsd:element name="Duration">
+                    <xsd:annotation>
+                        <xsd:documentation>按照hh:mm:ss格式转义事件持续时长。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
+                </xsd:element>
+                <xsd:element name="ThreeLetterCode">
+                    <xsd:annotation>
+                        <xsd:documentation>按照3位ASCII编码格式转义语言代码。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
                 </xsd:element>
             </xsd:choice>
         </xsd:sequence>

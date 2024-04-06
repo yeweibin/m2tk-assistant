@@ -16,24 +16,43 @@
 
 package m2tk.assistant.template.definition;
 
+import m2tk.dvb.DVB;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public interface ValueMapping
 {
     boolean eval(long value);
 
     String mapping();
 
-    static ValueMapping mono(int value, String mapping)
+    static ValueMapping mono(long value, String mapping)
     {
         return new MonoValueMapping(value, mapping);
     }
 
-    static ValueMapping range(int min, int max, String mapping)
+    static ValueMapping range(long min, long max, String mapping)
     {
         return new RangeValueMapping(min, max, mapping);
     }
 
+    static ValueMapping dvbTime()
+    {
+        return new MJDUTCTimeMapping();
+    }
 
-    record MonoValueMapping(int value, String mapping) implements ValueMapping
+    static ValueMapping duration()
+    {
+        return new DurationMapping();
+    }
+
+    static ValueMapping threeLetterCode()
+    {
+        return new ThreeLetterCodeMapping();
+    }
+
+    record MonoValueMapping(long value, String mapping) implements ValueMapping
     {
         @Override
         public boolean eval(long value)
@@ -42,12 +61,69 @@ public interface ValueMapping
         }
     }
 
-    record RangeValueMapping(int min, int max, String mapping) implements ValueMapping
+    record RangeValueMapping(long min, long max, String mapping) implements ValueMapping
     {
         @Override
         public boolean eval(long value)
         {
             return min <= value && value <= max;
+        }
+    }
+
+    class MJDUTCTimeMapping implements ValueMapping
+    {
+        private static final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
+        private String mapping;
+
+        @Override
+        public boolean eval(long value)
+        {
+            mapping = LocalDateTime.of(DVB.decodeDate((int) (value >> 24)),
+                                       DVB.decodeTime((int) (value & 0xFFFFFF)))
+                                   .format(timeFormatter);
+            return true;
+        }
+
+        @Override
+        public String mapping()
+        {
+            return mapping;
+        }
+    }
+
+    class DurationMapping implements ValueMapping
+    {
+        private String mapping;
+
+        @Override
+        public boolean eval(long value)
+        {
+            mapping = DVB.printTimeFields((int) value);
+            return true;
+        }
+
+        @Override
+        public String mapping()
+        {
+            return mapping;
+        }
+    }
+
+    class ThreeLetterCodeMapping implements ValueMapping
+    {
+        private String mapping;
+
+        @Override
+        public boolean eval(long value)
+        {
+            mapping = DVB.decodeThreeLetterCode((int) value);
+            return true;
+        }
+
+        @Override
+        public String mapping()
+        {
+            return mapping;
         }
     }
 }

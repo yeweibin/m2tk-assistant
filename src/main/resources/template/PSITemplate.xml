@@ -1,7 +1,7 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 <M2TKTemplate>
     <TableTemplate name="program_association_section" group="PSI/PAT">
-        <TableId id="0">
+        <TableId id="0x00">
             <DisplayName str="节目关联表 (PAT)"/>
         </TableId>
         <TableBody>
@@ -89,7 +89,7 @@
         </UniqueKey>
     </TableTemplate>
     <TableTemplate name="conditional_access_section" group="PSI/CAT">
-        <TableId id="1">
+        <TableId id="0x01">
             <DisplayName str="条件接收表 (CAT)"/>
         </TableId>
         <TableBody>
@@ -142,7 +142,7 @@
         </UniqueKey>
     </TableTemplate>
     <TableTemplate name="program_map_section" group="PSI/PMT">
-        <TableId id="2">
+        <TableId id="0x02">
             <DisplayName str="节目映射表 (PMT)"/>
         </TableId>
         <TableBody>
@@ -259,7 +259,7 @@
         </TableBody>
     </TableTemplate>
     <TableTemplate name="ts_description_section" group="PSI/TSDT">
-        <TableId id="3">
+        <TableId id="0x03">
             <DisplayName str="传输流描述表 (TSDT)"/>
         </TableId>
         <TableBody>
@@ -311,7 +311,7 @@
             <FieldRef field="section_number"/>
         </UniqueKey>
     </TableTemplate>
-    <DescriptorTemplate tag="9" name="ca_descriptor">
+    <DescriptorTemplate tag="0x09" name="ca_descriptor">
         <DisplayName str="条件接收描述符"/>
         <DescriptorBody>
             <Field name="descriptor_tag" length="8" encoding="uimsbf"/>
