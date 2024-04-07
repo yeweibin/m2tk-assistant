@@ -1661,7 +1661,8 @@
                                     </If>
                                     <If>
                                         <Condition>
-                                            <CompareWithConst field="original_network_id_flag" comp_op="equals" const="1"/>
+                                            <CompareWithConst field="original_network_id_flag" comp_op="equals"
+                                                              const="1"/>
                                         </Condition>
                                         <Then>
                                             <Field name="target_original_network_id" length="16" encoding="uimsbf">
@@ -1841,7 +1842,8 @@
                 </LoopPresentation>
                 <Body>
                     <Field name="item_description_length" length="8" encoding="uimsbf"/>
-                    <Field name="item_description" length_field="item_description_length" encoding="text" string_type="dvb_text">
+                    <Field name="item_description" length_field="item_description_length" encoding="text"
+                           string_type="dvb_text">
                         <FieldPresentation>
                             <Prefix str="元素描述"/>
                         </FieldPresentation>
@@ -1886,6 +1888,923 @@
                     <Prefix str="索引事件号"/>
                 </FieldPresentation>
             </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x50" name="component_descriptor">
+        <DisplayName str="组件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+            <Field name="stream_content" length="4" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="流内容类型"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_type" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件类型"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件标签"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="语言代码"/>
+                    <Mapping>
+                        <ThreeLetterCode/>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="text" length_field="implicit" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="组件描述"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x52" name="stream_identifier_descriptor">
+        <DisplayName str="流标识符描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件标签"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x53" name="ca_identifier_descriptor">
+        <DisplayName str="条件接收标识符描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="identifier_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无条件接收标识符***"/>
+                    <LoopEntry>
+                        <Prefix str="标识符"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ca_system_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="CA系统号"/>
+                            <Format str="%04X"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x54" name="content_descriptor">
+        <DisplayName str="内容描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="description_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无内容描述***"/>
+                    <LoopEntry>
+                        <Prefix str="描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="content_nibble" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="内容类型"/>
+                            <Mapping>
+                                <ValueRange min="0x00" max="0x0F">
+                                    <ValString str="未定义内容"/>
+                                </ValueRange>
+                                <Value value="0x10">
+                                    <ValString str="电影/电视剧/戏剧（普通）"/>
+                                </Value>
+                                <Value value="0x11">
+                                    <ValString str="侦探/恐怖"/>
+                                </Value>
+                                <Value value="0x12">
+                                    <ValString str="冒险/战争"/>
+                                </Value>
+                                <Value value="0x13">
+                                    <ValString str="科幻"/>
+                                </Value>
+                                <Value value="0x14">
+                                    <ValString str="喜剧"/>
+                                </Value>
+                                <Value value="0x15">
+                                    <ValString str="肥皂剧"/>
+                                </Value>
+                                <Value value="0x16">
+                                    <ValString str="言情"/>
+                                </Value>
+                                <Value value="0x17">
+                                    <ValString str="古典/历史/正剧"/>
+                                </Value>
+                                <Value value="0x18">
+                                    <ValString str="成人电影/戏剧"/>
+                                </Value>
+                                <ValueRange min="0x19" max="0x1E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x1F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x20">
+                                    <ValString str="新闻时事（普通）"/>
+                                </Value>
+                                <Value value="0x21">
+                                    <ValString str="新闻/天气预报"/>
+                                </Value>
+                                <Value value="0x22">
+                                    <ValString str="新闻杂志"/>
+                                </Value>
+                                <Value value="0x23">
+                                    <ValString str="资料"/>
+                                </Value>
+                                <Value value="0x24">
+                                    <ValString str="讨论/访谈/辩论"/>
+                                </Value>
+                                <ValueRange min="0x25" max="0x2E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x2F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x30">
+                                    <ValString str="表演/游戏（普通）"/>
+                                </Value>
+                                <Value value="0x31">
+                                    <ValString str="智力游戏/智力竞赛"/>
+                                </Value>
+                                <Value value="0x32">
+                                    <ValString str="杂技"/>
+                                </Value>
+                                <Value value="0x33">
+                                    <ValString str="脱口秀"/>
+                                </Value>
+                                <ValueRange min="0x34" max="0x3E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x3F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x40">
+                                    <ValString str="综合体育"/>
+                                </Value>
+                                <Value value="0x41">
+                                    <ValString str="特别节目（奥运会、世界杯……）"/>
+                                </Value>
+                                <Value value="0x42">
+                                    <ValString str="体育杂志"/>
+                                </Value>
+                                <Value value="0x43">
+                                    <ValString str="足球/篮球/排球"/>
+                                </Value>
+                                <Value value="0x44">
+                                    <ValString str="乒乓球/羽毛球/网球"/>
+                                </Value>
+                                <Value value="0x45">
+                                    <ValString str="团体性运动"/>
+                                </Value>
+                                <Value value="0x46">
+                                    <ValString str="田径"/>
+                                </Value>
+                                <Value value="0x47">
+                                    <ValString str="自行车/赛车"/>
+                                </Value>
+                                <Value value="0x48">
+                                    <ValString str="水上运动"/>
+                                </Value>
+                                <Value value="0x49">
+                                    <ValString str="冬季运动"/>
+                                </Value>
+                                <Value value="0x4A">
+                                    <ValString str="马术"/>
+                                </Value>
+                                <Value value="0x4B">
+                                    <ValString str="武术/拳击/摔跤"/>
+                                </Value>
+                                <Value value="0x4C">
+                                    <ValString str="棋牌"/>
+                                </Value>
+                                <ValueRange min="0x4D" max="0x4E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x4F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x50">
+                                    <ValString str=""/>
+                                </Value>
+                                <Value value="0x50">
+                                    <ValString str="青少儿节目（综合）"/>
+                                </Value>
+                                <Value value="0x51">
+                                    <ValString str="幼儿节目"/>
+                                </Value>
+                                <Value value="0x52">
+                                    <ValString str="少儿节目"/>
+                                </Value>
+                                <Value value="0x53">
+                                    <ValString str="青年节目"/>
+                                </Value>
+                                <Value value="0x54">
+                                    <ValString str="信息/教育"/>
+                                </Value>
+                                <Value value="0x55">
+                                    <ValString str="卡通/木偶戏"/>
+                                </Value>
+                                <ValueRange min="0x56" max="0x5E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x5F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x60">
+                                    <ValString str="音乐/芭蕾/舞蹈（综合）"/>
+                                </Value>
+                                <Value value="0x61">
+                                    <ValString str="摇滚/流行乐"/>
+                                </Value>
+                                <Value value="0x62">
+                                    <ValString str="古典音乐/严肃音乐"/>
+                                </Value>
+                                <Value value="0x63">
+                                    <ValString str="民俗音乐/民族音乐"/>
+                                </Value>
+                                <Value value="0x64">
+                                    <ValString str="爵士乐"/>
+                                </Value>
+                                <Value value="0x65">
+                                    <ValString str="音乐剧/歌剧"/>
+                                </Value>
+                                <Value value="0x66">
+                                    <ValString str="芭蕾舞"/>
+                                </Value>
+                                <Value value="0x67">
+                                    <ValString str="戏曲/曲艺"/>
+                                </Value>
+                                <ValueRange min="0x68" max="0x6E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x6F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x70">
+                                    <ValString str="文化艺术（综合）"/>
+                                </Value>
+                                <Value value="0x71">
+                                    <ValString str="表演艺术"/>
+                                </Value>
+                                <Value value="0x72">
+                                    <ValString str="高雅艺术"/>
+                                </Value>
+                                <Value value="0x73">
+                                    <ValString str="宗教文化"/>
+                                </Value>
+                                <Value value="0x74">
+                                    <ValString str="大众文化/传统艺术"/>
+                                </Value>
+                                <Value value="0x75">
+                                    <ValString str="文学"/>
+                                </Value>
+                                <Value value="0x76">
+                                    <ValString str="电影/电视文化"/>
+                                </Value>
+                                <Value value="0x77">
+                                    <ValString str="实验电影"/>
+                                </Value>
+                                <Value value="0x78">
+                                    <ValString str="广播/出版物"/>
+                                </Value>
+                                <Value value="0x79">
+                                    <ValString str="新媒体"/>
+                                </Value>
+                                <Value value="0x7A">
+                                    <ValString str="艺术/文化杂志"/>
+                                </Value>
+                                <Value value="0x7B">
+                                    <ValString str="时尚"/>
+                                </Value>
+                                <ValueRange min="0x7C" max="0x7E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x7F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x80">
+                                    <ValString str="社会/政治/经济（普通）"/>
+                                </Value>
+                                <Value value="0x81">
+                                    <ValString str="杂志/报道/资讯/证券"/>
+                                </Value>
+                                <Value value="0x82">
+                                    <ValString str="经济/社会咨询"/>
+                                </Value>
+                                <Value value="0x83">
+                                    <ValString str="名人专访"/>
+                                </Value>
+                                <ValueRange min="0x84" max="0x8E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x8F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x90">
+                                    <ValString str="教育/科学/专题（普通）"/>
+                                </Value>
+                                <Value value="0x91">
+                                    <ValString str="自然/动物/环境"/>
+                                </Value>
+                                <Value value="0x92">
+                                    <ValString str="技术/自然科学"/>
+                                </Value>
+                                <Value value="0x93">
+                                    <ValString str="医疗/生理/心理"/>
+                                </Value>
+                                <Value value="0x94">
+                                    <ValString str="探险"/>
+                                </Value>
+                                <Value value="0x95">
+                                    <ValString str="社会科学"/>
+                                </Value>
+                                <Value value="0x96">
+                                    <ValString str="继续教育"/>
+                                </Value>
+                                <Value value="0x97">
+                                    <ValString str="语言"/>
+                                </Value>
+                                <ValueRange min="0x98" max="0x9E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x9F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0xA0">
+                                    <ValString str="休闲/业余爱好（普通）"/>
+                                </Value>
+                                <Value value="0xA1">
+                                    <ValString str="旅游"/>
+                                </Value>
+                                <Value value="0xA2">
+                                    <ValString str="手工"/>
+                                </Value>
+                                <Value value="0xA3">
+                                    <ValString str="车趣"/>
+                                </Value>
+                                <Value value="0xA4">
+                                    <ValString str="健身"/>
+                                </Value>
+                                <Value value="0xA5">
+                                    <ValString str="烹饪"/>
+                                </Value>
+                                <Value value="0xA6">
+                                    <ValString str="广告/购物"/>
+                                </Value>
+                                <Value value="0xA7">
+                                    <ValString str="园艺"/>
+                                </Value>
+                                <ValueRange min="0xA8" max="0xAE">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0xAF">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0xB0">
+                                    <ValString str="原声资料"/>
+                                </Value>
+                                <Value value="0xB1">
+                                    <ValString str="黑白片"/>
+                                </Value>
+                                <Value value="0xB2">
+                                    <ValString str="未公映"/>
+                                </Value>
+                                <Value value="0xB3">
+                                    <ValString str="现场直播"/>
+                                </Value>
+                                <Value value="0xB4">
+                                    <ValString str="平面立体"/>
+                                </Value>
+                                <ValueRange min="0xB5" max="0xBE">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0xBF">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <ValueRange min="0xC0" max="0xEF">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <ValueRange min="0xF0" max="0xFF">
+                                    <ValString str="用户定义"/>
+                                </ValueRange>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="user_byte" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="用户定义"/>
+                            <Format str="0x%02X"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x55" name="parental_rating_descriptor">
+        <DisplayName str="成人级描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="rating_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无成人级描述***"/>
+                    <LoopEntry>
+                        <Prefix str="描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="country_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="国家代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="rating" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="成人级"/>
+                            <Mapping>
+                                <Value value="0x00">
+                                    <ValString str="未定义"/>
+                                </Value>
+                                <Value value="0x01">
+                                    <ValString str="4岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x02">
+                                    <ValString str="5岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x03">
+                                    <ValString str="6岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x04">
+                                    <ValString str="7岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x05">
+                                    <ValString str="8岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x06">
+                                    <ValString str="9岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x07">
+                                    <ValString str="10岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x08">
+                                    <ValString str="11岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x09">
+                                    <ValString str="12岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0A">
+                                    <ValString str="13岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0B">
+                                    <ValString str="14岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0C">
+                                    <ValString str="15岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0D">
+                                    <ValString str="16岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0E">
+                                    <ValString str="17岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0F">
+                                    <ValString str="18岁及以上允许观看"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x58" name="local_time_offset_descriptor">
+        <DisplayName str="本地时间偏移描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="offset_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无本地时间偏移描述***"/>
+                    <LoopEntry>
+                        <Prefix str="本地时间偏移描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="country_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="国家代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="country_region_id" length="6" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="国家区域编号"/>
+                            <Format str="%d"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved" length="1" encoding="bslbf"/>
+                    <Field name="local_time_offset_polarity" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="本地时间偏移极性"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="正"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="负"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="local_time_offset" length="4" encoding="nibbles">
+                        <FieldPresentation>
+                            <Prefix str="本地时间偏移量"/>
+                            <Format str="lowercase"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="time_of_change" length="40" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="变更时间"/>
+                            <Mapping>
+                                <DVBTime/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="next_time_offset" length="4" encoding="nibbles">
+                        <FieldPresentation>
+                            <Prefix str="下一时间偏移"/>
+                            <Format str="lowercase"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x59" name="subtitling_descriptor">
+        <DisplayName str="字幕描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="subtitling_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无字幕描述***"/>
+                    <LoopEntry>
+                        <Prefix str="字幕"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="subtitling_type" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="字幕类型"/>
+                            <Format str="0x%02X"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="composition_page_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="组合页标识"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="ancillary_page_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="辅助页标识"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5A" name="terrestrial_delivery_system_descriptor">
+        <DisplayName str="地面传输系统描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="centre_frequency" length="32" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="中心频点"/>
+                    <Format str="%d0 Hz"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="bandwidth" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="带宽"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="8 MHz"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="7 MHz"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="6 MHz"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="5 MHz"/>
+                        </Value>
+                        <ValueRange min="4" max="7">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="priority" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="优先级"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="低优先级（LP）"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="高优先级（HP）"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="Time_Slicing_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="TimeSlicing标志"/>
+                    <Mapping>
+                        <Value value="1">
+                            <ValString str="未使用"/>
+                        </Value>
+                        <Value value="0">
+                            <ValString str="使用"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="MPE-FEC_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="MPE-FEC标志"/>
+                    <Mapping>
+                        <Value value="1">
+                            <ValString str="未使用"/>
+                        </Value>
+                        <Value value="0">
+                            <ValString str="使用"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="2" encoding="bslbf"/>
+            <Field name="constellation" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="星座特性"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="QPSK"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="16-QAM"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="64-QAM"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="hierarchy_information" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="层次信息"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="非层次化，原始交织"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="α = 1，原始交织"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="α = 2，原始交织"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="α = 4，原始交织"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="非层次化，深度交织"/>
+                        </Value>
+                        <Value value="5">
+                            <ValString str="α = 1，深度交织"/>
+                        </Value>
+                        <Value value="6">
+                            <ValString str="α = 2，深度交织"/>
+                        </Value>
+                        <Value value="7">
+                            <ValString str="α = 4，深度交织"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="code_rate-HP_stream" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="高优先级流编码率模式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="1/2"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="2/3"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="3/4"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="5/6"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="7/8"/>
+                        </Value>
+                        <ValueRange min="5" max="7">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="code_rate-LP_stream" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="低优先级流编码率模式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="1/2"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="2/3"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="3/4"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="5/6"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="7/8"/>
+                        </Value>
+                        <ValueRange min="5" max="7">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="guard_interval" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="保护间隙"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="1/32"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="1/16"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="1/8"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="1/4"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="transmission_mode" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="传输模式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="2k模式"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="8k模式"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="4k模式"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="other_frequency_flag" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="其他频率标志"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="不使用其他频率"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="使用其他频率"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="32" encoding="bslbf"/>
         </DescriptorBody>
     </DescriptorTemplate>
     <DescriptorTemplate tag="0x5B" name="multilingual_network_name_descriptor">
@@ -2019,6 +2938,73 @@
                     </Field>
                 </Body>
             </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5E" name="multilingual_component_descriptor">
+        <DisplayName str="多语言组件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件标签"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="component_loop" length_field="implicit">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无多语言组件描述***"/>
+                    <LoopEntry>
+                        <Prefix str="多语言组件描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="text_description_length" length="8" encoding="uimsbf"/>
+                    <Field name="text" length_field="text_description_length" encoding="text" string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="组件描述"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5F" name="private_data_specifier_descriptor">
+        <DisplayName str="私有数据标识符描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="private_data_specifier" length="32" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="私有数据标识符"/>
+                </FieldPresentation>
+            </Field>
         </DescriptorBody>
     </DescriptorTemplate>
 </M2TKTemplate>
