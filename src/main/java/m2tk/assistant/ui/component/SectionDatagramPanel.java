@@ -29,6 +29,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.*;
@@ -457,7 +458,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("本地时间：%s",
+            node.setUserObject(String.format("时间：%s",
                                              translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
             groupTDT.add(node);
         }
@@ -477,7 +478,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("本地时间：%s",
+            node.setUserObject(String.format("时间：%s",
                                              translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
             groupTOT.add(node);
         }
@@ -535,7 +536,8 @@ public class SectionDatagramPanel extends JPanel
 
     private String translateTimepoint2Local(long timepoint)
     {
-        return DVB.decodeTimepointIntoLocalDateTime(timepoint).format(timeFormatter);
+        return DVB.decodeTimepointIntoLocalDateTime(timepoint).format(timeFormatter) +
+               " [" + ZoneId.systemDefault().getId() + ']';
     }
 
     class SectionDatagramTreeCellRenderer extends DefaultTreeCellRenderer
