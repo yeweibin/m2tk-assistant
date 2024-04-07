@@ -304,7 +304,7 @@
                 </xsd:element>
                 <xsd:element name="ThreeLetterCode">
                     <xsd:annotation>
-                        <xsd:documentation>按照3位ASCII编码格式转义语言代码。</xsd:documentation>
+                        <xsd:documentation>按照3位ASCII编码格式转义语言代码或国家代码。</xsd:documentation>
                     </xsd:annotation>
                     <xsd:complexType/>
                 </xsd:element>

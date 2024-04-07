@@ -21,6 +21,8 @@
   - [2.5 \<Syntax\> 标签](#25-syntax-标签)
     - [2.5.1 \<Field\> 标签](#251-field-标签)
       - [2.5.1.1 \<FieldPresentation\> 标签](#2511-fieldpresentation-标签)
+      - [2.5.1.2 \<Label\> 标签](#2512-label-标签)
+      - [2.5.1.3 \<ValueMapping\> 标签](#2513-valuemapping-标签)
     - [2.5.2 \<If\> 标签](#252-if-标签)
       - [2.5.2.1 单值比较标签（\<CompareWithConst\>）](#2521-单值比较标签comparewithconst)
       - [2.5.2.2 多值比较标签（\<CompareWithConstMulti\>）](#2522-多值比较标签comparewithconstmulti)
@@ -75,7 +77,7 @@
 
 ```xml
 <!-- TableTemplate示例 -->
-<TableTemplate name="program_association_section" standard="mpeg" group="PSI">
+<TableTemplate name="program_association_section" group="PSI/PAT">
     <TableId id="0">
         <DisplayName str="PAT"/>
     </TableId>
@@ -153,7 +155,6 @@
 &lt;TableTemplate&gt;标签包含下列属性：
 
 - name：当前段结构的索引名称，可用于描述符定位（详见描述符模板中的MayOccurIn标签）。
-- standard：来源标准。可选值有：mpeg（ISO标准）、dvb（DVB标准）、private（其他标准或自定义数据）。
 - group：展示分段结构时，节点所在的结构树的分支名称。
 
 【要求】name是必要属性，其他是可选属性。
@@ -171,7 +172,7 @@
 
 &lt;TableId&gt;标签包含唯一必要属性：
 
-- id：table_id值
+- id：table_id值，可以填写十进制数（非负整数）或以‘0x’开头的十六进制数。
 
 
 #### 2.3.2 &lt;DisplayName&gt; 标签
@@ -214,7 +215,7 @@
 
 ```xml
 <!-- DescriptorTemplate示例 -->
-<DescriptorTemplate tag="9" name="ca_descriptor" standard="mpeg">
+<DescriptorTemplate tag="9" name="ca_descriptor">
     <DisplayName str="CA Descriptor"/>
     <MayOccurIn table="conditional_access_section"/>
     <MayOccurIn table="program_map_section"/>
@@ -249,10 +250,9 @@
 
 &lt;DescriptorTemplate&gt;标签包含下列属性：
 
-- tag：descriptor_tag，其中保留值‘0’用于表示未知格式的任意描述符解析。
-- tag_ext：扩展descriptor_tag。
+- tag：descriptor_tag，其中保留值‘0’用于表示未知格式的任意描述符解析。可以填写十进制数（非负整数）或以‘0x’开头的十六进制数。
+- tag_ext：扩展descriptor_tag。可以填写十进制数（非负整数）或以‘0x’开头的十六进制数。
 - name：描述符索引名称。
-- standard：来源标准。可选值有：mpeg（ISO标准）、dvb（DVB标准）、private（其他标准或自定义数据）。
 
 【要求】tag、name是必要属性，其他是可选属性。
 
@@ -322,18 +322,25 @@
 
 【要求】name、encoding是必要属性，其他是可选属性。当字段类型为text时，必须提供合适的string_type描述。
 
-***bslbf***、***uimsbf***、***checksum*** 都是数值类型，可以表示64位以内的任意非负整数；***nibbles*** 通常表示BCD编码；***octets*** 表示任意长度的字节数组；***text*** 表示字符串编码。字符串编码中是否包含结尾字符'\0'，由业务层规定，模板解析时并不作说明。
+**bslbf**、**uimsbf**、**checksum** 都是数值类型，可以表示64位以内的任意非负整数；**nibbles** 通常表示BCD编码；**octets** 表示任意长度的字节数组；**text** 表示字符串编码。字符串编码中是否包含结尾字符'\0'，由业务层规定，模板解析时并不作说明。
+
+**uimsbf** 类型要求数值向右对齐，即数值的最低位在字节的末尾。
+
+**checksum** 类型在 **uimsbf** 类型要求的基础上，增加了对长度的限制，即数值长度仅允许为8、16、32、64位（符合常见CRC校验算法长度）。
 
 &lt;Field&gt;标签可以添加显示说明标签（&lt;FieldPresentation&gt;），专门描述字段的展示形式和特殊要求。
 
 ##### 2.5.1.1 &lt;FieldPresentation&gt; 标签
 
-&lt;FieldPresentation&gt; 标签包含两个可选的 **Label** 标签：
+&lt;FieldPresentation&gt; 标签包含两个可选的 **Label** 标签和一个可选的 **ValueMapping** 标签：
 
 - &lt;Prefix&gt; 标签：展示字段时，需要添加在内容前面的前缀部分。默认以当前字段的名称加冒号作为前缀显示。
 - &lt;Format&gt; 标签：展示字段时，字段值的显示样式。
+- &lt;Mapping&gt; 标签：值映射。
 
-一个 **Label** 标签包含以下属性：
+##### 2.5.1.2 &lt;Label&gt; 标签
+
+**Label** 标签包含以下属性：
 
 - str：表示要显示的文字或格式化模板（仅对Format标签适用）。
 
@@ -345,6 +352,32 @@
 
 格式化标签不适用于文本内容。
 
+
+##### 2.5.1.3 &lt;ValueMapping&gt; 标签
+
+```xml
+<!-- ValueMapping示例 -->
+<Mapping>
+  <Value value="123">
+    <ValString str="123"/>
+  </Value>
+  <ValueRange min="0" max="10">
+    <ValString str="123"/>
+  </ValueRange>
+</Mapping>
+```
+
+&lt;ValueMapping&gt; 标签包含下列可选的子标签：
+
+- &lt;Value&gt; 标签：按照单值转义，包含一个属性（value），一个子标签（ValString，Label类型）。
+- &lt;ValueRange&gt; 标签：按照区间值（[min,max]）转义，包含两个属性（min：区间下限，包含；max：区间上限，包含），一个子标签（ValString，Label类型）。
+- &lt;DVBTime&gt; 标签：按照MJD-UTC格式的转义时间，无属性，无子标签。
+- &lt;Duration&gt; 标签：按照hh:mm:ss格式转义事件持续时长，无属性，无子标签。
+- &lt;ThreeLetterCode&gt; 标签：按照3位ASCII编码格式转义语言代码或国家代码，无属性，无子标签。
+
+【注意】 **DVBTime**、**Duration**、**ThreeLetterCode** 有专门用途，不要与其他标签混用。
+
+**Value** 标签里的value属性以及 **ValueRange** 标签里的min/max属性，可以填写十进制数（非负整数）或以‘0x’开头的十六进制数。
 
 #### 2.5.2 &lt;If&gt; 标签
 
@@ -388,6 +421,8 @@
 - 【多值比较】等于其中某值（equals_any）
 - 【多值比较】不等于指定值（not_equals_all）
 
+const属性可以填写十进制数（非负整数）或以‘0x’开头的十六进制数。
+
 ##### 2.5.2.1 单值比较标签（&lt;CompareWithConst&gt;）
 
 ```xml
@@ -424,7 +459,9 @@
 <!-- Loop示例 -->
 <Loop name="elementary_stream_loop" length_field="implicit" length_correction="-4">
     <LoopPresentation>
+        <!-- NoLoopHeader和LoopHeader标签二选一 -->
         <NoLoopHeader/>
+        <LoopHeader str="节目基本流描述"/>
         <LoopEmpty str="无节目ES信息描述"/>
         <LoopEntry>
             <Prefix str="基本流"/>
