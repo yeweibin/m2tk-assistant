@@ -49,9 +49,6 @@ import m2tk.assistant.ui.event.SourceAttachedEvent;
 import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
-import m2tk.assistant.util.RxChannelInputStream;
-import m2tk.io.ProtocolManager;
-import m2tk.io.RxChannel;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.FrameView;
 
@@ -234,11 +231,11 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
 
-        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
+//        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
         if (videoPid != 0x1FFF)
-            AssistantApp.getInstance().playVideo(new RxChannelInputStream(channel), videoPid);
+            AssistantApp.getInstance().playVideo(Global.getLatestSourceUrl(), videoPid);
         else
-            AssistantApp.getInstance().playAudio(new RxChannelInputStream(channel), audioPid);
+            AssistantApp.getInstance().playAudio(Global.getLatestSourceUrl(), audioPid);
     }
 
     private void playProgram()
@@ -273,8 +270,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'{}'，视频PID：{}，音频PID：{}", programName, videoPid, audioPid);
 
-        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
-        AssistantApp.getInstance().playVideoAndAudio(new RxChannelInputStream(channel), videoPid, audioPid);
+        AssistantApp.getInstance().playProgram(Global.getLatestSourceUrl(), selectedProgram.getProgramNumber());
     }
 
     private void filterPrivateSection()

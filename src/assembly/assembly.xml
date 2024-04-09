@@ -32,6 +32,13 @@
             </includes>
         </fileSet>
 
+        <!-- 打包ffmpeg -->
+        <fileSet>
+            <directory>${basedir}/ffmpeg</directory>
+            <outputDirectory>ffmpeg</outputDirectory>
+            <fileMode>0755</fileMode>
+        </fileSet>
+
         <!-- 将第三方依赖打包到lib目录中 -->
         <!-- 第三方依赖已经通过 maven-dependency-plugin 复制到了 target/lib 中 -->
         <fileSet>

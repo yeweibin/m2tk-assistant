@@ -6,7 +6,7 @@
 
     <groupId>mpeg2-toolkit</groupId>
     <artifactId>m2tk-assistant</artifactId>
-    <version>1.7.1</version>
+    <version>1.7.2</version>
 
     <properties>
         <jdk.version>21</jdk.version>
@@ -35,6 +35,7 @@
         <javacv.version>1.5.7</javacv.version>
         <eaxy.version>0.2.2</eaxy.version>
         <jaxp-api.version>1.4.5</jaxp-api.version>
+        <jaffree.version>2023.09.10</jaffree.version>
     </properties>
 
     <scm>
@@ -159,11 +160,6 @@
             <version>${image-viewer.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>javacv-platform</artifactId>
-            <version>${javacv.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eaxy</groupId>
             <artifactId>eaxy</artifactId>
             <version>${eaxy.version}</version>
@@ -173,6 +169,11 @@
             <groupId>javax.xml.parsers</groupId>
             <artifactId>jaxp-api</artifactId>
             <version>${jaxp-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.kokorin.jaffree</groupId>
+            <artifactId>jaffree</artifactId>
+            <version>${jaffree.version}</version>
         </dependency>
     </dependencies>
 

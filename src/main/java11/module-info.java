@@ -8,11 +8,10 @@ module m2tk.assistant
     requires com.fasterxml.jackson.core;
     requires com.fasterxml.jackson.annotation;
     requires com.fasterxml.jackson.databind;
+    requires com.github.kokorin.jaffree;
     requires lombok;
     requires cn.hutool.core;
     requires com.miglayout.swing;
-    requires org.bytedeco.ffmpeg;
-    requires org.bytedeco.javacv;
     requires com.formdev.flatlaf;
     requires com.zaxxer.hikari;
     requires com.h2database;

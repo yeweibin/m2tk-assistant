@@ -26,7 +26,6 @@ import org.jdesktop.application.SingleFrameApplication;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.InputStream;
 
 @Slf4j
 public final class AssistantApp extends SingleFrameApplication
@@ -43,7 +42,7 @@ public final class AssistantApp extends SingleFrameApplication
     }
 
     public static final String APP_NAME = "M2TK码流分析助手";
-    public static final String APP_VERSION = "1.7.1.1800";
+    public static final String APP_VERSION = "1.7.2.1400";
     public static final String APP_COPYRIGHT_YEAR = "2024";
     public static final String APP_VENDOR = "M2TK项目组";
     private MainViewController controller;
@@ -87,7 +86,7 @@ public final class AssistantApp extends SingleFrameApplication
         super.shutdown();
     }
 
-    public void playVideoAndAudio(InputStream in, int videoPid, int audioPid)
+    public void playProgram(String url, int programNumber)
     {
         Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
                                                                "无法播放指定内容",
@@ -98,7 +97,7 @@ public final class AssistantApp extends SingleFrameApplication
             try
             {
                 player.stop();
-                player.playVideoAndAudio(in, videoPid, audioPid);
+                player.playProgram(url, programNumber);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());
@@ -107,7 +106,7 @@ public final class AssistantApp extends SingleFrameApplication
         });
     }
 
-    public void playVideo(InputStream in, int videoPid)
+    public void playVideo(String url, int videoPid)
     {
         Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
                                                                "无法播放指定内容",
@@ -118,7 +117,7 @@ public final class AssistantApp extends SingleFrameApplication
             try
             {
                 player.stop();
-                player.playVideo(in, videoPid);
+                player.playVideo(url, videoPid);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());
@@ -127,7 +126,7 @@ public final class AssistantApp extends SingleFrameApplication
         });
     }
 
-    public void playAudio(InputStream in, int audioPid)
+    public void playAudio(String url, int audioPid)
     {
         Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
                                                                "无法播放指定内容",
@@ -138,7 +137,7 @@ public final class AssistantApp extends SingleFrameApplication
             try
             {
                 player.stop();
-                player.playAudio(in, audioPid);
+                player.playAudio(url, audioPid);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());

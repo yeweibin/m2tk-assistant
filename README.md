@@ -6,7 +6,7 @@
 #### 软件架构
 1.  GUI：Java Swing
 2.  解复用：m2tk-core + m2tk-multiplex + m2tk-io
-3.  音视频解码：ffmpeg（基于JavaCPP封装的ffmpeg依赖）
+3.  音视频解码：ffmpeg（借助 [Jaffree](https://github.com/kokorin/Jaffree/) 调用本地ffmpeg程序）
 
 
 #### 安装教程

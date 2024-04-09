@@ -16,14 +16,11 @@
 
 package m2tk.assistant;
 
-import cn.hutool.core.thread.ThreadUtil;
+import com.github.kokorin.jaffree.ffmpeg.Frame;
+import com.github.kokorin.jaffree.ffmpeg.*;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.ui.util.ComponentUtil;
-import m2tk.assistant.util.FFmpegTSFrameGrabber;
-import org.bytedeco.ffmpeg.global.avutil;
-import org.bytedeco.javacv.CanvasFrame;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.FrameGrabber;
+import m2tk.util.BigEndian;
 
 import javax.sound.sampled.*;
 import javax.swing.*;
@@ -31,510 +28,376 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.InputStream;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.awt.image.BufferedImage;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static org.bytedeco.ffmpeg.global.avutil.AV_LOG_QUIET;
 
 @Slf4j
 public class MPEGTSPlayer
 {
-    private final BlockingDeque<Frame> vQueue;
-    private final BlockingDeque<Frame> aQueue;
-    private Rectangle bounds;
-
-    private CanvasFrame canvasFrame;
-    private volatile long timelineStart = -1;
-    private volatile long prevAudioTimestamp = -1;
-    private volatile long prevAudioPosition = 0;
-    private boolean isFullScreen;
-
-    public MPEGTSPlayer()
-    {
-        vQueue = new LinkedBlockingDeque<>();
-        aQueue = new LinkedBlockingDeque<>();
-    }
+    private volatile FFmpegResultFuture ffmpegTask;
 
     public void stop()
     {
-        if (canvasFrame != null && canvasFrame.isVisible())
+        if (ffmpegTask != null)
         {
-            canvasFrame.setVisible(false);
-            canvasFrame.dispose();
+            ffmpegTask.graceStop();
+
+            try
+            {
+                ffmpegTask.get(2, TimeUnit.SECONDS);
+            } catch (Exception ex)
+            {
+                log.warn("等待播放任务结束时超时：{}", ex.getMessage());
+            }
         }
     }
 
-    public void playVideoAndAudio(InputStream in, int videoPid, int audioPid) throws FFmpegTSFrameGrabber.Exception
+    public void playProgram(String url, int programNumber)
     {
-        avutil.av_log_set_level(AV_LOG_QUIET);
+        stop();
 
-        FFmpegTSFrameGrabber grabber = new FFmpegTSFrameGrabber(in, 0);
-        grabber.setCloseInputStream(true);
-        grabber.setVideoStreamPid(videoPid);
-        grabber.setAudioStreamPid(audioPid);
-        grabber.start();
+        CanvasFrame canvasFrame = new CanvasFrame("播放" + url + "，节目号：" + programNumber);
+        JRootPane rootPane = canvasFrame.getRootPane();
+        rootPane.registerKeyboardAction(e ->
+                                        {
+                                            canvasFrame.setVisible(false);
+                                            canvasFrame.dispose();
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e ->
+                                        {
+                                            canvasFrame.setVisible(false);
+                                            canvasFrame.dispose();
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        double fps = grabber.getVideoFrameRate();
-        int width = grabber.getImageWidth();
-        int height = grabber.getImageHeight();
-        int frameGaps = (int) (1000 / fps);
-        int sampleFormat = grabber.getSampleFormat();
-        SourceDataLine sourceDataLine = initSourceDataLine(grabber);
+        FFmpegResultFuture future = FFmpeg.atPath(Paths.get(System.getProperty("user.dir"), "ffmpeg"))
+                                          .addInput(UrlInput.fromUrl(url).setReadAtFrameRate(true))
+                                          .addOutput(new CustomFrameOutput(new NutFrameConsumer(canvasFrame))
+                                                             .addMap(0, "p:" + programNumber))
+                                          .setExecutorTimeoutMillis(10000)
+                                          .executeAsync();
+        future.toCompletableFuture()
+              .whenComplete((r, t) ->
+                            {
+                                if (t != null)
+                                {
+                                    SwingUtilities.invokeLater(() -> {
+                                        canvasFrame.setVisible(false);
+                                        canvasFrame.dispose();
 
-        canvasFrame = new CanvasFrame("播放", CanvasFrame.getDefaultGamma() / grabber.getGamma());
+                                        JOptionPane.showMessageDialog(AssistantApp.getInstance().getMainFrame(),
+                                                                      "播放器异常",
+                                                                      "错误",
+                                                                      JOptionPane.WARNING_MESSAGE);
+                                    });
+                                } else
+                                {
+                                    SwingUtilities.invokeLater(() -> {
+                                        canvasFrame.setVisible(false);
+                                        canvasFrame.dispose();
+                                    });
+                                }
+                            });
 
-        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber));
-        Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, sourceDataLine));
-        Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sampleFormat, sourceDataLine));
-
-        if (width > 1280)
-        {
-            double ratio = 1.0 * height / width;
-            width = 1280;
-            height = (int) (width * ratio);
-        }
-        canvasFrame.setCanvasSize(width, height);
-        ComponentUtil.setLocateToCenter(canvasFrame);
-        canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         canvasFrame.addWindowListener(new WindowAdapter()
         {
             @Override
             public void windowClosed(WindowEvent e)
             {
-                vQueue.clear();
-                aQueue.clear();
-                try
-                {
-                    if (sourceDataLine != null)
-                        sourceDataLine.close();
-
-                    task2.get();
-                    task1.get();
-                    task0.get();
-                    grabber.close();
-                } catch (Exception ex)
-                {
-                    log.warn("{}", ex.getMessage());
-                }
-                log.debug("播放进程结束");
+                future.graceStop();
+                log.debug("结束播放：{}", url);
             }
         });
-        JRootPane rootPane = canvasFrame.getRootPane();
-        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        rootPane.registerKeyboardAction(e -> {
-                                            if (isFullScreen)
-                                            {
-                                                canvasFrame.setBounds(bounds);
-                                                isFullScreen = false;
-                                            } else
-                                            {
-                                                bounds = canvasFrame.getBounds();
-                                                canvasFrame.setExtendedState(canvasFrame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
-                                                isFullScreen = true;
-                                            }
-                                        },
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_F, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        canvasFrame.setAlwaysOnTop(true);
+        canvasFrame.setVisible(true);
+
+        ffmpegTask = future;
     }
 
-    public void playVideo(InputStream in, int videoPid) throws FFmpegTSFrameGrabber.Exception
+    public void playVideo(String url, int videoPid)
     {
-        avutil.av_log_set_level(AV_LOG_QUIET);
+        stop();
 
-        FFmpegTSFrameGrabber grabber = new FFmpegTSFrameGrabber(in, 0);
-        grabber.setCloseInputStream(true);
-        grabber.setVideoStreamPid(videoPid);
-        grabber.setAudioStreamPid(0x1FFF);
-        grabber.start();
+        CanvasFrame canvasFrame = new CanvasFrame("播放" + url + "，视频PID：" + videoPid);
+        JRootPane rootPane = canvasFrame.getRootPane();
+        rootPane.registerKeyboardAction(e ->
+                                        {
+                                            canvasFrame.setVisible(false);
+                                            canvasFrame.dispose();
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e ->
+                                        {
+                                            canvasFrame.setVisible(false);
+                                            canvasFrame.dispose();
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        double fps = grabber.getVideoFrameRate();
-        int width = grabber.getImageWidth();
-        int height = grabber.getImageHeight();
-        int frameGaps = (int) (1000 / fps);
+        FFmpegResultFuture future = FFmpeg.atPath(Paths.get(System.getProperty("user.dir"), "ffmpeg"))
+                                          .addInput(UrlInput.fromUrl(url).setReadAtFrameRate(true))
+                                          .addOutput(new CustomFrameOutput(new NutFrameConsumer(canvasFrame))
+                                                             .addMap(0, "i:" + videoPid))
+                                          .setExecutorTimeoutMillis(10000)
+                                          .executeAsync();
+        future.toCompletableFuture()
+              .whenComplete((r, t) ->
+                            {
+                                if (t != null)
+                                {
+                                    SwingUtilities.invokeLater(() -> {
+                                        canvasFrame.setVisible(false);
+                                        canvasFrame.dispose();
 
-        canvasFrame = new CanvasFrame("播放", CanvasFrame.getDefaultGamma() / grabber.getGamma());
+                                        JOptionPane.showMessageDialog(AssistantApp.getInstance().getMainFrame(),
+                                                                      "播放器异常",
+                                                                      "错误",
+                                                                      JOptionPane.WARNING_MESSAGE);
+                                    });
+                                } else
+                                {
+                                    SwingUtilities.invokeLater(() -> {
+                                        canvasFrame.setVisible(false);
+                                        canvasFrame.dispose();
+                                    });
+                                }
+                            });
 
-        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber));
-        Future<?> task1 = ThreadUtil.execAsync(() -> processVideoFrame(canvasFrame, frameGaps, null));
 
-        if (width > 1280)
-        {
-            double ratio = 1.0 * height / width;
-            width = 1280;
-            height = (int) (width * ratio);
-        }
-        canvasFrame.setCanvasSize(width, height);
-        ComponentUtil.setLocateToCenter(canvasFrame);
-        canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         canvasFrame.addWindowListener(new WindowAdapter()
         {
             @Override
             public void windowClosed(WindowEvent e)
             {
-                vQueue.clear();
-                aQueue.clear();
-                try
-                {
-                    task1.get();
-                    task0.get();
-                    grabber.close();
-                } catch (Exception ex)
-                {
-                    log.warn("{}", ex.getMessage());
-                }
-                log.debug("播放进程结束");
+                future.graceStop();
+                log.debug("结束播放：{}，video_pid = {}", url, videoPid);
             }
         });
-        JRootPane rootPane = canvasFrame.getRootPane();
-        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        rootPane.registerKeyboardAction(e -> {
-                                            if (isFullScreen)
-                                            {
-                                                canvasFrame.setBounds(bounds);
-                                                isFullScreen = false;
-                                            } else
-                                            {
-                                                bounds = canvasFrame.getBounds();
-                                                canvasFrame.setExtendedState(canvasFrame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
-                                                isFullScreen = true;
-                                            }
-                                        },
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_F, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        canvasFrame.setAlwaysOnTop(true);
+        canvasFrame.setVisible(true);
+
+        ffmpegTask = future;
     }
 
-    public void playAudio(InputStream in, int audioPid) throws FFmpegTSFrameGrabber.Exception
+    public void playAudio(String url, int audioPid)
     {
-        avutil.av_log_set_level(AV_LOG_QUIET);
+        stop();
 
-        FFmpegTSFrameGrabber grabber = new FFmpegTSFrameGrabber(in, 0);
-        grabber.setCloseInputStream(true);
-        grabber.setVideoStreamPid(0x1FFF);
-        grabber.setAudioStreamPid(audioPid);
-        grabber.start();
+        CanvasFrame canvasFrame = new CanvasFrame("播放" + url + "，音频PID：" + audioPid);
+        JRootPane rootPane = canvasFrame.getRootPane();
+        rootPane.registerKeyboardAction(e ->
+                                        {
+                                            canvasFrame.setVisible(false);
+                                            canvasFrame.dispose();
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+        rootPane.registerKeyboardAction(e ->
+                                        {
+                                            canvasFrame.setVisible(false);
+                                            canvasFrame.dispose();
+                                        },
+                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
+                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        int sampleFormat = grabber.getSampleFormat();
-        SourceDataLine sourceDataLine = initSourceDataLine(grabber);
+        FFmpegResultFuture future = FFmpeg.atPath(Paths.get(System.getProperty("user.dir"), "ffmpeg"))
+                                          .addInput(UrlInput.fromUrl(url).setReadAtFrameRate(true))
+                                          .addOutput(new CustomFrameOutput(new NutFrameConsumer(canvasFrame))
+                                                             .addMap(0, "i:" + audioPid))
+                                          .setExecutorTimeoutMillis(10000)
+                                          .executeAsync();
+        future.toCompletableFuture()
+              .whenComplete((r, t) ->
+                            {
+                                if (t != null)
+                                {
+                                    SwingUtilities.invokeLater(() -> {
+                                        canvasFrame.setVisible(false);
+                                        canvasFrame.dispose();
 
-        canvasFrame = new CanvasFrame("播放", CanvasFrame.getDefaultGamma() / grabber.getGamma());
+                                        JOptionPane.showMessageDialog(AssistantApp.getInstance().getMainFrame(),
+                                                                      "播放器异常",
+                                                                      "错误",
+                                                                      JOptionPane.WARNING_MESSAGE);
+                                    });
+                                } else
+                                {
+                                    SwingUtilities.invokeLater(() -> {
+                                        canvasFrame.setVisible(false);
+                                        canvasFrame.dispose();
+                                    });
+                                }
+                            });
 
-        Future<?> task0 = ThreadUtil.execAsync(() -> grabFrames(canvasFrame, grabber));
-        Future<?> task2 = ThreadUtil.execAsync(() -> processAudioFrame(canvasFrame, sampleFormat, sourceDataLine));
-
-        canvasFrame.showImage(((ImageIcon) LargeIcons.SOUND_WAVE_128).getImage());
-        ComponentUtil.setLocateToCenter(canvasFrame);
-        canvasFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         canvasFrame.addWindowListener(new WindowAdapter()
         {
             @Override
             public void windowClosed(WindowEvent e)
             {
-                vQueue.clear();
-                aQueue.clear();
-                try
-                {
-                    if (sourceDataLine != null)
-                        sourceDataLine.close();
-
-                    task2.get();
-                    task0.get();
-                    grabber.close();
-                } catch (Exception ex)
-                {
-                    log.warn("{}", ex.getMessage());
-                }
-                log.debug("播放进程结束");
+                future.graceStop();
+                log.debug("结束播放：{}，audio_pid = {}", url, audioPid);
             }
         });
-        JRootPane rootPane = canvasFrame.getRootPane();
-        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        rootPane.registerKeyboardAction(e -> canvasFrame.setVisible(false),
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
-        rootPane.registerKeyboardAction(e -> {
-                                            if (isFullScreen)
-                                            {
-                                                canvasFrame.setBounds(bounds);
-                                                isFullScreen = false;
-                                            } else
-                                            {
-                                                bounds = canvasFrame.getBounds();
-                                                canvasFrame.setExtendedState(canvasFrame.getExtendedState() | java.awt.Frame.MAXIMIZED_BOTH);
-                                                isFullScreen = true;
-                                            }
-                                        },
-                                        KeyStroke.getKeyStroke(KeyEvent.VK_F, 0),
-                                        JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        Image audioImage = ((ImageIcon) LargeIcons.SOUND_WAVE_128).getImage();
+        canvasFrame.adjust(audioImage.getWidth(null), audioImage.getHeight(null));
+        canvasFrame.show(audioImage);
+        canvasFrame.setAlwaysOnTop(true);
+        canvasFrame.setVisible(true);
+
+        ffmpegTask = future;
     }
 
-    private void grabFrames(CanvasFrame canvas, FrameGrabber grabber)
+    private static class CustomFrameOutput extends FrameOutput
     {
-        timelineStart = -1;
-        prevAudioPosition = 0;
-        prevAudioTimestamp = -1;
-        vQueue.clear();
-        aQueue.clear();
-
-        while (canvas.isVisible())
+        protected CustomFrameOutput(FrameConsumer consumer)
         {
-            try
-            {
-                Frame frame = grabber.grab();
-                if (frame == null)
-                    continue;
-                if (frame.image != null)
-                    vQueue.add(frame.clone());
-                if (frame.samples != null)
-                    aQueue.add(frame.clone());
-
-                if (vQueue.size() > 50 || aQueue.size() > 50)
-                    ThreadUtil.safeSleep(100); // 做个保护，避免缓存过多，占用内存；一般在抓非实时流帧时有意义。
-            } catch (Exception ex)
-            {
-                log.warn("[抽帧] {}", ex.getMessage());
-            }
+            super(new NutFrameReader(consumer, ImageFormats.BGR24), "nut",
+                  "rawvideo", ImageFormats.BGR24.getPixelFormat(), "pcm_s16be");
         }
-        log.debug("抽帧线程结束");
     }
 
-    private void processVideoFrame(CanvasFrame canvas, int frameGaps, SourceDataLine dataLine)
+    private static class NutFrameConsumer implements FrameConsumer
     {
-        // 如果视频的fps很小或接近于零，则会导致frameGaps超级大。这里做一个保护。
-        int waitQueue = Math.min(50, frameGaps / 2);
-        while (canvas.isVisible())
+        private final CanvasFrame canvas;
+        private SourceDataLine dataLine;
+
+        public NutFrameConsumer(CanvasFrame player)
         {
-            try
+            this.canvas = player;
+        }
+
+        @Override
+        public void consumeStreams(List<Stream> streams)
+        {
+            for (Stream stream : streams)
             {
-                Frame image = vQueue.poll(waitQueue, TimeUnit.MILLISECONDS);
-                if (image == null)
-                    continue;
-
-                if (timelineStart == -1 && dataLine == null)
-                    timelineStart = image.timestamp;
-
-                if (image.timestamp < timelineStart)
+                if (stream.getType() == Stream.Type.VIDEO)
                 {
-                    image.close();
-                    continue;
+                    SwingUtilities.invokeLater(() -> {
+                        if (canvas.isVisible())
+                        {
+                            canvas.adjust(stream.getWidth(), stream.getHeight());
+                        }
+                    });
                 }
 
-                long vaOffset = image.timestamp - timelineStart - (dataLine == null ? 0 : dataLine.getMicrosecondPosition());
-                long delay = Math.min(frameGaps, vaOffset / 1000);
-                ThreadUtil.safeSleep(delay);
-
-                // ??? 原示例是直接showImage，并没有在EDT里showImage，可以吗？
-                Runnable r = () ->
+                if (stream.getType() == Stream.Type.AUDIO)
                 {
-                    canvas.showImage(image);
-                    image.close();
-                };
-                if (EventQueue.isDispatchThread())
-                    r.run();
-                else
-                    EventQueue.invokeLater(r);
-            } catch (Exception ex)
-            {
-                log.warn("[视频] {}", ex.getMessage());
-            }
-        }
-        log.debug("视频处理线程结束");
-    }
+                    try
+                    {
+                        // pcm_s32be
+                        AudioFormat audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
+                                                                  stream.getSampleRate(),
+                                                                  16,
+                                                                  stream.getChannels(),
+                                                                  stream.getChannels() * 2,
+                                                                  stream.getSampleRate(),
+                                                                  true);
+                        DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat, AudioSystem.NOT_SPECIFIED);
 
-    private void processAudioFrame(CanvasFrame canvas, int sampleFormat, SourceDataLine sourceDataLine)
-    {
-        while (canvas.isVisible())
-        {
-            try
-            {
-                Frame audio = aQueue.poll(50, TimeUnit.MILLISECONDS);
-                if (audio != null)
-                {
-                    playAudioSample(sourceDataLine, sampleFormat, audio.timestamp, audio.samples);
-                    audio.close();
+                        dataLine = (SourceDataLine) AudioSystem.getLine(info);
+                        dataLine.open(audioFormat);
+                    } catch (LineUnavailableException e)
+                    {
+                        dataLine = null;
+                    }
+
+                    if (dataLine != null)
+                        dataLine.start();
                 }
-            } catch (Exception ex)
-            {
-                log.warn("[音频] {}", ex.getMessage());
             }
         }
-        log.debug("音频处理线程结束");
-    }
 
-    private void playAudioSample(SourceDataLine sourceDataLine, int sampleFormat, long timestamp, Buffer[] samples)
-    {
-        if (sourceDataLine == null || samples == null)
-            return;
-
-        float vol = 1;//音量
-        byte[] data = null;
-
-        switch (sampleFormat)
+        @Override
+        public void consume(Frame frame)
         {
-            case avutil.AV_SAMPLE_FMT_FLTP://平面型左右声道分开
-            case avutil.AV_SAMPLE_FMT_S16P://平面型左右声道分开
+            if (frame == null)
+                return;
+
+            if (frame.getSamples() != null && dataLine != null && dataLine.isOpen())
             {
-                if (samples.length < 2 || samples[0] == null || samples[1] == null)
-                    return;
-                ByteBuffer TLData = toByteBuffer(samples[0], vol);
-                ByteBuffer TRData = toByteBuffer(samples[1], vol);
-                data = combineChannels(TLData.array(), TRData.array());
-                break;
+                byte[] data = samples2bytes(frame.getSamples());
+                dataLine.write(data, 0, data.length);
             }
-            case avutil.AV_SAMPLE_FMT_S16://非平面型左右声道在一个buffer中
-            case avutil.AV_SAMPLE_FMT_FLT://float非平面型
+
+            if (frame.getImage() != null && canvas.isVisible())
             {
-                if (samples.length < 1 || samples[0] == null)
-                    return;
-                ByteBuffer TLData = toByteBuffer(samples[0], vol);
-                data = TLData.array();
-                break;
+                BufferedImage image = frame.getImage();
+                SwingUtilities.invokeLater(() -> canvas.show(image));
             }
-            default:
-                break;
         }
 
-        if (data == null)
-            return;
-
-        long currAudioPosition = sourceDataLine.getMicrosecondPosition();
-        if (timelineStart == -1)
+        private byte[] samples2bytes(int[] samples)
         {
-            timelineStart = timestamp;
-        } else
-        {
-            long offset = timestamp - prevAudioTimestamp - (currAudioPosition - prevAudioPosition);
-            long delay = Math.min(50, offset / 1000);
-            ThreadUtil.safeSleep(delay);
-        }
-        sourceDataLine.write(data, 0, data.length);
-        prevAudioPosition = currAudioPosition;
-        prevAudioTimestamp = timestamp;
-    }
-
-    private SourceDataLine initSourceDataLine(FrameGrabber grabber)
-    {
-        AudioFormat af = null;
-        switch (grabber.getSampleFormat())
-        {
-            case avutil.AV_SAMPLE_FMT_U8://无符号short 8bit
-                break;
-            case avutil.AV_SAMPLE_FMT_S16://有符号short 16bit
-            case avutil.AV_SAMPLE_FMT_FLT:
-            case avutil.AV_SAMPLE_FMT_S16P://有符号short 16bit,平面型
-            case avutil.AV_SAMPLE_FMT_FLTP://float 平面型 需转为16bit short
-                af = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                                     grabber.getSampleRate(),
-                                     16,
-                                     grabber.getAudioChannels(),
-                                     grabber.getAudioChannels() * 2,
-                                     grabber.getSampleRate(),
-                                     true);
-                break;
-            case avutil.AV_SAMPLE_FMT_S32:
-            case avutil.AV_SAMPLE_FMT_DBL:
-            case avutil.AV_SAMPLE_FMT_U8P:
-            case avutil.AV_SAMPLE_FMT_DBLP:
-                break;
-            case avutil.AV_SAMPLE_FMT_S32P://有符号short 32bit，平面型，但是32bit的话可能电脑声卡不支持，这种音乐也少见
-                af = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
-                                     grabber.getSampleRate(),
-                                     32,
-                                     grabber.getAudioChannels(),
-                                     grabber.getAudioChannels() * 2,
-                                     grabber.getSampleRate(),
-                                     true);
-                break;
-            case avutil.AV_SAMPLE_FMT_S64://有符号short 64bit 非平面型
-            case avutil.AV_SAMPLE_FMT_S64P://有符号short 64bit平面型
-                break;
-            default:
-                log.warn("不支持的声音格式：{}", grabber.getSampleFormat());
-                return null;
-        }
-
-        try
-        {
-            DataLine.Info info = new DataLine.Info(SourceDataLine.class, af, AudioSystem.NOT_SPECIFIED);
-            SourceDataLine dataLine = (SourceDataLine) AudioSystem.getLine(info);
-            dataLine.open(af);
-            dataLine.start();
-            return dataLine;
-        } catch (LineUnavailableException e)
-        {
-            return null;
+            byte[] bytes = new byte[samples.length * 4];
+            for (int i = 0; i < samples.length; i++)
+            {
+                BigEndian.setUINT32(bytes, i * 4, samples[i]);
+            }
+            return bytes;
         }
     }
 
-    private ByteBuffer toByteBuffer(Buffer input, float volume)
+    private static class Canvas extends JPanel
     {
-        if (input instanceof FloatBuffer)
-            return floatToByteValue((FloatBuffer) input, volume);
-        if (input instanceof ShortBuffer)
-            return shortToByteValue((ShortBuffer) input, volume);
-        return (ByteBuffer) input;
+        private Image image;
+
+        public void setImage(Image image)
+        {
+            this.image = image;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g)
+        {
+            super.paintComponent(g);
+            if (image == null)
+            {
+                String text = "无视频";
+                g.setFont(UIManager.getFont("Label.font").deriveFont(Font.BOLD, 18));
+                int width = g.getFontMetrics().stringWidth(text);
+                g.drawString(text, (getSize().width - width) / 2, getSize().height / 2);
+            } else
+            {
+                g.drawImage(image, 0, 0, this);
+            }
+        }
     }
 
-    private ByteBuffer shortToByteValue(ShortBuffer arr, float vol)
+    private static class CanvasFrame extends JFrame
     {
-        int len = arr.capacity();
-        ByteBuffer bb = ByteBuffer.allocate(len * 2);
-        for (int i = 0; i < len; i++)
-        {
-            bb.putShort(i * 2, (short) (arr.get(i) * vol));
-        }
-        return bb; // 默认转为大端序
-    }
+        private final Canvas canvas;
 
-    private ByteBuffer floatToByteValue(FloatBuffer arr, float vol)
-    {
-        int len = arr.capacity();
-        float f;
-        float v;
-        ByteBuffer res = ByteBuffer.allocate(len * 2);
-        v = 32768.0f * vol;
-        for (int i = 0; i < len; i++)
+        public CanvasFrame(String title)
         {
-            f = arr.get(i) * v;//Ref：https://stackoverflow.com/questions/15087668/how-to-convert-pcm-samples-in-byte-array-as-floating-point-numbers-in-the-range
-            if (f > v) f = v;
-            if (f < -v) f = v;
-            //默认转为大端序
-            res.putShort(i * 2, (short) f);//注意乘以2，因为一次写入两个字节。
+            canvas = new Canvas();
+            canvas.setPreferredSize(new Dimension(720, 576));
+            getContentPane().add(canvas);
+            setTitle(title);
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            pack();
+            ComponentUtil.setLocateToCenter(this);
         }
-        return res;
-    }
 
-    private byte[] combineChannels(byte[] tl, byte[] tr)
-    {
-        byte[] combined = new byte[tl.length + tr.length];
-        int k = 0;
-        for (int i = 0; i < tl.length; i = i + 2)
+        public void adjust(int width, int height)
         {
-            //混合两个声道。
-            combined[4 * k    ] = tl[i    ];
-            combined[4 * k + 1] = tl[i + 1];
-            combined[4 * k + 2] = tr[i    ];
-            combined[4 * k + 3] = tr[i + 1];
-            k++;
+            canvas.setPreferredSize(new Dimension(width, height));
+            canvas.setSize(new Dimension(width, height));
+            pack();
+            ComponentUtil.setLocateToCenter(this);
         }
-        return combined;
+
+        public void show(Image image)
+        {
+            canvas.setImage(image);
+        }
     }
 }
