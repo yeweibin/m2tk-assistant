@@ -367,7 +367,8 @@ public class MPEGTSPlayer
                 g.drawString(text, (getSize().width - width) / 2, getSize().height / 2);
             } else
             {
-                g.drawImage(image, 0, 0, this);
+                // 根据当前播放窗口的大小调整图像比例
+                g.drawImage(image.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH), 0, 0, this);
             }
         }
     }

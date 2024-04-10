@@ -68,7 +68,7 @@ public class StreamInfoPanel extends JPanel
                     {
                         try
                         {
-                            popupListener.accept(e, model.getRow(selectedRow));
+                            popupListener.accept(e, model.getRow(table.convertRowIndexToModel(selectedRow)));
                         } catch (Exception ignored)
                         {
                         }
