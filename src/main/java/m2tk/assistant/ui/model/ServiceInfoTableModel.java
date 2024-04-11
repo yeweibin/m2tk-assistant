@@ -76,25 +76,17 @@ public class ServiceInfoTableModel extends AbstractTableModel
     public Object getValueAt(int rowIndex, int columnIndex)
     {
         SIService service = data.get(rowIndex);
-        switch (columnIndex)
+        return switch (columnIndex)
         {
-            case 0:
-                return rowIndex + 1;
-            case 1:
-                return service.getServiceName();
-            case 2:
-                return service.getServiceProvider();
-            case 3:
-                return service.getServiceType();
-            case 4:
-                return service.getServiceId();
-            case 5:
-                return service.getOriginalNetworkId();
-            case 6:
-                return service.getTransportStreamId();
-            default:
-                return null;
-        }
+            case 0 -> rowIndex + 1;
+            case 1 -> service.getServiceName();
+            case 2 -> service.getServiceProvider();
+            case 3 -> service.getServiceType();
+            case 4 -> service.getServiceId();
+            case 5 -> service.getOriginalNetworkId();
+            case 6 -> service.getTransportStreamId();
+            default -> null;
+        };
     }
 
     private boolean isSame(List<SIService> current, List<SIService> incoming)

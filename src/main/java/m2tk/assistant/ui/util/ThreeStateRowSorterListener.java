@@ -39,7 +39,7 @@ public class ThreeStateRowSorterListener implements RowSorterListener
         if (sortKeys.isEmpty())
             return;
 
-        RowSorter.SortKey sortKey = sortKeys.get(0);
+        RowSorter.SortKey sortKey = sortKeys.getFirst();
         if (lastColumn != sortKey.getColumn())
         {
             lastColumn = sortKey.getColumn();

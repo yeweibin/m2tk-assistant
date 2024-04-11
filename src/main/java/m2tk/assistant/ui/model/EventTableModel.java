@@ -83,38 +83,30 @@ public class EventTableModel extends AbstractTableModel
     public Object getValueAt(int rowIndex, int columnIndex)
     {
         SIEvent event = data.get(rowIndex);
-        switch (columnIndex)
+        return switch (columnIndex)
         {
-            case 0:
-                return event.isScheduleEvent()
-                       ? ""
-                       : event.isPresentEvent() ? "当前" : "后续";
-            case 1:
-                return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
-                       ? null
-                       : event.getEventId();
-            case 2:
-                return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
-                       ? null
-                       : event.getStartTime();
-            case 3:
-                return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
-                       ? null
-                       : event.getDuration();
-            case 4:
-                return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
-                       ? null
-                       : event.getLanguageCode();
-            case 5:
-                return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
-                       ? null
-                       : event.getEventName();
-            case 6:
-                return (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
-                       ? null
-                       : event.getEventDescription();
-            default:
-                return null;
-        }
+            case 0 -> event.isScheduleEvent()
+                      ? ""
+                      : event.isPresentEvent() ? "当前" : "后续";
+            case 1 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+                      ? null
+                      : event.getEventId();
+            case 2 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+                      ? null
+                      : event.getStartTime();
+            case 3 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+                      ? null
+                      : event.getDuration();
+            case 4 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+                      ? null
+                      : event.getLanguageCode();
+            case 5 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+                      ? null
+                      : event.getEventName();
+            case 6 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+                      ? null
+                      : event.getEventDescription();
+            default -> null;
+        };
     }
 }

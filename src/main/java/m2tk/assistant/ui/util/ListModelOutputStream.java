@@ -20,7 +20,7 @@ import javax.swing.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class ListModelOutputStream extends OutputStream
@@ -80,14 +80,8 @@ public class ListModelOutputStream extends OutputStream
 
     private String getBufferedString()
     {
-        try
-        {
-            // 在JDK8里默认的字符集编码不是UTF-8，而是系统编码。
-            // 所以这里要指明字符集，否则日志显示出来就是乱码。
-            return buffer.toString("UTF-8");
-        } catch (UnsupportedEncodingException ex)
-        {
-            return buffer.toString();
-        }
+        // 在JDK8里默认的字符集编码不是UTF-8，而是系统编码。
+        // 所以这里要指明字符集，否则日志显示出来就是乱码。
+        return buffer.toString(StandardCharsets.UTF_8);
     }
 }

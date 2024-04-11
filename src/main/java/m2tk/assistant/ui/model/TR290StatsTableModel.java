@@ -113,167 +113,119 @@ public class TR290StatsTableModel extends AbstractTableModel
         {
             case COLUMN_INDEX_STATUS_INDICATOR:
             {
-                switch (rowIndex)
+                return switch (rowIndex)
                 {
-                    case ROW_INDEX_SYNC_LOSS:
-                        return data.getErrorCount(TR290ErrorTypes.TS_SYNC_LOSS) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_SYNC_BYTE_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SYNC_BYTE_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_PAT_ERROR_2:
-                        return data.getErrorCount(TR290ErrorTypes.PAT_ERROR_2) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_CONTINUITY_COUNT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.CONTINUITY_COUNT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_PMT_ERROR_2:
-                        return data.getErrorCount(TR290ErrorTypes.PMT_ERROR_2) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_PID_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PID_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_TRANSPORT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.TRANSPORT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_CRC_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.CRC_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_PCR_REPETITION_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PCR_REPETITION_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_PCR_ACCURACY_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PCR_ACCURACY_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_CAT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.CAT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_NIT_ACTUAL_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.NIT_ACTUAL_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_NIT_OTHER_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.NIT_OTHER_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_SI_REPETITION_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SI_REPETITION_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_UNREFERENCED_PID:
-                        return data.getErrorCount(TR290ErrorTypes.UNREFERENCED_PID) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_SDT_ACTUAL_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SDT_ACTUAL_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_SDT_OTHER_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SDT_OTHER_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_EIT_ACTUAL_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.EIT_ACTUAL_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_EIT_OTHER_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.EIT_OTHER_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_RST_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.RST_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    case ROW_INDEX_TDT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.TDT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
-                    default:
-                        return null;
-                }
+                    case ROW_INDEX_SYNC_LOSS ->
+                            data.getErrorCount(TR290ErrorTypes.TS_SYNC_LOSS) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_SYNC_BYTE_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.SYNC_BYTE_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_PAT_ERROR_2 ->
+                            data.getErrorCount(TR290ErrorTypes.PAT_ERROR_2) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_CONTINUITY_COUNT_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.CONTINUITY_COUNT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_PMT_ERROR_2 ->
+                            data.getErrorCount(TR290ErrorTypes.PMT_ERROR_2) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_PID_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.PID_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_TRANSPORT_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.TRANSPORT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_CRC_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.CRC_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_PCR_REPETITION_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.PCR_REPETITION_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_PCR_ACCURACY_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.PCR_ACCURACY_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_CAT_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.CAT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_NIT_ACTUAL_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.NIT_ACTUAL_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_NIT_OTHER_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.NIT_OTHER_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_SI_REPETITION_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.SI_REPETITION_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_UNREFERENCED_PID ->
+                            data.getErrorCount(TR290ErrorTypes.UNREFERENCED_PID) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_SDT_ACTUAL_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.SDT_ACTUAL_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_SDT_OTHER_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.SDT_OTHER_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_EIT_ACTUAL_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.EIT_ACTUAL_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_EIT_OTHER_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.EIT_OTHER_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_RST_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.RST_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    case ROW_INDEX_TDT_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.TDT_ERROR) > 0 ? LargeIcons.DOT_RED : LargeIcons.DOT_GREEN;
+                    default -> null;
+                };
             }
 
             case COLUMN_INDEX_TYPE_INDICATOR:
             {
-                switch (rowIndex)
+                return switch (rowIndex)
                 {
-                    case ROW_INDEX_PRIORITY_1:
-                        return "--------第一级--------";
-                    case ROW_INDEX_SYNC_LOSS:
-                        return TR290ErrorTypes.TS_SYNC_LOSS;
-                    case ROW_INDEX_SYNC_BYTE_ERROR:
-                        return TR290ErrorTypes.SYNC_BYTE_ERROR;
-                    case ROW_INDEX_PAT_ERROR_2:
-                        return TR290ErrorTypes.PAT_ERROR_2;
-                    case ROW_INDEX_CONTINUITY_COUNT_ERROR:
-                        return TR290ErrorTypes.CONTINUITY_COUNT_ERROR;
-                    case ROW_INDEX_PMT_ERROR_2:
-                        return TR290ErrorTypes.PMT_ERROR_2;
-                    case ROW_INDEX_PID_ERROR:
-                        return TR290ErrorTypes.PID_ERROR;
-                    case ROW_INDEX_PRIORITY_2:
-                        return "--------第二级--------";
-                    case ROW_INDEX_TRANSPORT_ERROR:
-                        return TR290ErrorTypes.TRANSPORT_ERROR;
-                    case ROW_INDEX_CRC_ERROR:
-                        return TR290ErrorTypes.CRC_ERROR;
-                    case ROW_INDEX_PCR_REPETITION_ERROR:
-                        return TR290ErrorTypes.PCR_REPETITION_ERROR;
-                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR:
-                        return TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR;
-                    case ROW_INDEX_PCR_ACCURACY_ERROR:
-                        return TR290ErrorTypes.PCR_ACCURACY_ERROR;
-                    case ROW_INDEX_CAT_ERROR:
-                        return TR290ErrorTypes.CAT_ERROR;
-                    case ROW_INDEX_PRIORITY_3:
-                        return "--------第三级--------";
-                    case ROW_INDEX_NIT_ACTUAL_ERROR:
-                        return TR290ErrorTypes.NIT_ACTUAL_ERROR;
-                    case ROW_INDEX_NIT_OTHER_ERROR:
-                        return TR290ErrorTypes.NIT_OTHER_ERROR;
-                    case ROW_INDEX_SI_REPETITION_ERROR:
-                        return TR290ErrorTypes.SI_REPETITION_ERROR;
-                    case ROW_INDEX_UNREFERENCED_PID:
-                        return TR290ErrorTypes.UNREFERENCED_PID;
-                    case ROW_INDEX_SDT_ACTUAL_ERROR:
-                        return TR290ErrorTypes.SDT_ACTUAL_ERROR;
-                    case ROW_INDEX_SDT_OTHER_ERROR:
-                        return TR290ErrorTypes.SDT_OTHER_ERROR;
-                    case ROW_INDEX_EIT_ACTUAL_ERROR:
-                        return TR290ErrorTypes.EIT_ACTUAL_ERROR;
-                    case ROW_INDEX_EIT_OTHER_ERROR:
-                        return TR290ErrorTypes.EIT_OTHER_ERROR;
-                    case ROW_INDEX_RST_ERROR:
-                        return TR290ErrorTypes.RST_ERROR;
-                    case ROW_INDEX_TDT_ERROR:
-                        return TR290ErrorTypes.TDT_ERROR;
-                    default:
-                        return null;
-                }
+                    case ROW_INDEX_PRIORITY_1 -> "--------第一级--------";
+                    case ROW_INDEX_SYNC_LOSS -> TR290ErrorTypes.TS_SYNC_LOSS;
+                    case ROW_INDEX_SYNC_BYTE_ERROR -> TR290ErrorTypes.SYNC_BYTE_ERROR;
+                    case ROW_INDEX_PAT_ERROR_2 -> TR290ErrorTypes.PAT_ERROR_2;
+                    case ROW_INDEX_CONTINUITY_COUNT_ERROR -> TR290ErrorTypes.CONTINUITY_COUNT_ERROR;
+                    case ROW_INDEX_PMT_ERROR_2 -> TR290ErrorTypes.PMT_ERROR_2;
+                    case ROW_INDEX_PID_ERROR -> TR290ErrorTypes.PID_ERROR;
+                    case ROW_INDEX_PRIORITY_2 -> "--------第二级--------";
+                    case ROW_INDEX_TRANSPORT_ERROR -> TR290ErrorTypes.TRANSPORT_ERROR;
+                    case ROW_INDEX_CRC_ERROR -> TR290ErrorTypes.CRC_ERROR;
+                    case ROW_INDEX_PCR_REPETITION_ERROR -> TR290ErrorTypes.PCR_REPETITION_ERROR;
+                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR ->
+                            TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR;
+                    case ROW_INDEX_PCR_ACCURACY_ERROR -> TR290ErrorTypes.PCR_ACCURACY_ERROR;
+                    case ROW_INDEX_CAT_ERROR -> TR290ErrorTypes.CAT_ERROR;
+                    case ROW_INDEX_PRIORITY_3 -> "--------第三级--------";
+                    case ROW_INDEX_NIT_ACTUAL_ERROR -> TR290ErrorTypes.NIT_ACTUAL_ERROR;
+                    case ROW_INDEX_NIT_OTHER_ERROR -> TR290ErrorTypes.NIT_OTHER_ERROR;
+                    case ROW_INDEX_SI_REPETITION_ERROR -> TR290ErrorTypes.SI_REPETITION_ERROR;
+                    case ROW_INDEX_UNREFERENCED_PID -> TR290ErrorTypes.UNREFERENCED_PID;
+                    case ROW_INDEX_SDT_ACTUAL_ERROR -> TR290ErrorTypes.SDT_ACTUAL_ERROR;
+                    case ROW_INDEX_SDT_OTHER_ERROR -> TR290ErrorTypes.SDT_OTHER_ERROR;
+                    case ROW_INDEX_EIT_ACTUAL_ERROR -> TR290ErrorTypes.EIT_ACTUAL_ERROR;
+                    case ROW_INDEX_EIT_OTHER_ERROR -> TR290ErrorTypes.EIT_OTHER_ERROR;
+                    case ROW_INDEX_RST_ERROR -> TR290ErrorTypes.RST_ERROR;
+                    case ROW_INDEX_TDT_ERROR -> TR290ErrorTypes.TDT_ERROR;
+                    default -> null;
+                };
             }
 
             case COLUMN_INDEX_COUNT:
             {
-                switch (rowIndex)
+                return switch (rowIndex)
                 {
-                    case ROW_INDEX_SYNC_LOSS:
-                        return data.getErrorCount(TR290ErrorTypes.TS_SYNC_LOSS);
-                    case ROW_INDEX_SYNC_BYTE_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SYNC_BYTE_ERROR);
-                    case ROW_INDEX_PAT_ERROR_2:
-                        return data.getErrorCount(TR290ErrorTypes.PAT_ERROR_2);
-                    case ROW_INDEX_CONTINUITY_COUNT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.CONTINUITY_COUNT_ERROR);
-                    case ROW_INDEX_PMT_ERROR_2:
-                        return data.getErrorCount(TR290ErrorTypes.PMT_ERROR_2);
-                    case ROW_INDEX_PID_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PID_ERROR);
-                    case ROW_INDEX_TRANSPORT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.TRANSPORT_ERROR);
-                    case ROW_INDEX_CRC_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.CRC_ERROR);
-                    case ROW_INDEX_PCR_REPETITION_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PCR_REPETITION_ERROR);
-                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR);
-                    case ROW_INDEX_PCR_ACCURACY_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.PCR_ACCURACY_ERROR);
-                    case ROW_INDEX_CAT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.CAT_ERROR);
-                    case ROW_INDEX_NIT_ACTUAL_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.NIT_ACTUAL_ERROR);
-                    case ROW_INDEX_NIT_OTHER_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.NIT_OTHER_ERROR);
-                    case ROW_INDEX_SI_REPETITION_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SI_REPETITION_ERROR);
-                    case ROW_INDEX_UNREFERENCED_PID:
-                        return data.getErrorCount(TR290ErrorTypes.UNREFERENCED_PID);
-                    case ROW_INDEX_SDT_ACTUAL_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SDT_ACTUAL_ERROR);
-                    case ROW_INDEX_SDT_OTHER_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.SDT_OTHER_ERROR);
-                    case ROW_INDEX_EIT_ACTUAL_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.EIT_ACTUAL_ERROR);
-                    case ROW_INDEX_EIT_OTHER_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.EIT_OTHER_ERROR);
-                    case ROW_INDEX_RST_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.RST_ERROR);
-                    case ROW_INDEX_TDT_ERROR:
-                        return data.getErrorCount(TR290ErrorTypes.TDT_ERROR);
-                    default:
-                        return null;
-                }
+                    case ROW_INDEX_SYNC_LOSS -> data.getErrorCount(TR290ErrorTypes.TS_SYNC_LOSS);
+                    case ROW_INDEX_SYNC_BYTE_ERROR -> data.getErrorCount(TR290ErrorTypes.SYNC_BYTE_ERROR);
+                    case ROW_INDEX_PAT_ERROR_2 -> data.getErrorCount(TR290ErrorTypes.PAT_ERROR_2);
+                    case ROW_INDEX_CONTINUITY_COUNT_ERROR -> data.getErrorCount(TR290ErrorTypes.CONTINUITY_COUNT_ERROR);
+                    case ROW_INDEX_PMT_ERROR_2 -> data.getErrorCount(TR290ErrorTypes.PMT_ERROR_2);
+                    case ROW_INDEX_PID_ERROR -> data.getErrorCount(TR290ErrorTypes.PID_ERROR);
+                    case ROW_INDEX_TRANSPORT_ERROR -> data.getErrorCount(TR290ErrorTypes.TRANSPORT_ERROR);
+                    case ROW_INDEX_CRC_ERROR -> data.getErrorCount(TR290ErrorTypes.CRC_ERROR);
+                    case ROW_INDEX_PCR_REPETITION_ERROR -> data.getErrorCount(TR290ErrorTypes.PCR_REPETITION_ERROR);
+                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR ->
+                            data.getErrorCount(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR);
+                    case ROW_INDEX_PCR_ACCURACY_ERROR -> data.getErrorCount(TR290ErrorTypes.PCR_ACCURACY_ERROR);
+                    case ROW_INDEX_CAT_ERROR -> data.getErrorCount(TR290ErrorTypes.CAT_ERROR);
+                    case ROW_INDEX_NIT_ACTUAL_ERROR -> data.getErrorCount(TR290ErrorTypes.NIT_ACTUAL_ERROR);
+                    case ROW_INDEX_NIT_OTHER_ERROR -> data.getErrorCount(TR290ErrorTypes.NIT_OTHER_ERROR);
+                    case ROW_INDEX_SI_REPETITION_ERROR -> data.getErrorCount(TR290ErrorTypes.SI_REPETITION_ERROR);
+                    case ROW_INDEX_UNREFERENCED_PID -> data.getErrorCount(TR290ErrorTypes.UNREFERENCED_PID);
+                    case ROW_INDEX_SDT_ACTUAL_ERROR -> data.getErrorCount(TR290ErrorTypes.SDT_ACTUAL_ERROR);
+                    case ROW_INDEX_SDT_OTHER_ERROR -> data.getErrorCount(TR290ErrorTypes.SDT_OTHER_ERROR);
+                    case ROW_INDEX_EIT_ACTUAL_ERROR -> data.getErrorCount(TR290ErrorTypes.EIT_ACTUAL_ERROR);
+                    case ROW_INDEX_EIT_OTHER_ERROR -> data.getErrorCount(TR290ErrorTypes.EIT_OTHER_ERROR);
+                    case ROW_INDEX_RST_ERROR -> data.getErrorCount(TR290ErrorTypes.RST_ERROR);
+                    case ROW_INDEX_TDT_ERROR -> data.getErrorCount(TR290ErrorTypes.TDT_ERROR);
+                    default -> null;
+                };
             }
 
             case COLUMN_INDEX_TIME_OF_LAST_ERROR:
@@ -283,78 +235,34 @@ public class TR290StatsTableModel extends AbstractTableModel
                     rowIndex == ROW_INDEX_PRIORITY_3)
                     return null;
 
-                TR290Event event;
-                switch (rowIndex)
+                TR290Event event = switch (rowIndex)
                 {
-                    case ROW_INDEX_SYNC_LOSS:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.TS_SYNC_LOSS);
-                        break;
-                    case ROW_INDEX_SYNC_BYTE_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SYNC_BYTE_ERROR);
-                        break;
-                    case ROW_INDEX_PAT_ERROR_2:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PAT_ERROR_2);
-                        break;
-                    case ROW_INDEX_CONTINUITY_COUNT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.CONTINUITY_COUNT_ERROR);
-                        break;
-                    case ROW_INDEX_PMT_ERROR_2:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PMT_ERROR_2);
-                        break;
-                    case ROW_INDEX_PID_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PID_ERROR);
-                        break;
-                    case ROW_INDEX_TRANSPORT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.TRANSPORT_ERROR);
-                        break;
-                    case ROW_INDEX_CRC_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.CRC_ERROR);
-                        break;
-                    case ROW_INDEX_PCR_REPETITION_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PCR_REPETITION_ERROR);
-                        break;
-                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR);
-                        break;
-                    case ROW_INDEX_PCR_ACCURACY_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PCR_ACCURACY_ERROR);
-                        break;
-                    case ROW_INDEX_CAT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.CAT_ERROR);
-                        break;
-                    case ROW_INDEX_NIT_ACTUAL_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.NIT_ACTUAL_ERROR);
-                        break;
-                    case ROW_INDEX_NIT_OTHER_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.NIT_OTHER_ERROR);
-                        break;
-                    case ROW_INDEX_SI_REPETITION_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SI_REPETITION_ERROR);
-                        break;
-                    case ROW_INDEX_UNREFERENCED_PID:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.UNREFERENCED_PID);
-                        break;
-                    case ROW_INDEX_SDT_ACTUAL_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SDT_ACTUAL_ERROR);
-                        break;
-                    case ROW_INDEX_SDT_OTHER_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SDT_OTHER_ERROR);
-                        break;
-                    case ROW_INDEX_EIT_ACTUAL_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.EIT_ACTUAL_ERROR);
-                        break;
-                    case ROW_INDEX_EIT_OTHER_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.EIT_OTHER_ERROR);
-                        break;
-                    case ROW_INDEX_RST_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.RST_ERROR);
-                        break;
-                    case ROW_INDEX_TDT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.TDT_ERROR);
-                        break;
-                    default:
-                        event = null;
-                }
+                    case ROW_INDEX_SYNC_LOSS -> data.getErrorLastEvent(TR290ErrorTypes.TS_SYNC_LOSS);
+                    case ROW_INDEX_SYNC_BYTE_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SYNC_BYTE_ERROR);
+                    case ROW_INDEX_PAT_ERROR_2 -> data.getErrorLastEvent(TR290ErrorTypes.PAT_ERROR_2);
+                    case ROW_INDEX_CONTINUITY_COUNT_ERROR ->
+                            data.getErrorLastEvent(TR290ErrorTypes.CONTINUITY_COUNT_ERROR);
+                    case ROW_INDEX_PMT_ERROR_2 -> data.getErrorLastEvent(TR290ErrorTypes.PMT_ERROR_2);
+                    case ROW_INDEX_PID_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.PID_ERROR);
+                    case ROW_INDEX_TRANSPORT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.TRANSPORT_ERROR);
+                    case ROW_INDEX_CRC_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.CRC_ERROR);
+                    case ROW_INDEX_PCR_REPETITION_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.PCR_REPETITION_ERROR);
+                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR ->
+                            data.getErrorLastEvent(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR);
+                    case ROW_INDEX_PCR_ACCURACY_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.PCR_ACCURACY_ERROR);
+                    case ROW_INDEX_CAT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.CAT_ERROR);
+                    case ROW_INDEX_NIT_ACTUAL_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.NIT_ACTUAL_ERROR);
+                    case ROW_INDEX_NIT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.NIT_OTHER_ERROR);
+                    case ROW_INDEX_SI_REPETITION_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SI_REPETITION_ERROR);
+                    case ROW_INDEX_UNREFERENCED_PID -> data.getErrorLastEvent(TR290ErrorTypes.UNREFERENCED_PID);
+                    case ROW_INDEX_SDT_ACTUAL_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SDT_ACTUAL_ERROR);
+                    case ROW_INDEX_SDT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SDT_OTHER_ERROR);
+                    case ROW_INDEX_EIT_ACTUAL_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.EIT_ACTUAL_ERROR);
+                    case ROW_INDEX_EIT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.EIT_OTHER_ERROR);
+                    case ROW_INDEX_RST_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.RST_ERROR);
+                    case ROW_INDEX_TDT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.TDT_ERROR);
+                    default -> null;
+                };
                 return (event == null) ? "-" : event.getTimestamp();
             }
 
@@ -365,78 +273,34 @@ public class TR290StatsTableModel extends AbstractTableModel
                     rowIndex == ROW_INDEX_PRIORITY_3)
                     return null;
 
-                TR290Event event;
-                switch (rowIndex)
+                TR290Event event = switch (rowIndex)
                 {
-                    case ROW_INDEX_SYNC_LOSS:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.TS_SYNC_LOSS);
-                        break;
-                    case ROW_INDEX_SYNC_BYTE_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SYNC_BYTE_ERROR);
-                        break;
-                    case ROW_INDEX_PAT_ERROR_2:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PAT_ERROR_2);
-                        break;
-                    case ROW_INDEX_CONTINUITY_COUNT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.CONTINUITY_COUNT_ERROR);
-                        break;
-                    case ROW_INDEX_PMT_ERROR_2:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PMT_ERROR_2);
-                        break;
-                    case ROW_INDEX_PID_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PID_ERROR);
-                        break;
-                    case ROW_INDEX_TRANSPORT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.TRANSPORT_ERROR);
-                        break;
-                    case ROW_INDEX_CRC_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.CRC_ERROR);
-                        break;
-                    case ROW_INDEX_PCR_REPETITION_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PCR_REPETITION_ERROR);
-                        break;
-                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR);
-                        break;
-                    case ROW_INDEX_PCR_ACCURACY_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.PCR_ACCURACY_ERROR);
-                        break;
-                    case ROW_INDEX_CAT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.CAT_ERROR);
-                        break;
-                    case ROW_INDEX_NIT_ACTUAL_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.NIT_ACTUAL_ERROR);
-                        break;
-                    case ROW_INDEX_NIT_OTHER_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.NIT_OTHER_ERROR);
-                        break;
-                    case ROW_INDEX_SI_REPETITION_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SI_REPETITION_ERROR);
-                        break;
-                    case ROW_INDEX_UNREFERENCED_PID:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.UNREFERENCED_PID);
-                        break;
-                    case ROW_INDEX_SDT_ACTUAL_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SDT_ACTUAL_ERROR);
-                        break;
-                    case ROW_INDEX_SDT_OTHER_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.SDT_OTHER_ERROR);
-                        break;
-                    case ROW_INDEX_EIT_ACTUAL_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.EIT_ACTUAL_ERROR);
-                        break;
-                    case ROW_INDEX_EIT_OTHER_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.EIT_OTHER_ERROR);
-                        break;
-                    case ROW_INDEX_RST_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.RST_ERROR);
-                        break;
-                    case ROW_INDEX_TDT_ERROR:
-                        event = data.getErrorLastEvent(TR290ErrorTypes.TDT_ERROR);
-                        break;
-                    default:
-                        event = null;
-                }
+                    case ROW_INDEX_SYNC_LOSS -> data.getErrorLastEvent(TR290ErrorTypes.TS_SYNC_LOSS);
+                    case ROW_INDEX_SYNC_BYTE_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SYNC_BYTE_ERROR);
+                    case ROW_INDEX_PAT_ERROR_2 -> data.getErrorLastEvent(TR290ErrorTypes.PAT_ERROR_2);
+                    case ROW_INDEX_CONTINUITY_COUNT_ERROR ->
+                            data.getErrorLastEvent(TR290ErrorTypes.CONTINUITY_COUNT_ERROR);
+                    case ROW_INDEX_PMT_ERROR_2 -> data.getErrorLastEvent(TR290ErrorTypes.PMT_ERROR_2);
+                    case ROW_INDEX_PID_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.PID_ERROR);
+                    case ROW_INDEX_TRANSPORT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.TRANSPORT_ERROR);
+                    case ROW_INDEX_CRC_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.CRC_ERROR);
+                    case ROW_INDEX_PCR_REPETITION_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.PCR_REPETITION_ERROR);
+                    case ROW_INDEX_PCR_DISCONTINUITY_INDICATOR_ERROR ->
+                            data.getErrorLastEvent(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR);
+                    case ROW_INDEX_PCR_ACCURACY_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.PCR_ACCURACY_ERROR);
+                    case ROW_INDEX_CAT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.CAT_ERROR);
+                    case ROW_INDEX_NIT_ACTUAL_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.NIT_ACTUAL_ERROR);
+                    case ROW_INDEX_NIT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.NIT_OTHER_ERROR);
+                    case ROW_INDEX_SI_REPETITION_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SI_REPETITION_ERROR);
+                    case ROW_INDEX_UNREFERENCED_PID -> data.getErrorLastEvent(TR290ErrorTypes.UNREFERENCED_PID);
+                    case ROW_INDEX_SDT_ACTUAL_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SDT_ACTUAL_ERROR);
+                    case ROW_INDEX_SDT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.SDT_OTHER_ERROR);
+                    case ROW_INDEX_EIT_ACTUAL_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.EIT_ACTUAL_ERROR);
+                    case ROW_INDEX_EIT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.EIT_OTHER_ERROR);
+                    case ROW_INDEX_RST_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.RST_ERROR);
+                    case ROW_INDEX_TDT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.TDT_ERROR);
+                    default -> null;
+                };
                 return (event == null) ? "-" : event.getDescription();
             }
 

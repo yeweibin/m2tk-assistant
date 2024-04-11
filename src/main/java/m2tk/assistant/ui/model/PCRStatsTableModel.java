@@ -80,37 +80,24 @@ public class PCRStatsTableModel extends AbstractTableModel
     public Object getValueAt(int rowIndex, int columnIndex)
     {
         PCRStatEntity stat = data.get(rowIndex);
-        switch (columnIndex)
+        return switch (columnIndex)
         {
-            case 0:
-                return (stat.getRepetitionErrors() + stat.getDiscontinuityErrors() + stat.getAccuracyErrors()) > 0
-                       ? SmallIcons.EXCLAMATION
-                       : SmallIcons.CHECK;
-            case 1:
-                return String.format("0x%04X", stat.getPid());
-            case 2:
-                return String.format("%,d", stat.getPcrCount());
-            case 3:
-                return String.format("%,d bps", stat.getAvgBitrate());
-            case 4:
-                return String.format("%,d ms", stat.getAvgInterval() / 1000000);
-            case 5:
-                return String.format("%,d ms", stat.getMinInterval() / 1000000);
-            case 6:
-                return String.format("%,d ms", stat.getMaxInterval() / 1000000);
-            case 7:
-                return String.format("%,d", stat.getRepetitionErrors());
-            case 8:
-                return String.format("%,d ns", stat.getAvgAccuracy());
-            case 9:
-                return String.format("%,d ns", stat.getMinAccuracy());
-            case 10:
-                return String.format("%,d ns", stat.getMaxAccuracy());
-            case 11:
-                return String.format("%,d", stat.getAccuracyErrors());
-            default:
-                return null;
-        }
+            case 0 -> (stat.getRepetitionErrors() + stat.getDiscontinuityErrors() + stat.getAccuracyErrors()) > 0
+                      ? SmallIcons.EXCLAMATION
+                      : SmallIcons.CHECK;
+            case 1 -> String.format("0x%04X", stat.getPid());
+            case 2 -> String.format("%,d", stat.getPcrCount());
+            case 3 -> String.format("%,d bps", stat.getAvgBitrate());
+            case 4 -> String.format("%,d ms", stat.getAvgInterval() / 1000000);
+            case 5 -> String.format("%,d ms", stat.getMinInterval() / 1000000);
+            case 6 -> String.format("%,d ms", stat.getMaxInterval() / 1000000);
+            case 7 -> String.format("%,d", stat.getRepetitionErrors());
+            case 8 -> String.format("%,d ns", stat.getAvgAccuracy());
+            case 9 -> String.format("%,d ns", stat.getMinAccuracy());
+            case 10 -> String.format("%,d ns", stat.getMaxAccuracy());
+            case 11 -> String.format("%,d", stat.getAccuracyErrors());
+            default -> null;
+        };
     }
 
     private boolean isSame(List<PCRStatEntity> current, List<PCRStatEntity> incoming)

@@ -83,35 +83,23 @@ public class StreamInfoTableModel extends AbstractTableModel
     public Object getValueAt(int rowIndex, int columnIndex)
     {
         StreamEntity stream = data.get(rowIndex);
-        switch (columnIndex)
+        return switch (columnIndex)
         {
-            case 0:
-                return rowIndex + 1;
-            case 1:
-                return (stream.getTransportErrorCount() == 0 &&
-                        stream.getContinuityErrorCount() == 0)
-                       ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
-            case 2:
-                return stream.isScrambled() ? SmallIcons.LOCK : null;
-            case 3:
-                return stream.getPcrCount() > 0 ? SmallIcons.CLOCK : null;
-            case 4:
-                return String.format("%d (0x%04X)", stream.getPid(), stream.getPid());
-            case 5:
-                return String.format("%,.02f", stream.getBitrate() / 1000.0);
-            case 6:
-                return String.format("%.02f%%", 100 * stream.getRatio());
-            case 7:
-                return stream.getDescription();
-            case 8:
-                return String.format("%,d", stream.getPacketCount());
-            case 9:
-                return String.format("%,d", stream.getTransportErrorCount());
-            case 10:
-                return String.format("%,d", stream.getContinuityErrorCount());
-            default:
-                return null;
-        }
+            case 0 -> rowIndex + 1;
+            case 1 -> (stream.getTransportErrorCount() == 0 &&
+                       stream.getContinuityErrorCount() == 0)
+                      ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
+            case 2 -> stream.isScrambled() ? SmallIcons.LOCK : null;
+            case 3 -> stream.getPcrCount() > 0 ? SmallIcons.CLOCK : null;
+            case 4 -> String.format("%d (0x%04X)", stream.getPid(), stream.getPid());
+            case 5 -> String.format("%,.02f", stream.getBitrate() / 1000.0);
+            case 6 -> String.format("%.02f%%", 100 * stream.getRatio());
+            case 7 -> stream.getDescription();
+            case 8 -> String.format("%,d", stream.getPacketCount());
+            case 9 -> String.format("%,d", stream.getTransportErrorCount());
+            case 10 -> String.format("%,d", stream.getContinuityErrorCount());
+            default -> null;
+        };
     }
 
     private boolean isSame(List<StreamEntity> current, List<StreamEntity> incoming)

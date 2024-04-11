@@ -77,25 +77,17 @@ public class MultiplexInfoTableModel extends AbstractTableModel
     public Object getValueAt(int rowIndex, int columnIndex)
     {
         SIMultiplex multiplex = data.get(rowIndex);
-        switch (columnIndex)
+        return switch (columnIndex)
         {
-            case 0:
-                return rowIndex + 1;
-            case 1:
-                return multiplex.getNetworkName();
-            case 2:
-                return multiplex.getOriginalNetworkId();
-            case 3:
-                return multiplex.getTransportStreamId();
-            case 4:
-                return multiplex.getDeliverySystemType();
-            case 5:
-                return multiplex.getTransmitFrequency();
-            case 6:
-                return multiplex.getServiceCount();
-            default:
-                return null;
-        }
+            case 0 -> rowIndex + 1;
+            case 1 -> multiplex.getNetworkName();
+            case 2 -> multiplex.getOriginalNetworkId();
+            case 3 -> multiplex.getTransportStreamId();
+            case 4 -> multiplex.getDeliverySystemType();
+            case 5 -> multiplex.getTransmitFrequency();
+            case 6 -> multiplex.getServiceCount();
+            default -> null;
+        };
     }
 
     private boolean isSame(List<SIMultiplex> current, List<SIMultiplex> incoming)
