@@ -865,7 +865,7 @@
             <Field name="frequency" length="8" encoding="nibbles">
                 <FieldPresentation>
                     <Prefix str="频点"/>
-                    <Format str="compact, lowercase"/>
+                    <Format str="###.##### GHz"/>
                 </FieldPresentation>
             </Field>
             <Field name="orbital_position" length="4" encoding="nibbles">
@@ -960,7 +960,7 @@
             <Field name="symbol_rate" length="7" encoding="nibbles">
                 <FieldPresentation>
                     <Prefix str="符号率"/>
-                    <Format str="compact, lowercase"/>
+                    <Format str="###.#### Msymbol/s"/>
                 </FieldPresentation>
             </Field>
             <Field name="FEC_inner" length="4" encoding="bslbf">
@@ -1025,7 +1025,7 @@
             <Field name="frequency" length="8" encoding="nibbles">
                 <FieldPresentation>
                     <Prefix str="频点"/>
-                    <Format str="compact, lowercase"/>
+                    <Format str="####.#### MHz"/>
                 </FieldPresentation>
             </Field>
             <Field name="reserved_future_use" length="12" encoding="bslbf"/>
@@ -1079,7 +1079,7 @@
             <Field name="symbol_rate" length="7" encoding="nibbles">
                 <FieldPresentation>
                     <Prefix str="符号率"/>
-                    <Format str="compact, lowercase"/>
+                    <Format str="###.#### Msymbol/s"/>
                 </FieldPresentation>
             </Field>
             <Field name="FEC_inner" length="4" encoding="bslbf">

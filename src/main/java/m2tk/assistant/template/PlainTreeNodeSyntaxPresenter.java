@@ -147,24 +147,60 @@ public class PlainTreeNodeSyntaxPresenter
         String prefix = Optional.ofNullable(field.getPrefixText()).orElse(field.getName());
         String format = field.getLabelFormat();
 
-        boolean compact = false;
-        boolean lowercase = false;
-        if (format != null)
+        // 无指定格式，采用“[X X X]”样式
+        if (format == null)
         {
-            Set<String> options = new HashSet<>(StrUtil.split(format, ",", true, true));
-            compact = options.contains("compact");
-            lowercase = options.contains("lowercase");
+            String text = IntStream.of((int[]) field.getRawValue())
+                                   .mapToObj(i -> String.format("%X", i))
+                                   .collect(Collectors.joining(" ", "[", "]"));
+
+            return prefix + ": " + text;
         }
 
-        String s0 = lowercase ? "%x" : "%X";
-        String s1 = compact ? "" : " ";
-        String s2 = compact ? "" : "[";
-        String s3 = compact ? "" : "]";
-        String text = IntStream.of((int[]) field.getRawValue())
-                               .mapToObj(i -> String.format(s0, i))
-                               .collect(Collectors.joining(s1, s2, s3));
+        // BCD格式，每个‘#’代表一个BCD数字，中间可以添加小数点或任意连接符号。
+        if (format.contains("#"))
+        {
+            try
+            {
+                StringBuilder sbuf = new StringBuilder();
+                sbuf.append(prefix).append(": ");
 
-        return prefix + ": " + text;
+                int[] nibbles = (int[]) field.getRawValue();
+                int offset = 0;
+                for (int i = 0; i < format.length(); i++)
+                {
+                    char c = format.charAt(i);
+                    if (c == '#')
+                    {
+                        sbuf.append(Character.forDigit(nibbles[offset], 16));
+                        offset ++;
+                    } else
+                        sbuf.append(c);
+                }
+
+                return sbuf.toString();
+            } catch (IndexOutOfBoundsException ex)
+            {
+                return prefix + ": " + "***无法匹配格式***";
+            }
+        } else
+        {
+            // 普通格式
+
+            Set<String> options = new HashSet<>(StrUtil.split(format, ",", true, true));
+            boolean compact = options.contains("compact");
+            boolean lowercase = options.contains("lowercase");
+
+            String s0 = lowercase ? "%x" : "%X";
+            String s1 = compact ? "" : " ";
+            String s2 = compact ? "" : "[";
+            String s3 = compact ? "" : "]";
+            String text = IntStream.of((int[]) field.getRawValue())
+                                   .mapToObj(i -> String.format(s0, i))
+                                   .collect(Collectors.joining(s1, s2, s3));
+
+            return prefix + ": " + text;
+        }
     }
 
     private String renderOctets(SyntaxField field)
