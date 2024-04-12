@@ -27,6 +27,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.LongStream;
 
 public class SyntaxDecoder
@@ -562,10 +563,10 @@ public class SyntaxDecoder
     private String mapIntToString(long value, List<ValueMapping> valueMappings)
     {
         return valueMappings.stream()
-                            .filter(mapping -> mapping.eval(value))
-                            .map(ValueMapping::mapping)
+                            .map(mapping -> mapping.map(value))
+                            .filter(Objects::nonNull)
                             .findFirst()
-                            .orElse(Long.toString(value));
+                            .orElse(ValueMapping.raw(value));
     }
 
     private List<SyntaxFieldDefinition> getConditionBodyFields(ConditionalFieldDefinition definition, SyntaxField parent)
