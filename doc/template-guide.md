@@ -347,11 +347,22 @@
 &lt;Format&gt; 标签里的格式化模板，需要遵循：
 
 - 当应用于数值时，应符合Java语言里的字符串格式化模板，模板可以接收多个输入，但所有输入值都是字段的值。例如：str="0x%02X (%d)"，节点值将传两遍给格式化模板。
-- 当应用于nibbles流时，可以添加格式化说明：compact、lowercase（顺序任意，逗号分隔）。compact表示用字符串形式展示（默认是数组形式），lowercase表示字符以小写形式展示（默认大写）。
+- 当应用于nibbles流时，可以添加格式化说明：compact、lowercase（顺序任意，逗号分隔）或包含“#”符号的BCD格式化模板。compact表示用字符串形式展示（默认是数组形式），lowercase表示字符以小写形式展示（默认大写）。
 - 当应用与octets流时，可以添加格式化说明：compact、lowercase（顺序任意，逗号分隔）。compact表示以连续十六进制数字符串表示，且无前后括号包围（默认以数组形式展示），lowercase表示字符以小写形式展示（默认大写）。 
 
-格式化标签不适用于文本内容。
+【要求1】 格式化标签不适用于文本内容。
 
+【要求2】 BCD模板只能单独使用，且“#”符号的数量必须与半字节数量一致，否则会导致渲染失败。模板示例如下：
+
+```xml
+<!-- BCD格式模板的示例 -->
+<Field name="symbol_rate" length="7" encoding="nibbles">
+  <FieldPresentation>
+    <Prefix str="符号率"/>
+    <Format str="###.#### Msymbol/s"/>
+  </FieldPresentation>
+</Field>
+```
 
 ##### 2.5.1.3 &lt;ValueMapping&gt; 标签
 
