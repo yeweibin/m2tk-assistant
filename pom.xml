@@ -183,45 +183,23 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <executions>
-                    <execution>
-                        <id>default-compile</id>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <!--JDK8-->
-                        <configuration>
-                            <source>${jdk.version}</source>
-                            <target>${jdk.version}</target>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>module-compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <!-- 第三方依赖要求11+，所以这里也得保证11+ -->
-                            <release>21</release>
-                            <compileSourceRoots>
-                                <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
-                            </compileSourceRoots>
-                            <multiReleaseOutput>true</multiReleaseOutput>
-                        </configuration>
-                    </execution>
-                </executions>
+                <version>3.12.1</version>
                 <configuration>
-                    <source>16</source>
-                    <target>16</target>
+                    <release>${jdk.version}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.3.0</version>
                 <configuration>
                     <archive>
                         <manifest>
