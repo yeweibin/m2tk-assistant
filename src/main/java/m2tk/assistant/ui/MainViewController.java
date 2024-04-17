@@ -33,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -226,6 +228,7 @@ public class MainViewController
         fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(false);
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new FileNameExtensionFilter("码流文件", "ts", "m2ts", "mpeg"));
 
         initFileChooserCurrentDirectory(fileChooser);
 
@@ -643,10 +646,12 @@ public class MainViewController
     public void loadCustomTemplates()
     {
         File prevCurrDir = fileChooser.getCurrentDirectory();
+        FileFilter prevFilter = fileChooser.getFileFilter();
 
         fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir"), "template").toFile());
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setMultiSelectionEnabled(true);
+        fileChooser.setFileFilter(new FileNameExtensionFilter("模板文件", "xml"));
         int retCode = fileChooser.showOpenDialog(frameView.getFrame());
 
         if (retCode == JFileChooser.APPROVE_OPTION)
@@ -676,6 +681,7 @@ public class MainViewController
         fileChooser.setMultiSelectionEnabled(false);
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setCurrentDirectory(prevCurrDir);
+        fileChooser.setFileFilter(prevFilter);
     }
 
     public void setWillQuit()

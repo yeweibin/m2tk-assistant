@@ -160,6 +160,9 @@ public final class Global
         int success = 0;
         for (File file : files)
         {
+            if (file == null || !file.getName().endsWith(".xml"))
+                continue;
+
             M2TKTemplate userTemplate = reader.parse(file);
             if (userTemplate != null)
             {
