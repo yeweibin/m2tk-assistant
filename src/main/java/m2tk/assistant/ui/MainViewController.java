@@ -651,6 +651,7 @@ public class MainViewController
         fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir"), "template").toFile());
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setMultiSelectionEnabled(true);
+        fileChooser.resetChoosableFileFilters();
         fileChooser.setFileFilter(new FileNameExtensionFilter("模板文件", "xml"));
         int retCode = fileChooser.showOpenDialog(frameView.getFrame());
 
@@ -681,6 +682,7 @@ public class MainViewController
         fileChooser.setMultiSelectionEnabled(false);
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setCurrentDirectory(prevCurrDir);
+        fileChooser.resetChoosableFileFilters();
         fileChooser.setFileFilter(prevFilter);
     }
 
