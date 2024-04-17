@@ -17,6 +17,7 @@
 package m2tk.assistant.ui;
 
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
 import m2tk.assistant.ui.dialog.SourceHistoryDialog;
@@ -35,11 +36,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class MainViewController
 {
@@ -98,6 +103,9 @@ public class MainViewController
         menuOps.add(createMenuItem("openNotepad", "打开记事本", "打开记事本程序"));
         menuOps.addSeparator();
         menuOps.add(createMenuItem("drawNetworkGraph", "绘制网络结构图", "绘制网络结构图"));
+        menuOps.addSeparator();
+        menuOps.add(createMenuItem("exportInternalTemplates", "导出默认解析模板", "导出默认解析模板"));
+        menuOps.add(createMenuItem("loadCustomTemplates", "加载自定义解析模板", "加载自定义解析模板"));
 
         JMenu menuViews = new JMenu("查看(V)");
         menuViews.setMnemonic(KeyEvent.VK_V);
@@ -583,6 +591,91 @@ public class MainViewController
         DrawNetworkGraphTask task = new DrawNetworkGraphTask(frameView.getApplication());
         ComponentUtil.setWaitingMouseCursor(frameView.getRootPane(), true);
         task.execute();
+    }
+
+    @Action
+    public void exportInternalTemplates()
+    {
+        File prevCurrDir = fileChooser.getCurrentDirectory();
+
+        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir")).toFile());
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int retCode = fileChooser.showSaveDialog(frameView.getFrame());
+
+        if (retCode == JFileChooser.APPROVE_OPTION)
+        {
+            File dir = fileChooser.getSelectedFile();
+            File zip = new File(dir, "模板.zip");
+
+            try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zip)))
+            {
+                out.putNextEntry(new ZipEntry("PSITemplates.xml"));
+                try (InputStream in = getClass().getResourceAsStream("/template/PSITemplate.xml"))
+                {
+                    IoUtil.copy(in, out);
+                }
+                out.closeEntry();
+
+                out.putNextEntry(new ZipEntry("SITemplates.xml"));
+                try (InputStream in = getClass().getResourceAsStream("/template/SITemplate.xml"))
+                {
+                    IoUtil.copy(in, out);
+                }
+                out.closeEntry();
+                out.finish();
+
+                JOptionPane.showMessageDialog(frameView.getFrame(),
+                                              "导出模板到 " + zip, "导出成功",
+                                              JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex)
+            {
+                JOptionPane.showMessageDialog(frameView.getFrame(),
+                                              "无法导出模板", "请注意",
+                                              JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setCurrentDirectory(prevCurrDir);
+    }
+
+    @Action
+    public void loadCustomTemplates()
+    {
+        File prevCurrDir = fileChooser.getCurrentDirectory();
+
+        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir"), "template").toFile());
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setMultiSelectionEnabled(true);
+        int retCode = fileChooser.showOpenDialog(frameView.getFrame());
+
+        if (retCode == JFileChooser.APPROVE_OPTION)
+        {
+            File[] files = fileChooser.getSelectedFiles();
+            if (files.length > 0)
+            {
+                int count = Global.loadUserDefinedTemplates(files);
+                if (count == files.length)
+                {
+                    JOptionPane.showMessageDialog(frameView.getFrame(), "加载成功");
+                } else if (count > 0)
+                {
+                    JOptionPane.showMessageDialog(frameView.getFrame(),
+                                                  String.format("有 %d 个模板文件加载失败", files.length - count),
+                                                  "请注意",
+                                                  JOptionPane.WARNING_MESSAGE);
+                } else
+                {
+                    JOptionPane.showMessageDialog(frameView.getFrame(),
+                                                  "全部模板加载失败", "请注意",
+                                                  JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }
+
+        fileChooser.setMultiSelectionEnabled(false);
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setCurrentDirectory(prevCurrDir);
     }
 
     public void setWillQuit()

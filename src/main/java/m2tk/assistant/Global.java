@@ -29,6 +29,7 @@ import m2tk.assistant.template.SectionDecoder;
 import m2tk.assistant.template.TemplateReader;
 import m2tk.assistant.template.definition.M2TKTemplate;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -150,6 +151,25 @@ public final class Global
         {
             log.warn("加载自定义模板时异常：{}", ex.getMessage());
         }
+    }
+
+    public static int loadUserDefinedTemplates(File[] files)
+    {
+        TemplateReader reader = new TemplateReader();
+
+        int success = 0;
+        for (File file : files)
+        {
+            M2TKTemplate userTemplate = reader.parse(file);
+            if (userTemplate != null)
+            {
+                success ++;
+                userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+                userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+                log.info("加载自定义模板：{}", file);
+            }
+        }
+        return success;
     }
 
     public static DatabaseService getDatabaseService()
