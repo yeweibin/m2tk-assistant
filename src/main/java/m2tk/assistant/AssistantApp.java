@@ -17,6 +17,7 @@
 package m2tk.assistant;
 
 import cn.hutool.core.thread.ThreadUtil;
+import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import lombok.extern.slf4j.Slf4j;
@@ -51,21 +52,13 @@ public final class AssistantApp extends SingleFrameApplication
     @Override
     protected void initialize(String[] args)
     {
+        // 在resources/theme/FlatLaf.properties中设置自定义的UI样式
+        FlatLaf.registerCustomDefaultsSource("theme");
+
         if (Global.requiresLightTheme())
             FlatMacLightLaf.setup();
         else
             FlatMacDarkLaf.setup();
-
-        Font treeFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Tree.font").getSize());
-        Font tableFont = new Font(Font.MONOSPACED, Font.PLAIN, UIManager.getFont("Table.font").getSize());
-
-        UIManager.put("TitlePane.showIconBesideTitle", true);
-        UIManager.put("TabbedPane.showTabSeparators", true);
-        UIManager.put("Table.paintOutsideAlternateRows", true);
-        UIManager.put("Tree.font", treeFont);
-        UIManager.put("Table.font", tableFont);
-        UIManager.put("Table.cellMargins", new Insets(4, 6, 4, 6));
-//        UIManager.put("Table.alternateRowColor", FlatLaf.isLafDark() ? new Color(0x626262) : new Color(0xEEEEEE));
     }
 
     @Override
