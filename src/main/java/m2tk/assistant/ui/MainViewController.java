@@ -18,6 +18,8 @@ package m2tk.assistant.ui;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.util.StrUtil;
+import jnafilechooser.api.JnaFileChooser;
 import m2tk.assistant.AssistantApp;
 import m2tk.assistant.Global;
 import m2tk.assistant.ui.dialog.SourceHistoryDialog;
@@ -33,8 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Inet4Address;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
@@ -63,7 +64,7 @@ public class MainViewController
     private EBInfoView ebInfoView;
     private LogsView logsView;
     private JTabbedPane tabbedPane;
-    private JFileChooser fileChooser;
+    private Path lastOpenDirectory;
     private volatile boolean willQuit;
 
     public MainViewController(FrameView view)
@@ -225,12 +226,7 @@ public class MainViewController
     {
         frameView.getFrame().setTitle(AssistantApp.APP_NAME);
 
-        fileChooser = new JFileChooser();
-        fileChooser.setMultiSelectionEnabled(false);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setFileFilter(new FileNameExtensionFilter("码流文件", "ts", "m2ts", "mpeg"));
-
-        initFileChooserCurrentDirectory(fileChooser);
+        initFileChooserCurrentDirectory();
 
         actionMap.get("reopenInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
@@ -364,12 +360,15 @@ public class MainViewController
     @Action
     public void openFile()
     {
-        int retCode = fileChooser.showOpenDialog(frameView.getFrame());
+        JnaFileChooser fileChooser = new JnaFileChooser();
+        fileChooser.setMultiSelectionEnabled(false);
+        fileChooser.setMode(JnaFileChooser.Mode.Files);
+        fileChooser.setCurrentDirectory(lastOpenDirectory.toString());
+        fileChooser.addFilter("码流文件", "ts", "m2ts", "mpeg");
 
-        if (retCode == JFileChooser.APPROVE_OPTION)
+        if (fileChooser.showOpenDialog(frameView.getFrame()))
         {
             File file = fileChooser.getSelectedFile();
-            fileChooser.setCurrentDirectory(file.getParentFile());
             String input = file.getAbsolutePath();
 
             Global.resetUserPrivateSectionStreams();
@@ -599,13 +598,9 @@ public class MainViewController
     @Action
     public void exportInternalTemplates()
     {
-        File prevCurrDir = fileChooser.getCurrentDirectory();
-
-        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir")).toFile());
-        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int retCode = fileChooser.showSaveDialog(frameView.getFrame());
-
-        if (retCode == JFileChooser.APPROVE_OPTION)
+        JnaFileChooser fileChooser = new JnaFileChooser();
+        fileChooser.setMode(JnaFileChooser.Mode.Directories);
+        if (fileChooser.showSaveDialog(frameView.getFrame()))
         {
             File dir = fileChooser.getSelectedFile();
             File zip = new File(dir, "模板.zip");
@@ -637,25 +632,17 @@ public class MainViewController
                                               JOptionPane.ERROR_MESSAGE);
             }
         }
-
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setCurrentDirectory(prevCurrDir);
     }
 
     @Action
     public void loadCustomTemplates()
     {
-        File prevCurrDir = fileChooser.getCurrentDirectory();
-        FileFilter prevFilter = fileChooser.getFileFilter();
-
-        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir"), "template").toFile());
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        JnaFileChooser fileChooser = new JnaFileChooser();
+        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir"), "template").toString());
+        fileChooser.setMode(JnaFileChooser.Mode.Files);
         fileChooser.setMultiSelectionEnabled(true);
-        fileChooser.resetChoosableFileFilters();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("模板文件", "xml"));
-        int retCode = fileChooser.showOpenDialog(frameView.getFrame());
-
-        if (retCode == JFileChooser.APPROVE_OPTION)
+        fileChooser.addFilter("模板文件", "xml");
+        if (fileChooser.showOpenDialog(frameView.getFrame()))
         {
             File[] files = fileChooser.getSelectedFiles();
             if (files.length > 0)
@@ -678,12 +665,6 @@ public class MainViewController
                 }
             }
         }
-
-        fileChooser.setMultiSelectionEnabled(false);
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setCurrentDirectory(prevCurrDir);
-        fileChooser.resetChoosableFileFilters();
-        fileChooser.setFileFilter(prevFilter);
     }
 
     public void setWillQuit()
@@ -732,14 +713,22 @@ public class MainViewController
         }
     }
 
-    private void initFileChooserCurrentDirectory(JFileChooser fileChooser)
+    private void initFileChooserCurrentDirectory()
     {
         try
         {
             Path pwd = Paths.get(System.getProperty("user.dir"));
             Path recentCfg = pwd.resolve("recent.cfg");
-            String recentFile = FileUtil.readUtf8String(recentCfg.toFile());
-            fileChooser.setCurrentDirectory(Paths.get(recentFile).toFile());
+            if (!Files.exists(recentCfg))
+            {
+                lastOpenDirectory = Paths.get(System.getProperty("user.dir"));
+            } else
+            {
+                String recentFile = FileUtil.readUtf8String(recentCfg.toFile());
+                lastOpenDirectory = StrUtil.isNotBlank(recentFile)
+                                    ? Paths.get(recentFile)
+                                    : Paths.get(System.getProperty("user.dir"));
+            }
         } catch (Exception ex)
         {
             logger.debug("无法设置文件选择器起始路径：{}", ex.getMessage());
