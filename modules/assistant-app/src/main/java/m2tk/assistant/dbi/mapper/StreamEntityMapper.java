@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) M2TK Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package m2tk.assistant.dbi.mapper;
+
+import m2tk.assistant.dbi.entity.StreamEntity;
+import org.jdbi.v3.core.mapper.RowMapper;
+import org.jdbi.v3.core.statement.StatementContext;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class StreamEntityMapper implements RowMapper<StreamEntity>
+{
+    @Override
+    public StreamEntity map(ResultSet rs, StatementContext ctx) throws SQLException
+    {
+        StreamEntity entity = new StreamEntity();
+        entity.setId(rs.getLong("id"));
+        entity.setTransactionId(rs.getLong("transaction_id"));
+        entity.setPid(rs.getInt("pid"));
+        entity.setPacketCount(rs.getLong("pkt_cnt"));
+        entity.setPcrCount(rs.getInt("pcr_cnt"));
+        entity.setTransportErrorCount(rs.getInt("trans_err_cnt"));
+        entity.setContinuityErrorCount(rs.getInt("cc_err_cnt"));
+        entity.setBitrate(rs.getInt("bitrate"));
+        entity.setRatio(rs.getDouble("ratio"));
+        entity.setScrambled(rs.getBoolean("scrambled"));
+        entity.setCategory(rs.getString("category"));
+        entity.setDescription(rs.getString("description"));
+        entity.setMarked(rs.getBoolean("marked"));
+        return entity;
+    }
+}

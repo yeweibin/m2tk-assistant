@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <xsd:element name="M2TKTemplate">
+        <xsd:annotation>
+            <xsd:documentation>M2TK模板文件的顶层节点元素</xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:choice maxOccurs="unbounded">
+                    <xsd:element ref="TableTemplate"/>
+                    <xsd:element ref="DescriptorTemplate"/>
+                </xsd:choice>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="TableTemplate">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="TableId" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="DisplayName" type="Label"/>
+                        </xsd:sequence>
+                        <xsd:attribute name="id" use="required" type="hex_or_decimal_value_type"/>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="TableBody" type="Syntax"/>
+                <xsd:element name="UniqueKey" minOccurs="0">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="FieldRef" maxOccurs="unbounded">
+                                <xsd:complexType>
+                                    <xsd:attribute name="field" type="xsd:string"/>
+                                </xsd:complexType>
+                            </xsd:element>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="name" use="required" type="xsd:string"/>
+            <xsd:attribute name="group" type="xsd:string">
+                <xsd:annotation>
+                    <xsd:documentation>组：解析后的节点出现的表分组</xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="DescriptorTemplate">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="DisplayName" type="Label"/>
+                <xsd:element name="MayOccurIn" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:attribute name="table" use="required" type="xsd:string">
+                            <xsd:annotation>
+                                <xsd:documentation>可能承载描述符的表名称。</xsd:documentation>
+                            </xsd:annotation>
+                        </xsd:attribute>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="DescriptorBody" type="Syntax"/>
+            </xsd:sequence>
+            <xsd:attribute name="tag" use="required" type="hex_or_decimal_value_type"/>
+            <xsd:attribute name="tag_ext" type="hex_or_decimal_value_type"/>
+            <xsd:attribute name="name" use="required" type="xsd:string"/>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:complexType name="Syntax">
+        <xsd:choice minOccurs="0" maxOccurs="unbounded">
+            <xsd:element name="Field">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="FieldPresentation" minOccurs="0"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="name" use="required" type="xsd:string"/>
+                    <xsd:attribute name="encoding" use="required">
+                        <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                                <xsd:enumeration value="bslbf"/>
+                                <xsd:enumeration value="uimsbf"/>
+                                <xsd:enumeration value="checksum"/>
+                                <xsd:enumeration value="nibbles"/>
+                                <xsd:enumeration value="octets"/>
+                                <xsd:enumeration value="text"/>
+                            </xsd:restriction>
+                        </xsd:simpleType>
+                    </xsd:attribute>
+                    <xsd:attribute name="string_type">
+                        <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                                <xsd:enumeration value="dvb_text"/>
+                                <xsd:enumeration value="utf16"/>
+                                <xsd:enumeration value="utf8"/>
+                                <xsd:enumeration value="ascii"/>
+                                <xsd:enumeration value="gb2312"/>
+                                <xsd:enumeration value="gbk"/>
+                                <xsd:enumeration value="gb18030"/>
+                            </xsd:restriction>
+                        </xsd:simpleType>
+                    </xsd:attribute>
+                    <xsd:attribute name="length" type="unsigned_int_or_escaped_type">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段为直接长度时，length为非负整数；当字段为间接长度时，length应置空，或设置为“n/a”。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="length_field" type="xsd:string">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段长度为剩余可用长度时，length_field应设置为“implicit”。
+                                非间接长度时，length_field应置空，或设置为“n/a”。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="length_correction" type="int_or_escaped_type">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段长度需要修正时，最终length等于${length_field} + length_correction。
+                                仅在使用引用长度时生效，其余情况应置空。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="If">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="Condition">
+                            <xsd:complexType>
+                                <xsd:choice>
+                                    <xsd:element name="CompareWithConst">
+                                        <xsd:complexType>
+                                            <xsd:attribute name="field" type="xsd:string"/>
+                                            <xsd:attribute name="comp_op" use="required">
+                                                <xsd:simpleType>
+                                                    <xsd:restriction base="xsd:string">
+                                                        <xsd:enumeration value="equals"/>
+                                                        <xsd:enumeration value="not_equal"/>
+                                                        <xsd:enumeration value="larger_than"/>
+                                                        <xsd:enumeration value="smaller_than"/>
+                                                    </xsd:restriction>
+                                                </xsd:simpleType>
+                                            </xsd:attribute>
+                                            <xsd:attribute name="const" use="required" type="hex_or_decimal_value_type"/>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                    <xsd:element name="CompareWithConstMulti">
+                                        <xsd:complexType>
+                                            <xsd:sequence>
+                                                <xsd:element name="ConstValue" maxOccurs="unbounded">
+                                                    <xsd:complexType>
+                                                        <xsd:attribute name="const" use="required" type="hex_or_decimal_value_type"/>
+                                                    </xsd:complexType>
+                                                </xsd:element>
+                                            </xsd:sequence>
+                                            <xsd:attribute name="field" use="required" type="xsd:string"/>
+                                            <xsd:attribute name="comp_op" use="required">
+                                                <xsd:simpleType>
+                                                    <xsd:restriction base="xsd:string">
+                                                        <xsd:enumeration value="equals_any"/>
+                                                        <xsd:enumeration value="not_equal_all"/>
+                                                    </xsd:restriction>
+                                                </xsd:simpleType>
+                                            </xsd:attribute>
+                                        </xsd:complexType>
+                                    </xsd:element>
+                                </xsd:choice>
+                            </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="Then" type="Syntax"/>
+                        <xsd:element name="Else" type="Syntax" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Loop">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element ref="LoopPresentation" minOccurs="0"/>
+                        <xsd:element name="Body" type="Syntax"/>
+                    </xsd:sequence>
+                    <xsd:attribute name="name" use="required" type="xsd:string"/>
+                    <xsd:attribute name="length_type">
+                        <xsd:simpleType>
+                            <xsd:restriction base="xsd:string">
+                                <xsd:enumeration value="length_in_bytes"/>
+                                <xsd:enumeration value="count"/>
+                            </xsd:restriction>
+                        </xsd:simpleType>
+                    </xsd:attribute>
+                    <xsd:attribute name="length_field" use="required" type="xsd:string"/>
+                    <xsd:attribute name="length_correction" type="int_or_escaped_type">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段长度需要修正时，最终length等于${length_field} + length_correction。
+                                仅在使用字节长度时生效。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Descriptor">
+                <xsd:annotation>
+                    <xsd:documentation>仅在循环体描述（Body）中出现，作为描述符的占位符。</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType/>
+            </xsd:element>
+        </xsd:choice>
+    </xsd:complexType>
+    <xsd:element name="LoopPresentation">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="LoopHeader" type="Label" minOccurs="0"/>
+                <xsd:element name="NoLoopHeader" minOccurs="0">
+                    <xsd:complexType/>
+                </xsd:element>
+                <xsd:element name="LoopEmpty" type="Label" minOccurs="0">
+                    <xsd:annotation>
+                        <xsd:documentation>循环为空时显示</xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+                <xsd:element name="LoopEntry" minOccurs="0">
+                    <xsd:annotation>
+                        <xsd:documentation>
+                            循环不为空时，作为标头显示在每个循环内容之前（不适用于描述符循环）。
+                            区别：Prefix表示循环序数（index）之前的内容，Fixed表示固定显示的内容（无循环序数）。
+                        </xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType>
+                        <xsd:choice>
+                            <xsd:element name="Prefix" type="Label"/>
+                            <xsd:element name="Fixed" type="Label"/>
+                        </xsd:choice>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="FieldPresentation">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="Prefix" type="Label" minOccurs="0"/>
+                <xsd:element name="Format" type="Label" minOccurs="0"/>
+                <xsd:element name="Mapping" type="ValueMapping" minOccurs="0"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:simpleType name="unsigned_int_or_escaped_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="(n/a)|(0|[1-9][0-9]*)"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="int_or_escaped_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="(n/a)|(0|-?[1-9][0-9]*)"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="color_code">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="#[0-9A-Fa-f]{6}"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="hex_or_decimal_value_type">
+        <xsd:restriction base="xsd:string">
+            <xsd:pattern value="(0x[0-9A-Fa-f]{1,16})|([0-9]+)"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:complexType name="Label">
+        <xsd:attribute name="str" use="required" type="xsd:string"/>
+        <xsd:attribute name="color" type="color_code"/>
+        <xsd:attribute name="bold" type="xsd:boolean"/>
+    </xsd:complexType>
+    <xsd:complexType name="ValueMapping">
+        <xsd:sequence>
+            <xsd:choice maxOccurs="unbounded">
+                <xsd:element name="Value">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="ValString" type="Label"/>
+                        </xsd:sequence>
+                        <xsd:attribute name="value" use="required" type="hex_or_decimal_value_type"/>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="ValueRange">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="ValString" type="Label"/>
+                        </xsd:sequence>
+                        <xsd:attribute name="min" use="required" type="hex_or_decimal_value_type"/>
+                        <xsd:attribute name="max" use="required" type="hex_or_decimal_value_type"/>
+                    </xsd:complexType>
+                </xsd:element>
+                <xsd:element name="DVBTime">
+                    <xsd:annotation>
+                        <xsd:documentation>按照MJD-UTC格式的转义时间。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
+                </xsd:element>
+                <xsd:element name="Duration">
+                    <xsd:annotation>
+                        <xsd:documentation>按照hh:mm:ss格式转义事件持续时长。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
+                </xsd:element>
+                <xsd:element name="ThreeLetterCode">
+                    <xsd:annotation>
+                        <xsd:documentation>按照3位ASCII编码格式转义语言代码或国家代码。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
+                </xsd:element>
+            </xsd:choice>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
