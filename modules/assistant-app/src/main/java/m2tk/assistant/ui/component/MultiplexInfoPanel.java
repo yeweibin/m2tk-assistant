@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.analyzer.domain.SIMultiplex;
+import m2tk.assistant.core.domain.SIMultiplex;
 import m2tk.assistant.ui.model.MultiplexInfoTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ThreeStateRowSorterListener;

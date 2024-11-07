@@ -18,9 +18,9 @@ package m2tk.assistant.ui.view;
 
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
-import m2tk.assistant.analyzer.domain.TR290Event;
-import m2tk.assistant.analyzer.domain.TR290Stats;
-import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
+import m2tk.assistant.core.domain.TR290Event;
+import m2tk.assistant.core.domain.TR290Stats;
+import m2tk.assistant.core.presets.TR290ErrorTypes;
 import m2tk.assistant.dbi.entity.TR290StatEntity;
 import m2tk.assistant.ui.component.TR290StatsPanel;
 import m2tk.assistant.ui.event.SourceAttachedEvent;
@@ -34,6 +34,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -129,11 +130,12 @@ public class TR290InfoView extends JPanel implements InfoView
             return;
 
         Supplier<TR290Stats> query = () -> {
-            Map<String, TR290StatEntity> statsMap = Global.getDatabaseService()
-                                                          .listTR290Stats(currentTransaction)
-                                                          .stream()
-                                                          .collect(toMap(TR290StatEntity::getIndicator,
-                                                                         entity -> entity));
+            Map<String, TR290StatEntity> statsMap = new HashMap<>();
+//                Global.getDatabaseService()
+//                                                          .listTR290Stats(currentTransaction)
+//                                                          .stream()
+//                                                          .collect(toMap(TR290StatEntity::getIndicator,
+//                                                                         entity -> entity));
 
             TR290Stats stats = new TR290Stats();
             Consumer<TR290StatEntity> operator = stat -> {
@@ -141,9 +143,10 @@ public class TR290InfoView extends JPanel implements InfoView
                 {
                     stats.setStat(stat.getIndicator(),
                                   stat.getCount(),
-                                  new TR290Event(stat.getLastEventTimestamp(),
-                                                 stat.getIndicator(),
-                                                 stat.getLastEventDescription()));
+                                  new TR290Event());
+//                    stat.getLastEventTimestamp(),
+//                                                 stat.getIndicator(),
+//                                                 stat.getLastEventDescription()));
                 }
             };
 

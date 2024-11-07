@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.builder.descriptor;
 
-import m2tk.assistant.analyzer.presets.ServiceTypes;
+import m2tk.assistant.core.presets.ServiceTypes;
 import m2tk.assistant.ui.builder.DescriptorPayloadNodeBuilder;
 import m2tk.encoding.Encoding;
 

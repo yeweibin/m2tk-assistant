@@ -17,7 +17,7 @@
 package m2tk.assistant.ui.component;
 
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.analyzer.presets.CASystems;
+import m2tk.assistant.core.presets.CASystems;
 import m2tk.assistant.dbi.entity.CAStreamEntity;
 import m2tk.util.Bytes;
 

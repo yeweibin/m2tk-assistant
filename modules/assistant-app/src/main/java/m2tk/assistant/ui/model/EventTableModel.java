@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.model;
 
-import m2tk.assistant.analyzer.domain.SIEvent;
+import m2tk.assistant.core.domain.SIEvent;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -32,21 +32,21 @@ public class EventTableModel extends AbstractTableModel
             String.class, Integer.class, String.class, String.class, String.class, String.class, String.class
     };
 
-    private static final SIEvent EMPTY_PRESENT_EVENT = new SIEvent(0, 0, 0, 0, "", "", "", "", "", false, true);
-    private static final SIEvent EMPTY_FOLLOWING_EVENT = new SIEvent(0, 0, 0, 0, "", "", "", "", "", false, false);
+    private static final SIEvent EMPTY_PRESENT_EVENT = new SIEvent();//0, 0, 0, 0, "", "", "", "", "", false, true);
+    private static final SIEvent EMPTY_FOLLOWING_EVENT = new SIEvent();//0, 0, 0, 0, "", "", "", "", "", false, false);
 
     public void update(List<SIEvent> events)
     {
         SIEvent pEvent = events.stream()
-                               .filter(e -> !e.isScheduleEvent() && e.isPresentEvent())
+                               .filter(e -> !e.isSchedule() && e.isPresent())
                                .findFirst()
                                .orElse(EMPTY_PRESENT_EVENT);
         SIEvent fEvent = events.stream()
-                               .filter(e -> !e.isScheduleEvent() && !e.isPresentEvent())
+                               .filter(e -> !e.isSchedule() && !e.isPresent())
                                .findFirst().orElse(EMPTY_FOLLOWING_EVENT);
 
         List<SIEvent> copy = new ArrayList<>(events);
-        copy.removeIf(e -> !e.isScheduleEvent());
+        copy.removeIf(e -> !e.isSchedule());
 
         data.clear();
         data.add(pEvent);
@@ -85,9 +85,9 @@ public class EventTableModel extends AbstractTableModel
         SIEvent event = data.get(rowIndex);
         return switch (columnIndex)
         {
-            case 0 -> event.isScheduleEvent()
+            case 0 -> event.isSchedule()
                       ? ""
-                      : event.isPresentEvent() ? "当前" : "后续";
+                      : event.isPresent() ? "当前" : "后续";
             case 1 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
                       : event.getEventId();
@@ -102,10 +102,10 @@ public class EventTableModel extends AbstractTableModel
                       : event.getLanguageCode();
             case 5 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
-                      : event.getEventName();
+                      : event.getTitle();
             case 6 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
-                      : event.getEventDescription();
+                      : event.getDescription();
             default -> null;
         };
     }

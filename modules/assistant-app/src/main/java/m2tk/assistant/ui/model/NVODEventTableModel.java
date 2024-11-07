@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.model;
 
-import m2tk.assistant.analyzer.domain.NVODEvent;
+import m2tk.assistant.core.domain.SIEvent;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import java.util.List;
 
 public class NVODEventTableModel extends AbstractTableModel
 {
-    private final List<NVODEvent> data = new ArrayList<>();
+    private final List<SIEvent> data = new ArrayList<>();
     private final String[] COLUMNS = {
             "类型", "事件号", "开始时间", "持续时间", "语言", "标题", "描述"
     };
@@ -32,30 +32,30 @@ public class NVODEventTableModel extends AbstractTableModel
             String.class, Integer.class, String.class, String.class, String.class, String.class, String.class
     };
 
-    private static final NVODEvent EMPTY_PRESENT_EVENT = NVODEvent.ofTimeShifted(-1, -1, -1, -1,
-                                                                                 -1, -1,
-                                                                                 "", "", "",
-                                                                                 "", "", true);
-    private static final NVODEvent EMPTY_FOLLOWING_EVENT = NVODEvent.ofTimeShifted(-1, -1, -1, -1,
-                                                                                   -1, -1,
-                                                                                   "", "", "",
-                                                                                   "", "", false);
+    private static final SIEvent EMPTY_PRESENT_EVENT = new SIEvent();// SIEvent.ofTimeShifted(-1, -1, -1, -1,
+                                                                     //            -1, -1,
+                                                                     //            "", "", "",
+                                                                     //            "", "", true);
+    private static final SIEvent EMPTY_FOLLOWING_EVENT = new SIEvent();// SIEvent.ofTimeShifted(-1, -1, -1, -1,
+                                                                       //            -1, -1,
+                                                                       //            "", "", "",
+                                                                       //            "", "", false);
 
-    public void update(List<NVODEvent> events)
+    public void update(List<SIEvent> events)
     {
-        NVODEvent pEvent = events.stream()
-                                 .filter(e -> e.isTimeShiftedEvent() && e.isPresentEvent())
-                                 .findFirst()
-                                 .orElse(EMPTY_PRESENT_EVENT);
-        NVODEvent fEvent = events.stream()
-                                 .filter(e -> e.isTimeShiftedEvent() && !e.isPresentEvent())
-                                 .findFirst()
-                                 .orElse(EMPTY_FOLLOWING_EVENT);
-
-        data.clear();
-        data.add(pEvent);
-        data.add(fEvent);
-        fireTableDataChanged();
+//        SIEvent pEvent = events.stream()
+//                                 .filter(e -> e.isTimeShiftedEvent() && e.isPresentEvent())
+//                                 .findFirst()
+//                                 .orElse(EMPTY_PRESENT_EVENT);
+//        SIEvent fEvent = events.stream()
+//                                 .filter(e -> e.isTimeShiftedEvent() && !e.isPresentEvent())
+//                                 .findFirst()
+//                                 .orElse(EMPTY_FOLLOWING_EVENT);
+//
+//        data.clear();
+//        data.add(pEvent);
+//        data.add(fEvent);
+//        fireTableDataChanged();
     }
 
     @Override
@@ -85,10 +85,10 @@ public class NVODEventTableModel extends AbstractTableModel
     @Override
     public Object getValueAt(int rowIndex, int columnIndex)
     {
-        NVODEvent event = data.get(rowIndex);
+        SIEvent event = data.get(rowIndex);
         return switch (columnIndex)
         {
-            case 0 -> event.isPresentEvent() ? "当前" : "后续";
+            case 0 -> event.isPresent() ? "当前" : "后续";
             case 1 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
                       : event.getEventId();
@@ -103,10 +103,10 @@ public class NVODEventTableModel extends AbstractTableModel
                       : event.getLanguageCode();
             case 5 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
-                      : event.getEventName();
+                      : event.getTitle();
             case 6 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
-                      : event.getEventDescription();
+                      : event.getDescription();
             default -> null;
         };
     }

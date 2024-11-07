@@ -35,7 +35,7 @@
     <logger name="m2tk.assistant.MPEGTSPlayer" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
-    <logger name="m2tk.assistant.analyzer.StreamAnalyzer" level="INFO">
+    <logger name="m2tk.assistant.core.StreamAnalyzer" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
     <logger name="m2tk.assistant.ui.MainViewController" level="INFO">

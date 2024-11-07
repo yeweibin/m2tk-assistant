@@ -20,6 +20,8 @@ import cn.hutool.core.lang.generator.Generator;
 import cn.hutool.core.lang.generator.SnowflakeGenerator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import m2tk.assistant.core.M2TKDatabase;
+import m2tk.assistant.core.domain.*;
 import m2tk.assistant.dbi.entity.*;
 import m2tk.assistant.dbi.handler.*;
 import org.jdbi.v3.core.Jdbi;
@@ -33,7 +35,7 @@ import java.util.function.Function;
 
 import static java.util.stream.Collectors.toMap;
 
-public class DatabaseService
+public class DatabaseService implements M2TKDatabase
 {
     private final Jdbi dbi;
     private final Generator<Long> idGenerator;
@@ -406,9 +408,327 @@ public class DatabaseService
         return dbi.withHandle(handle -> tr290Handler.listEvents(handle, transactionId, type, count));
     }
 
-    public List<TR290StatEntity> listTR290Stats(long transactionId)
+    @Override
+    public void beginTransaction(StreamSource source)
+    {
+
+    }
+
+    @Override
+    public void updateStreamSource(StreamSource source)
+    {
+
+    }
+
+    @Override
+    public StreamSource getTransactionStreamSource(long transactionId)
+    {
+        return null;
+    }
+
+    @Override
+    public StreamSource getStreamSource(long sourceRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<StreamSource> listRecentSources()
+    {
+        return List.of();
+    }
+
+    @Override
+    public void updateElementaryStream(ElementaryStream stream)
+    {
+
+    }
+
+    @Override
+    public void updateElementaryStreamUsage(long transactionId, int pid, String category, String description)
+    {
+
+    }
+
+    @Override
+    public void accumulateElementaryStreamErrors(long transactionId, int pid, int transportErrors, int continuityErrors)
+    {
+
+    }
+
+    @Override
+    public ElementaryStream getElementaryStream(long transactionId, int pid)
+    {
+        return null;
+    }
+
+    @Override
+    public ElementaryStream getElementaryStream(long streamRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<ElementaryStream> listElementaryStreams(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addMPEGProgram(MPEGProgram program)
+    {
+
+    }
+
+    @Override
+    public void updateMPEGProgram(MPEGProgram program)
+    {
+
+    }
+
+    @Override
+    public void clearMPEGPrograms(long transactionId)
+    {
+
+    }
+
+    @Override
+    public MPEGProgram getMPEGProgram(long programRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<MPEGProgram> listMPEGPrograms(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addProgramStreamMapping(ProgramStreamMapping mapping)
+    {
+
+    }
+
+    @Override
+    public List<ProgramStreamMapping> getProgramStreamMappings(long transactionId, int programNumber)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addCASystemStream(CASystemStream stream)
+    {
+
+    }
+
+    @Override
+    public void updateCASystemStream(CASystemStream stream)
+    {
+
+    }
+
+    @Override
+    public CASystemStream getCASystemStream(long streamRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<CASystemStream> listCASystemStreams(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addSIBouquet(SIBouquet bouquet)
+    {
+
+    }
+
+    @Override
+    public void updateSIBouquet(SIBouquet bouquet)
+    {
+
+    }
+
+    @Override
+    public SIBouquet getSIBouquet(long bouquetRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<SIBouquet> listSIBouquets(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addBouquetServiceMapping(BouquetServiceMapping mapping)
+    {
+
+    }
+
+    @Override
+    public List<BouquetServiceMapping> getBouquetServiceMappings(long transactionId, int bouquetId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addSINetwork(SINetwork network)
+    {
+
+    }
+
+    @Override
+    public void updateSINetwork(SINetwork network)
+    {
+
+    }
+
+    @Override
+    public SINetwork getSINetwork(long networkRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<SINetwork> listSINetworks(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addSIMultiplex(SIMultiplex multiplex)
+    {
+
+    }
+
+    @Override
+    public void updateSIMultiplex(SIMultiplex multiplex)
+    {
+
+    }
+
+    @Override
+    public SIMultiplex getSIMultiplex(long multiplexRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<SIMultiplex> listSIMultiplexes(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addSIService(SIService service)
+    {
+
+    }
+
+    @Override
+    public void updateSIService(SIService service)
+    {
+
+    }
+
+    @Override
+    public SIService getSIService(long serviceRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<SIService> listSIServices(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addSIEvent(SIEvent event)
+    {
+
+    }
+
+    @Override
+    public void updateSIEvent(SIEvent event)
+    {
+
+    }
+
+    @Override
+    public SIEvent getSIEvent(long eventRef)
+    {
+        return null;
+    }
+
+    @Override
+    public List<SIEvent> listSIEvents(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addTimestamp(Timestamp timestamp)
+    {
+
+    }
+
+    @Override
+    public Timestamp getLastTimestamp(long transactionId)
+    {
+        return null;
+    }
+
+    @Override
+    public void addTR290Event(TR290Event event)
+    {
+
+    }
+
+    @Override
+    public List<TR290Event> listTR290Events(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public List<TR290Stats> listTR290Stats(long transactionId)
+    {
+        return List.of();
+    }
+
+    public List<TR290StatEntity> listTR290Stats0(long transactionId)
     {
         return dbi.withHandle(handle -> tr290Handler.listStats(handle, transactionId));
+    }
+
+    @Override
+    public void addPCR(PCR pcr)
+    {
+
+    }
+
+    @Override
+    public void addPCRCheck(PCRCheck check)
+    {
+
+    }
+
+    @Override
+    public List<PCRStats> listPCRStats(long transactionId)
+    {
+        return List.of();
+    }
+
+    @Override
+    public List<PCRCheck> getRecentPCRChecks(long transactionId, int pid, int limit)
+    {
+        return List.of();
     }
 
     public void addPCR(long transactionId, int pid, long position, long value)
@@ -438,14 +758,74 @@ public class DatabaseService
                                                        accuracyCheckFailed));
     }
 
-    public List<PCRStatEntity> listPCRStats(long transactionId)
+    public List<PCRStatEntity> listPCRStats0(long transactionId)
     {
         return dbi.withHandle(handle -> pcrHandler.listPCRStats(handle, transactionId));
     }
 
-    public List<PCRCheckEntity> getRecentPCRChecks(long transactionId, int pid, int limit)
+    public List<PCRCheckEntity> getRecentPCRChecks0(long transactionId, int pid, int limit)
     {
         return dbi.withHandle(handle -> pcrHandler.listRecentPCRChecks(handle, transactionId, pid, limit));
+    }
+
+    @Override
+    public void addPrivateSection(PrivateSection section)
+    {
+
+    }
+
+    @Override
+    public int removePrivateSections(long transactionId, int pid, String tag, int count)
+    {
+        return 0;
+    }
+
+    @Override
+    public List<PrivateSection> getPrivateSections(long transactionId, int pid, int count)
+    {
+        return List.of();
+    }
+
+    @Override
+    public List<PrivateSection> getPrivateSections(long transactionId, int pid, String tag, int count)
+    {
+        return List.of();
+    }
+
+    @Override
+    public Map<Integer, List<PrivateSection>> getPrivateSectionGroups(long transactionId, String tag)
+    {
+        return Map.of();
+    }
+
+    @Override
+    public void addTransportPacket(TransportPacket packet)
+    {
+
+    }
+
+    @Override
+    public List<TransportPacket> getTransportPackets(long transactionId, int pid, int count)
+    {
+        return List.of();
+    }
+
+    @Override
+    public void addFilteringHook(FilteringHook hook)
+    {
+
+    }
+
+    @Override
+    public void removeFilteringHook(long hookRef)
+    {
+
+    }
+
+    @Override
+    public List<FilteringHook> listFilteringHooks()
+    {
+        return List.of();
     }
 
     public void addSection(long transactionId, String tag, int pid, long position, byte[] encoding)

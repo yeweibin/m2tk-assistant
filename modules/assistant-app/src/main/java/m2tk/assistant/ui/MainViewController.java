@@ -21,6 +21,7 @@ import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
 import jnafilechooser.api.JnaFileChooser;
 import m2tk.assistant.Global;
+import m2tk.assistant.core.tracer.Tracer;
 import m2tk.assistant.ui.dialog.SourceHistoryDialog;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
 import m2tk.assistant.ui.task.DrawNetworkGraphTask;
@@ -45,6 +46,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -201,7 +203,7 @@ public class MainViewController
         tr290InfoView = new TR290InfoView(frameView);
         pcrStatsView = new PCRInfoView(frameView);
         epgInfoView = new EPGInfoView(frameView);
-        nvodInfoView = new NVODInfoView(frameView);
+//        nvodInfoView = new NVODInfoView(frameView);
         datagramView = new DatagramView(frameView);
         ebInfoView = new EBInfoView(frameView);
         logsView = new LogsView();
@@ -213,7 +215,7 @@ public class MainViewController
         tabbedPane.add("TR 101 290", tr290InfoView);
         tabbedPane.add("PCR", pcrStatsView);
         tabbedPane.add("EPG", epgInfoView);
-        tabbedPane.add("NVOD", nvodInfoView);
+//        tabbedPane.add("NVOD", nvodInfoView);
         tabbedPane.add("PSI/SI", datagramView);
         tabbedPane.add("应急广播", ebInfoView);
         tabbedPane.add("日志", logsView);
@@ -371,7 +373,7 @@ public class MainViewController
             String input = file.getAbsolutePath();
 
             Global.resetUserPrivateSectionStreams();
-            boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
+            boolean started = Global.getStreamAnalyser().start(input, List.of(), this::onAnalyzerStopped);
             if (!started)
             {
                 actionMap.get("reopenInput").setEnabled(false);
@@ -417,7 +419,7 @@ public class MainViewController
         }
 
         Global.resetUserPrivateSectionStreams();
-        boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
+        boolean started = Global.getStreamAnalyser().start(input, List.of(), this::onAnalyzerStopped);
         if (!started)
         {
             actionMap.get("reopenInput").setEnabled(false);
@@ -451,7 +453,7 @@ public class MainViewController
         if (input == null)
             return;
 
-        boolean started = Global.getStreamAnalyser().start(input, this::onAnalyzerStopped);
+        boolean started = Global.getStreamAnalyser().start(input, List.of(), this::onAnalyzerStopped);
         if (!started)
         {
             actionMap.get("reopenInput").setEnabled(false);
@@ -486,7 +488,7 @@ public class MainViewController
         if (source == null)
             return;
 
-        boolean started = Global.getStreamAnalyser().start(source, this::onAnalyzerStopped);
+        boolean started = Global.getStreamAnalyser().start(source, List.of(), this::onAnalyzerStopped);
         if (!started)
         {
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);

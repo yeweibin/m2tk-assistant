@@ -17,8 +17,8 @@
 package m2tk.assistant.ui.component;
 
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.analyzer.domain.SIEvent;
-import m2tk.assistant.analyzer.domain.SIService;
+import m2tk.assistant.core.domain.SIEvent;
+import m2tk.assistant.core.domain.SIService;
 import m2tk.assistant.ui.model.EventTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -145,7 +145,7 @@ public class ServiceEventGuidePanel extends JPanel
         if (current.size() != incoming.size())
             return false;
 
-        incoming.sort(Comparator.comparing(SIService::getId));
+        incoming.sort(Comparator.comparing(SIService::getRef));
 
         int n = current.size();
         for (int i = 0; i < n; i++)
@@ -154,7 +154,7 @@ public class ServiceEventGuidePanel extends JPanel
             SIService s2 = incoming.get(i);
 
             if (!Objects.equals(s1, s2) &&
-                !Objects.equals(s1.getServiceName(), s2.getServiceName()))
+                !Objects.equals(s1.getName(), s2.getName()))
                 return false;
         }
 
@@ -217,7 +217,7 @@ public class ServiceEventGuidePanel extends JPanel
                 if (userObject instanceof SIService)
                 {
                     SIService service = (SIService) userObject;
-                    setText(service.getServiceName());
+                    setText(service.getName());
                     setIcon(SmallIcons.TELEVISION);
                 }
             }

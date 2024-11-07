@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.model;
 
-import m2tk.assistant.analyzer.domain.SIService;
+import m2tk.assistant.core.domain.SIService;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
@@ -79,8 +79,8 @@ public class ServiceInfoTableModel extends AbstractTableModel
         return switch (columnIndex)
         {
             case 0 -> rowIndex + 1;
-            case 1 -> service.getServiceName();
-            case 2 -> service.getServiceProvider();
+            case 1 -> service.getName();
+            case 2 -> service.getProvider();
             case 3 -> service.getServiceType();
             case 4 -> service.getServiceId();
             case 5 -> service.getOriginalNetworkId();

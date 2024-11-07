@@ -18,9 +18,9 @@ package m2tk.assistant.ui.component;
 
 import cn.hutool.core.util.StrUtil;
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.analyzer.domain.CASystemStream;
-import m2tk.assistant.analyzer.domain.ElementaryStream;
-import m2tk.assistant.analyzer.domain.MPEGProgram;
+import m2tk.assistant.core.domain.CASystemStream;
+import m2tk.assistant.core.domain.ElementaryStream;
+import m2tk.assistant.core.domain.MPEGProgram;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -133,29 +133,29 @@ public class ProgramInfoPanel extends JPanel
             if (p1.getTransportStreamId() != p2.getTransportStreamId() ||
                 p1.getProgramNumber() != p2.getProgramNumber() ||
                 p1.getPmtVersion() != p2.getPmtVersion() ||
-                !Objects.equals(p1.getProgramName(), p2.getProgramName()))
+                !Objects.equals(p1.getName(), p2.getName()))
                 return false;
 
-            if (p1.getEcmList().size() != p2.getEcmList().size() ||
-                p1.getElementList().size() != p2.getElementList().size())
+            if (p1.getEcmStreams().size() != p2.getEcmStreams().size() ||
+                p1.getElementaryStreams().size() != p2.getElementaryStreams().size())
                 return false;
 
-            int m = p1.getEcmList().size();
+            int m = p1.getEcmStreams().size();
             for (int j = 0; j < m; j++)
             {
-                CASystemStream ecm1 = p1.getEcmList().get(j);
-                CASystemStream ecm2 = p2.getEcmList().get(j);
+                CASystemStream ecm1 = p1.getEcmStreams().get(j);
+                CASystemStream ecm2 = p2.getEcmStreams().get(j);
                 if (ecm1.getStreamPid() != ecm2.getStreamPid())
                     return false;
             }
 
-            m = p1.getElementList().size();
+            m = p1.getElementaryStreams().size();
             for (int j = 0; j < m; j++)
             {
-                ElementaryStream es1 = p1.getElementList().get(j);
-                ElementaryStream es2 = p2.getElementList().get(j);
+                ElementaryStream es1 = p1.getElementaryStreams().get(j);
+                ElementaryStream es2 = p2.getElementaryStreams().get(j);
                 if (es1.getStreamPid() != es2.getStreamPid() ||
-                    es1.getPacketCount() != es2.getPacketCount())
+                    es1.getPktCount() != es2.getPktCount())
                     return false;
             }
         }
@@ -168,14 +168,14 @@ public class ProgramInfoPanel extends JPanel
         String text = String.format("节目号：%d（PMT：0x%04X",
                                     program.getProgramNumber(),
                                     program.getPmtPid());
-        if (StrUtil.isEmpty(program.getProgramName()))
+        if (StrUtil.isEmpty(program.getName()))
             text += "）";
         else
-            text += " 节目名称：" + program.getProgramName() + "）";
-        if (program.isFreeAccess())
-            text = "[P]" + text;
-        else
+            text += " 节目名称：" + program.getName() + "）";
+        if (program.isScrambled())
             text = "[P*]" + text;
+        else
+            text = "[P]" + text;
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode();
         node.setUserObject(text);
@@ -185,18 +185,18 @@ public class ProgramInfoPanel extends JPanel
         nodeBW.setUserObject(text);
         node.add(nodeBW);
 
-        for (CASystemStream ecm : program.getEcmList())
+        for (CASystemStream ecm : program.getEcmStreams())
         {
-            text = String.format("[ECM]PID：0x%04X，%s",
+            text = String.format("[ECM]PID：0x%04X，%d",
                                  ecm.getStreamPid(),
-                                 ecm.getStreamDescription());
+                                 ecm.getStreamType());
 
             DefaultMutableTreeNode nodeECM = new DefaultMutableTreeNode();
             nodeECM.setUserObject(text);
             node.add(nodeECM);
         }
 
-        for (ElementaryStream es : program.getElementList())
+        for (ElementaryStream es : program.getElementaryStreams())
         {
             text = String.format("[%s]PID：0x%04X，%s",
                                  es.getCategory(),
@@ -204,7 +204,7 @@ public class ProgramInfoPanel extends JPanel
                                  es.getDescription());
             if (es.isScrambled())
                 text += "，加密";
-            if (!es.isPresent())
+            if (es.getPktCount() == 0)
                 text += "（未出现）";
 
             DefaultMutableTreeNode nodeES = new DefaultMutableTreeNode();

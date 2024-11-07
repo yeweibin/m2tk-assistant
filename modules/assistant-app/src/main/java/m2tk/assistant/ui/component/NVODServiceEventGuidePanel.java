@@ -16,9 +16,8 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.SmallIcons;
-import m2tk.assistant.analyzer.domain.NVODEvent;
-import m2tk.assistant.analyzer.domain.NVODService;
+import m2tk.assistant.core.domain.SIEvent;
+import m2tk.assistant.core.domain.SIService;
 import m2tk.assistant.ui.model.NVODEventTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -29,7 +28,6 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
@@ -40,8 +38,8 @@ public class NVODServiceEventGuidePanel extends JPanel
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode treeRoot;
     private NVODEventTableModel eventTableModel;
-    private transient Map<String, NVODService> serviceRegistry = Collections.emptyMap();
-    private transient Map<String, NVODEvent> eventRegistry = Collections.emptyMap();
+    private transient Map<String, SIService> serviceRegistry = Collections.emptyMap();
+    private transient Map<String, SIEvent> eventRegistry = Collections.emptyMap();
 
     public NVODServiceEventGuidePanel()
     {
@@ -60,28 +58,28 @@ public class NVODServiceEventGuidePanel extends JPanel
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) serviceTree.getLastSelectedPathComponent();
             if (node != null)
             {
-                NVODService service = (NVODService) node.getUserObject();
-                List<NVODEvent> events = new ArrayList<>();
+//                SIService service = (SIService) node.getUserObject();
+//                List<SIEvent> events = new ArrayList<>();
 
-                if (service.isTimeShiftedService())
-                {
-                    Map<String, NVODEvent> registry = eventRegistry;
-                    if (registry != null)
-                    {
-                        registry.values().forEach(event -> {
-                            if (event.getParentId().equals(service.getId()))
-                                events.add(event);
-                        });
-                        events.sort(Comparator.comparing(NVODEvent::getStartTime));
-                    }
-                }
-                eventTableModel.update(events);
+//                if (service.isTimeShiftedService())
+//                {
+//                    Map<String, SIEvent> registry = eventRegistry;
+//                    if (registry != null)
+//                    {
+//                        registry.values().forEach(event -> {
+//                            if (event.getParentId().equals(service.getId()))
+//                                events.add(event);
+//                        });
+//                        events.sort(Comparator.comparing(SIEvent::getStartTime));
+//                    }
+//                }
+//                eventTableModel.update(events);
             }
         });
 
-        eventTableModel = new NVODEventTableModel();
+//        eventTableModel = new SIEventTableModel();
         JTable eventTable = new JTable();
-        eventTable.setModel(eventTableModel);
+//        eventTable.setModel(eventTableModel);
         eventTable.getTableHeader().setReorderingAllowed(true);
         eventTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
@@ -110,73 +108,73 @@ public class NVODServiceEventGuidePanel extends JPanel
     {
         treeRoot.removeAllChildren();
         treeModel.reload();
-        eventTableModel.update(Collections.emptyList());
+//        eventTableModel.update(Collections.emptyList());
         serviceRegistry = Collections.emptyMap();
         eventRegistry = Collections.emptyMap();
     }
 
-    public void update(Map<String, NVODService> services, Map<String, NVODEvent> events)
+    public void update(Map<String, SIService> services, Map<String, SIEvent> events)
     {
-        if (!isSameServices(serviceRegistry, services) || !isSameEventGroups(eventRegistry, events))
-        {
-            treeRoot.removeAllChildren();
-
-            Map<NVODService, List<NVODService>> groups = groupServices(services);
-            for (Map.Entry<NVODService, List<NVODService>> group : groups.entrySet())
-            {
-                treeRoot.add(createServiceGroupNode(group.getKey(), group.getValue()));
-            }
-
-            serviceTree.expandPath(new TreePath(treeRoot));
-            treeModel.reload();
-
-            eventRegistry = events;
-            serviceRegistry = services;
-        }
+//        if (!isSameServices(serviceRegistry, services) || !isSameEventGroups(eventRegistry, events))
+//        {
+//            treeRoot.removeAllChildren();
+//
+//            Map<SIService, List<SIService>> groups = groupServices(services);
+//            for (Map.Entry<SIService, List<SIService>> group : groups.entrySet())
+//            {
+//                treeRoot.add(createServiceGroupNode(group.getKey(), group.getValue()));
+//            }
+//
+//            serviceTree.expandPath(new TreePath(treeRoot));
+//            treeModel.reload();
+//
+//            eventRegistry = events;
+//            serviceRegistry = services;
+//        }
     }
 
-    private boolean isSameServices(Map<String, NVODService> current, Map<String, NVODService> incoming)
+    private boolean isSameServices(Map<String, SIService> current, Map<String, SIService> incoming)
     {
         return Objects.equals(current.keySet(), incoming.keySet());
     }
 
-    private boolean isSameEventGroups(Map<String, NVODEvent> current, Map<String, NVODEvent> incoming)
+    private boolean isSameEventGroups(Map<String, SIEvent> current, Map<String, SIEvent> incoming)
     {
         return Objects.equals(current.keySet(), incoming.keySet());
     }
 
-    private Map<NVODService, List<NVODService>> groupServices(Map<String, NVODService> services)
+    private Map<SIService, List<SIService>> groupServices(Map<String, SIService> services)
     {
-        Map<NVODService, List<NVODService>> groups = new TreeMap<>();
-        for (NVODService service : services.values())
+        Map<SIService, List<SIService>> groups = new TreeMap<>();
+        for (SIService service : services.values())
         {
-            if (service.isTimeShiftedService())
-            {
-                NVODService refService = services.get(service.getReferenceId());
-                if (refService == null)
-                    continue; // 缺少描述
-                for (NVODService refSrv : groups.keySet())
-                {
-                    if (NVODService.isSameReferenceService(refService, refSrv))
-                    {
-                        refService = refSrv;
-                        break;
-                    }
-                }
-                groups.computeIfAbsent(refService, key -> new ArrayList<>())
-                      .add(service);
-                Collections.sort(groups.get(refService));
-            }
+//            if (service.isTimeShiftedService())
+//            {
+//                SIService refService = services.get(service.getReferenceId());
+//                if (refService == null)
+//                    continue; // 缺少描述
+//                for (SIService refSrv : groups.keySet())
+//                {
+//                    if (SIService.isSameReferenceService(refService, refSrv))
+//                    {
+//                        refService = refSrv;
+//                        break;
+//                    }
+//                }
+//                groups.computeIfAbsent(refService, key -> new ArrayList<>())
+//                      .add(service);
+//                Collections.sort(groups.get(refService));
+//            }
         }
         return groups;
     }
 
-    private DefaultMutableTreeNode createServiceGroupNode(NVODService referenceService, List<NVODService> shiftedServices)
+    private DefaultMutableTreeNode createServiceGroupNode(SIService referenceService, List<SIService> shiftedServices)
     {
         DefaultMutableTreeNode groupNode = new DefaultMutableTreeNode();
         groupNode.setUserObject(referenceService);
 
-        for (NVODService shiftedService : shiftedServices)
+        for (SIService shiftedService : shiftedServices)
         {
             DefaultMutableTreeNode srvNode = new DefaultMutableTreeNode();
             srvNode.setUserObject(shiftedService);
@@ -195,17 +193,17 @@ public class NVODServiceEventGuidePanel extends JPanel
 
             if (value != treeRoot)
             {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-                NVODService service = (NVODService) node.getUserObject();
-                if (service.isReferenceService())
-                {
-                    setText(String.format("索引业务%d", service.getServiceId()));
-                    setIcon(SmallIcons.TRANSMIT);
-                } else
-                {
-                    setText(String.format("时移业务%d", service.getServiceId()));
-                    setIcon(SmallIcons.TELEVISION);
-                }
+//                DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+//                SIService service = (SIService) node.getUserObject();
+//                if (service.isReferenceService())
+//                {
+//                    setText(String.format("索引业务%d", service.getServiceId()));
+//                    setIcon(SmallIcons.TRANSMIT);
+//                } else
+//                {
+//                    setText(String.format("时移业务%d", service.getServiceId()));
+//                    setIcon(SmallIcons.TELEVISION);
+//                }
             }
 
             return this;

@@ -3,6 +3,9 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>m2tk-assistant-app</artifactId>
+
     <parent>
         <groupId>mpeg2-toolkit</groupId>
         <artifactId>m2tk-assistant</artifactId>
@@ -10,15 +13,13 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>m2tk-assistant-app</artifactId>
-
     <properties>
         <m2tk.version>1.2</m2tk.version>
         <bsaf.version>1.9.2</bsaf.version>
         <jfreechart.version>1.5.4</jfreechart.version>
         <miglayout-swing.version>11.0</miglayout-swing.version>
         <guava.version>33.0.0-jre</guava.version>
-        <flatlaf.version>3.4</flatlaf.version>
+        <flatlaf.version>3.5</flatlaf.version>
         <slf4j.version>2.0.16</slf4j.version>
         <logback.version>1.5.12</logback.version>
         <jackson.version>2.18.1</jackson.version>
@@ -68,6 +69,11 @@
     </dependencyManagement>
 
     <dependencies>
+        <dependency>
+            <groupId>mpeg2-toolkit</groupId>
+            <artifactId>m2tk-assistant-core</artifactId>
+            <version>2.0-incubation</version>
+        </dependency>
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-multiplex</artifactId>
@@ -265,15 +271,21 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <minimum>true</minimum>
-                    <name>M2TK传输流分析助手</name>
-                    <mainClass>m2tk.assistant.AppLauncher</mainClass>
-                    <winConsole>false</winConsole>
-                    <icon>${project.basedir}/src/main/resources/images/app.ico</icon>
                     <type>app-image</type>
+                    <minimum>true</minimum>
+                    <mainClass>m2tk.assistant.AppLauncher</mainClass>
+                    <icon>${project.basedir}/src/main/resources/images/app.ico</icon>
                     <appVersion>2.0.0</appVersion>
-                    <copyright>版权所有 @ 2022-2024, M2TK项目组</copyright>
+                    <appContent>${project.basedir}/fonts,${project.basedir}/ffmpeg</appContent>
+                    <winConsole>false</winConsole>
+                    <winMenu>true</winMenu>
+                    <winDirChooser>true</winDirChooser>
+                    <winShortcut>true</winShortcut>
+                    <winShortcutPrompt>true</winShortcutPrompt>
+                    <winPerUserInstall>false</winPerUserInstall>
+                    <name>M2TK传输流分析助手</name>
                     <vendor>M2TK项目组</vendor>
+                    <copyright>版权所有 @ 2022-2024, M2TK项目组</copyright>
                     <description>M2TK传输流分析助手</description>
                 </configuration>
             </plugin>

@@ -1,0 +1,142 @@
+/*
+ * Copyright (c) M2TK Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package m2tk.assistant.core;
+
+import com.google.common.eventbus.EventBus;
+import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.core.domain.StreamSource;
+import m2tk.assistant.core.event.SourceAttachedEvent;
+import m2tk.assistant.core.event.SourceDetachedEvent;
+import m2tk.assistant.core.tracer.Tracer;
+import m2tk.io.ProtocolManager;
+import m2tk.io.RxChannel;
+import m2tk.multiplex.DemuxStatus;
+import m2tk.multiplex.TSDemux;
+import m2tk.multiplex.TSDemuxEvent;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+
+@Slf4j
+public class StreamAnalyzer
+{
+    private final ExecutorService executor;
+    private final TSDemux demux;
+    private final EventBus eventBus;
+    private final M2TKDatabase databaseService;
+
+    private RxChannel input;
+
+    public StreamAnalyzer(EventBus bus, M2TKDatabase database)
+    {
+        executor = Executors.newSingleThreadExecutor();
+        demux = TSDemux.newDefaultDemux(executor);
+        eventBus = Objects.requireNonNull(bus);
+        databaseService = Objects.requireNonNull(database);
+    }
+
+    public boolean start(String uri, List<Tracer> tracers, Consumer<DemuxStatus> consumer)
+    {
+        try
+        {
+            input = ProtocolManager.openRxChannel(uri);
+        } catch (Exception ex)
+        {
+            log.warn("无法获取输入通道：{}", ex.getMessage());
+            input = null;
+            return false;
+        }
+
+        demux.reset();
+
+        StreamSource source = new StreamSource();
+        source.setName((String) input.query("source name"));
+        source.setUri(uri);
+        databaseService.beginTransaction(source);
+
+        tracers.forEach(tracer -> tracer.configure(source, demux, databaseService));
+
+        demux.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
+        demux.registerEventListener(new EventFilter<>(DemuxStatus.class, this::closeChannelWhenDemuxStopped));
+
+        demux.attach(input);
+
+        eventBus.post(new SourceAttachedEvent(source));
+
+        log.info("开始分析");
+        return true;
+    }
+
+    public void stop()
+    {
+        demux.detach();
+    }
+
+    public void shutdown()
+    {
+        demux.shutdown();
+        executor.shutdownNow();
+    }
+
+    private void closeChannelWhenDemuxStopped(DemuxStatus status)
+    {
+        if (!status.isRunning())
+        {
+            try
+            {
+                input.close();
+            } catch (IOException ex)
+            {
+                log.error("关闭通道时异常：{}", ex.getMessage());
+            }
+
+            eventBus.post(new SourceDetachedEvent());
+            log.info("停止分析");
+        }
+    }
+
+    static class EventFilter<T extends TSDemuxEvent> implements Consumer<TSDemuxEvent>
+    {
+        private final Class<T> type;
+        private final Consumer<T> consumer;
+
+        EventFilter(Class<T> type, Consumer<T> consumer)
+        {
+            this.type = type;
+            this.consumer = consumer;
+        }
+
+        @Override
+        public void accept(TSDemuxEvent event)
+        {
+            if (type.isInstance(event))
+            {
+                try
+                {
+                    consumer.accept(type.cast(event));
+                } catch (Exception ex)
+                {
+                    log.warn("Exception: {}", ex.getMessage(), ex);
+                }
+            }
+        }
+    }
+}

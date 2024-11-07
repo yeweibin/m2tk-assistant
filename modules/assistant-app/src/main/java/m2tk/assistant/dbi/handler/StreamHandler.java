@@ -17,7 +17,7 @@
 package m2tk.assistant.dbi.handler;
 
 import cn.hutool.core.lang.generator.Generator;
-import m2tk.assistant.analyzer.presets.StreamTypes;
+import m2tk.assistant.core.presets.StreamTypes;
 import m2tk.assistant.dbi.entity.StreamEntity;
 import m2tk.assistant.dbi.mapper.StreamEntityMapper;
 import org.jdbi.v3.core.Handle;

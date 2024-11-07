@@ -36,9 +36,9 @@ import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.ui.AssistantApp;
 import m2tk.assistant.Global;
-import m2tk.assistant.analyzer.domain.ElementaryStream;
-import m2tk.assistant.analyzer.domain.MPEGProgram;
-import m2tk.assistant.analyzer.presets.StreamTypes;
+import m2tk.assistant.core.domain.ElementaryStream;
+import m2tk.assistant.core.domain.MPEGProgram;
+import m2tk.assistant.core.presets.StreamTypes;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.*;
 import m2tk.assistant.ui.component.CASystemInfoPanel;
@@ -242,7 +242,7 @@ public class StreamInfoView extends JPanel implements InfoView
     {
         int videoPid = 0x1FFF;
         int audioPid = 0x1FFF;
-        for (ElementaryStream es : selectedProgram.getElementList())
+        for (ElementaryStream es : selectedProgram.getElementaryStreams())
         {
             if (es.isScrambled())
                 continue;
@@ -254,13 +254,13 @@ public class StreamInfoView extends JPanel implements InfoView
                 audioPid = es.getStreamPid();
         }
 
-        String programName = (selectedProgram.getProgramName() == null)
+        String programName = (selectedProgram.getName() == null)
                              ? "节目" + selectedProgram.getProgramNumber()
-                             : selectedProgram.getProgramName();
+                             : selectedProgram.getName();
 
         if (videoPid == 0x1FFF && audioPid == 0x1FFF)
         {
-            String text = !selectedProgram.isFreeAccess()
+            String text = !selectedProgram.isScrambled()
                           ? programName + "完全加扰，无法播放"
                           : programName + "无可播放内容";
             JOptionPane.showMessageDialog(frameView.getFrame(), text);
@@ -345,12 +345,12 @@ public class StreamInfoView extends JPanel implements InfoView
                                              .map(SIServiceEntity::getServiceName)
                                              .orElse(null);
 
-                programs.add(new MPEGProgram(programName,
-                                             program,
-                                             ecmGroups.getOrDefault(program.getProgramNumber(),
-                                                                    Collections.emptyList()),
-                                             mappedStreams,
-                                             streamRegistry));
+//                programs.add(new MPEGProgram(programName,
+//                                             program,
+//                                             ecmGroups.getOrDefault(program.getProgramNumber(),
+//                                                                    Collections.emptyList()),
+//                                             mappedStreams,
+//                                             streamRegistry));
             }
 
             programs.sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
@@ -456,9 +456,9 @@ public class StreamInfoView extends JPanel implements InfoView
     private void showProgramPopupMenu(MouseEvent event, MPEGProgram program)
     {
         selectedProgram = program;
-        String text = (selectedProgram.getProgramName() == null)
+        String text = (selectedProgram.getName() == null)
                       ? String.format("播放 节目%d", selectedProgram.getProgramNumber())
-                      : String.format("播放 %s", selectedProgram.getProgramName());
+                      : String.format("播放 %s", selectedProgram.getName());
         programContextMenuItem.setText(text);
 
         if (program.isPlayable())

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.EventBus;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.analyzer.StreamAnalyzer;
+import m2tk.assistant.core.StreamAnalyzer;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SourceEntity;
 import m2tk.assistant.template.DescriptorDecoder;
@@ -56,10 +56,9 @@ public final class Global
     static
     {
         databaseService = new DatabaseService();
-        streamAnalyser = new StreamAnalyzer();
-        userPrivateSectionStreams = new HashSet<>();
-        streamAnalyser.setDatabaseService(databaseService);
         eventBus = new EventBus();
+        streamAnalyser = new StreamAnalyzer(eventBus, databaseService);
+        userPrivateSectionStreams = new HashSet<>();
         objectMapper = new ObjectMapper();
     }
 

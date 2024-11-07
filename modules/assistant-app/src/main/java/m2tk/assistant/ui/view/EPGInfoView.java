@@ -18,8 +18,8 @@ package m2tk.assistant.ui.view;
 
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
-import m2tk.assistant.analyzer.domain.SIEvent;
-import m2tk.assistant.analyzer.domain.SIService;
+import m2tk.assistant.core.domain.SIEvent;
+import m2tk.assistant.core.domain.SIService;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIEventEntity;
 import m2tk.assistant.dbi.entity.SIServiceEntity;
@@ -157,36 +157,39 @@ public class EPGInfoView extends JPanel implements InfoView
 
             services.stream()
                     .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)
-                    .map(service -> new SIService(service.getTransportStreamId(),
-                                                  service.getOriginalNetworkId(),
-                                                  service.getServiceId(),
-                                                  service.getServiceTypeName(),
-                                                  service.getServiceName(),
-                                                  service.getServiceProvider()))
+                    .map(service -> new SIService())
+//                    service.getTransportStreamId(),
+//                                                  service.getOriginalNetworkId(),
+//                                                  service.getServiceId(),
+//                                                  service.getServiceTypeName(),
+//                                                  service.getServiceName(),
+//                                                  service.getServiceProvider()))
                     .sorted(comparator1)
                     .forEach(serviceList::add);
 
             events.stream()
                   .filter(event -> !event.isNvodReferenceEvent() && !event.isNvodTimeShiftedEvent())
-                  .map(event -> new SIEvent(event.getTransportStreamId(),
-                                            event.getOriginalNetworkId(),
-                                            event.getServiceId(),
-                                            event.getEventId(),
-                                            event.getEventName(),
-                                            event.getEventDescription(),
-                                            event.getLanguageCode(),
-                                            event.getStartTime(),
-                                            event.getDuration(),
-                                            event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
-                                            event.isPresentEvent()))
+                  .map(event -> new SIEvent())
+//        event.getTransportStreamId(),
+//                                            event.getOriginalNetworkId(),
+//                                            event.getServiceId(),
+//                                            event.getEventId(),
+//                                            event.getEventName(),
+//                                            event.getEventDescription(),
+//                                            event.getLanguageCode(),
+//                                            event.getStartTime(),
+//                                            event.getDuration(),
+//                                            event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
+//                                            event.isPresentEvent()))
                   .sorted(comparator2)
                   .forEach(event -> {
-                      SIService service = new SIService(event.getTransportStreamId(),
-                                                        event.getOriginalNetworkId(),
-                                                        event.getServiceId(),
-                                                        "数字电视业务",
-                                                        String.format("未知业务（业务号：%d）", event.getServiceId()),
-                                                        "未知提供商");
+                      SIService service = new SIService();
+//                      event.getTransportStreamId(),
+//                                                        event.getOriginalNetworkId(),
+//                                                        event.getServiceId(),
+//                                                        "数字电视业务",
+//                                                        String.format("未知业务（业务号：%d）", event.getServiceId()),
+//                                                        "未知提供商");
                       List<SIEvent> eventList = eventRegistry.computeIfAbsent(service, any -> new ArrayList<>());
                       eventList.add(event);
                   });

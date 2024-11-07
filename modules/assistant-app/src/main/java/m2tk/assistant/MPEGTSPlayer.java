@@ -52,6 +52,8 @@ public class MPEGTSPlayer
             {
                 log.warn("等待播放任务结束时超时：{}", ex.getMessage());
             }
+
+            ffmpegTask = null;
         }
     }
 

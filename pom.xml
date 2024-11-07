@@ -9,8 +9,8 @@
     <version>2.0-incubation</version>
     <packaging>pom</packaging>
     <modules>
-        <module>modules/assistant-core</module>
         <module>modules/assistant-app</module>
+        <module>modules/assistant-core</module>
     </modules>
 
     <properties>

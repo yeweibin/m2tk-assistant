@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.model;
 
-import m2tk.assistant.analyzer.domain.SIMultiplex;
+import m2tk.assistant.core.domain.SIMultiplex;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;

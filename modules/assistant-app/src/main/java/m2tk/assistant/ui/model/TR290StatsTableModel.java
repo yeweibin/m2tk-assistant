@@ -17,9 +17,9 @@
 package m2tk.assistant.ui.model;
 
 import m2tk.assistant.LargeIcons;
-import m2tk.assistant.analyzer.domain.TR290Event;
-import m2tk.assistant.analyzer.domain.TR290Stats;
-import m2tk.assistant.analyzer.presets.TR290ErrorTypes;
+import m2tk.assistant.core.domain.TR290Event;
+import m2tk.assistant.core.domain.TR290Stats;
+import m2tk.assistant.core.presets.TR290ErrorTypes;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;

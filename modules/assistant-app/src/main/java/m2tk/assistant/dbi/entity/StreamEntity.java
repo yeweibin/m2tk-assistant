@@ -17,7 +17,7 @@
 package m2tk.assistant.dbi.entity;
 
 import lombok.Data;
-import m2tk.assistant.analyzer.presets.StreamTypes;
+import m2tk.assistant.core.presets.StreamTypes;
 
 @Data
 public class StreamEntity

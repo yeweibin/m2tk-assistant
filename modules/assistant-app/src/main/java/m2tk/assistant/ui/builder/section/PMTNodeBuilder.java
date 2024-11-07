@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.builder.section;
 
-import m2tk.assistant.analyzer.presets.StreamTypes;
+import m2tk.assistant.core.presets.StreamTypes;
 import m2tk.assistant.ui.builder.DescriptorNodeBuilders;
 import m2tk.assistant.ui.builder.TreeNodeBuilder;
 import m2tk.encoding.Encoding;

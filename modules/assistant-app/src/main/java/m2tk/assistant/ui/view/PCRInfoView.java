@@ -156,7 +156,7 @@ public class PCRInfoView extends JPanel implements InfoView
         if (currentTransaction == -1)
             return;
 
-        Supplier<List<PCRStatEntity>> query = () -> Global.getDatabaseService().listPCRStats(currentTransaction);
+        Supplier<List<PCRStatEntity>> query = () -> Global.getDatabaseService().listPCRStats0(currentTransaction);
         Consumer<List<PCRStatEntity>> consumer = pcrStatsPanel::update;
 
         AsyncQueryTask<List<PCRStatEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
@@ -173,7 +173,7 @@ public class PCRInfoView extends JPanel implements InfoView
             return;
 
         Supplier<List<PCRCheckEntity>> query = () -> Global.getDatabaseService()
-                                                           .getRecentPCRChecks(currentTransaction, target.getPid(), 1000);
+                                                           .getRecentPCRChecks0(currentTransaction, target.getPid(), 1000);
 
         Consumer<List<PCRCheckEntity>> consumer = this::updatePCRChart;
         AsyncQueryTask<List<PCRCheckEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),

@@ -18,8 +18,9 @@ package m2tk.assistant.ui.view;
 
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
-import m2tk.assistant.analyzer.domain.NVODEvent;
-import m2tk.assistant.analyzer.domain.NVODService;
+import m2tk.assistant.core.domain.SIEvent;
+import m2tk.assistant.core.domain.SIService;
+import m2tk.assistant.core.domain.SIServiceLocator;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.SIEventEntity;
 import m2tk.assistant.dbi.entity.SIServiceEntity;
@@ -35,6 +36,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,8 +131,8 @@ public class NVODInfoView extends JPanel implements InfoView
         if (currentTransactionId == -1)
             return;
 
-        Map<String, NVODService> serviceRegistry = new HashMap<>();
-        Map<String, NVODEvent> eventRegistry = new HashMap<>();
+        Map<Long, SIService> serviceRegistry = new HashMap<>();
+        Map<Long, SIEvent> eventRegistry = new HashMap<>();
 
         Supplier<Void> query = () -> {
             DatabaseService databaseService = Global.getDatabaseService();
@@ -138,15 +140,9 @@ public class NVODInfoView extends JPanel implements InfoView
             List<SIEventEntity> events = databaseService.listNVODEvents(currentTransactionId);
 
             services.forEach(service -> {
-                NVODService nvodService = service.isNvodReferenceService()
-                                          ? NVODService.ofReference(service.getTransportStreamId(),
-                                                                    service.getOriginalNetworkId(),
-                                                                    service.getServiceId())
-                                          : NVODService.ofTimeShifted(service.getTransportStreamId(),
-                                                                      service.getOriginalNetworkId(),
-                                                                      service.getServiceId(),
-                                                                      service.getReferenceServiceId());
-                serviceRegistry.put(nvodService.getId(), nvodService);
+                SIService nvodService = service.isNvodReferenceService() ? ofReference(service)
+                                                                         : ofTimeShifted(service);
+                serviceRegistry.put(nvodService.getRef(), nvodService);
             });
 
             // 先筛查所有的引用事件
@@ -154,50 +150,97 @@ public class NVODInfoView extends JPanel implements InfoView
             {
                 if (event.isNvodReferenceEvent())
                 {
-                    NVODEvent referenceEvent = NVODEvent.ofReference(event.getTransportStreamId(),
-                                                                     event.getOriginalNetworkId(),
-                                                                     event.getServiceId(),
-                                                                     event.getEventId(),
-                                                                     event.getEventName(),
-                                                                     event.getEventDescription(),
-                                                                     event.getLanguageCode(),
-                                                                     event.getStartTime(), event.getDuration());
-                    eventRegistry.put(referenceEvent.getId(), referenceEvent);
+                    SIEvent referenceEvent = ofReference(event);
+                    eventRegistry.put(referenceEvent.getRef(), referenceEvent);
                 }
             }
 
             // 再筛出所有的时移事件，并更新事件描述
             for (SIEventEntity event : events)
             {
-                if (event.isNvodTimeShiftedEvent())
-                {
-                    String refKey = NVODEvent.referenceId(event.getTransportStreamId(),
-                                                          event.getOriginalNetworkId(),
-                                                          event.getReferenceServiceId(),
-                                                          event.getReferenceEventId());
-                    NVODEvent referenceEvent = eventRegistry.get(refKey);
-                    NVODEvent shiftedEvent = NVODEvent.ofTimeShifted(event.getTransportStreamId(),
-                                                                     event.getOriginalNetworkId(),
-                                                                     event.getServiceId(),
-                                                                     event.getEventId(),
-                                                                     event.getReferenceServiceId(), event.getReferenceEventId(),
-                                                                     referenceEvent != null ? referenceEvent.getEventName() : String.format("事件%d", event.getReferenceEventId()),
-                                                                     referenceEvent != null ? referenceEvent.getEventDescription() : "",
-                                                                     referenceEvent != null ? referenceEvent.getLanguageCode() : "",
-                                                                     event.getStartTime(), event.getDuration(),
-                                                                     event.isPresentEvent());
-                    eventRegistry.put(shiftedEvent.getId(), shiftedEvent);
-                }
+//                if (event.isNvodTimeShiftedEvent())
+//                {
+//                    String refKey = NVODEvent.referenceId(event.getTransportStreamId(),
+//                                                          event.getOriginalNetworkId(),
+//                                                          event.getReferenceServiceId(),
+//                                                          event.getReferenceEventId());
+//                    SIEvent referenceEvent = eventRegistry.get(refKey);
+//                    SIEvent shiftedEvent = NVODEvent.ofTimeShifted(event.getTransportStreamId(),
+//                                                                   event.getOriginalNetworkId(),
+//                                                                   event.getServiceId(),
+//                                                                   event.getEventId(),
+//                                                                   event.getReferenceServiceId(), event.getReferenceEventId(),
+//                                                                   referenceEvent != null ? referenceEvent.getEventName() : String.format("事件%d", event.getReferenceEventId()),
+//                                                                   referenceEvent != null ? referenceEvent.getEventDescription() : "",
+//                                                                   referenceEvent != null ? referenceEvent.getLanguageCode() : "",
+//                                                                   event.getStartTime(), event.getDuration(),
+//                                                                   event.isPresentEvent());
+//                    eventRegistry.put(shiftedEvent.getRef(), shiftedEvent);
+//                }
             }
 
             return null;
         };
 
-        Consumer<Void> consumer = nothing -> serviceEventGuidePanel.update(serviceRegistry, eventRegistry);
+//        Consumer<Void> consumer = nothing -> serviceEventGuidePanel.update(serviceRegistry, eventRegistry);
+//
+//        AsyncQueryTask<Void> task = new AsyncQueryTask<>(frameView.getApplication(),
+//                                                         query,
+//                                                         consumer);
+//        task.execute();
+    }
 
-        AsyncQueryTask<Void> task = new AsyncQueryTask<>(frameView.getApplication(),
-                                                         query,
-                                                         consumer);
-        task.execute();
+    private SIService ofReference(SIServiceEntity entity)
+    {
+        SIService nvodService = new SIService();
+        nvodService.setOriginalNetworkId(entity.getOriginalNetworkId());
+        nvodService.setTransportStreamId(entity.getTransportStreamId());
+        nvodService.setServiceId(entity.getServiceId());
+        nvodService.setReference(true);
+        return nvodService;
+    }
+
+    private SIService ofTimeShifted(SIServiceEntity entity)
+    {
+        SIService nvodService = new SIService();
+        nvodService.setOriginalNetworkId(entity.getOriginalNetworkId());
+        nvodService.setTransportStreamId(entity.getTransportStreamId());
+        nvodService.setServiceId(entity.getServiceId());
+        nvodService.setReferenceServiceId(entity.getReferenceServiceId());
+        nvodService.setTimeShifted(true);
+        return nvodService;
+    }
+
+    private SIEvent ofReference(SIEventEntity entity)
+    {
+        SIEvent nvodEvent = new SIEvent();
+        nvodEvent.setOriginalNetworkId(entity.getOriginalNetworkId());
+        nvodEvent.setTransportStreamId(entity.getTransportStreamId());
+        nvodEvent.setServiceId(entity.getServiceId());
+        nvodEvent.setEventId(entity.getEventId());
+        nvodEvent.setTitle(entity.getEventName());
+        nvodEvent.setDescription(entity.getEventDescription());
+        nvodEvent.setStartTime(OffsetDateTime.parse(entity.getStartTime()));
+        nvodEvent.setDuration(Integer.parseInt(entity.getDuration()));
+        nvodEvent.setReferenceEventId(entity.getReferenceEventId());
+        nvodEvent.setReferenceServiceId(entity.getReferenceServiceId());
+        return nvodEvent;
+    }
+
+    private SIEvent ofTimeShifted(SIEventEntity entity)
+    {
+        SIEvent nvodEvent = new SIEvent();
+        nvodEvent.setOriginalNetworkId(entity.getOriginalNetworkId());
+        nvodEvent.setTransportStreamId(entity.getTransportStreamId());
+        nvodEvent.setServiceId(entity.getServiceId());
+        nvodEvent.setEventId(entity.getEventId());
+        nvodEvent.setTitle(entity.getEventName());
+        nvodEvent.setDescription(entity.getEventDescription());
+        nvodEvent.setStartTime(OffsetDateTime.parse(entity.getStartTime()));
+        nvodEvent.setDuration(Integer.parseInt(entity.getDuration()));
+        nvodEvent.setReferenceEventId(entity.getReferenceEventId());
+        nvodEvent.setReferenceServiceId(entity.getReferenceServiceId());
+        nvodEvent.setTimeShiftedEvent(true);
+        return nvodEvent;
     }
 }

@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.analyzer.domain.SIService;
+import m2tk.assistant.core.domain.SIService;
 import m2tk.assistant.ui.model.ServiceInfoTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ThreeStateRowSorterListener;

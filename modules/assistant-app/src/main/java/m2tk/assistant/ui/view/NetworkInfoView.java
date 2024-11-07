@@ -18,8 +18,8 @@ package m2tk.assistant.ui.view;
 
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
-import m2tk.assistant.analyzer.domain.SIMultiplex;
-import m2tk.assistant.analyzer.domain.SIService;
+import m2tk.assistant.core.domain.SIMultiplex;
+import m2tk.assistant.core.domain.SIService;
 import m2tk.assistant.dbi.DatabaseService;
 import m2tk.assistant.dbi.entity.*;
 import m2tk.assistant.ui.component.MultiplexInfoPanel;
@@ -178,12 +178,13 @@ public class NetworkInfoView extends JPanel implements InfoView
                     String key = String.format("%d.%d",
                                                multiplex.getTransportStreamId(),
                                                multiplex.getOriginalNetworkId());
-                    SIMultiplex mux = new SIMultiplex(multiplex.getTransportStreamId(),
-                                                      multiplex.getOriginalNetworkId(),
-                                                      network.getNetworkName(),
-                                                      multiplex.getDeliverySystemType(),
-                                                      multiplex.getTransmitFrequency(),
-                                                      srvCnts.getOrDefault(key, 0));
+                    SIMultiplex mux = new SIMultiplex();
+//                    multiplex.getTransportStreamId(),
+//                                                      multiplex.getOriginalNetworkId(),
+//                                                      network.getNetworkName(),
+//                                                      multiplex.getDeliverySystemType(),
+//                                                      multiplex.getTransmitFrequency(),
+//                                                      srvCnts.getOrDefault(key, 0));
                     if (network.isActualNetwork())
                         tsActualNW.add(mux);
                     else
@@ -226,12 +227,13 @@ public class NetworkInfoView extends JPanel implements InfoView
 
             for (SIServiceEntity service : services)
             {
-                SIService srv = new SIService(service.getTransportStreamId(),
-                                              service.getOriginalNetworkId(),
-                                              service.getServiceId(),
-                                              service.getServiceTypeName(),
-                                              service.getServiceName(),
-                                              service.getServiceProvider());
+                SIService srv = new SIService();
+//                service.getTransportStreamId(),
+//                                              service.getOriginalNetworkId(),
+//                                              service.getServiceId(),
+//                                              service.getServiceTypeName(),
+//                                              service.getServiceName(),
+//                                              service.getServiceProvider());
                 if (service.isActualTransportStream())
                     srvActualTS.add(srv);
                 else

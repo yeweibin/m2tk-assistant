@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.analyzer.domain.TR290Stats;
+import m2tk.assistant.core.domain.TR290Stats;
 import m2tk.assistant.ui.model.TR290StatsTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 
