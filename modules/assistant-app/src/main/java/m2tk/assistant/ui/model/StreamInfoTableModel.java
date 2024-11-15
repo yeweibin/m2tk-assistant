@@ -17,7 +17,7 @@
 package m2tk.assistant.ui.model;
 
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.dbi.entity.StreamEntity;
+import m2tk.assistant.core.domain.ElementaryStream;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -27,7 +27,7 @@ import java.util.List;
 
 public class StreamInfoTableModel extends AbstractTableModel
 {
-    private final transient List<StreamEntity> data;
+    private final transient List<ElementaryStream> data;
     private static final String[] COLUMNS = {
             "序号", "状态", "加扰", "PCR", "PID", "平均Kbps", "带宽占比", "类型描述", "包数量", "传输错误", "连续计数错误"
     };
@@ -40,7 +40,7 @@ public class StreamInfoTableModel extends AbstractTableModel
         data = new ArrayList<>();
     }
 
-    public void update(List<StreamEntity> streams)
+    public void update(List<ElementaryStream> streams)
     {
         if (isSame(data, streams))
             return;
@@ -50,7 +50,7 @@ public class StreamInfoTableModel extends AbstractTableModel
         fireTableDataChanged();
     }
 
-    public StreamEntity getRow(int row)
+    public ElementaryStream getRow(int row)
     {
         return data.get(row);
     }
@@ -82,7 +82,7 @@ public class StreamInfoTableModel extends AbstractTableModel
     @Override
     public Object getValueAt(int rowIndex, int columnIndex)
     {
-        StreamEntity stream = data.get(rowIndex);
+        ElementaryStream stream = data.get(rowIndex);
         return switch (columnIndex)
         {
             case 0 -> rowIndex + 1;
@@ -91,7 +91,7 @@ public class StreamInfoTableModel extends AbstractTableModel
                       ? SmallIcons.CHECK : SmallIcons.EXCLAMATION;
             case 2 -> stream.isScrambled() ? SmallIcons.LOCK : null;
             case 3 -> stream.getPcrCount() > 0 ? SmallIcons.CLOCK : null;
-            case 4 -> String.format("%d (0x%04X)", stream.getPid(), stream.getPid());
+            case 4 -> String.format("%d (0x%04X)", stream.getStreamPid(), stream.getStreamPid());
             case 5 -> String.format("%,.02f", stream.getBitrate() / 1000.0);
             case 6 -> String.format("%.02f%%", 100 * stream.getRatio());
             case 7 -> stream.getDescription();
@@ -102,20 +102,21 @@ public class StreamInfoTableModel extends AbstractTableModel
         };
     }
 
-    private boolean isSame(List<StreamEntity> current, List<StreamEntity> incoming)
+    private boolean isSame(List<ElementaryStream> current, List<ElementaryStream> incoming)
     {
         if (current.size() != incoming.size())
             return false;
 
-        incoming.sort(Comparator.comparingInt(StreamEntity::getPid));
+        incoming = new ArrayList<>(incoming);
+        incoming.sort(Comparator.comparingInt(ElementaryStream::getStreamPid));
 
         int n = current.size();
         for (int i = 0; i < n; i ++)
         {
-            StreamEntity s1 = current.get(i);
-            StreamEntity s2 = incoming.get(i);
+            ElementaryStream s1 = current.get(i);
+            ElementaryStream s2 = incoming.get(i);
 
-            if (s1.getPid() != s2.getPid() ||
+            if (s1.getStreamPid() != s2.getStreamPid() ||
                 s1.getPacketCount() != s2.getPacketCount() ||
                 s1.getTransportErrorCount() != s2.getTransportErrorCount() ||
                 s1.getContinuityErrorCount() != s2.getContinuityErrorCount())

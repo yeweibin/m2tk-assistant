@@ -23,12 +23,9 @@ import java.util.List;
 @Data
 public class MPEGProgram
 {
-    private long ref;
-    private long transactionId;
-
+    private int id;
     private String name;
-    private boolean scrambled;
-    private boolean playable;
+    private boolean freeAccess;
     private int programNumber;
     private int transportStreamId;
     private int bandwidth;

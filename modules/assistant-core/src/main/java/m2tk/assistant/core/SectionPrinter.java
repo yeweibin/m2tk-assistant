@@ -61,7 +61,7 @@ public class SectionPrinter implements Consumer<DemuxStatus>
 
     private void printSections(String name)
     {
-        Map<Integer, List<PrivateSection>> sectionGroups = database.getPrivateSectionGroups(transactionId, name);
+        Map<Integer, List<PrivateSection>> sectionGroups = database.getPrivateSectionGroups(name);
         List<Integer> streamPids = new ArrayList<>(sectionGroups.keySet());
         streamPids.sort(Integer::compare);
         for (Integer pid : streamPids)

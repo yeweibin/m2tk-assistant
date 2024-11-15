@@ -35,7 +35,7 @@ import m2tk.mpeg2.decoder.section.PMTSectionDecoder;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxPayload;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -176,7 +176,6 @@ public class TR290Tracer2 implements Tracer
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
         databaseService = database;
-        transactionId = source.getTransactionId();
 
         demux.registerRawChannel(this::processTransportPacket);
         demux.registerSectionChannel(0x0000, this::processSection);
@@ -190,9 +189,7 @@ public class TR290Tracer2 implements Tracer
     private void reportError(String errorType, String errorMessage, long position, int stream)
     {
         TR290Event event = new TR290Event();
-        event.setRef(-1);
-        event.setTransactionId(transactionId);
-        event.setTimestamp(LocalDateTime.now());
+        event.setTimestamp(OffsetDateTime.now());
         event.setType(errorType);
         event.setDescription(errorMessage);
         event.setPosition(position);

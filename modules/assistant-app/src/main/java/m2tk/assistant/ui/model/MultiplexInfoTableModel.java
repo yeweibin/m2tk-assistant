@@ -16,6 +16,7 @@
 
 package m2tk.assistant.ui.model;
 
+import cn.hutool.core.collection.CollUtil;
 import m2tk.assistant.core.domain.SIMultiplex;
 
 import javax.swing.table.AbstractTableModel;
@@ -85,7 +86,7 @@ public class MultiplexInfoTableModel extends AbstractTableModel
             case 3 -> multiplex.getTransportStreamId();
             case 4 -> multiplex.getDeliverySystemType();
             case 5 -> multiplex.getTransmitFrequency();
-            case 6 -> multiplex.getServiceCount();
+            case 6 -> CollUtil.size(multiplex.getServices());
             default -> null;
         };
     }

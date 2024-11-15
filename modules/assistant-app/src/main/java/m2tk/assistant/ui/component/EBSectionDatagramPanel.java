@@ -17,7 +17,7 @@
 package m2tk.assistant.ui.component;
 
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.dbi.entity.SectionEntity;
+import m2tk.assistant.kernel.entity.PrivateSectionEntity;
 import m2tk.assistant.ui.builder.section.*;
 import m2tk.encoding.Encoding;
 
@@ -77,7 +77,7 @@ public class EBSectionDatagramPanel extends JPanel
         model.reload();
     }
 
-    public void update(Map<String, List<SectionEntity>> sectionGroups)
+    public void update(Map<String, List<PrivateSectionEntity>> sectionGroups)
     {
         addEBIndexSectionNodes(sectionGroups.getOrDefault("EBIndex", Collections.emptyList()));
         addEBContentSectionNodes(sectionGroups.getOrDefault("EBContent", Collections.emptyList()));
@@ -95,46 +95,46 @@ public class EBSectionDatagramPanel extends JPanel
         model.reload();
     }
 
-    private void addEBIndexSectionNodes(List<SectionEntity> sections)
+    private void addEBIndexSectionNodes(List<PrivateSectionEntity> sections)
     {
         EBIndexSectionNodeBuilder builder = new EBIndexSectionNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+        sections.sort(Comparator.comparing(PrivateSectionEntity::getPosition));
 
         groupEBIndex.removeAllChildren();
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
             groupEBIndex.add(builder.build(Encoding.wrap(section.getEncoding())));
         groupEBIndex.setUserObject(String.format("EBIndex（%d）", groupEBIndex.getChildCount()));
     }
 
-    private void addEBContentSectionNodes(List<SectionEntity> sections)
+    private void addEBContentSectionNodes(List<PrivateSectionEntity> sections)
     {
         EBContentSectionNodeBuilder builder = new EBContentSectionNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+        sections.sort(Comparator.comparing(PrivateSectionEntity::getPosition));
 
         groupEBContent.removeAllChildren();
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
             groupEBContent.add(builder.build(Encoding.wrap(section.getEncoding())));
         groupEBContent.setUserObject(String.format("EBContent（%d）", groupEBContent.getChildCount()));
     }
 
-    private void addEBCertAuthSectionNodes(List<SectionEntity> sections)
+    private void addEBCertAuthSectionNodes(List<PrivateSectionEntity> sections)
     {
         EBCertAuthSectionNodeBuilder builder = new EBCertAuthSectionNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+        sections.sort(Comparator.comparing(PrivateSectionEntity::getPosition));
 
         groupEBCertAuth.removeAllChildren();
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
             groupEBCertAuth.add(builder.build(Encoding.wrap(section.getEncoding())));
         groupEBCertAuth.setUserObject(String.format("EBCertAuth（%d）", groupEBCertAuth.getChildCount()));
     }
 
-    private void addEBConfigureSectionNodes(List<SectionEntity> sections)
+    private void addEBConfigureSectionNodes(List<PrivateSectionEntity> sections)
     {
         EBConfigureSectionNodeBuilder builder = new EBConfigureSectionNodeBuilder();
-        sections.sort(Comparator.comparing(SectionEntity::getPosition));
+        sections.sort(Comparator.comparing(PrivateSectionEntity::getPosition));
 
         groupEBConfigure.removeAllChildren();
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
             groupEBConfigure.add(builder.build(Encoding.wrap(section.getEncoding())));
         groupEBConfigure.setUserObject(String.format("EBConfigure（%d）", groupEBConfigure.getChildCount()));
     }

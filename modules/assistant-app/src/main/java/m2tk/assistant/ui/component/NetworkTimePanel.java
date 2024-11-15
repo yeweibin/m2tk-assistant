@@ -16,12 +16,14 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.dbi.entity.SIDateTimeEntity;
+import m2tk.assistant.kernel.entity.SIDateTimeEntity;
 import m2tk.dvb.DVB;
 
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public class NetworkTimePanel extends JPanel
@@ -43,7 +45,10 @@ public class NetworkTimePanel extends JPanel
         if (entity == null)
             return;
 
-        LocalDateTime time = DVB.decodeTimepointIntoLocalDateTime(entity.getTimepoint());
+        LocalDateTime time = entity.getTimepoint()
+                                   .atOffset(ZoneOffset.UTC)
+                                   .atZoneSameInstant(ZoneId.systemDefault())
+                                   .toLocalDateTime();
         text.setText(time.format(formatter));
     }
 

@@ -21,17 +21,16 @@ import lombok.Data;
 @Data
 public class ElementaryStream
 {
-    private long ref;
-    private long transactionId;
-
     private int streamPid;
     private int streamType;
     private int programNumber;
-    private long pktCount;
-    private long pcrCount;
-    private long cceCount;
     private int bitrate;
     private double ratio;
+    private long lastPct;
+    private long packetCount;
+    private long pcrCount;
+    private long transportErrorCount;
+    private long continuityErrorCount;
     private boolean scrambled;
     private String category;
     private String description;

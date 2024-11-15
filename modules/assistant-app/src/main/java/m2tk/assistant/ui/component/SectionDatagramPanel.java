@@ -17,7 +17,7 @@
 package m2tk.assistant.ui.component;
 
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.dbi.entity.SectionEntity;
+import m2tk.assistant.kernel.entity.PrivateSectionEntity;
 import m2tk.assistant.template.PlainTreeNodeSyntaxPresenter;
 import m2tk.assistant.template.SectionDecoder;
 import m2tk.assistant.template.SyntaxField;
@@ -129,7 +129,7 @@ public class SectionDatagramPanel extends JPanel
         model.reload();
     }
 
-    public void update(Map<String, List<SectionEntity>> sectionGroups)
+    public void update(Map<String, List<PrivateSectionEntity>> sectionGroups)
     {
         addPATSectionNodes(sectionGroups.getOrDefault("PAT", Collections.emptyList()));
         addCATSectionNodes(sectionGroups.getOrDefault("CAT", Collections.emptyList()));
@@ -169,11 +169,11 @@ public class SectionDatagramPanel extends JPanel
         model.reload();
     }
 
-    private void addPATSectionNodes(List<SectionEntity> sections)
+    private void addPATSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupPAT.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -192,11 +192,11 @@ public class SectionDatagramPanel extends JPanel
         groupPAT.setUserObject(String.format("PAT (%d)", groupPAT.getChildCount()));
     }
 
-    private void addCATSectionNodes(List<SectionEntity> sections)
+    private void addCATSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupCAT.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -214,11 +214,11 @@ public class SectionDatagramPanel extends JPanel
         groupCAT.setUserObject(String.format("CAT (%d)", groupCAT.getChildCount()));
     }
 
-    private void addPMTSectionNodes(List<SectionEntity> sections)
+    private void addPMTSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupPMT.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -237,11 +237,11 @@ public class SectionDatagramPanel extends JPanel
         groupPMT.setUserObject(String.format("PMT (%d)", groupPMT.getChildCount()));
     }
 
-    private void addBATSectionNodes(List<SectionEntity> sections)
+    private void addBATSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupBAT.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -260,11 +260,11 @@ public class SectionDatagramPanel extends JPanel
         groupBAT.setUserObject(String.format("BAT (%d)", groupBAT.getChildCount()));
     }
 
-    private void addNITActualSectionNodes(List<SectionEntity> sections)
+    private void addNITActualSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupNITActual.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -283,11 +283,11 @@ public class SectionDatagramPanel extends JPanel
         groupNITActual.setUserObject(String.format("NIT_Actual (%d)", groupNITActual.getChildCount()));
     }
 
-    private void addNITOtherSectionNodes(List<SectionEntity> sections)
+    private void addNITOtherSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupNITOther.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -306,11 +306,11 @@ public class SectionDatagramPanel extends JPanel
         groupNITOther.setUserObject(String.format("NIT_Other (%d)", groupNITOther.getChildCount()));
     }
 
-    private void addSDTActualSectionNodes(List<SectionEntity> sections)
+    private void addSDTActualSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupSDTActual.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -330,11 +330,11 @@ public class SectionDatagramPanel extends JPanel
         groupSDTActual.setUserObject(String.format("SDT_Actual (%d)", groupSDTActual.getChildCount()));
     }
 
-    private void addSDTOtherSectionNodes(List<SectionEntity> sections)
+    private void addSDTOtherSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupSDTOther.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -354,11 +354,11 @@ public class SectionDatagramPanel extends JPanel
         groupSDTOther.setUserObject(String.format("SDT_Other (%d)", groupSDTOther.getChildCount()));
     }
 
-    private void addEITPFActualSectionNodes(List<SectionEntity> sections)
+    private void addEITPFActualSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupEITPFActual.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -377,11 +377,11 @@ public class SectionDatagramPanel extends JPanel
         groupEITPFActual.setUserObject(String.format("EIT_PF_Actual (%d)", groupEITPFActual.getChildCount()));
     }
 
-    private void addEITPFOtherSectionNodes(List<SectionEntity> sections)
+    private void addEITPFOtherSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupEITPFOther.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -400,11 +400,11 @@ public class SectionDatagramPanel extends JPanel
         groupEITPFOther.setUserObject(String.format("EIT_PF_Other (%d)", groupEITPFOther.getChildCount()));
     }
 
-    private void addEITScheduleActualSectionNodes(List<SectionEntity> sections)
+    private void addEITScheduleActualSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupEITScheduleActual.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -423,11 +423,11 @@ public class SectionDatagramPanel extends JPanel
         groupEITScheduleActual.setUserObject(String.format("EIT_Schedule_Actual (%d)", groupEITScheduleActual.getChildCount()));
     }
 
-    private void addEITScheduleOtherSectionNodes(List<SectionEntity> sections)
+    private void addEITScheduleOtherSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupEITScheduleOther.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -446,11 +446,11 @@ public class SectionDatagramPanel extends JPanel
         groupEITScheduleOther.setUserObject(String.format("EIT_Schedule_Other (%d)", groupEITScheduleOther.getChildCount()));
     }
 
-    private void addTDTSectionNodes(List<SectionEntity> sections)
+    private void addTDTSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupTDT.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -466,11 +466,11 @@ public class SectionDatagramPanel extends JPanel
         groupTDT.setUserObject(String.format("TDT (%d)", groupTDT.getChildCount()));
     }
 
-    private void addTOTSectionNodes(List<SectionEntity> sections)
+    private void addTOTSectionNodes(List<PrivateSectionEntity> sections)
     {
         groupTOT.removeAllChildren();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
@@ -486,12 +486,12 @@ public class SectionDatagramPanel extends JPanel
         groupTOT.setUserObject(String.format("TOT (%d)", groupTOT.getChildCount()));
     }
 
-    private void addUserPrivateSectionNodes(List<SectionEntity> sections)
+    private void addUserPrivateSectionNodes(List<PrivateSectionEntity> sections)
     {
         Map<String, DefaultMutableTreeNode> namedGroups = new HashMap<>();
         DefaultMutableTreeNode defaultGroup = new DefaultMutableTreeNode();
 
-        for (SectionEntity section : sections)
+        for (PrivateSectionEntity section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
             SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());

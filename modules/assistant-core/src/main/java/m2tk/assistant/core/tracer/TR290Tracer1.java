@@ -29,11 +29,11 @@ import m2tk.mpeg2.decoder.element.AdaptationFieldDecoder;
 import m2tk.mpeg2.decoder.element.ProgramClockReferenceDecoder;
 import m2tk.multiplex.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 
 /**
- * 290错误检测有很多项，有些项目相对独立，有些项目比较矛盾，不宜放在同一个处理逻辑里。
+ * TR290错误检测有很多项，有些项目相对独立，有些项目比较矛盾，不宜放在同一个处理逻辑里。
  * 因此拆分到不同的检测流程里。
  * TR290Trace1只负责与传输包有关的错误。
  */
@@ -53,7 +53,6 @@ public class TR290Tracer1 implements Tracer
     private int pktcnt;
     private long avgBitrate;
     private M2TKDatabase databaseService;
-    private long transactionId;
 
     private static final byte[] DUPLICATE_PACKET_MASK = new byte[MPEG2.TS_PACKET_SIZE];
 
@@ -95,7 +94,6 @@ public class TR290Tracer1 implements Tracer
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
         databaseService = database;
-        transactionId = source.getTransactionId();
 
         demux.registerEventListener(this::processDemuxEvent);
         demux.registerRawChannel(this::processTransportPacket);
@@ -104,9 +102,7 @@ public class TR290Tracer1 implements Tracer
     private void reportError(String errorType, String errorMessage, long position, int stream)
     {
         TR290Event event = new TR290Event();
-        event.setRef(-1);
-        event.setTransactionId(transactionId);
-        event.setTimestamp(LocalDateTime.now());
+        event.setTimestamp(OffsetDateTime.now());
         event.setType(errorType);
         event.setDescription(errorMessage);
         event.setPosition(position);
@@ -295,8 +291,6 @@ public class TR290Tracer1 implements Tracer
             return;
 
         PCR pcr = new PCR();
-        pcr.setRef(-1);
-        pcr.setTransactionId(transactionId);
         pcr.setPid(pid);
         pcr.setPosition(currPct);
         pcr.setValue(currPcr);
@@ -344,8 +338,6 @@ public class TR290Tracer1 implements Tracer
         }
 
         PCRCheck check = new PCRCheck();
-        check.setRef(-1);
-        check.setTransactionId(transactionId);
         check.setPid(pid);
         check.setPrevValue(PCRs[pid]);
         check.setPrevPosition(PCRPcts[pid]);
@@ -394,13 +386,13 @@ public class TR290Tracer1 implements Tracer
     {
         if (immediately || pktcnt > 2000)
         {
-            for (int i = 0; i < 8191; i++)
+            for (int pid = 0; pid < 8191; pid++)
             {
-                if (TECnts[i] > 0 || CECnts[i] > 0)
+                if (TECnts[pid] > 0 || CECnts[pid] > 0)
                 {
-                    databaseService.accumulateElementaryStreamErrors(transactionId, i, TECnts[i], CECnts[i]);
-                    TECnts[i] = 0;
-                    CECnts[i] = 0;
+                    databaseService.accumulateElementaryStreamErrors(pid, TECnts[pid], CECnts[pid]);
+                    TECnts[pid] = 0;
+                    CECnts[pid] = 0;
                 }
             }
             pktcnt = 0;

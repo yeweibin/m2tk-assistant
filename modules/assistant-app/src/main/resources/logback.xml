@@ -32,7 +32,7 @@
     <logger name="m2tk.assistant.ui.AssistantApp" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
-    <logger name="m2tk.assistant.MPEGTSPlayer" level="INFO">
+    <logger name="m2tk.assistant.kernel.service.MPEGTSPlayer" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
     <logger name="m2tk.assistant.core.StreamAnalyzer" level="INFO">

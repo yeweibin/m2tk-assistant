@@ -88,7 +88,7 @@ public class NVODEventTableModel extends AbstractTableModel
         SIEvent event = data.get(rowIndex);
         return switch (columnIndex)
         {
-            case 0 -> event.isPresent() ? "当前" : "后续";
+            case 0 -> event.isPresentEvent() ? "当前" : "后续";
             case 1 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
                       : event.getEventId();

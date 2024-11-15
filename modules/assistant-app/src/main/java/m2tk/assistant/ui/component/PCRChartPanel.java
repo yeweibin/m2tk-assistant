@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.dbi.entity.PCRCheckEntity;
+import m2tk.assistant.kernel.entity.PCRCheckEntity;
 import m2tk.mpeg2.ProgramClockReference;
 import net.miginfocom.swing.MigLayout;
 import org.jfree.chart.ChartPanel;
@@ -268,18 +268,18 @@ public class PCRChartPanel extends JPanel
             int[] accuracyGroups = new int[11];
             int[] intervalGroups = new int[11];
 
-            for (PCRCheckEntity check : checks)
-            {
-                series1.add(check.getCurrentPosition(), ProgramClockReference.toTimepoint(check.getCurrentValue()));
-
-                // bps -> Mbps
-                series2.add(check.getCurrentPosition(), check.getBitrate() / 1000000.0d);
-
-                int groupA = getAccuracyGroup(check.getAccuracyNanos());
-                int groupI = getIntervalGroup(check.getIntervalNanos());
-                accuracyGroups[groupA] += 1;
-                intervalGroups[groupI] += 1;
-            }
+//            for (PCRCheckEntity check : checks)
+//            {
+//                series1.add(check.getCurrentPosition(), ProgramClockReference.toTimepoint(check.getCurrentValue()));
+//
+//                // bps -> Mbps
+//                series2.add(check.getCurrentPosition(), check.getBitrate() / 1000000.0d);
+//
+//                int groupA = getAccuracyGroup(check.getAccuracyNanos());
+//                int groupI = getIntervalGroup(check.getIntervalNanos());
+//                accuracyGroups[groupA] += 1;
+//                intervalGroups[groupI] += 1;
+//            }
 
             for (int i = 0; i < 11; i++)
             {
@@ -292,7 +292,7 @@ public class PCRChartPanel extends JPanel
             for (PCRCheckEntity check : recent500Checks)
             {
                 series5.add(check.getCurrentPosition(), check.getAccuracyNanos());
-                series6.add(check.getCurrentPosition(), check.getIntervalNanos() / 1000000.0d);
+                series6.add((double) check.getCurrentPosition(), check.getIntervalNanos() / 1000000.0d);
             }
 
             pcrValues.addSeries(series1);

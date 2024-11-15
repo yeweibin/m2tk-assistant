@@ -17,8 +17,9 @@
 package m2tk.assistant.ui.component;
 
 import m2tk.assistant.SmallIcons;
+import m2tk.assistant.core.domain.CASystemStream;
 import m2tk.assistant.core.presets.CASystems;
-import m2tk.assistant.dbi.entity.CAStreamEntity;
+import m2tk.assistant.kernel.entity.CAStreamEntity;
 import m2tk.util.Bytes;
 
 import javax.swing.*;
@@ -39,7 +40,7 @@ public class CASystemInfoPanel extends JPanel
     private DefaultTreeModel model;
     private DefaultMutableTreeNode root;
     private JTree tree;
-    private final List<CAStreamEntity> currentStreams;
+    private final List<CASystemStream> currentStreams;
 
     public CASystemInfoPanel()
     {
@@ -66,17 +67,16 @@ public class CASystemInfoPanel extends JPanel
     {
         root.removeAllChildren();
         model.reload();
-        currentStreams.clear();
     }
 
-    public void updateStreamList(List<CAStreamEntity> streams)
+    public void updateStreamList(List<CASystemStream> streams)
     {
         if (streams == null || streams.isEmpty() || isSame(currentStreams, streams))
             return;
 
         root.removeAllChildren();
-        Map<Integer, List<CAStreamEntity>> groups = streams.stream()
-                                                           .collect(groupingBy(CAStreamEntity::getSystemId));
+        Map<Integer, List<CASystemStream>> groups = streams.stream()
+                                                           .collect(groupingBy(CASystemStream::getSystemId));
         List<Integer> systemIds = new ArrayList<>(groups.keySet());
         systemIds.sort(Comparator.naturalOrder());
 
@@ -91,18 +91,19 @@ public class CASystemInfoPanel extends JPanel
         currentStreams.addAll(streams);
     }
 
-    private boolean isSame(List<CAStreamEntity> current, List<CAStreamEntity> incoming)
+    private boolean isSame(List<CASystemStream> current, List<CASystemStream> incoming)
     {
         if (current.size() != incoming.size())
             return false;
 
-        incoming.sort(Comparator.comparingInt(CAStreamEntity::getStreamPid));
+        incoming = new ArrayList<>(incoming);
+        incoming.sort(Comparator.comparingInt(CASystemStream::getStreamPid));
 
         int n = current.size();
         for (int i = 0; i < n; i++)
         {
-            CAStreamEntity s1 = current.get(i);
-            CAStreamEntity s2 = incoming.get(i);
+            CASystemStream s1 = current.get(i);
+            CASystemStream s2 = incoming.get(i);
 
             if (s1.getSystemId() != s2.getSystemId() ||
                 s1.getStreamPid() != s2.getStreamPid() ||
@@ -113,7 +114,7 @@ public class CASystemInfoPanel extends JPanel
         return true;
     }
 
-    private DefaultMutableTreeNode createCASystemNode(int systemId, List<CAStreamEntity> streams)
+    private DefaultMutableTreeNode createCASystemNode(int systemId, List<CASystemStream> streams)
     {
         String text = String.format("[CAS]系统号：%04X", systemId);
         String vendor = CASystems.vendor(systemId);
@@ -130,7 +131,7 @@ public class CASystemInfoPanel extends JPanel
                 return Integer.compare(s1.getStreamType(), s2.getStreamType());
         });
 
-        for (CAStreamEntity stream : streams)
+        for (CASystemStream stream : streams)
         {
             String type = stream.getStreamType() == CAStreamEntity.TYPE_ECM ? "ECM" : "EMM";
             text = String.format("[%s]%s：0x%04X", type, type, stream.getStreamPid());

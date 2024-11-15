@@ -155,7 +155,7 @@ public class ProgramInfoPanel extends JPanel
                 ElementaryStream es1 = p1.getElementaryStreams().get(j);
                 ElementaryStream es2 = p2.getElementaryStreams().get(j);
                 if (es1.getStreamPid() != es2.getStreamPid() ||
-                    es1.getPktCount() != es2.getPktCount())
+                    es1.getPacketCount() != es2.getPacketCount())
                     return false;
             }
         }
@@ -172,10 +172,10 @@ public class ProgramInfoPanel extends JPanel
             text += "）";
         else
             text += " 节目名称：" + program.getName() + "）";
-        if (program.isScrambled())
-            text = "[P*]" + text;
-        else
+        if (program.isFreeAccess())
             text = "[P]" + text;
+        else
+            text = "[P*]" + text;
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode();
         node.setUserObject(text);
@@ -204,7 +204,7 @@ public class ProgramInfoPanel extends JPanel
                                  es.getDescription());
             if (es.isScrambled())
                 text += "，加密";
-            if (es.getPktCount() == 0)
+            if (es.getPacketCount() == 0)
                 text += "（未出现）";
 
             DefaultMutableTreeNode nodeES = new DefaultMutableTreeNode();

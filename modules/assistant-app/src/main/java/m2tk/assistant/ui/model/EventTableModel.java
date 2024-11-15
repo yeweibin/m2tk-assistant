@@ -38,15 +38,15 @@ public class EventTableModel extends AbstractTableModel
     public void update(List<SIEvent> events)
     {
         SIEvent pEvent = events.stream()
-                               .filter(e -> !e.isSchedule() && e.isPresent())
+                               .filter(e -> !e.isScheduleEvent() && e.isPresentEvent())
                                .findFirst()
                                .orElse(EMPTY_PRESENT_EVENT);
         SIEvent fEvent = events.stream()
-                               .filter(e -> !e.isSchedule() && !e.isPresent())
+                               .filter(e -> !e.isScheduleEvent() && !e.isPresentEvent())
                                .findFirst().orElse(EMPTY_FOLLOWING_EVENT);
 
         List<SIEvent> copy = new ArrayList<>(events);
-        copy.removeIf(e -> !e.isSchedule());
+        copy.removeIf(e -> !e.isScheduleEvent());
 
         data.clear();
         data.add(pEvent);
@@ -85,9 +85,9 @@ public class EventTableModel extends AbstractTableModel
         SIEvent event = data.get(rowIndex);
         return switch (columnIndex)
         {
-            case 0 -> event.isSchedule()
+            case 0 -> event.isScheduleEvent()
                       ? ""
-                      : event.isPresent() ? "当前" : "后续";
+                      : event.isPresentEvent() ? "当前" : "后续";
             case 1 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
                       : event.getEventId();

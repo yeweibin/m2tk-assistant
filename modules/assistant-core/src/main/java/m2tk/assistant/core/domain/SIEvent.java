@@ -23,8 +23,8 @@ import java.time.OffsetDateTime;
 @Data
 public class SIEvent
 {
-    private long ref;
-    private long transactionId;
+    private int id;
+    private int version;
 
     private String title;
     private String description;
@@ -32,9 +32,9 @@ public class SIEvent
     private OffsetDateTime startTime;
     private int duration;
     private int runningStatus;
-    private boolean freeAccessible;
-    private boolean present;
-    private boolean schedule;
+    private boolean freeAccess;
+    private boolean presentEvent;
+    private boolean scheduleEvent;
 
     private int transportStreamId;
     private int originalNetworkId;
@@ -43,5 +43,5 @@ public class SIEvent
 
     private int referenceServiceId;
     private int referenceEventId;
-    private boolean timeShiftedEvent;
+    private boolean nvodTimeShiftedEvent;
 }

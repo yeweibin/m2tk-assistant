@@ -32,35 +32,40 @@
 package m2tk.assistant.ui.view;
 
 import cn.hutool.core.util.StrUtil;
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.ui.AssistantApp;
 import m2tk.assistant.Global;
-import m2tk.assistant.core.domain.ElementaryStream;
-import m2tk.assistant.core.domain.MPEGProgram;
+import m2tk.assistant.core.M2TKDatabase;
+import m2tk.assistant.core.domain.*;
+import m2tk.assistant.core.event.SourceAttachedEvent;
+import m2tk.assistant.core.event.SourceDetachedEvent;
 import m2tk.assistant.core.presets.StreamTypes;
-import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.*;
+import m2tk.assistant.ui.AssistantApp;
 import m2tk.assistant.ui.component.CASystemInfoPanel;
 import m2tk.assistant.ui.component.ProgramInfoPanel;
 import m2tk.assistant.ui.component.SourceInfoPanel;
 import m2tk.assistant.ui.component.StreamInfoPanel;
-import m2tk.assistant.ui.event.SourceAttachedEvent;
-import m2tk.assistant.ui.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
+import m2tk.io.ProtocolManager;
+import m2tk.io.RxChannel;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.FrameView;
 
-import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -82,9 +87,11 @@ public class StreamInfoView extends JPanel implements InfoView
     private Timer timer2;
     private Timer timer3;
     private Timer timer4;
-    private volatile long transactionId;
-    private transient StreamEntity selectedStream;
+    private volatile boolean stopped;
+    private transient ElementaryStream selectedStream;
     private transient MPEGProgram selectedProgram;
+    private EventBus bus;
+    private M2TKDatabase database;
 
     public StreamInfoView(FrameView view)
     {
@@ -95,39 +102,19 @@ public class StreamInfoView extends JPanel implements InfoView
     private void initUI()
     {
         timer1 = new Timer(500, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer1.stop();
-            else
+            if (isVisible() && !stopped)
                 querySourceInfo();
         });
         timer2 = new Timer(500, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer2.stop();
-            else
+            if (isVisible() && !stopped)
                 queryProgramInfo();
         });
         timer3 = new Timer(500, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer3.stop();
-            else
+            if (isVisible() && !stopped)
                 queryStreamInfo();
         });
         timer4 = new Timer(500, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer4.stop();
-            else
+            if (isVisible() && !stopped)
                 queryCASystemInfo();
         });
 
@@ -173,14 +160,13 @@ public class StreamInfoView extends JPanel implements InfoView
             }
         });
 
-        Global.registerSubscriber(this);
-        transactionId = -1;
     }
 
     @Subscribe
     public void onSourceAttachedEvent(SourceAttachedEvent event)
     {
-        transactionId = event.getSource().getTransactionId();
+        log.info("source attached.");
+        stopped = false;
         timer1.start();
         timer2.start();
         timer3.start();
@@ -191,7 +177,8 @@ public class StreamInfoView extends JPanel implements InfoView
     @Subscribe
     public void onSourceDetachedEvent(SourceDetachedEvent event)
     {
-        transactionId = -1;
+        log.info("source detached.");
+        stopped = true;
     }
 
     @Override
@@ -203,23 +190,30 @@ public class StreamInfoView extends JPanel implements InfoView
         queryCASystemInfo();
     }
 
+    @Override
+    public void updateDataSource(EventBus bus, M2TKDatabase database)
+    {
+        this.bus = bus;
+        this.database = database;
+    }
+
     private void playStream()
     {
         int videoPid = 0x1FFF;
         int audioPid = 0x1FFF;
         if (selectedStream.isScrambled())
         {
-            String text = String.format("流%d 被加扰，无法播放", selectedStream.getPid());
+            String text = String.format("流%d 被加扰，无法播放", selectedStream.getStreamPid());
             JOptionPane.showMessageDialog(frameView.getFrame(), text);
             log.info(text);
             return;
         }
 
         if (StreamTypes.CATEGORY_VIDEO.equals(selectedStream.getCategory()))
-            videoPid = selectedStream.getPid();
+            videoPid = selectedStream.getStreamPid();
 
         if (StreamTypes.CATEGORY_AUDIO.equals(selectedStream.getCategory()))
-            audioPid = selectedStream.getPid();
+            audioPid = selectedStream.getStreamPid();
 
         if (videoPid == 0x1FFF && audioPid == 0x1FFF)
         {
@@ -229,9 +223,9 @@ public class StreamInfoView extends JPanel implements InfoView
             return;
         }
 
-        log.info("播放'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
+        log.info("播放'流{}'，类型：{}", selectedStream.getStreamPid(), selectedStream.getDescription());
 
-//        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
+        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
         if (videoPid != 0x1FFF)
             AssistantApp.getInstance().playVideo(Global.getLatestSourceUrl(), videoPid);
         else
@@ -260,9 +254,9 @@ public class StreamInfoView extends JPanel implements InfoView
 
         if (videoPid == 0x1FFF && audioPid == 0x1FFF)
         {
-            String text = !selectedProgram.isScrambled()
-                          ? programName + "完全加扰，无法播放"
-                          : programName + "无可播放内容";
+            String text = selectedProgram.isFreeAccess()
+                          ? programName + "无可播放内容"
+                          : programName + "完全加扰，无法播放";
             JOptionPane.showMessageDialog(frameView.getFrame(), text);
             log.info(text);
             return;
@@ -277,7 +271,7 @@ public class StreamInfoView extends JPanel implements InfoView
     {
         if (selectedStream.isScrambled())
         {
-            String text = String.format("流%d 被加扰，无法解码", selectedStream.getPid());
+            String text = String.format("流%d 被加扰，无法解码", selectedStream.getStreamPid());
             JOptionPane.showMessageDialog(frameView.getFrame(), text);
             log.info(text);
             return;
@@ -286,7 +280,7 @@ public class StreamInfoView extends JPanel implements InfoView
         int pid = 0x1FFF;
         if (StreamTypes.CATEGORY_DATA.equals(selectedStream.getCategory()) ||
             StreamTypes.CATEGORY_USER_PRIVATE.equals(selectedStream.getCategory()))
-            pid = selectedStream.getPid();
+            pid = selectedStream.getStreamPid();
 
         if (pid == 0x1FFF)
         {
@@ -296,21 +290,17 @@ public class StreamInfoView extends JPanel implements InfoView
             return;
         }
 
-        log.info("添加私有段过滤器：'流{}'，类型：{}", selectedStream.getPid(), selectedStream.getDescription());
+        log.info("添加私有段过滤器：'流{}'，类型：{}", selectedStream.getStreamPid(), selectedStream.getDescription());
 
         Global.addUserPrivateSectionStreams(List.of(pid));
     }
 
     private void querySourceInfo()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
+        Supplier<StreamSource> query = () -> database.getCurrentStreamSource();
+        Consumer<StreamSource> consumer = sourceInfoPanel::updateSourceInfo;
 
-        Supplier<SourceEntity> query = () -> Global.getDatabaseService().getSource(currentTransaction);
-        Consumer<SourceEntity> consumer = sourceInfoPanel::updateSourceInfo;
-
-        AsyncQueryTask<SourceEntity> task = new AsyncQueryTask<>(frameView.getApplication(),
+        AsyncQueryTask<StreamSource> task = new AsyncQueryTask<>(frameView.getApplication(),
                                                                  query,
                                                                  consumer);
         task.execute();
@@ -318,39 +308,28 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryProgramInfo()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
-
         Supplier<List<MPEGProgram>> query = () ->
         {
-            DatabaseService databaseService = Global.getDatabaseService();
-            Map<Integer, StreamEntity> streamRegistry = databaseService.getStreamRegistry(currentTransaction);
+            Map<Integer, ElementaryStream> streamRegistry = database.listElementaryStreams(true)
+                                                                           .stream()
+                                                                           .collect(Collectors.toMap(ElementaryStream::getStreamPid,
+                                                                                                     Function.identity()));
 
-            List<MPEGProgram> programs = new ArrayList<>();
-            Map<String, SIServiceEntity> serviceMap = databaseService.listServices(currentTransaction)
-                                                                     .stream()
-                                                                     .collect(toMap(service -> String.format("%d.%d",
-                                                                                                             service.getTransportStreamId(),
-                                                                                                             service.getServiceId()),
-                                                                                    service -> service));
-            Map<ProgramEntity, List<ProgramStreamMappingEntity>> mappings = databaseService.getProgramMappings(currentTransaction);
-            Map<Integer, List<CAStreamEntity>> ecmGroups = databaseService.listECMGroups(currentTransaction);
-            for (Map.Entry<ProgramEntity, List<ProgramStreamMappingEntity>> mapping : mappings.entrySet())
+            List<MPEGProgram> programs = database.listMPEGPrograms();
+            Map<String, SIService> serviceMap = database.listSIServices()
+                                                               .stream()
+                                                               .collect(toMap(service -> String.format("%d.%d",
+                                                                                                       service.getTransportStreamId(),
+                                                                                                       service.getServiceId()),
+                                                                              service -> service));
+            for (MPEGProgram program : programs)
             {
-                ProgramEntity program = mapping.getKey();
-                List<ProgramStreamMappingEntity> mappedStreams = mapping.getValue();
                 String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
                 String programName = Optional.ofNullable(serviceMap.get(key))
-                                             .map(SIServiceEntity::getServiceName)
+                                             .map(SIService::getName)
                                              .orElse(null);
 
-//                programs.add(new MPEGProgram(programName,
-//                                             program,
-//                                             ecmGroups.getOrDefault(program.getProgramNumber(),
-//                                                                    Collections.emptyList()),
-//                                             mappedStreams,
-//                                             streamRegistry));
+                program.setName(programName);
             }
 
             programs.sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
@@ -367,29 +346,21 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryStreamInfo()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
+        Supplier<List<ElementaryStream>> query = () -> database.listElementaryStreams(true);
+        Consumer<List<ElementaryStream>> consumer = streamInfoPanel::updateStreamList;
 
-        Supplier<List<StreamEntity>> query = () -> Global.getDatabaseService().listStreams(currentTransaction);
-        Consumer<List<StreamEntity>> consumer = streamInfoPanel::updateStreamList;
-
-        AsyncQueryTask<List<StreamEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
-                                                                       query,
-                                                                       consumer);
+        AsyncQueryTask<List<ElementaryStream>> task = new AsyncQueryTask<>(frameView.getApplication(),
+                                                                           query,
+                                                                           consumer);
         task.execute();
     }
 
     private void queryCASystemInfo()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
+        Supplier<List<CASystemStream>> query = () -> database.listCASystemStreams();
+        Consumer<List<CASystemStream>> consumer = casInfoPanel::updateStreamList;
 
-        Supplier<List<CAStreamEntity>> query = () -> Global.getDatabaseService().listCAStreams(currentTransaction);
-        Consumer<List<CAStreamEntity>> consumer = casInfoPanel::updateStreamList;
-
-        AsyncQueryTask<List<CAStreamEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
+        AsyncQueryTask<List<CASystemStream>> task = new AsyncQueryTask<>(frameView.getApplication(),
                                                                          query,
                                                                          consumer);
         task.execute();
@@ -402,7 +373,7 @@ public class StreamInfoView extends JPanel implements InfoView
         sourceInfoPanel.resetSourceInfo();
         casInfoPanel.resetStreamList();
 
-        if (transactionId != -1)
+        if (!stopped)
         {
             timer1.restart();
             timer2.restart();
@@ -415,7 +386,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
     public void startRefreshing()
     {
-        if (transactionId != -1)
+        if (!stopped)
         {
             timer1.start();
             timer2.start();
@@ -436,7 +407,7 @@ public class StreamInfoView extends JPanel implements InfoView
         programInfoPanel.setPopupListener(this::showProgramPopupMenu);
     }
 
-    private void showStreamPopupMenu(MouseEvent event, StreamEntity stream)
+    private void showStreamPopupMenu(MouseEvent event, ElementaryStream stream)
     {
         selectedStream = stream;
         streamContextMenuItem1.setText("播放 " + selectedStream.getDescription());
@@ -461,7 +432,7 @@ public class StreamInfoView extends JPanel implements InfoView
                       : String.format("播放 %s", selectedProgram.getName());
         programContextMenuItem.setText(text);
 
-        if (program.isPlayable())
+        if (program.isFreeAccess())
             programContextMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 }

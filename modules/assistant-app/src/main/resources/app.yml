@@ -1,0 +1,38 @@
+solon:
+  serialization.json:
+    dateAsFormat: 'yyyy-MM-dd HH:mm:ss' #配置日期格式（默认输出为时间戳）
+    dateAsTimeZone: 'GMT+8' #配置时区
+    dateAsTicks: false #将date转为毫秒数（和 dateAsFormat 二选一）
+    longAsString: true #将long型转为字符串输出 （默认为false）
+    boolAsInt: false   #将bool型转为字符串输出 （默认为false）
+    nullStringAsEmpty: false
+    nullBoolAsFalse: false
+    nullNumberAsZero: false
+    nullArrayAsEmpty: false
+    nullAsWriteable: false
+    enumAsName: false #枚举使用名字（v2.2.1 后支持）
+  logging.appender:
+      console:
+        enable: false
+
+# 配置数据源
+m2tk.db: # 数据源对象的 bean 名称
+  jdbcUrl: jdbc:h2:~/m2tk/db/assistant;IGNORECASE=TRUE;AUTO_SERVER=TRUE  # 使用混合模式访问，方便外部监控和调试数据库
+  driverClassName: org.h2.Driver
+
+# 配置 mybatis-plus
+mybatis: # 这个是 MyBatis（MyBatis-plus）配置的前缀
+  m2tk: # 必须与 DataSource 的 bean 名称相同
+    typeAliases: #支持包名 或 类名（大写开头 或 *）//支持 ** 或 * 占位符
+      - "m2tk.assistant.kernel.entity"
+    mappers: #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）//支持 ** 或 * 占位符
+      - "m2tk.assistant.kernel.mapper"
+      - "classpath:m2tk/assistant/**/mapper.xml"
+    configuration: # 扩展配置（要与 MybatisConfiguration 类的属性一一对应）
+      cacheEnabled: false
+      mapperVerifyEnabled: false # 如果为 true，则要求所有 mapper 有 @Mapper 主解
+      mapUnderscoreToCamelCase: true
+      callSettersOnNulls: true
+      jdbcTypeForNull: 'null'
+    globalConfig: # 全局配置（要与 GlobalConfig 类的属性一一对应）
+      banner: false

@@ -16,7 +16,12 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.EventBus;
+import m2tk.assistant.core.M2TKDatabase;
+
 public interface InfoView
 {
     void refresh();
+
+    void updateDataSource(EventBus bus, M2TKDatabase database);
 }

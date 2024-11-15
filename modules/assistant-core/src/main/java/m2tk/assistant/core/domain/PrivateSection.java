@@ -21,9 +21,6 @@ import lombok.Data;
 @Data
 public class PrivateSection
 {
-    private long ref;
-    private long transactionId;
-
     private String tag;
     private int pid;
     private long position;

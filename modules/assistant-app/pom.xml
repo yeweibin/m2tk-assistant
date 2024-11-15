@@ -14,12 +14,10 @@
     </parent>
 
     <properties>
-        <m2tk.version>1.2</m2tk.version>
         <bsaf.version>1.9.2</bsaf.version>
-        <jfreechart.version>1.5.4</jfreechart.version>
+        <flatlaf.version>3.5</flatlaf.version>
         <miglayout-swing.version>11.0</miglayout-swing.version>
         <guava.version>33.0.0-jre</guava.version>
-        <flatlaf.version>3.5</flatlaf.version>
         <slf4j.version>2.0.16</slf4j.version>
         <logback.version>1.5.12</logback.version>
         <jackson.version>2.18.1</jackson.version>
@@ -28,6 +26,7 @@
         <hikari.version>6.0.0</hikari.version>
         <caffeine.version>3.1.8</caffeine.version>
         <lombok.version>1.18.34</lombok.version>
+        <jfreechart.version>1.5.4</jfreechart.version>
         <graphviz-java.version>0.18.1</graphviz-java.version>
         <image-viewer.version>1.2.3</image-viewer.version>
         <eaxy.version>0.2.2</eaxy.version>
@@ -72,12 +71,10 @@
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-assistant-core</artifactId>
-            <version>2.0-incubation</version>
         </dependency>
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-multiplex</artifactId>
-            <version>${m2tk.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
@@ -91,9 +88,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>${jfreechart.version}</version>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>${flatlaf.version}</version>
         </dependency>
         <dependency>
             <groupId>com.miglayout</groupId>
@@ -101,35 +98,30 @@
             <version>${miglayout-swing.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.formdev</groupId>
-            <artifactId>flatlaf</artifactId>
-            <version>${flatlaf.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.slf4j</groupId>-->
+<!--            <artifactId>slf4j-api</artifactId>-->
+<!--            <version>${slf4j.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ch.qos.logback</groupId>-->
+<!--            <artifactId>logback-classic</artifactId>-->
+<!--            <version>${logback.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-annotations</artifactId>-->
+<!--            <version>${jackson.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
+<!--            <artifactId>jackson-databind</artifactId>-->
+<!--            <version>${jackson.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-core</artifactId>
@@ -166,6 +158,11 @@
             <version>${lombok.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+            <version>${jfreechart.version}</version>
+        </dependency>
+        <dependency>
             <groupId>guru.nidi</groupId>
             <artifactId>graphviz-java-all-j2v8</artifactId>
             <version>${graphviz-java.version}</version>
@@ -195,6 +192,44 @@
             <groupId>com.github.steos</groupId>
             <artifactId>jnafilechooser</artifactId>
             <version>1.1.2</version>
+        </dependency>
+        <!--solon-->
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-config-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-serialization-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-logging-logback</artifactId>
+            <exclusions>
+                <!-- jansi与部分windows不兼容，会导致程序崩溃 -->
+                <exclusion>
+                    <groupId>org.fusesource.jansi</groupId>
+                    <artifactId>jansi</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>solon-data-sqlutils</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>mybatis-plus-solon-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.noear</groupId>
+            <artifactId>mybatis-plus-extension-solon-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>mpeg2-toolkit</groupId>
+            <artifactId>m2tk-assistant-core</artifactId>
+            <version>2.0-incubation</version>
         </dependency>
     </dependencies>
 

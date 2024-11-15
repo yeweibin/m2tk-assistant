@@ -21,12 +21,8 @@ import lombok.Data;
 @Data
 public class SINetwork
 {
-    private long ref;
-    private long transactionId;
-
+    private int id;
     private String name;
-    private String multilingualName;
-
     private int networkId;
     private int multiplexCount;
     private boolean actualNetwork;

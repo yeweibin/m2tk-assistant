@@ -23,13 +23,8 @@ import java.util.List;
 @Data
 public class SIBouquet
 {
-    private long ref;
-    private long transactionId;
-
+    private int id;
     private String name;
-    private String multilingualName;
-
     private int bouquetId;
-
     private List<SIServiceLocator> services;
 }

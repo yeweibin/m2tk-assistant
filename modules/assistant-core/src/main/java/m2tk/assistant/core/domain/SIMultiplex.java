@@ -18,18 +18,18 @@ package m2tk.assistant.core.domain;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class SIMultiplex
 {
-    private long ref;
-    private long transactionId;
-
-    private int serviceCount;
-
+    private int id;
     private int networkId;
     private int transportStreamId;
     private int originalNetworkId;
     private String networkName;
     private String transmitFrequency;
     private String deliverySystemType;
+
+    private List<SIServiceLocator> services;
 }

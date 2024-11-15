@@ -21,9 +21,6 @@ import lombok.Data;
 @Data
 public class PCRCheck
 {
-    private long ref;
-    private long transactionId;
-
     private int pid;
     private long prevPosition;
     private long prevValue;

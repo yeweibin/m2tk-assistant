@@ -17,7 +17,7 @@
 package m2tk.assistant.ui.model;
 
 import m2tk.assistant.SmallIcons;
-import m2tk.assistant.dbi.entity.PCRStatEntity;
+import m2tk.assistant.kernel.entity.PCRStatViewEntity;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -26,12 +26,12 @@ import java.util.List;
 
 public class PCRStatsTableModel extends AbstractTableModel
 {
-    private final List<PCRStatEntity> data = new ArrayList<>();
+    private final List<PCRStatViewEntity> data = new ArrayList<>();
     private static final String[] COLUMNS = {
             "", "PID", "PCR总数", "平均码率", "平均间隔", "最小间隔", "最大间隔", "间隔越界", "平均精度", "最小精度", "最大精度", "精度越界", ""
     };
 
-    public void update(List<PCRStatEntity> stats)
+    public void update(List<PCRStatViewEntity> stats)
     {
         if (isSame(data, stats))
             return;
@@ -41,7 +41,7 @@ public class PCRStatsTableModel extends AbstractTableModel
         fireTableDataChanged();
     }
 
-    public PCRStatEntity getStatAtRow(int row)
+    public PCRStatViewEntity getStatAtRow(int row)
     {
         try
         {
@@ -79,7 +79,7 @@ public class PCRStatsTableModel extends AbstractTableModel
     @Override
     public Object getValueAt(int rowIndex, int columnIndex)
     {
-        PCRStatEntity stat = data.get(rowIndex);
+        PCRStatViewEntity stat = data.get(rowIndex);
         return switch (columnIndex)
         {
             case 0 -> (stat.getRepetitionErrors() + stat.getDiscontinuityErrors() + stat.getAccuracyErrors()) > 0
@@ -100,15 +100,15 @@ public class PCRStatsTableModel extends AbstractTableModel
         };
     }
 
-    private boolean isSame(List<PCRStatEntity> current, List<PCRStatEntity> incoming)
+    private boolean isSame(List<PCRStatViewEntity> current, List<PCRStatViewEntity> incoming)
     {
         if (current.size() != incoming.size())
             return false;
 
         for (int i = 0; i < incoming.size(); i++)
         {
-            PCRStatEntity s1 = current.get(i);
-            PCRStatEntity s2 = incoming.get(i);
+            PCRStatViewEntity s1 = current.get(i);
+            PCRStatViewEntity s2 = incoming.get(i);
 
             if (s1.getPid() != s2.getPid() ||
                 s1.getPcrCount() != s2.getPcrCount())

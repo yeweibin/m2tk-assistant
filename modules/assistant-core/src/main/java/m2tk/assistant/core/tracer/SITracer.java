@@ -64,7 +64,6 @@ public class SITracer implements Tracer
     private final Map<String, Integer> tableVersions;
 
     private M2TKDatabase databaseService;
-    private long transactionId;
 
     public SITracer()
     {
@@ -96,7 +95,6 @@ public class SITracer implements Tracer
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
         databaseService = database;
-        transactionId = source.getTransactionId();
 
         demux.registerSectionChannel(0x0010, this::processSection);
         demux.registerSectionChannel(0x0011, this::processSection);
@@ -151,37 +149,28 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "NIT");
-
-        recordSISection(tableId == 0x40 ? "NIT_Actual" : "NIT_Other", payload);
+        SINetwork network = databaseService.addSINetwork(nit.getNetworkID(), tableId == 0x40);
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "NIT");
+        databaseService.addPrivateSection(network.isActualNetwork() ? "NIT_Actual" : "NIT_Other",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
 
         tableVersions.put(uid, version);
 
-        SINetwork network = new SINetwork();
-        network.setRef(-1);
-        network.setTransactionId(transactionId);
-        network.setName("未命名网络");
-        network.setNetworkId(nit.getNetworkID());
-        network.setActualNetwork(tableId == 0x40);
-
         descloop.attach(nit.getDescriptorLoop());
         descloop.findFirstDescriptor(nnd::isAttachable)
-                .ifPresent(encoding ->
-                           {
-                               nnd.attach(encoding);
-                               String name = nnd.getNetworkName();
-                               network.setName(name);
-                           });
+                .ifPresent(encoding -> {
+                    nnd.attach(encoding);
+                    network.setName(nnd.getNetworkName());
+                });
+        databaseService.updateSINetwork(network);
 
         nit.forEachTransportStreamDescription(encoding -> {
             tsd.attach(encoding);
-            SIMultiplex multiplex = new SIMultiplex();
-            multiplex.setRef(-1);
-            multiplex.setTransactionId(transactionId);
-            multiplex.setNetworkName(network.getName());
-            multiplex.setNetworkId(network.getNetworkId());
-            multiplex.setOriginalNetworkId(tsd.getOriginalNetworkID());
-            multiplex.setTransportStreamId(tsd.getTransportStreamID());
+            SIMultiplex multiplex = databaseService.addSIMultiplex(network.getId(),
+                                                                   tsd.getTransportStreamID(),
+                                                                   tsd.getOriginalNetworkID());
 
             descloop.attach(tsd.getDescriptorLoop());
             descloop.forEach(descriptor -> {
@@ -204,12 +193,8 @@ public class SITracer implements Tracer
                     multiplex.setTransmitFrequency(DVB.translateTerrestrialFrequencyCode(tdsd.getCentreFrequencyCode()));
                 }
             });
-            databaseService.addSIMultiplex(multiplex);
-
-            network.setMultiplexCount(network.getMultiplexCount() + 1);
+            databaseService.updateSIMultiplex(multiplex);
         });
-
-        databaseService.addSINetwork(network);
     }
 
     private void processBAT(TSDemuxPayload payload)
@@ -240,16 +225,14 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
-
-        recordSISection("BAT", payload);
+        SIBouquet bouquet = databaseService.addSIBouquet(bouquetId);
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
+        databaseService.addPrivateSection("BAT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
 
         tableVersions.put(uid, version);
-
-        SIBouquet bouquet = new SIBouquet();
-        bouquet.setRef(-1);
-        bouquet.setTransactionId(transactionId);
-        bouquet.setBouquetId(bouquetId);
 
         descloop.attach(bat.getDescriptorLoop());
         descloop.findFirstDescriptor(bnd::isAttachable)
@@ -258,7 +241,7 @@ public class SITracer implements Tracer
                                bnd.attach(encoding);
                                bouquet.setName(bnd.getBouquetName());
                            });
-        databaseService.addSIBouquet(bouquet);
+        databaseService.updateSIBouquet(bouquet);
 
         bat.forEachTransportStreamDescription(encoding -> {
             tsd.attach(encoding);
@@ -269,14 +252,10 @@ public class SITracer implements Tracer
                         int[] serviceIds = sld.getServiceIDList();
                         for (int serviceId : serviceIds)
                         {
-                            BouquetServiceMapping mapping = new BouquetServiceMapping();
-                            mapping.setRef(-1);
-                            mapping.setTransactionId(transactionId);
-                            mapping.setBouquetId(bouquetId);
-                            mapping.setOriginalNetworkId(tsd.getOriginalNetworkID());
-                            mapping.setTransportStreamId(tsd.getTransportStreamID());
-                            mapping.setServiceId(serviceId);
-                            databaseService.addBouquetServiceMapping(mapping);
+                            databaseService.addBouquetServiceMapping(bouquet.getId(),
+                                                                     tsd.getTransportStreamID(),
+                                                                     tsd.getOriginalNetworkID(),
+                                                                     serviceId);
                         }
                     });
         });
@@ -312,26 +291,22 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
-
-        recordSISection(tableId == 0x42 ? "SDT_Actual" : "SDT_Other", payload);
-
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
+        databaseService.addPrivateSection(tableId == 0x42 ? "SDT_Actual" : "SDT_Other",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
         tableVersions.put(uid, version);
 
         sdt.forEachServiceDescription(encoding -> {
             sdd.attach(encoding);
 
-            SIService service = new SIService();
-            service.setRef(-1);
-            service.setTransactionId(transactionId);
-            service.setOriginalNetworkId(originalNetworkId);
-            service.setTransportStreamId(transportStreamId);
-            service.setServiceId(sdd.getServiceID());
+            SIService service = databaseService.addSIService(sdd.getServiceID(), transportStreamId, originalNetworkId);
             service.setRunningStatus(sdd.getRunningStatus());
-            service.setFreeAccessible(sdd.getFreeCAMode() == 0);
-            service.setPresentFollowingEitEnabled(sdd.getEITPresentFollowingFlag() == 1);
-            service.setScheduleEitEnabled(sdd.getEITScheduleFlag() == 1);
-            service.setActualTransport(tableId == 0x42);
+            service.setFreeAccess(sdd.getFreeCAMode() == 0);
+            service.setPresentFollowingEITEnabled(sdd.getEITPresentFollowingFlag() == 1);
+            service.setScheduleEITEnabled(sdd.getEITScheduleFlag() == 1);
+            service.setActualTransportStream(tableId == 0x42);
 
             descloop.attach(sdd.getDescriptorLoop());
             descloop.forEach(descriptor -> {
@@ -345,12 +320,12 @@ public class SITracer implements Tracer
                 if (tssd.isAttachable(descriptor))
                 {
                     tssd.attach(descriptor);
-                    service.setReferenceServiceId(tssd.getReferenceServiceID());
                     service.setServiceType(0x05);
-                    service.setName(String.format("NVOD时移业务（引用业务号：%d）", service.getReferenceServiceId()));
+                    service.setName(String.format("NVOD时移业务（引用业务号：%d）", tssd.getReferenceServiceID()));
+                    service.setReferenceServiceId(tssd.getReferenceServiceID());
                 }
             });
-            databaseService.addSIService(service);
+            databaseService.updateSIService(service);
         });
     }
 
@@ -387,60 +362,43 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "EIT");
-
-        recordSISection(getEITTag(tableId), payload);
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "EIT");
+        databaseService.addPrivateSection(getEITTag(tableId),
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
 
         tableVersions.put(uid, version);
 
         eit.forEachEventDescription(encoding -> {
             edd.attach(encoding);
-            int eventId = edd.getEventID();
-            OffsetDateTime startTime = translateStartTime(edd.getStartTime());
-            int duration = DVB.decodeDuration(edd.getDuration());
-            int runningStatus = edd.getRunningStatus();
-            boolean isFreeCAMode = (edd.getFreeCAMode() == 0);
-            SIEvent event = new SIEvent();
-            event.setRef(-1);
-            event.setTransactionId(transactionId);
-            event.setOriginalNetworkId(eit.getOriginalNetworkID());
-            event.setTransportStreamId(eit.getTransportStreamID());
-            event.setServiceId(eit.getServiceID());
-            event.setEventId(eventId);
-            event.setStartTime(startTime);
-            event.setDuration(duration);
-            event.setRunningStatus(runningStatus);
-            event.setFreeAccessible(isFreeCAMode);
 
-            if (tableId == 0x4E || tableId == 0x4F)
-            {
-                event.setPresent(secnum == 0);
-                event.setSchedule(false);
-            } else
-            {
-                event.setPresent(false);
-                event.setSchedule(true);
-            }
+            SIEvent event = databaseService.addSIEvent(edd.getEventID(), transportStreamId, originalNetworkId, serviceId);
+            event.setRunningStatus(edd.getRunningStatus());
+            event.setFreeAccess(edd.getFreeCAMode() == 0);
+            event.setStartTime(translateStartTime(edd.getStartTime()));
+            event.setDuration(DVB.decodeDuration(edd.getDuration()));
+            event.setPresentEvent((tableId == 0x4E || tableId == 0x4F) && (secnum == 0));
+            event.setScheduleEvent(tableId >= 0x50 && tableId <= 0x5F);
 
             descloop.attach(edd.getDescriptorLoop());
             descloop.forEach(descriptor -> {
                 if (sed.isAttachable(descriptor))
                 {
                     sed.attach(descriptor);
+                    event.setLanguageCode(sed.getLanguageCode());
                     event.setTitle(sed.getEventName());
                     event.setDescription(sed.getEventDescription());
-                    event.setLanguageCode(sed.getLanguageCode());
                 }
                 if (tsed.isAttachable(descriptor))
                 {
                     tsed.attach(descriptor);
+                    event.setNvodTimeShiftedEvent(true);
                     event.setReferenceServiceId(tsed.getReferenceServiceID());
                     event.setReferenceEventId(tsed.getReferenceEventID());
-                    event.setTimeShiftedEvent(true);
                 }
             });
-
-            databaseService.addSIEvent(event);
+            databaseService.updateSIEvent(event);
         });
     }
 
@@ -460,42 +418,24 @@ public class SITracer implements Tracer
     {
         tdt.attach(payload.getEncoding());
 
-        Timestamp timestamp = new Timestamp();
-        timestamp.setRef(-1);
-        timestamp.setTransactionId(transactionId);
-        timestamp.setTime(DVB.decodeTimepointIntoOffsetDateTime(tdt.getUTCTime()));
-        databaseService.addTimestamp(timestamp);
-
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
-
-        recordSISection("TDT", payload);
+        databaseService.addTimestamp(DVB.decodeTimepointIntoOffsetDateTime(tdt.getUTCTime()));
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
+        databaseService.addPrivateSection("TDT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
     }
 
     private void processTOT(TSDemuxPayload payload)
     {
         tot.attach(payload.getEncoding());
 
-        Timestamp timestamp = new Timestamp();
-        timestamp.setRef(-1);
-        timestamp.setTransactionId(transactionId);
-        timestamp.setTime(DVB.decodeTimepointIntoOffsetDateTime(tdt.getUTCTime()));
-        databaseService.addTimestamp(timestamp);
-
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
-
-        recordSISection("TOT", payload);
-    }
-
-    private void recordSISection(String type, TSDemuxPayload payload)
-    {
-        PrivateSection section = new PrivateSection();
-        section.setRef(-1);
-        section.setTransactionId(transactionId);
-        section.setTag(type);
-        section.setPid(payload.getStreamPID());
-        section.setPosition(payload.getFinishPacketCounter());
-        section.setEncoding(payload.getEncoding().getBytes());
-        databaseService.addPrivateSection(section);
+        databaseService.addTimestamp(DVB.decodeTimepointIntoOffsetDateTime(tot.getUTCTime()));
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TDT/TOT");
+        databaseService.addPrivateSection("TOT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
     }
 
     private OffsetDateTime translateStartTime(long timepoint)

@@ -21,26 +21,34 @@ import lombok.Data;
 @Data
 public class SIService
 {
-    private long ref;
-    private long transactionId;
+    private int id;
 
     private String name;
     private String provider;
-    private String multilingualName;
 
     private int transportStreamId;
     private int originalNetworkId;
     private int serviceId;
     private int serviceType;
+    private String serviceTypeName;
     private int runningStatus;
-    private boolean freeAccessible;
-    private boolean presentFollowingEitEnabled;
-    private boolean scheduleEitEnabled;
-    private boolean actualTransport;
+    private String runningStatusName;
+    private boolean freeAccess;
+    private boolean presentFollowingEITEnabled;
+    private boolean scheduleEITEnabled;
+    private boolean actualTransportStream;
 
     private int referenceServiceId;
-    private boolean reference;
-    private boolean timeShifted;
+
+    public boolean isNVODReferenceService()
+    {
+        return serviceType == 0x04;
+    }
+
+    public boolean isNVODTimeShiftedService()
+    {
+        return serviceType == 0x05;
+    }
 
     public SIServiceLocator locator()
     {

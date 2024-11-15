@@ -43,8 +43,7 @@ public class StreamTracer implements Tracer
     private long t0;
 
     private M2TKDatabase databaseService;
-    private StreamSource streamSource;
-    private long transactionId;
+    private int sourceId;
 
     public StreamTracer()
     {
@@ -62,9 +61,8 @@ public class StreamTracer implements Tracer
     @Override
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
-        streamSource = source;
+        sourceId = source.getId();
         databaseService = database;
-        transactionId = source.getTransactionId();
 
         demux.registerEventListener(this::processDemuxStatus);
         demux.registerRawChannel(this::processTransportPacket);
@@ -77,19 +75,16 @@ public class StreamTracer implements Tracer
 
         if (!status.isRunning())
         {
-            streamSource.setBitrate(avgBitrate);
-            streamSource.setFrameSize(frameSize);
-            streamSource.setPacketCount(lastPct);
-            databaseService.updateStreamSource(streamSource);
+            databaseService.updateStreamSourceStats(sourceId, avgBitrate, frameSize, lastPct);
 
             for (ElementaryStream stream : streams)
             {
-                if (stream != null && stream.getPktCount() > 0)
+                if (stream != null && stream.getPacketCount() > 0)
                 {
-                    double ratio = 1.0d * stream.getPktCount() / lastPct;
+                    double ratio = 1.0 * stream.getPacketCount() / lastPct;
                     stream.setRatio(ratio);
                     stream.setBitrate((int) (avgBitrate * ratio));
-                    databaseService.updateElementaryStream(stream);
+                    databaseService.updateElementaryStreamStats(stream);
                 }
             }
         }
@@ -106,11 +101,13 @@ public class StreamTracer implements Tracer
         ElementaryStream stream = streams[pid];
         if (stream == null)
         {
-            stream = databaseService.getElementaryStream(transactionId, pid);
+            stream = databaseService.getElementaryStream(pid);
+            stream.setLastPct(-1);
             streams[pid] = stream;
         }
 
-        stream.setPktCount(stream.getPktCount() + 1);
+        stream.setPacketCount(stream.getPacketCount() + 1);
+        stream.setLastPct(payload.getStartPacketCounter());
 
         if (pkt.isScrambled())
             stream.setScrambled(true);
@@ -143,29 +140,23 @@ public class StreamTracer implements Tracer
     private void saveToDatabase()
     {
         long t1 = System.currentTimeMillis();
-        if ((t1 - t0) >= 200) // 超过200ms才更新数据库
+        if ((t1 - t0) >= 200) // 超过200ms才更新数据库，避免频繁操作数据库而造成的IO阻塞。
         {
-            streamSource.setBitrate(avgBitrate);
-            streamSource.setFrameSize(frameSize);
-            streamSource.setPacketCount(lastPct);
-            databaseService.updateStreamSource(streamSource);
+            databaseService.updateStreamSourceStats(sourceId, avgBitrate, frameSize, lastPcrPct);
 
             for (ElementaryStream stream : streams)
-                saveStreamStatistics(stream);
-
+            {
+                if (stream != null && stream.getLastPct() > 0)
+                {
+                    double ratio = 1.0 * stream.getPacketCount() / lastPct;
+                    stream.setRatio(ratio);
+                    stream.setBitrate((int) (avgBitrate * ratio));
+                    databaseService.updateElementaryStreamStats(stream);
+                    stream.setLastPct(-1); // 这里借用lastPct作为是否有新增数据的标志
+                }
+            }
             t0 = System.currentTimeMillis();
         }
-    }
-
-    private void saveStreamStatistics(ElementaryStream stream)
-    {
-        if (stream == null || stream.getPktCount() == 0)
-            return;
-
-        double ratio = 1.0d * stream.getPktCount() / lastPct;
-        stream.setRatio(ratio);
-        stream.setBitrate((int) (avgBitrate * ratio));
-        databaseService.updateElementaryStream(stream);
     }
 
     private long readPCR()

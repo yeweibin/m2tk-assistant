@@ -145,7 +145,7 @@ public class ServiceEventGuidePanel extends JPanel
         if (current.size() != incoming.size())
             return false;
 
-        incoming.sort(Comparator.comparing(SIService::getRef));
+        incoming.sort(Comparator.comparing(SIService::getId));
 
         int n = current.size();
         for (int i = 0; i < n; i++)

@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.dbi.entity.StreamEntity;
+import m2tk.assistant.core.domain.ElementaryStream;
 import m2tk.assistant.ui.model.StreamInfoTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 import m2tk.assistant.ui.util.ThreeStateRowSorterListener;
@@ -35,7 +35,7 @@ import java.util.function.BiConsumer;
 public class StreamInfoPanel extends JPanel
 {
     private StreamInfoTableModel model;
-    private transient BiConsumer<MouseEvent, StreamEntity> popupListener;
+    private transient BiConsumer<MouseEvent, ElementaryStream> popupListener;
 
     public StreamInfoPanel()
     {
@@ -101,7 +101,7 @@ public class StreamInfoPanel extends JPanel
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
-    public void setPopupListener(BiConsumer<MouseEvent, StreamEntity> listener)
+    public void setPopupListener(BiConsumer<MouseEvent, ElementaryStream> listener)
     {
         popupListener = listener;
     }
@@ -111,7 +111,7 @@ public class StreamInfoPanel extends JPanel
         model.update(Collections.emptyList());
     }
 
-    public void updateStreamList(List<StreamEntity> streams)
+    public void updateStreamList(List<ElementaryStream> streams)
     {
         model.update(streams);
     }

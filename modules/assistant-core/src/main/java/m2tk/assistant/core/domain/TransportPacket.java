@@ -21,9 +21,7 @@ import lombok.Data;
 @Data
 public class TransportPacket
 {
-    private long ref;
-    private long transactionId;
-
+    private String tag;
     private int pid;
     private long position;
     private byte[] encoding;

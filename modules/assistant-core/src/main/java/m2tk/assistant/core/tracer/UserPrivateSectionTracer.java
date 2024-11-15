@@ -18,7 +18,6 @@ package m2tk.assistant.core.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.core.M2TKDatabase;
-import m2tk.assistant.core.domain.PrivateSection;
 import m2tk.assistant.core.domain.StreamSource;
 import m2tk.mpeg2.decoder.SectionDecoder;
 import m2tk.multiplex.TSDemux;
@@ -37,7 +36,6 @@ public class UserPrivateSectionTracer implements Tracer
     private final int[] secCounts;
 
     private M2TKDatabase databaseService;
-    private long transactionId;
 
     public UserPrivateSectionTracer(Collection<Integer> streams, int maxSectionCountPerStream)
     {
@@ -51,7 +49,6 @@ public class UserPrivateSectionTracer implements Tracer
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
         databaseService = database;
-        transactionId = source.getTransactionId();
 
         for (Integer pid : targetStreams)
         {
@@ -70,19 +67,15 @@ public class UserPrivateSectionTracer implements Tracer
         if (secCounts[pid] >= limitPerStream)
         {
             int drops = (int) (limitPerStream * 0.25);
-            drops = databaseService.removePrivateSections(transactionId, pid, "UserPrivate", drops);
-            secCounts[pid] -= drops;
+            databaseService.removePrivateSections("UserPrivate", pid);
+            secCounts[pid] = 0;
             log.info("丢弃位于流 {} 上的 {} 个私有分段记录", pid, drops);
         }
 
-        PrivateSection section = new PrivateSection();
-        section.setRef(-1);
-        section.setTransactionId(transactionId);
-        section.setPid(pid);
-        section.setTag("UserPrivate");
-        section.setPosition(payload.getFinishPacketCounter());
-        section.setEncoding(payload.getEncoding().getBytes());
-        databaseService.addPrivateSection(section);
+        databaseService.addPrivateSection("UserPrivate",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
 
         secCounts[pid] += 1;
     }

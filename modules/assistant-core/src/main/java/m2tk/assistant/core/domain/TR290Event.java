@@ -18,15 +18,12 @@ package m2tk.assistant.core.domain;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 public class TR290Event
 {
-    private long ref;
-    private long transactionId;
-
-    private LocalDateTime timestamp;
+    private OffsetDateTime timestamp;
     private String type;
     private String description;
 

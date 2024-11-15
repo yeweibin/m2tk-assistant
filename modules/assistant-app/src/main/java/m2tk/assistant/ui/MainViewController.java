@@ -19,9 +19,13 @@ package m2tk.assistant.ui;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
+import com.google.common.eventbus.EventBus;
 import jnafilechooser.api.JnaFileChooser;
 import m2tk.assistant.Global;
-import m2tk.assistant.core.tracer.Tracer;
+import m2tk.assistant.core.M2TKDatabase;
+import m2tk.assistant.core.tracer.PSITracer;
+import m2tk.assistant.core.tracer.SITracer;
+import m2tk.assistant.core.tracer.StreamTracer;
 import m2tk.assistant.ui.dialog.SourceHistoryDialog;
 import m2tk.assistant.ui.dialog.SystemInfoDialog;
 import m2tk.assistant.ui.task.DrawNetworkGraphTask;
@@ -46,6 +50,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -229,6 +234,8 @@ public class MainViewController
 
         initFileChooserCurrentDirectory();
 
+        actionMap.get("openFile").setEnabled(false);
+        actionMap.get("openMulticast").setEnabled(false);
         actionMap.get("reopenInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
@@ -261,6 +268,22 @@ public class MainViewController
         button.setAction(actionMap.get(action));
         button.setToolTipText(tooltip);
         return button;
+    }
+
+    public void ready()
+    {
+        EventBus bus = AssistantApp.getInstance().getEventBus();
+        M2TKDatabase database = AssistantApp.getInstance().getM2TKDatabase();
+        streamInfoView.updateDataSource(bus, database);
+        networkInfoView.updateDataSource(bus, database);
+        tr290InfoView.updateDataSource(bus, database);
+        pcrStatsView.updateDataSource(bus, database);
+        epgInfoView.updateDataSource(bus, database);
+        datagramView.updateDataSource(bus, database);
+        ebInfoView.updateDataSource(bus, database);
+
+        actionMap.get("openFile").setEnabled(true);
+        actionMap.get("openMulticast").setEnabled(true);
     }
 
     @Action
@@ -372,8 +395,25 @@ public class MainViewController
             File file = fileChooser.getSelectedFile();
             String input = file.getAbsolutePath();
 
+            System.out.println("准备分析 @ " + LocalDateTime.now());
+            logger.info("准备分析");
             Global.resetUserPrivateSectionStreams();
-            boolean started = Global.getStreamAnalyser().start(input, List.of(), this::onAnalyzerStopped);
+            boolean started = false;
+            try
+            {
+                started = AssistantApp.getInstance()
+                                      .getStreamAnalyzer()
+                                      .start(input,
+                                             List.of(new StreamTracer(),
+                                                     new PSITracer(),
+                                                     new SITracer()),
+                                             this::onAnalyzerStopped);
+                logger.info("开始分析：{}", started);
+            } catch (Exception ex)
+            {
+                System.err.println(ex.getMessage());
+            }
+
             if (!started)
             {
                 actionMap.get("reopenInput").setEnabled(false);
@@ -386,7 +426,7 @@ public class MainViewController
                 tr290InfoView.reset();
                 pcrStatsView.reset();
                 epgInfoView.reset();
-                nvodInfoView.reset();
+//                nvodInfoView.reset();
                 datagramView.reset();
                 ebInfoView.reset();
                 actionMap.get("openFile").setEnabled(false);
@@ -419,7 +459,9 @@ public class MainViewController
         }
 
         Global.resetUserPrivateSectionStreams();
-        boolean started = Global.getStreamAnalyser().start(input, List.of(), this::onAnalyzerStopped);
+        boolean started = AssistantApp.getInstance()
+                                      .getStreamAnalyzer()
+                                      .start(input, List.of(), this::onAnalyzerStopped);
         if (!started)
         {
             actionMap.get("reopenInput").setEnabled(false);
@@ -453,7 +495,9 @@ public class MainViewController
         if (input == null)
             return;
 
-        boolean started = Global.getStreamAnalyser().start(input, List.of(), this::onAnalyzerStopped);
+        boolean started = AssistantApp.getInstance()
+                                      .getStreamAnalyzer()
+                                      .start(input, List.of(), this::onAnalyzerStopped);
         if (!started)
         {
             actionMap.get("reopenInput").setEnabled(false);
@@ -488,7 +532,9 @@ public class MainViewController
         if (source == null)
             return;
 
-        boolean started = Global.getStreamAnalyser().start(source, List.of(), this::onAnalyzerStopped);
+        boolean started = AssistantApp.getInstance()
+                                      .getStreamAnalyzer()
+                                      .start(source, List.of(), this::onAnalyzerStopped);
         if (!started)
         {
             JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
@@ -515,7 +561,7 @@ public class MainViewController
     @Action
     public void stopAnalyzer()
     {
-        Global.getStreamAnalyser().stop();
+        AssistantApp.getInstance().getStreamAnalyzer().stop();
     }
 
     @Action
@@ -526,7 +572,7 @@ public class MainViewController
         tr290InfoView.stopRefreshing();
         pcrStatsView.stopRefreshing();
         epgInfoView.stopRefreshing();
-        nvodInfoView.stopRefreshing();
+//        nvodInfoView.stopRefreshing();
         datagramView.stopRefreshing();
         ebInfoView.stopRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(false);
@@ -541,7 +587,7 @@ public class MainViewController
         tr290InfoView.startRefreshing();
         pcrStatsView.startRefreshing();
         epgInfoView.startRefreshing();
-        nvodInfoView.startRefreshing();
+//        nvodInfoView.startRefreshing();
         datagramView.startRefreshing();
         ebInfoView.startRefreshing();
         actionMap.get("pauseRefreshing").setEnabled(true);
@@ -694,7 +740,7 @@ public class MainViewController
         tr290InfoView.stopRefreshing();
         pcrStatsView.stopRefreshing();
         epgInfoView.stopRefreshing();
-        nvodInfoView.startRefreshing();
+//        nvodInfoView.startRefreshing();
         datagramView.startRefreshing();
         ebInfoView.startRefreshing();
     }

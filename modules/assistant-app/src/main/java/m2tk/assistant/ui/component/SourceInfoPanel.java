@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.dbi.entity.SourceEntity;
+import m2tk.assistant.core.domain.StreamSource;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -29,7 +29,7 @@ public class SourceInfoPanel extends JPanel
     private JTextField fieldFrameSize;
     private JTextField fieldPacketCount;
     private JTextField fieldTransportStreamId;
-    private SourceEntity currentSourceEntity;
+    private StreamSource currentSource;
 
     public SourceInfoPanel()
     {
@@ -65,7 +65,7 @@ public class SourceInfoPanel extends JPanel
         add(new JLabel("传输流号"), "left");
         add(fieldTransportStreamId, "span 2, grow, wrap");
 
-        currentSourceEntity = null;
+        currentSource = null;
     }
 
     public void resetSourceInfo()
@@ -75,29 +75,29 @@ public class SourceInfoPanel extends JPanel
         fieldFrameSize.setText(null);
         fieldPacketCount.setText(null);
         fieldTransportStreamId.setText(null);
-        currentSourceEntity = null;
+        currentSource = null;
     }
 
-    public void updateSourceInfo(SourceEntity source)
+    public void updateSourceInfo(StreamSource source)
     {
-        if (source == null || isSame(currentSourceEntity, source))
+        if (source == null || isSame(currentSource, source))
             return;
 
         String oldSourceName = fieldSourceName.getText();
-        if (!Objects.equals(oldSourceName, source.getSourceName()))
+        if (!Objects.equals(oldSourceName, source.getName()))
         {
-            fieldSourceName.setText(source.getSourceName());
-            fieldSourceName.setToolTipText(source.getSourceName());
+            fieldSourceName.setText(source.getName());
+            fieldSourceName.setToolTipText(source.getName());
         }
 
         fieldBitrate.setText(String.format("%,d bps", source.getBitrate()));
         fieldFrameSize.setText("" + source.getFrameSize());
         fieldPacketCount.setText(String.format("%,d", source.getPacketCount()));
         fieldTransportStreamId.setText("" + source.getTransportStreamId());
-        currentSourceEntity = source;
+        currentSource = source;
     }
 
-    private boolean isSame(SourceEntity current, SourceEntity incoming)
+    private boolean isSame(StreamSource current, StreamSource incoming)
     {
         if (current == null || incoming == null)
             return false;

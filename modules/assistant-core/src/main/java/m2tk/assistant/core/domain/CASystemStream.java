@@ -24,8 +24,7 @@ public class CASystemStream
     public static final int TYPE_EMM = 0;
     public static final int TYPE_ECM = 1;
 
-    private long ref;
-    private long transactionId;
+    private long id;
 
     private int systemId;
     private int streamPid;

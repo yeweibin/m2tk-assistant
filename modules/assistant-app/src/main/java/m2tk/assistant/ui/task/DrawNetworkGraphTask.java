@@ -28,11 +28,10 @@ import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.LinkSource;
 import guru.nidi.graphviz.model.Node;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.Global;
-import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.SIMultiplexEntity;
-import m2tk.assistant.dbi.entity.SINetworkEntity;
-import m2tk.assistant.dbi.entity.SIServiceEntity;
+import m2tk.assistant.core.presets.ServiceTypes;
+import m2tk.assistant.kernel.entity.SIMultiplexEntity;
+import m2tk.assistant.kernel.entity.SINetworkEntity;
+import m2tk.assistant.kernel.entity.SIServiceEntity;
 import m2tk.assistant.ui.dialog.NetworkGraphDialog;
 import m2tk.assistant.ui.util.ComponentUtil;
 import org.jdesktop.application.Application;
@@ -88,25 +87,21 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
 
     private BufferedImage query()
     {
-        long currentTransaction = Global.getLatestTransactionId();
-        if (currentTransaction == -1)
-            return null;
-
-        DatabaseService databaseService = Global.getDatabaseService();
-        List<SINetworkEntity> networks = databaseService.listNetworks(currentTransaction);
-        List<SIMultiplexEntity> multiplexes = databaseService.listMultiplexes(currentTransaction);
-        List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
-
-        Context context = new Context();
-        createNodes(context, networks, multiplexes, services);
-        List<LinkSource> linkSources = createNodeLinks(context);
+//        DatabaseService databaseService = Global.getDatabaseService();
+//        List<SINetworkEntity> networks = databaseService.listNetworks(currentTransaction);
+//        List<SIMultiplexEntity> multiplexes = databaseService.listMultiplexes(currentTransaction);
+//        List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
+//
+//        Context context = new Context();
+//        createNodes(context, networks, multiplexes, services);
+//        List<LinkSource> linkSources = createNodeLinks(context);
 
         Graph graph = Factory.graph("NetworkGraph")
                              .directed()
                              .graphAttr().with(Rank.dir(LEFT_TO_RIGHT), Rank.sep(1.75), GraphAttr.splines(GraphAttr.SplineMode.LINE))
                              .nodeAttr().with("fontname", "SimSun")
                              .linkAttr().with("class", "link-class")
-                             .with(linkSources);
+                             .with(List.of());
 
         Graphviz.useEngine(new GraphvizV8Engine());
 
@@ -138,8 +133,8 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
             String muxKey = parentKey(service);
             context.muxSrvMap.computeIfAbsent(muxKey, k -> new ArrayList<>()).add(srvKey);
 
-            if (service.isActualTransportStream())
-                actualTransportStreamId = service.getTransportStreamId();
+//            if (service.isActualTransportStream())
+//                actualTransportStreamId = service.getTransportStreamId();
         }
 
         for (SIMultiplexEntity multiplex : multiplexes)
@@ -209,7 +204,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
     {
         String label = Records.turn(Records.rec("id",
                                                 String.format(" %s 业务%d",
-                                                              service.isActualTransportStream() ? "[当前]" : "",
+                                                              service.getActualTransportStream() ? "[当前]" : "",
                                                               service.getServiceId())),
                                     Records.rec(String.format(" service_id：%d %n " +
                                                               " transport_stream_id：%d %n " +
@@ -221,7 +216,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
                                                               " 业务名称：%s %n " +
                                                               " 提供商：%s",
                                                               service.getServiceType(),
-                                                              service.getServiceTypeName(),
+                                                              ServiceTypes.name(service.getServiceType()),
                                                               (service.getServiceName() == null) ? "未命名业务" : service.getServiceName(),
                                                               (service.getServiceProvider() == null) ? "未知提供商" : service.getServiceProvider())),
                                     Records.rec(String.format(" 运行状态：%s %n " +
@@ -229,9 +224,9 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
                                                               " 发送EIT_P/f：%s %n " +
                                                               " 发送EIT_Sch：%s",
                                                               service.getRunningStatus(),
-                                                              service.isFreeCAMode() ? "否" : "是",
-                                                              service.isPresentFollowingEITEnabled() ? "是" : "否",
-                                                              service.isScheduleEITEnabled() ? "是" : "否")));
+                                                              service.getFreeAccess() ? "否" : "是",
+                                                              service.getPresentFollowingEITEnabled() ? "是" : "否",
+                                                              service.getScheduleEITEnabled() ? "是" : "否")));
         return Factory.node(key(service))
                       .with("shape", "record")
                       .with(Records.label(label));
@@ -248,8 +243,8 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
                                               " original_network_id：%d",
                                               multiplex.getTransportStreamId(),
                                               multiplex.getOriginalNetworkId())));
-        if (multiplex.getDeliverySystemType() != null)
-            records.add(Records.rec(String.format(" 传输系统：%s", multiplex.getDeliverySystemType())));
+        if (multiplex.getDeliveryType() != null)
+            records.add(Records.rec(String.format(" 传输系统：%s", multiplex.getDeliveryType())));
 
         String muxKey = String.format("multiplex_%04x_%04x",
                                       multiplex.getTransportStreamId(),
@@ -271,7 +266,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
     {
         List<String> records = new ArrayList<>();
         records.add(Records.rec("id", String.format(" %s 网络%d",
-                                                    network.isActualNetwork() ? "[当前]" : "",
+                                                    network.getActualNetwork() ? "[当前]" : "",
                                                     network.getNetworkId())));
         records.add(Records.rec(String.format(" network_id：%d", network.getNetworkId())));
         if (network.getNetworkName() != null)
@@ -368,6 +363,6 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
 
     private String parentKey(SIMultiplexEntity multiplex)
     {
-        return String.format("network_%04x", multiplex.getNetworkId());
+        return String.format("network_%04x", multiplex.getNetworkRef());
     }
 }

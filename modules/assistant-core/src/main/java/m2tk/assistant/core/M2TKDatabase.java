@@ -18,89 +18,127 @@ package m2tk.assistant.core;
 
 import m2tk.assistant.core.domain.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
 public interface M2TKDatabase
 {
-    void beginTransaction(StreamSource source);
+    StreamSource beginDiagnosis(String source, String uri);
+
+    void updateStreamSourceStats(int streamRef, int bitrate, int frameSize, long packetCount);
+
+    void updateStreamSourceTransportId(int streamRef, int transportStreamId);
 
     void updateStreamSource(StreamSource source);
-    StreamSource getTransactionStreamSource(long transactionId);
-    StreamSource getStreamSource(long sourceRef);
-    List<StreamSource> listRecentSources();
 
-    void updateElementaryStream(ElementaryStream stream);
-    void updateElementaryStreamUsage(long transactionId, int pid, String category, String description);
-    void accumulateElementaryStreamErrors(long transactionId, int pid, int transportErrors, int continuityErrors);
-    ElementaryStream getElementaryStream(long transactionId, int pid);
-    ElementaryStream getElementaryStream(long streamRef);
-    List<ElementaryStream> listElementaryStreams(long transactionId);
+    StreamSource getCurrentStreamSource();
 
-    void addMPEGProgram(MPEGProgram program);
-    void updateMPEGProgram(MPEGProgram program);
-    void clearMPEGPrograms(long transactionId);
-    MPEGProgram getMPEGProgram(long programRef);
-    List<MPEGProgram> listMPEGPrograms(long transactionId);
+    List<StreamSource> listStreamSources();
 
-    void addProgramStreamMapping(ProgramStreamMapping mapping);
-    List<ProgramStreamMapping> getProgramStreamMappings(long transactionId, int programNumber);
+    void updateElementaryStreamStats(int pid, long pktCount, long pcrCount, int bitrate, double ratio, boolean scrambled);
 
-    void addCASystemStream(CASystemStream stream);
-    void updateCASystemStream(CASystemStream stream);
-    CASystemStream getCASystemStream(long streamRef);
-    List<CASystemStream> listCASystemStreams(long transactionId);
+    void updateElementaryStreamStats(ElementaryStream stream);
 
-    void addSIBouquet(SIBouquet bouquet);
+    void updateElementaryStreamUsage(int pid, String category, String description);
+
+    void updateElementaryStreamUsage(ElementaryStream stream);
+
+    void accumulateElementaryStreamErrors(int pid, int transportErrors, int continuityErrors);
+
+    ElementaryStream getElementaryStream(int pid);
+
+    List<ElementaryStream> listElementaryStreams(boolean presentOnly);
+
+    MPEGProgram addMPEGProgram(int programNumber, int transportStreamId, int pmtPid);
+
+    void updateMPEGProgram(int programRef, int pcrPid, int pmtVersion, boolean freeAccess);
+
+    void clearMPEGPrograms();
+
+    void addProgramElementaryMapping(int programRef, int streamPid, int streamType);
+
+    List<MPEGProgram> listMPEGPrograms();
+
+    CASystemStream addCASystemStream(int pid, int type, int systemId, byte[] privateData, int programRef, int elementaryStreamPid);
+
+    List<CASystemStream> listCASystemStreams();
+
+    SIBouquet addSIBouquet(int bouquetId);
+
     void updateSIBouquet(SIBouquet bouquet);
-    SIBouquet getSIBouquet(long bouquetRef);
-    List<SIBouquet> listSIBouquets(long transactionId);
 
-    void addBouquetServiceMapping(BouquetServiceMapping mapping);
-    List<BouquetServiceMapping> getBouquetServiceMappings(long transactionId, int bouquetId);
+    void addBouquetServiceMapping(int bouquetRef, int transportStreamId, int originalNetworkId, int serviceId);
 
-    void addSINetwork(SINetwork network);
+    List<SIBouquet> listSIBouquets();
+
+    SINetwork addSINetwork(int networkId, boolean actualNetwork);
+
     void updateSINetwork(SINetwork network);
-    SINetwork getSINetwork(long networkRef);
-    List<SINetwork> listSINetworks(long transactionId);
 
-    void addSIMultiplex(SIMultiplex multiplex);
+    List<SINetwork> listSINetworks();
+
+    SIMultiplex addSIMultiplex(int networkRef, int transportStreamId, int originalNetworkId);
+
     void updateSIMultiplex(SIMultiplex multiplex);
-    SIMultiplex getSIMultiplex(long multiplexRef);
-    List<SIMultiplex> listSIMultiplexes(long transactionId);
 
-    void addSIService(SIService service);
+    void addMultiplexServiceMapping(int bouquetRef, int serviceId);
+
+    List<SIMultiplex> listSIMultiplexes();
+
+    SIService addSIService(int serviceId, int transportStreamId, int originalNetworkId);
+
     void updateSIService(SIService service);
-    SIService getSIService(long serviceRef);
-    List<SIService> listSIServices(long transactionId);
 
-    void addSIEvent(SIEvent event);
+    List<SIService> listSIServices();
+
+    SIEvent addSIEvent(int eventId, int transportStreamId, int originalNetworkId, int serviceId);
+
     void updateSIEvent(SIEvent event);
-    SIEvent getSIEvent(long eventRef);
-    List<SIEvent> listSIEvents(long transactionId);
 
-    void addTimestamp(Timestamp timestamp);
-    Timestamp getLastTimestamp(long transactionId);
+    List<SIEvent> listSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
+                               boolean presentOnly, boolean scheduleOnly,
+                               OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd);
+
+    void addTimestamp(OffsetDateTime timestamp);
+
+    OffsetDateTime getLastTimestamp();
 
     void addTR290Event(TR290Event event);
-    List<TR290Event> listTR290Events(long transactionId);
-    List<TR290Stats> listTR290Stats(long transactionId);
+
+    List<TR290Event> listTR290Events();
+
+    List<TR290Stats> listTR290Stats();
 
     void addPCR(PCR pcr);
+
     void addPCRCheck(PCRCheck check);
-    List<PCRStats> listPCRStats(long transactionId);
-    List<PCRCheck> getRecentPCRChecks(long transactionId, int pid, int limit);
 
-    void addPrivateSection(PrivateSection section);
-    int removePrivateSections(long transactionId, int pid, String tag, int count);
-    List<PrivateSection> getPrivateSections(long transactionId, int pid, int count);
-    List<PrivateSection> getPrivateSections(long transactionId, int pid, String tag, int count);
-    Map<Integer, List<PrivateSection>> getPrivateSectionGroups(long transactionId, String tag);
+    List<PCRStats> listPCRStats();
 
-    void addTransportPacket(TransportPacket packet);
-    List<TransportPacket> getTransportPackets(long transactionId, int pid, int count);
+    List<PCRCheck> getRecentPCRChecks(int pid, int limit);
+
+    void addPrivateSection(String tag, int pid, long position, byte[] encoding);
+
+    void removePrivateSections(String tag, int pid);
+
+    List<PrivateSection> getPrivateSections(int pid, int count);
+
+    List<PrivateSection> getPrivateSections(String tag, int pid, int count);
+
+    Map<Integer, List<PrivateSection>> getPrivateSectionGroups(String tag);
+
+    void addTransportPacket(String tag, int pid, long position, byte[] encoding);
+
+    List<TransportPacket> getTransportPackets(String tag, int pid, int count);
+
+    void addTableVersion(TableVersion version);
+
+    List<TableVersion> listTableVersions();
 
     void addFilteringHook(FilteringHook hook);
+
     void removeFilteringHook(long hookRef);
+
     List<FilteringHook> listFilteringHooks();
 }

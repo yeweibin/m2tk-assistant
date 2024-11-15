@@ -30,7 +30,6 @@ import m2tk.multiplex.TSDemuxEvent;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -49,8 +48,8 @@ public class StreamAnalyzer
     {
         executor = Executors.newSingleThreadExecutor();
         demux = TSDemux.newDefaultDemux(executor);
-        eventBus = Objects.requireNonNull(bus);
-        databaseService = Objects.requireNonNull(database);
+        eventBus = bus;
+        databaseService = database;
     }
 
     public boolean start(String uri, List<Tracer> tracers, Consumer<DemuxStatus> consumer)
@@ -67,11 +66,7 @@ public class StreamAnalyzer
 
         demux.reset();
 
-        StreamSource source = new StreamSource();
-        source.setName((String) input.query("source name"));
-        source.setUri(uri);
-        databaseService.beginTransaction(source);
-
+        StreamSource source = databaseService.beginDiagnosis((String) input.query("source name"), uri);
         tracers.forEach(tracer -> tracer.configure(source, demux, databaseService));
 
         demux.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
@@ -80,8 +75,8 @@ public class StreamAnalyzer
         demux.attach(input);
 
         eventBus.post(new SourceAttachedEvent(source));
-
         log.info("开始分析");
+
         return true;
     }
 

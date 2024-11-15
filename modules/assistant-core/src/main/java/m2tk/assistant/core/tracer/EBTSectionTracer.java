@@ -18,7 +18,6 @@ package m2tk.assistant.core.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.core.M2TKDatabase;
-import m2tk.assistant.core.domain.PrivateSection;
 import m2tk.assistant.core.domain.StreamSource;
 import m2tk.mpeg2.decoder.ExtendedSectionDecoder;
 import m2tk.multiplex.TSDemux;
@@ -51,7 +50,6 @@ public class EBTSectionTracer implements Tracer
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
         databaseService = database;
-        transactionId = source.getTransactionId();
         demux.registerSectionChannel(0x0021, this::processSection);
     }
 
@@ -80,14 +78,10 @@ public class EBTSectionTracer implements Tracer
         if (cache.contains(key))
             return;
 
-        PrivateSection section = new PrivateSection();
-        section.setRef(-1);
-        section.setTransactionId(transactionId);
-        section.setTag("eb-section" + translateSectionType(tableId));
-        section.setPid(payload.getStreamPID());
-        section.setPosition(payload.getFinishPacketCounter());
-        section.setEncoding(payload.getEncoding().getBytes());
-        databaseService.addPrivateSection(section);
+        databaseService.addPrivateSection("eb-section" + translateSectionType(tableId),
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
 
         cache.add(key);
     }

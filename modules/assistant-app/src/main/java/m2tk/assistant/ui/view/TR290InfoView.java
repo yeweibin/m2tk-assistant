@@ -16,15 +16,18 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
+import m2tk.assistant.core.M2TKDatabase;
 import m2tk.assistant.core.domain.TR290Event;
 import m2tk.assistant.core.domain.TR290Stats;
 import m2tk.assistant.core.presets.TR290ErrorTypes;
-import m2tk.assistant.dbi.entity.TR290StatEntity;
+import m2tk.assistant.kernel.entity.TR290StatViewEntity;
+import m2tk.assistant.ui.AssistantApp;
 import m2tk.assistant.ui.component.TR290StatsPanel;
-import m2tk.assistant.ui.event.SourceAttachedEvent;
-import m2tk.assistant.ui.event.SourceDetachedEvent;
+import m2tk.assistant.core.event.SourceAttachedEvent;
+import m2tk.assistant.core.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -46,6 +49,8 @@ public class TR290InfoView extends JPanel implements InfoView
     private final transient FrameView frameView;
     private TR290StatsPanel tr290StatsPanel;
     private Timer timer;
+    private EventBus bus;
+    private M2TKDatabase database;
     private volatile long transactionId;
 
     public TR290InfoView(FrameView view)
@@ -81,14 +86,13 @@ public class TR290InfoView extends JPanel implements InfoView
             }
         });
 
-        Global.registerSubscriber(this);
         transactionId = -1;
     }
 
     @Subscribe
     public void onSourceAttachedEvent(SourceAttachedEvent event)
     {
-        transactionId = event.getSource().getTransactionId();
+        transactionId = 1; //event.getSource().getTransactionId();
         timer.start();
         refresh();
     }
@@ -103,6 +107,13 @@ public class TR290InfoView extends JPanel implements InfoView
     public void refresh()
     {
         queryTR290Events();
+    }
+
+    @Override
+    public void updateDataSource(EventBus bus, M2TKDatabase database)
+    {
+        this.bus = bus;
+        this.database = database;
     }
 
     public void reset()
@@ -125,12 +136,8 @@ public class TR290InfoView extends JPanel implements InfoView
 
     private void queryTR290Events()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
-
         Supplier<TR290Stats> query = () -> {
-            Map<String, TR290StatEntity> statsMap = new HashMap<>();
+            Map<String, TR290StatViewEntity> statsMap = new HashMap<>();
 //                Global.getDatabaseService()
 //                                                          .listTR290Stats(currentTransaction)
 //                                                          .stream()
@@ -138,10 +145,10 @@ public class TR290InfoView extends JPanel implements InfoView
 //                                                                         entity -> entity));
 
             TR290Stats stats = new TR290Stats();
-            Consumer<TR290StatEntity> operator = stat -> {
+            Consumer<TR290StatViewEntity> operator = stat -> {
                 if (stat != null)
                 {
-                    stats.setStat(stat.getIndicator(),
+                    stats.setStat(stat.getType(),
                                   stat.getCount(),
                                   new TR290Event());
 //                    stat.getLastEventTimestamp(),

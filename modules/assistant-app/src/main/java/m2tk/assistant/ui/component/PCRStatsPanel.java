@@ -16,7 +16,7 @@
 
 package m2tk.assistant.ui.component;
 
-import m2tk.assistant.dbi.entity.PCRStatEntity;
+import m2tk.assistant.kernel.entity.PCRStatViewEntity;
 import m2tk.assistant.ui.model.PCRStatsTableModel;
 import m2tk.assistant.ui.util.ComponentUtil;
 
@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 public class PCRStatsPanel extends JPanel
 {
     private PCRStatsTableModel tableModel;
-    private Consumer<PCRStatEntity> consumer;
+    private Consumer<PCRStatViewEntity> consumer;
 
     public PCRStatsPanel()
     {
@@ -79,7 +79,7 @@ public class PCRStatsPanel extends JPanel
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
-    public void update(List<PCRStatEntity> stats)
+    public void update(List<PCRStatViewEntity> stats)
     {
         tableModel.update(Objects.requireNonNull(stats));
     }
@@ -89,7 +89,7 @@ public class PCRStatsPanel extends JPanel
         tableModel.update(Collections.emptyList());
     }
 
-    public void addPCRStatConsumer(Consumer<PCRStatEntity> consumer)
+    public void addPCRStatConsumer(Consumer<PCRStatViewEntity> consumer)
     {
         this.consumer = consumer;
     }

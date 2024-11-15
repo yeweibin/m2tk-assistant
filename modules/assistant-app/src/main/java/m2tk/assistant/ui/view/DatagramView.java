@@ -16,12 +16,15 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
-import m2tk.assistant.dbi.entity.SectionEntity;
+import m2tk.assistant.core.M2TKDatabase;
+import m2tk.assistant.kernel.entity.PrivateSectionEntity;
+import m2tk.assistant.ui.AssistantApp;
 import m2tk.assistant.ui.component.SectionDatagramPanel;
-import m2tk.assistant.ui.event.SourceAttachedEvent;
-import m2tk.assistant.ui.event.SourceDetachedEvent;
+import m2tk.assistant.core.event.SourceAttachedEvent;
+import m2tk.assistant.core.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -41,6 +44,8 @@ public class DatagramView extends JPanel implements InfoView
     private final transient FrameView frameView;
     private SectionDatagramPanel sectionDatagramPanel;
     private Timer timer;
+    private EventBus bus;
+    private M2TKDatabase database;
     private volatile long transactionId;
 
     public DatagramView(FrameView view)
@@ -76,14 +81,13 @@ public class DatagramView extends JPanel implements InfoView
             }
         });
 
-        Global.registerSubscriber(this);
         transactionId = -1;
     }
 
     @Subscribe
     public void onSourceAttachedEvent(SourceAttachedEvent event)
     {
-        transactionId = event.getSource().getTransactionId();
+        transactionId = 1; //event.getSource().getTransactionId();
         timer.start();
         refresh();
     }
@@ -98,6 +102,13 @@ public class DatagramView extends JPanel implements InfoView
     public void refresh()
     {
         queryDatagrams();
+    }
+
+    @Override
+    public void updateDataSource(EventBus bus, M2TKDatabase database)
+    {
+        this.bus = bus;
+        this.database = database;
     }
 
     public void reset()
@@ -120,17 +131,17 @@ public class DatagramView extends JPanel implements InfoView
 
     private void queryDatagrams()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
-
-        Supplier<Map<String, List<SectionEntity>>> query = () ->
-                Global.getDatabaseService().getSectionGroups(currentTransaction);
-
-        Consumer<Map<String, List<SectionEntity>>> consumer = sectionDatagramPanel::update;
-
-        AsyncQueryTask<Map<String, List<SectionEntity>>> task =
-                new AsyncQueryTask<>(frameView.getApplication(), query, consumer);
-        task.execute();
+//        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
+//        if (currentTransaction == -1)
+//            return;
+//
+//        Supplier<Map<String, List<PrivateSectionEntity>>> query = () ->
+//                Global.getDatabaseService().getSectionGroups(currentTransaction);
+//
+//        Consumer<Map<String, List<PrivateSectionEntity>>> consumer = sectionDatagramPanel::update;
+//
+//        AsyncQueryTask<Map<String, List<PrivateSectionEntity>>> task =
+//                new AsyncQueryTask<>(frameView.getApplication(), query, consumer);
+//        task.execute();
     }
 }

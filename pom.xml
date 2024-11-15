@@ -15,10 +15,36 @@
 
     <properties>
         <jdk.version>21</jdk.version>
+        <m2tk.version>1.2.1</m2tk.version>
         <maven.compiler.source>${jdk.version}</maven.compiler.source>
         <maven.compiler.target>${jdk.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>mpeg2-toolkit</groupId>
+                <artifactId>m2tk-assistant-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mpeg2-toolkit</groupId>
+                <artifactId>m2tk-core</artifactId>
+                <version>${m2tk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mpeg2-toolkit</groupId>
+                <artifactId>m2tk-multiplex</artifactId>
+                <version>${m2tk.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>mpeg2-toolkit</groupId>
+                <artifactId>m2tk-io</artifactId>
+                <version>${m2tk.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

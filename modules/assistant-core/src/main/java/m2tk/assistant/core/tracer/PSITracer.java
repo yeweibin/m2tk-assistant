@@ -18,7 +18,9 @@ package m2tk.assistant.core.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.core.M2TKDatabase;
-import m2tk.assistant.core.domain.*;
+import m2tk.assistant.core.domain.CASystemStream;
+import m2tk.assistant.core.domain.MPEGProgram;
+import m2tk.assistant.core.domain.StreamSource;
 import m2tk.assistant.core.presets.CASystems;
 import m2tk.assistant.core.presets.StreamTypes;
 import m2tk.mpeg2.decoder.DescriptorLoopDecoder;
@@ -47,7 +49,7 @@ public class PSITracer implements Tracer
     private final Map<Integer, ProgramContext> programs;
 
     private M2TKDatabase databaseService;
-    private long transactionId;
+    private int sourceId;
     private int[] patSections;
     private int[] catSections;
     private int tsid;
@@ -77,8 +79,8 @@ public class PSITracer implements Tracer
     @Override
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
+        sourceId = source.getId();
         databaseService = database;
-        transactionId = source.getTransactionId();
 
         demux.registerSectionChannel(0x0000, this::processPAT);
         demux.registerSectionChannel(0x0001, this::processCAT);
@@ -114,49 +116,34 @@ public class PSITracer implements Tracer
             for (ProgramContext context : programs.values())
             {
                 demux.closeChannel(context.channel);
-                databaseService.updateElementaryStreamUsage(transactionId,
-                                                            context.program.getPmtPid(),
-                                                            StreamTypes.CATEGORY_USER_PRIVATE,
-                                                            "未知流");
+                databaseService.updateElementaryStreamUsage(context.program.getPmtPid(),
+                                                            "",
+                                                            "");
             }
             pmtVersions.clear();
             programs.clear();
-            databaseService.clearMPEGPrograms(transactionId);
+            databaseService.clearMPEGPrograms();
         }
 
         tsid = pat.getTransportStreamID();
         pat.forEachProgramAssociation((number, pmtpid) -> {
-            if (log.isDebugEnabled())
-            {
-                log.debug("[PAT] Program {}, PMT PID: {}",
-                          number,
-                          String.format("0x%04X", pmtpid));
-            }
+            log.debug("[PAT] Program {}, PMT PID: {}", number, pmtpid);
 
             ProgramContext context = new ProgramContext();
-            MPEGProgram program = new MPEGProgram();
-            program.setRef(-1);
-            program.setTransactionId(transactionId);
-            program.setTransportStreamId(tsid);
-            program.setProgramNumber(number);
-            program.setPmtPid(pmtpid);
-            program.setName("未知节目");
-            databaseService.addMPEGProgram(program);
-            context.program = program;
-            context.program.setPmtPid(pmtpid);
+            context.program = databaseService.addMPEGProgram(number, tsid, pmtpid);
             context.channel = demux.registerSectionChannel(pmtpid, this::processPMT);
             programs.put(number, context);
             pmtVersions.put(pmtpid, -1);
         });
 
-        StreamSource source = databaseService.getStreamSource(transactionId);
-        source.setTransportStreamId(tsid);
-        databaseService.updateStreamSource(source);
+        databaseService.updateStreamSourceTransportId(sourceId, tsid);
 
         patSections[secnum] = version;
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
-
-        recordPSISection("PAT", payload);
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
+        databaseService.addPrivateSection("PAT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
     }
 
     private void processCAT(TSDemuxPayload payload)
@@ -188,19 +175,25 @@ public class PSITracer implements Tracer
         descloop.attach(cat.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, descriptor -> {
             cad.attach(descriptor);
-            int emm = cad.getConditionalAccessStreamPID();
+            int emmpid = cad.getConditionalAccessStreamPID();
             int systemId = cad.getConditionalAccessSystemID();
+            byte[] privateData = cad.getPrivateDataBytes();
             String vendor = CASystems.vendor(systemId);
             String description = String.format("EMM，系统号：%04X", systemId);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
-            databaseService.updateElementaryStreamUsage(transactionId, emm, StreamTypes.CATEGORY_DATA, description);
+            databaseService.updateElementaryStreamUsage(emmpid, StreamTypes.CATEGORY_DATA, description);
+            databaseService.addCASystemStream(emmpid, CASystemStream.TYPE_EMM,
+                                              systemId, privateData,
+                                              -1, -1);
         });
 
         catSections[secnum] = version;
-        databaseService.updateElementaryStreamUsage(transactionId, payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
-
-        recordPSISection("CAT", payload);
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
+        databaseService.addPrivateSection("CAT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
     }
 
     private void processPMT(TSDemuxPayload payload)
@@ -226,12 +219,9 @@ public class PSITracer implements Tracer
         ProgramContext context = programs.get(pmt.getProgramNumber());
         if (context == null)
         {
-            if (log.isDebugEnabled())
-            {
-                log.debug("[PID {}] 收到了节目{}的PMT，但是该节目未在PAT中描述。丢弃。",
-                          String.format("0x%04X", payload.getStreamPID()),
-                          pmt.getProgramNumber());
-            }
+            log.debug("[PID {}] 收到了节目号为 {} 的PMT数据，但是该节目未在PAT中定义。丢弃。",
+                      payload.getStreamPID(),
+                      pmt.getProgramNumber());
             return;
         }
 
@@ -242,43 +232,35 @@ public class PSITracer implements Tracer
 
         descloop.attach(pmt.getDescriptorLoop());
         descloop.forEach(cad::isAttachable, encoding -> {
-            program.setScrambled(false);
+            program.setFreeAccess(false);
             cad.attach(encoding);
-            int ecm = cad.getConditionalAccessStreamPID();
+            int ecmpid = cad.getConditionalAccessStreamPID();
             int systemId = cad.getConditionalAccessSystemID();
             byte[] privateData = cad.getPrivateDataBytes();
             String vendor = CASystems.vendor(systemId);
             String description = String.format("ECM（节目号：%d），系统号：%04X", program.getProgramNumber(), systemId);
             if (!vendor.isEmpty())
                 description += "，提供商：" + vendor;
-            databaseService.updateElementaryStreamUsage(transactionId, ecm, StreamTypes.CATEGORY_DATA, description);
-
-            recordECMStream(systemId, ecm, privateData, program.getProgramNumber(), 8191);
+            databaseService.updateElementaryStreamUsage(ecmpid, StreamTypes.CATEGORY_DATA, description);
+            databaseService.addCASystemStream(ecmpid, CASystemStream.TYPE_ECM,
+                                              systemId, privateData,
+                                              program.getId(), -1);
         });
 
         pmt.forEachProgramElement(encoding -> {
             element.attach(encoding);
             int esPid = element.getElementaryPID();
             int esType = element.getStreamType();
-            databaseService.updateElementaryStreamUsage(transactionId, esPid, StreamTypes.category(esType),
+            databaseService.updateElementaryStreamUsage(esPid, StreamTypes.category(esType),
                                                         StreamTypes.description(esType) +
                                                         String.format("（节目号：%d）", program.getProgramNumber()));
-
-            ProgramStreamMapping mapping = new ProgramStreamMapping();
-            mapping.setRef(-1);
-            mapping.setTransactionId(transactionId);
-            mapping.setProgramNumber(program.getProgramNumber());
-            mapping.setElementaryStreamPid(esPid);
-            mapping.setElementaryStreamType(esType);
-            mapping.setElementaryStreamCategory(StreamTypes.category(esType));
-            mapping.setElementaryStreamDescription(StreamTypes.description(esType));
-            databaseService.addProgramStreamMapping(mapping);
+            databaseService.addProgramElementaryMapping(program.getId(), esPid, esType);
 
             descloop.attach(element.getDescriptorLoop());
             descloop.forEach(cad::isAttachable, descriptor -> {
-                program.setScrambled(false);
+                program.setFreeAccess(false);
                 cad.attach(descriptor);
-                int ecm = cad.getConditionalAccessStreamPID();
+                int ecmpid = cad.getConditionalAccessStreamPID();
                 int systemId = cad.getConditionalAccessSystemID();
                 byte[] privateData = cad.getPrivateDataBytes();
                 String vendor = CASystems.vendor(systemId);
@@ -288,45 +270,26 @@ public class PSITracer implements Tracer
                                                    systemId);
                 if (!vendor.isEmpty())
                     description += "，提供商：" + vendor;
-                databaseService.updateElementaryStreamUsage(transactionId, ecm, StreamTypes.CATEGORY_DATA, description);
-
-                recordECMStream(systemId, ecm, privateData, program.getProgramNumber(), esPid);
+                databaseService.updateElementaryStreamUsage(ecmpid, StreamTypes.CATEGORY_DATA, description);
+                databaseService.addCASystemStream(ecmpid, CASystemStream.TYPE_ECM,
+                                                  systemId, privateData,
+                                                  program.getId(), esPid);
             });
         });
 
-        databaseService.updateMPEGProgram(program);
+        databaseService.updateMPEGProgram(program.getId(),
+                                          program.getPcrPid(),
+                                          program.getPmtVersion(),
+                                          program.isFreeAccess());
 
         pmtVersions.put(pmtpid, version);
-        databaseService.updateElementaryStreamUsage(transactionId, pmtpid,
+        databaseService.updateElementaryStreamUsage(pmtpid,
                                                     StreamTypes.CATEGORY_DATA,
                                                     String.format("PMT（节目号：%d）", program.getProgramNumber()));
 
-        recordPSISection("PMT", payload);
-    }
-
-    private void recordPSISection(String type, TSDemuxPayload payload)
-    {
-        PrivateSection section = new PrivateSection();
-        section.setRef(-1);
-        section.setTransactionId(transactionId);
-        section.setTag(type);
-        section.setPid(payload.getStreamPID());
-        section.setPosition(payload.getFinishPacketCounter());
-        section.setEncoding(payload.getEncoding().getBytes());
-        databaseService.addPrivateSection(section);
-    }
-
-    private void recordECMStream(int systemId, int pid, byte[] privateData, int programNumber, int elementaryStreamPid)
-    {
-        CASystemStream stream = new CASystemStream();
-        stream.setRef(-1);
-        stream.setTransactionId(transactionId);
-        stream.setSystemId(systemId);
-        stream.setStreamPid(pid);
-        stream.setStreamType(CASystemStream.TYPE_ECM);
-        stream.setStreamPrivateData(privateData);
-        stream.setProgramNumber(programNumber);
-        stream.setElementaryStreamPid(elementaryStreamPid);
-        databaseService.addCASystemStream(stream);
+        databaseService.addPrivateSection("PMT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
     }
 }

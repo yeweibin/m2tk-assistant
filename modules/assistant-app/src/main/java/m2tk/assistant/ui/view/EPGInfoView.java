@@ -16,16 +16,17 @@
 
 package m2tk.assistant.ui.view;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.Global;
+import m2tk.assistant.core.M2TKDatabase;
 import m2tk.assistant.core.domain.SIEvent;
 import m2tk.assistant.core.domain.SIService;
-import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.SIEventEntity;
-import m2tk.assistant.dbi.entity.SIServiceEntity;
+import m2tk.assistant.kernel.service.M2TKDatabaseService;
+import m2tk.assistant.ui.AssistantApp;
 import m2tk.assistant.ui.component.ServiceEventGuidePanel;
-import m2tk.assistant.ui.event.SourceAttachedEvent;
-import m2tk.assistant.ui.event.SourceDetachedEvent;
+import m2tk.assistant.core.event.SourceAttachedEvent;
+import m2tk.assistant.core.event.SourceDetachedEvent;
 import m2tk.assistant.ui.task.AsyncQueryTask;
 import m2tk.assistant.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -46,6 +47,8 @@ public class EPGInfoView extends JPanel implements InfoView
     private ServiceEventGuidePanel serviceEventGuidePanel;
     private Timer timer;
     private volatile long transactionId;
+    private EventBus bus;
+    private M2TKDatabase database;
 
     public EPGInfoView(FrameView view)
     {
@@ -80,14 +83,13 @@ public class EPGInfoView extends JPanel implements InfoView
             }
         });
 
-        Global.registerSubscriber(this);
         transactionId = -1;
     }
 
     @Subscribe
     public void onSourceAttachedEvent(SourceAttachedEvent event)
     {
-        transactionId = event.getSource().getTransactionId();
+        transactionId = 1;
         timer.start();
         refresh();
     }
@@ -102,6 +104,13 @@ public class EPGInfoView extends JPanel implements InfoView
     public void refresh()
     {
         queryServiceAndEvents();
+    }
+
+    @Override
+    public void updateDataSource(EventBus bus, M2TKDatabase database)
+    {
+        this.bus = bus;
+        this.database = database;
     }
 
     public void reset()
@@ -124,10 +133,6 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
-        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-        if (currentTransaction == -1)
-            return;
-
         List<SIService> serviceList = new ArrayList<>();
         Map<SIService, List<SIEvent>> eventRegistry = new HashMap<>();
 
@@ -150,49 +155,47 @@ public class EPGInfoView extends JPanel implements InfoView
         };
 
         Supplier<Void> query = () -> {
-            DatabaseService databaseService = Global.getDatabaseService();
-
-            List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
-            List<SIEventEntity> events = databaseService.listEvents(currentTransaction);
-
-            services.stream()
-                    .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)
-                    .map(service -> new SIService())
-//                    service.getTransportStreamId(),
-//                                                  service.getOriginalNetworkId(),
-//                                                  service.getServiceId(),
-//                                                  service.getServiceTypeName(),
-//                                                  service.getServiceName(),
-//                                                  service.getServiceProvider()))
-                    .sorted(comparator1)
-                    .forEach(serviceList::add);
-
-            events.stream()
-                  .filter(event -> !event.isNvodReferenceEvent() && !event.isNvodTimeShiftedEvent())
-                  .map(event -> new SIEvent())
-//        event.getTransportStreamId(),
-//                                            event.getOriginalNetworkId(),
-//                                            event.getServiceId(),
-//                                            event.getEventId(),
-//                                            event.getEventName(),
-//                                            event.getEventDescription(),
-//                                            event.getLanguageCode(),
-//                                            event.getStartTime(),
-//                                            event.getDuration(),
-//                                            event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
-//                                            event.isPresentEvent()))
-                  .sorted(comparator2)
-                  .forEach(event -> {
-                      SIService service = new SIService();
-//                      event.getTransportStreamId(),
-//                                                        event.getOriginalNetworkId(),
-//                                                        event.getServiceId(),
-//                                                        "数字电视业务",
-//                                                        String.format("未知业务（业务号：%d）", event.getServiceId()),
-//                                                        "未知提供商");
-                      List<SIEvent> eventList = eventRegistry.computeIfAbsent(service, any -> new ArrayList<>());
-                      eventList.add(event);
-                  });
+//            List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
+//            List<SIEventEntity> events = databaseService.listEvents(currentTransaction);
+//
+//            services.stream()
+//                    .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)
+//                    .map(service -> new SIService())
+////                    service.getTransportStreamId(),
+////                                                  service.getOriginalNetworkId(),
+////                                                  service.getServiceId(),
+////                                                  service.getServiceTypeName(),
+////                                                  service.getServiceName(),
+////                                                  service.getServiceProvider()))
+//                    .sorted(comparator1)
+//                    .forEach(serviceList::add);
+//
+//            events.stream()
+//                  .filter(event -> !event.isNvodReferenceEvent() && !event.isNvodTimeShiftedEvent())
+//                  .map(event -> new SIEvent())
+////        event.getTransportStreamId(),
+////                                            event.getOriginalNetworkId(),
+////                                            event.getServiceId(),
+////                                            event.getEventId(),
+////                                            event.getEventName(),
+////                                            event.getEventDescription(),
+////                                            event.getLanguageCode(),
+////                                            event.getStartTime(),
+////                                            event.getDuration(),
+////                                            event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
+////                                            event.isPresentEvent()))
+//                  .sorted(comparator2)
+//                  .forEach(event -> {
+//                      SIService service = new SIService();
+////                      event.getTransportStreamId(),
+////                                                        event.getOriginalNetworkId(),
+////                                                        event.getServiceId(),
+////                                                        "数字电视业务",
+////                                                        String.format("未知业务（业务号：%d）", event.getServiceId()),
+////                                                        "未知提供商");
+//                      List<SIEvent> eventList = eventRegistry.computeIfAbsent(service, any -> new ArrayList<>());
+//                      eventList.add(event);
+//                  });
 
             return null;
         };

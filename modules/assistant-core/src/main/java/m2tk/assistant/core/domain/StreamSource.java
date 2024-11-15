@@ -21,12 +21,9 @@ import lombok.Data;
 @Data
 public class StreamSource
 {
-    private long ref;
-    private long transactionId;
-
+    private int id;
     private String name;
     private String uri;
-
     private int frameSize;
     private int transportStreamId;
     private int bitrate;

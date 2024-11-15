@@ -18,12 +18,9 @@ package m2tk.assistant;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.eventbus.EventBus;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.core.StreamAnalyzer;
-import m2tk.assistant.dbi.DatabaseService;
-import m2tk.assistant.dbi.entity.SourceEntity;
+import m2tk.assistant.kernel.entity.StreamSourceEntity;
 import m2tk.assistant.template.DescriptorDecoder;
 import m2tk.assistant.template.SectionDecoder;
 import m2tk.assistant.template.TemplateReader;
@@ -42,22 +39,15 @@ import java.util.stream.Stream;
 @Slf4j
 public final class Global
 {
-    private static final DatabaseService databaseService;
-    private static final StreamAnalyzer streamAnalyser;
     private static final Set<Integer> userPrivateSectionStreams;
-    private static volatile long latestTransactionId = -1L;
     private static volatile int maxDatagramPerStream = -1;
     private static boolean requiresLightTheme;
     private static String latestSourceUrl;
 
-    private static final EventBus eventBus;
     private static final ObjectMapper objectMapper;
 
     static
     {
-        databaseService = new DatabaseService();
-        eventBus = new EventBus();
-        streamAnalyser = new StreamAnalyzer(eventBus, databaseService);
         userPrivateSectionStreams = new HashSet<>();
         objectMapper = new ObjectMapper();
     }
@@ -73,14 +63,8 @@ public final class Global
     {
     }
 
-    public static StreamAnalyzer getStreamAnalyser()
-    {
-        return streamAnalyser;
-    }
-
     public static void init()
     {
-        databaseService.initDatabase();
         loadUserConfigs();
         loadInternalTemplates();
         loadUserDefinedTemplates();
@@ -136,16 +120,7 @@ public final class Global
         try (Stream<Path> stream = Files.list(folder))
         {
             TemplateReader reader = new TemplateReader();
-            stream.filter(path -> path.getFileName().toString().endsWith(".xml"))
-                  .forEach(file -> {
-                      M2TKTemplate userTemplate = reader.parse(file.toFile());
-                      if (userTemplate != null)
-                      {
-                          userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
-                          userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
-                          log.info("加载自定义模板：{}", file);
-                      }
-                  });
+            stream.forEach(path -> loadTemplate(reader, path.toFile()));
         } catch (Exception ex)
         {
             log.warn("加载自定义模板时异常：{}", ex.getMessage());
@@ -159,24 +134,26 @@ public final class Global
         int success = 0;
         for (File file : files)
         {
-            if (file == null || !file.getName().endsWith(".xml"))
-                continue;
-
-            M2TKTemplate userTemplate = reader.parse(file);
-            if (userTemplate != null)
-            {
-                success ++;
-                userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
-                userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
-                log.info("加载自定义模板：{}", file);
-            }
+            if (loadTemplate(reader, file))
+                success += 1;
         }
         return success;
     }
 
-    public static DatabaseService getDatabaseService()
+    private static boolean loadTemplate(TemplateReader reader, File file)
     {
-        return databaseService;
+        if (file == null || !file.getName().endsWith(".xml"))
+            return false;
+
+        M2TKTemplate userTemplate = reader.parse(file);
+        if (userTemplate == null)
+            return false;
+
+        userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+        userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        log.info("加载自定义模板：{}", file);
+
+        return true;
     }
 
     public static boolean requiresLightTheme()
@@ -206,7 +183,7 @@ public final class Global
 
     public static List<String> getSourceHistory()
     {
-        return databaseService.getSourceHistory();
+        return List.of(); //databaseService.getSourceHistory();
     }
 
     public static String getLatestSourceUrl()
@@ -214,24 +191,9 @@ public final class Global
         return latestSourceUrl;
     }
 
-    public static long getLatestTransactionId()
+    public static void updateSource(StreamSourceEntity source)
     {
-        return latestTransactionId;
-    }
-
-    public static void updateSource(SourceEntity source)
-    {
-        latestTransactionId = source.getTransactionId();
-        latestSourceUrl = source.getSourceUrl();
-    }
-
-    public static void postEvent(Object event)
-    {
-        eventBus.post(event);
-    }
-
-    public static void registerSubscriber(Object subscriber)
-    {
-        eventBus.register(subscriber);
+//        latestTransactionId = source.getTransactionId();
+//        latestSourceUrl = source.getSourceUrl();
     }
 }
