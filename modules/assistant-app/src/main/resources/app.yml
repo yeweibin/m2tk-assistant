@@ -24,9 +24,9 @@ m2tk.db: # 数据源对象的 bean 名称
 mybatis: # 这个是 MyBatis（MyBatis-plus）配置的前缀
   m2tk: # 必须与 DataSource 的 bean 名称相同
     typeAliases: #支持包名 或 类名（大写开头 或 *）//支持 ** 或 * 占位符
-      - "m2tk.assistant.kernel.entity"
+      - "m2tk.assistant.app.kernel.entity"
     mappers: #支持包名 或 类名（大写开头 或 *）或 xml（.xml结尾）//支持 ** 或 * 占位符
-      - "m2tk.assistant.kernel.mapper"
+      - "m2tk.assistant.app.kernel.mapper"
       - "classpath:m2tk/assistant/**/mapper.xml"
     configuration: # 扩展配置（要与 MybatisConfiguration 类的属性一一对应）
       cacheEnabled: false

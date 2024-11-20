@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) M2TK Project. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package m2tk.assistant.app.ui.component;
+
+import m2tk.assistant.api.domain.ElementaryStream;
+import m2tk.assistant.app.ui.util.ComponentUtil;
+import m2tk.assistant.app.ui.util.ThreeStateRowSorterListener;
+import m2tk.assistant.app.ui.model.StreamInfoTableModel;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.BiConsumer;
+
+public class StreamInfoPanel extends JPanel
+{
+    private StreamInfoTableModel model;
+    private transient BiConsumer<MouseEvent, ElementaryStream> popupListener;
+
+    public StreamInfoPanel()
+    {
+        initUI();
+    }
+
+    private void initUI()
+    {
+        model = new StreamInfoTableModel();
+        TableRowSorter<StreamInfoTableModel> rowSorter = new TableRowSorter<>(model);
+        rowSorter.addRowSorterListener(new ThreeStateRowSorterListener(rowSorter));
+
+        JTable table = new JTable();
+        table.setModel(model);
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        table.setRowSelectionAllowed(true);
+        table.setRowSorter(rowSorter);
+        table.getTableHeader().setReorderingAllowed(true);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        table.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                if (e.isPopupTrigger())
+                {
+                    int selectedRow = table.getSelectedRow();
+                    int rowAtPoint = table.rowAtPoint(e.getPoint());
+                    if (selectedRow == rowAtPoint && popupListener != null)
+                    {
+                        try
+                        {
+                            popupListener.accept(e, model.getRow(table.convertRowIndexToModel(selectedRow)));
+                        } catch (Exception ignored)
+                        {
+                        }
+                    }
+                }
+            }
+        });
+
+        DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
+        centeredRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        DefaultTableCellRenderer leadingRenderer = new DefaultTableCellRenderer();
+        leadingRenderer.setHorizontalAlignment(SwingConstants.LEADING);
+        DefaultTableCellRenderer trailingRenderer = new DefaultTableCellRenderer();
+        trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
+
+        TableColumnModel columnModel = table.getColumnModel();
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 40, false); // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, 40, false); // 流状态
+        ComponentUtil.configTableColumn(columnModel, 2, 40, false); // 加扰状态
+        ComponentUtil.configTableColumn(columnModel, 3, 40, false); // PCR
+        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 120, true); // PID
+        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, true); // 平均Kbps
+        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false); // 带宽占比
+        ComponentUtil.configTableColumn(columnModel, 7, leadingRenderer, 400, true); // 类型描述
+        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 100, false); // 包数量
+        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 100, false); // 传输错误
+        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 100, false); // 连续计数错误
+
+        setLayout(new BorderLayout());
+        add(new JScrollPane(table), BorderLayout.CENTER);
+    }
+
+    public void setPopupListener(BiConsumer<MouseEvent, ElementaryStream> listener)
+    {
+        popupListener = listener;
+    }
+
+    public void resetStreamList()
+    {
+        model.update(Collections.emptyList());
+    }
+
+    public void updateStreamList(List<ElementaryStream> streams)
+    {
+        model.update(streams);
+    }
+}

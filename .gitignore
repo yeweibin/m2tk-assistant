@@ -1,3 +1,4 @@
 /.idea/
 /modules/assistant-app/target/
-/modules/assistant-core/target/
+/modules/assistant-api/target/
+/modules/assistant-ext/target/

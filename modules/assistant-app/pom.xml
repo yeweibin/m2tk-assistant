@@ -4,16 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>mpeg2-toolkit</groupId>
     <artifactId>m2tk-assistant-app</artifactId>
-
-    <parent>
-        <groupId>mpeg2-toolkit</groupId>
-        <artifactId>m2tk-assistant</artifactId>
-        <version>2.0-incubation</version>
-        <relativePath>../../pom.xml</relativePath>
-    </parent>
+    <version>2.0-incubation</version>
+    <packaging>jar</packaging>
 
     <properties>
+        <jdk.version>21</jdk.version>
+        <m2tk.version>1.2.1</m2tk.version>
         <bsaf.version>1.9.2</bsaf.version>
         <flatlaf.version>3.5</flatlaf.version>
         <miglayout-swing.version>11.0</miglayout-swing.version>
@@ -32,6 +30,11 @@
         <eaxy.version>0.2.2</eaxy.version>
         <jaxp-api.version>1.4.5</jaxp-api.version>
         <jaffree.version>2023.09.10</jaffree.version>
+        <maven.compiler.source>${jdk.version}</maven.compiler.source>
+        <maven.compiler.target>${jdk.version}</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <scm>
@@ -51,13 +54,6 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.jdbi</groupId>
-                <artifactId>jdbi3-bom</artifactId>
-                <type>pom</type>
-                <version>3.32.0</version>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.noear</groupId>
                 <artifactId>solon-parent</artifactId>
                 <version>3.0.2</version>
@@ -70,11 +66,18 @@
     <dependencies>
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
-            <artifactId>m2tk-assistant-core</artifactId>
+            <artifactId>m2tk-assistant-api</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-multiplex</artifactId>
+            <version>${m2tk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.pf4j</groupId>
+            <artifactId>pf4j</artifactId>
+            <version>3.12.1</version>
         </dependency>
         <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
@@ -93,6 +96,16 @@
             <version>${flatlaf.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-fonts-inter</artifactId>
+            <version>4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-fonts-roboto-mono</artifactId>
+            <version>3.000</version>
+        </dependency>
+        <dependency>
             <groupId>com.miglayout</groupId>
             <artifactId>miglayout-swing</artifactId>
             <version>${miglayout-swing.version}</version>
@@ -102,26 +115,6 @@
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.slf4j</groupId>-->
-<!--            <artifactId>slf4j-api</artifactId>-->
-<!--            <version>${slf4j.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-classic</artifactId>-->
-<!--            <version>${logback.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-annotations</artifactId>-->
-<!--            <version>${jackson.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--            <artifactId>jackson-databind</artifactId>-->
-<!--            <version>${jackson.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-core</artifactId>
@@ -136,26 +129,6 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>${hikari.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jdbi</groupId>
-            <artifactId>jdbi3-core</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.github.ben-manes.caffeine</groupId>
-                    <artifactId>caffeine</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>${caffeine.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jfree</groupId>
@@ -227,9 +200,14 @@
             <artifactId>mybatis-plus-extension-solon-plugin</artifactId>
         </dependency>
         <dependency>
-            <groupId>mpeg2-toolkit</groupId>
-            <artifactId>m2tk-assistant-core</artifactId>
-            <version>2.0-incubation</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
         </dependency>
     </dependencies>
 
@@ -241,13 +219,21 @@
                 <version>3.13.0</version>
                 <configuration>
                     <release>${jdk.version}</release>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
+<!--                    <annotationProcessors>-->
+<!--                        <annotationProcessor>org.pf4j.processor.ExtensionAnnotationProcessor</annotationProcessor>-->
+<!--                    </annotationProcessors>-->
+<!--                    <annotationProcessorPaths>-->
+<!--                        <path>-->
+<!--                            <groupId>org.pf4j</groupId>-->
+<!--                            <artifactId>pf4j</artifactId>-->
+<!--                            <version>3.12.1</version>-->
+<!--                        </path>-->
+<!--                        <path>-->
+<!--                            <groupId>org.projectlombok</groupId>-->
+<!--                            <artifactId>lombok</artifactId>-->
+<!--                            <version>${lombok.version}</version>-->
+<!--                        </path>-->
+<!--                    </annotationProcessorPaths>-->
                 </configuration>
             </plugin>
 
@@ -259,7 +245,7 @@
                     <archive>
                         <manifest>
                             <!-- 项目启动类 -->
-                            <mainClass>m2tk.assistant.AppLauncher</mainClass>
+                            <mainClass>m2tk.assistant.app.AppLauncher</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
                         <manifestEntries>
@@ -308,7 +294,7 @@
                 <configuration>
                     <type>app-image</type>
                     <minimum>true</minimum>
-                    <mainClass>m2tk.assistant.AppLauncher</mainClass>
+                    <mainClass>m2tk.assistant.app.AppLauncher</mainClass>
                     <icon>${project.basedir}/src/main/resources/images/app.ico</icon>
                     <appVersion>2.0.0</appVersion>
                     <appContent>${project.basedir}/fonts,${project.basedir}/ffmpeg</appContent>

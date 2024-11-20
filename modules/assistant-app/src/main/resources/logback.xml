@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="TextListLogAppender" class="m2tk.assistant.util.TextListLogAppender">
+    <appender name="TextListLogAppender" class="m2tk.assistant.app.util.TextListLogAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
@@ -29,19 +29,19 @@
     <root level="INFO">
         <appender-ref ref="FileAppender"/>
     </root>
-    <logger name="m2tk.assistant.ui.AssistantApp" level="INFO">
+    <logger name="m2tk.assistant.app.ui.AssistantApp" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
-    <logger name="m2tk.assistant.kernel.service.MPEGTSPlayer" level="INFO">
+    <logger name="m2tk.assistant.app.kernel.service.MPEGTSPlayer" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
-    <logger name="m2tk.assistant.core.StreamAnalyzer" level="INFO">
+    <logger name="m2tk.assistant.app.kernel.service.StreamAnalyzer" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
-    <logger name="m2tk.assistant.ui.MainViewController" level="INFO">
+    <logger name="m2tk.assistant.app.ui.MainViewController" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
-    <logger name="m2tk.assistant.ui.view.StreamInfoView" level="INFO">
+    <logger name="m2tk.assistant.core.view.StreamInfoView" level="INFO">
         <appender-ref ref="TextListLogAppender" />
     </logger>
     <logger name="m2tk.template" level="INFO">
