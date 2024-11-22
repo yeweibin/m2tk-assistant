@@ -16,13 +16,9 @@
 
 package m2tk.assistant.api.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class SIServiceLocator
 {
     private int originalNetworkId;

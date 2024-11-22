@@ -49,9 +49,4 @@ public class SIService
     {
         return serviceType == 0x05;
     }
-
-    public SIServiceLocator locator()
-    {
-        return new SIServiceLocator(originalNetworkId, transportStreamId, serviceId);
-    }
 }

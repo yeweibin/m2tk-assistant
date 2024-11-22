@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.kernel;
 
 import lombok.Getter;
@@ -21,17 +20,17 @@ import lombok.Getter;
 @Getter
 public class KernelException extends RuntimeException
 {
-    private final int code;
+    private final int errorCode;
 
     public KernelException(int code)
     {
         super("code = " + code);
-        this.code = code;
+        errorCode = code;
     }
 
     public KernelException(int code, String message)
     {
         super(message);
-        this.code = code;
+        errorCode = code;
     }
 }

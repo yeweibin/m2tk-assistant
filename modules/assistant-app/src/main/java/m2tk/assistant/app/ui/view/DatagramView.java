@@ -1,17 +1,17 @@
 /*
- * Copyright (c) M2TK Project. All rights reserved.
+ *  Copyright (c) M2TK Project. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
 package m2tk.assistant.app.ui.view;
 
@@ -19,16 +19,22 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.api.event.SourceAttachedEvent;
 import m2tk.assistant.api.event.SourceDetachedEvent;
 import m2tk.assistant.app.ui.component.SectionDatagramPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
+import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
+import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
+import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
@@ -97,9 +103,8 @@ public class DatagramView extends JPanel implements InfoView
     }
 
     @Override
-    public void setupDataSource(EventBus bus, M2TKDatabase database)
+    public void setupDatabase(M2TKDatabase database)
     {
-        this.bus = bus;
         this.database = database;
     }
 
@@ -110,9 +115,25 @@ public class DatagramView extends JPanel implements InfoView
     }
 
     @Override
+    public void setupBus(EventBus bus)
+    {
+        this.bus = bus;
+    }
+
+    @Override
     public void setupMenu(JMenu menu)
     {
-
+        JMenuItem item = new JMenuItem("数据结构");
+        item.setIcon(getViewIcon());
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 4"));
+        item.addActionListener(e -> {
+            if (bus != null)
+            {
+                ShowInfoViewEvent event = new ShowInfoViewEvent(this);
+                bus.post(event);
+            }
+        });
+        menu.add(item);
     }
 
     @Override
@@ -130,7 +151,7 @@ public class DatagramView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return null;
+        return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, UIManager.getColor("Label.foreground"));
     }
 
     public void reset()

@@ -22,6 +22,7 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIEvent;
 import m2tk.assistant.api.domain.SIService;
+import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.api.event.SourceAttachedEvent;
 import m2tk.assistant.api.event.SourceDetachedEvent;
 import m2tk.assistant.app.ui.component.ServiceEventGuidePanel;
@@ -29,11 +30,15 @@ import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
+import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
+import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;
@@ -106,9 +111,8 @@ public class EPGInfoView extends JPanel implements InfoView
     }
 
     @Override
-    public void setupDataSource(EventBus bus, M2TKDatabase database)
+    public void setupDatabase(M2TKDatabase database)
     {
-        this.bus = bus;
         this.database = database;
     }
 
@@ -119,9 +123,25 @@ public class EPGInfoView extends JPanel implements InfoView
     }
 
     @Override
+    public void setupBus(EventBus bus)
+    {
+        this.bus = bus;
+    }
+
+    @Override
     public void setupMenu(JMenu menu)
     {
-
+        JMenuItem item = new JMenuItem("EPG");
+        item.setIcon(getViewIcon());
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 3"));
+        item.addActionListener(e -> {
+            if (bus != null)
+            {
+                ShowInfoViewEvent event = new ShowInfoViewEvent(this);
+                bus.post(event);
+            }
+        });
+        menu.add(item);
     }
 
     @Override
@@ -139,7 +159,7 @@ public class EPGInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return null;
+        return FontIcon.of(FluentUiRegularAL.CALENDAR_20, 20, UIManager.getColor("Label.foreground"));
     }
 
     public void reset()

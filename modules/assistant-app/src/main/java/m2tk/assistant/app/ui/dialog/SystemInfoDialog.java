@@ -1,22 +1,27 @@
 /*
- * Copyright (c) M2TK Project. All rights reserved.
+ *  Copyright (c) M2TK Project. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.dialog;
 
+import jnafilechooser.api.JnaFileChooser;
+import m2tk.assistant.app.ui.util.ComponentUtil;
+
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultCaret;
+import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -46,11 +51,11 @@ public class SystemInfoDialog extends JDialog
     private void exportInfo()
     {
         String info = textArea.getText();
-        JFileChooser chooser = new JFileChooser();
-        chooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir")).toFile());
-        chooser.setSelectedFile(new File("system-info.txt"));
-        int retCode = chooser.showSaveDialog(this);
-        if (retCode == JFileChooser.APPROVE_OPTION)
+        JnaFileChooser chooser = new JnaFileChooser();
+        chooser.setCurrentDirectory(System.getProperty("user.home"));
+        chooser.setMode(JnaFileChooser.Mode.Files);
+        chooser.setDefaultFileName("system-info.txt");
+        if (chooser.showSaveDialog(this))
         {
             try
             {
@@ -80,7 +85,14 @@ public class SystemInfoDialog extends JDialog
 
         textArea = new JTextArea();
         textArea.setEditable(false);
-        root.add(new JScrollPane(textArea), BorderLayout.CENTER);
+        textArea.setLineWrap(true);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.putClientProperty("FlatLaf.style",
+                                     """
+                                     borderWidth: 0.75;
+                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                     """);
+        root.add(scrollPane, BorderLayout.CENTER);
 
         JButton export = new JButton("导出到文件");
         export.addActionListener(e -> exportInfo());
@@ -109,21 +121,37 @@ public class SystemInfoDialog extends JDialog
         {
             appendTextArea(objectObjectEntry.getKey() + "=" + objectObjectEntry.getValue());
         }
+        removeLastLineSeparator();
+        textArea.setCaretPosition(0);
 
         pack();
         setModal(true);
         setTitle("系统环境变量");
-        setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getRootPane().setDefaultButton(close);
         getRootPane().registerKeyboardAction(e -> closeDialog(),
                                              KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0),
                                              JComponent.WHEN_IN_FOCUSED_WINDOW);
+
+        ComponentUtil.setPreferSizeAndLocateToCenter(this, 0.4, 0.64);
     }
 
     private void appendTextArea(String str)
     {
         textArea.append(str);
         textArea.append(System.lineSeparator());
+    }
+
+    private void removeLastLineSeparator()
+    {
+        try
+        {
+            Document doc = textArea.getDocument();
+            String lineSeparator = System.lineSeparator();
+            int length = lineSeparator.length();
+            doc.remove(doc.getLength() - length, length);
+        } catch (BadLocationException ignored)
+        {
+        }
     }
 }

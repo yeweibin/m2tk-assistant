@@ -13,11 +13,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.app.kernel.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import m2tk.assistant.app.kernel.entity.SIMultiplexEntity;
+package m2tk.assistant.api.event;
 
-public interface SIMultiplexEntityMapper extends BaseMapper<SIMultiplexEntity>
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import m2tk.assistant.api.InfoView;
+
+@Getter
+@AllArgsConstructor
+public class ShowInfoViewEvent
 {
+    private InfoView view;
 }

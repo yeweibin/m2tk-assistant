@@ -13,12 +13,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.app.kernel.entity.StreamSourceEntity;
 import m2tk.assistant.app.ui.template.DescriptorDecoder;
 import m2tk.assistant.app.ui.template.SectionDecoder;
@@ -37,9 +37,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+@Slf4j
 public final class Global
 {
-    private static final Logger log = LoggerFactory.getLogger(Global.class);
+//    private static final Logger log = LoggerFactory.getLogger(Global.class);
     private static final Set<Integer> userPrivateSectionStreams;
     private static volatile int maxDatagramPerStream = -1;
     private static boolean requiresLightTheme;
@@ -58,26 +59,6 @@ public final class Global
     {
         private String appTheme;
         private int datagramFilteringLimitPerStream;
-
-//        public String getAppTheme()
-//        {
-//            return appTheme;
-//        }
-//
-//        public void setAppTheme(String appTheme)
-//        {
-//            this.appTheme = appTheme;
-//        }
-//
-//        public int getDatagramFilteringLimitPerStream()
-//        {
-//            return datagramFilteringLimitPerStream;
-//        }
-//
-//        public void setDatagramFilteringLimitPerStream(int datagramFilteringLimitPerStream)
-//        {
-//            this.datagramFilteringLimitPerStream = datagramFilteringLimitPerStream;
-//        }
     }
 
     private Global()

@@ -26,7 +26,7 @@
     <dependencies>
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
-            <artifactId>m2tk-assistant-core</artifactId>
+            <artifactId>m2tk-assistant-api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -52,6 +52,18 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-swing</artifactId>
+            <version>12.3.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fluentui-pack</artifactId>
+            <version>12.3.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
@@ -151,10 +163,10 @@
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
                         <manifestEntries>
-                            <Plugin-Class>m2tk.assistant.core.CorePlugin</Plugin-Class>
-                            <Plugin-Id>assistant-core-plugin</Plugin-Id>
+                            <Plugin-Class>m2tk.assistant.ext.ExtPlugin</Plugin-Class>
+                            <Plugin-Id>assistant-ext-plugin</Plugin-Id>
                             <Plugin-Version>0.0.1</Plugin-Version>
-                            <Plugin-Description>M2TK-Assistant App Core Plugin</Plugin-Description>
+                            <Plugin-Description>M2TK-Assistant App Ext Plugin</Plugin-Description>
                             <Plugin-Provider>M2TK</Plugin-Provider>
                             <Plugin-License>Apache License 2.0</Plugin-License>
                         </manifestEntries>
