@@ -20,8 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
 import m2tk.assistant.api.domain.StreamSource;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.io.ProtocolManager;
 import m2tk.io.RxChannel;
 import m2tk.multiplex.DemuxStatus;
@@ -85,7 +84,7 @@ public class StreamAnalyzer
 
         demux.attach(input);
 
-        bus.post(new SourceAttachedEvent(source));
+        bus.post(new SourceStateEvent(SourceStateEvent.ATTACHED));
         log.info("开始分析");
 
         return true;
@@ -114,7 +113,7 @@ public class StreamAnalyzer
                 log.error("关闭通道时异常：{}", ex.getMessage());
             }
 
-            bus.post(new SourceDetachedEvent());
+            bus.post(new SourceStateEvent(SourceStateEvent.DETACHED));
             log.info("停止分析");
         }
     }

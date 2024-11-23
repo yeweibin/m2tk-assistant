@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.view;
 
 import com.google.common.eventbus.EventBus;
@@ -22,13 +21,13 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.TR290Event;
 import m2tk.assistant.api.domain.TR290Stats;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.api.presets.TR290ErrorTypes;
 import m2tk.assistant.app.ui.component.TR290StatsPanel;
-import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
+import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
 import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
@@ -36,9 +35,6 @@ import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.HashMap;
@@ -74,7 +70,7 @@ public class TR290InfoView extends JPanel implements InfoView
         });
 
         tr290StatsPanel = new TR290StatsPanel();
-        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101 290", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101 290");
 
         setLayout(new MigLayout("fill"));
         add(tr290StatsPanel, "center, grow");
@@ -91,32 +87,6 @@ public class TR290InfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        transactionId = 1; //event.getSource().getTransactionId();
-        timer.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        transactionId = -1;
-    }
-
-    @Override
-    public void refresh()
-    {
-        queryTR290Events();
-    }
-
-    @Override
-    public void setupDatabase(M2TKDatabase database)
-    {
-        this.database = database;
-    }
-
     @Override
     public void setupApplication(Application application)
     {
@@ -124,9 +94,12 @@ public class TR290InfoView extends JPanel implements InfoView
     }
 
     @Override
-    public void setupBus(EventBus bus)
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
 
     @Override
@@ -143,7 +116,6 @@ public class TR290InfoView extends JPanel implements InfoView
             }
         });
         menu.add(item);
-
     }
 
     @Override
@@ -171,15 +143,40 @@ public class TR290InfoView extends JPanel implements InfoView
             timer.restart();
     }
 
-    public void startRefreshing()
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
     {
-        if (transactionId != -1)
-            timer.start();
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                transactionId = 1; //event.getSource().getTransactionId();
+                timer.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                transactionId = -1;
+            }
+        }
     }
 
-    public void stopRefreshing()
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
     {
-        timer.stop();
+        if (event.enabled())
+        {
+            if (transactionId != -1)
+                timer.start();
+        } else
+        {
+            timer.stop();
+        }
+    }
+
+    public void refresh()
+    {
+        queryTR290Events();
     }
 
     private void queryTR290Events()

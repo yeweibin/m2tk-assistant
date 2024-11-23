@@ -22,12 +22,6 @@ public class KernelException extends RuntimeException
 {
     private final int errorCode;
 
-    public KernelException(int code)
-    {
-        super("code = " + code);
-        errorCode = code;
-    }
-
     public KernelException(int code, String message)
     {
         super(message);

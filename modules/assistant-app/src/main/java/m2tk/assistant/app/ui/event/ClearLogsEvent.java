@@ -13,11 +13,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+package m2tk.assistant.app.ui.event;
 
-package m2tk.assistant.api.event;
-
-import m2tk.assistant.api.InfoView;
-
-public record ShowInfoViewEvent(InfoView view)
+public class ClearLogsEvent
 {
 }

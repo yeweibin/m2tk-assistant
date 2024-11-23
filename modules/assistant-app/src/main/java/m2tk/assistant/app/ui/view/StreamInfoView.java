@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.view;
 
 import cn.hutool.core.util.StrUtil;
@@ -22,16 +21,16 @@ import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.*;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.api.presets.StreamTypes;
 import m2tk.assistant.app.ui.component.CASystemInfoPanel;
 import m2tk.assistant.app.ui.component.ProgramInfoPanel;
 import m2tk.assistant.app.ui.component.SourceInfoPanel;
 import m2tk.assistant.app.ui.component.StreamInfoPanel;
-import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
+import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
 import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
@@ -41,8 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.event.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -128,9 +128,9 @@ public class StreamInfoView extends JPanel implements InfoView
         tabbedPane.add("节目", programInfoPanel);
         tabbedPane.add("条件接收", casInfoPanel);
 
-        ComponentUtil.setTitledBorder(streamInfoPanel, "传输流信息", TitledBorder.LEFT);
-        ComponentUtil.setTitledBorder(sourceInfoPanel, "基本信息", TitledBorder.LEFT);
-        ComponentUtil.setTitledBorder(tabbedPane, "PSI信息", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(streamInfoPanel, "传输流信息");
+        ComponentUtil.setTitledBorder(sourceInfoPanel, "基本信息");
+        ComponentUtil.setTitledBorder(tabbedPane, "PSI信息");
 
         setLayout(new MigLayout("fill", "[grow][fill]", "[fill][grow]"));
         add(streamInfoPanel, "span 1 2, grow");
@@ -145,26 +145,6 @@ public class StreamInfoView extends JPanel implements InfoView
                 refresh();
             }
         });
-
-    }
-
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        log.info("source attached.");
-        stopped = false;
-        timer1.start();
-        timer2.start();
-        timer3.start();
-        timer4.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        log.info("source detached.");
-        stopped = true;
     }
 
     @Override
@@ -174,10 +154,14 @@ public class StreamInfoView extends JPanel implements InfoView
     }
 
     @Override
-    public void setupBus(EventBus bus)
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
+
     @Override
     public void setupMenu(JMenu menu)
     {
@@ -212,7 +196,6 @@ public class StreamInfoView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularAL.DATA_USAGE_20, 20, UIManager.getColor("Label.foreground"));
     }
 
-    @Override
     public void refresh()
     {
         querySourceInfo();
@@ -221,10 +204,50 @@ public class StreamInfoView extends JPanel implements InfoView
         queryCASystemInfo();
     }
 
-    @Override
-    public void setupDatabase(M2TKDatabase database)
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
     {
-        this.database = database;
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                stopped = false;
+                timer1.start();
+                timer2.start();
+                timer3.start();
+                timer4.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                stopped = true;
+            }
+        }
+    }
+
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
+    {
+        if (event.enabled())
+        {
+            if (!stopped)
+            {
+                timer1.start();
+                timer2.start();
+                timer3.start();
+                timer4.start();
+                streamInfoPanel.setPopupListener(null);
+                programInfoPanel.setPopupListener(null);
+            }
+        } else
+        {
+            timer1.stop();
+            timer2.stop();
+            timer3.stop();
+            timer4.stop();
+            streamInfoPanel.setPopupListener(this::showStreamPopupMenu);
+            programInfoPanel.setPopupListener(this::showProgramPopupMenu);
+        }
     }
 
     private void playStream()
@@ -341,17 +364,17 @@ public class StreamInfoView extends JPanel implements InfoView
         Supplier<List<MPEGProgram>> query = () ->
         {
             Map<Integer, ElementaryStream> streamRegistry = database.listElementaryStreams(true)
-                                                                           .stream()
-                                                                           .collect(Collectors.toMap(ElementaryStream::getStreamPid,
-                                                                                                     Function.identity()));
+                                                                    .stream()
+                                                                    .collect(Collectors.toMap(ElementaryStream::getStreamPid,
+                                                                                              Function.identity()));
 
             List<MPEGProgram> programs = database.listMPEGPrograms();
             Map<String, SIService> serviceMap = database.listSIServices()
                                                         .stream()
                                                         .collect(toMap(service -> String.format("%d.%d",
-                                                                                                       service.getTransportStreamId(),
-                                                                                                       service.getServiceId()),
-                                                                              service -> service));
+                                                                                                service.getTransportStreamId(),
+                                                                                                service.getServiceId()),
+                                                                       service -> service));
             for (MPEGProgram program : programs)
             {
                 String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
@@ -414,28 +437,6 @@ public class StreamInfoView extends JPanel implements InfoView
         }
     }
 
-    public void startRefreshing()
-    {
-        if (!stopped)
-        {
-            timer1.start();
-            timer2.start();
-            timer3.start();
-            timer4.start();
-            streamInfoPanel.setPopupListener(null);
-            programInfoPanel.setPopupListener(null);
-        }
-    }
-
-    public void stopRefreshing()
-    {
-        timer1.stop();
-        timer2.stop();
-        timer3.stop();
-        timer4.stop();
-        streamInfoPanel.setPopupListener(this::showStreamPopupMenu);
-        programInfoPanel.setPopupListener(this::showProgramPopupMenu);
-    }
 
     private void showStreamPopupMenu(MouseEvent event, ElementaryStream stream)
     {

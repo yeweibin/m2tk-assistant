@@ -13,45 +13,42 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
-import com.google.common.base.Functions;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import jnafilechooser.api.JnaFileChooser;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.Global;
+import m2tk.assistant.app.kernel.service.StreamAnalyzer;
 import m2tk.assistant.app.ui.dialog.AboutDialog;
 import m2tk.assistant.app.ui.dialog.SourceHistoryDialog;
 import m2tk.assistant.app.ui.dialog.SystemInfoDialog;
-import m2tk.assistant.app.ui.task.DrawNetworkGraphTask;
-import m2tk.assistant.app.ui.tracer.PSITracer;
-import m2tk.assistant.app.ui.tracer.SITracer;
-import m2tk.assistant.app.ui.tracer.StreamTracer;
+import m2tk.assistant.app.ui.event.ClearLogsEvent;
+import m2tk.assistant.app.ui.task.DrawNetworkDiagramTask;
 import m2tk.assistant.app.ui.util.ButtonBuilder;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.util.MenuItemBuilder;
+import m2tk.assistant.app.ui.view.LogsView;
 import m2tk.multiplex.DemuxStatus;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
 import org.kordamp.ikonli.Ikon;
-import org.kordamp.ikonli.feather.Feather;
 import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
 import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
 import org.kordamp.ikonli.swing.FontIcon;
-import org.pf4j.DefaultPluginManager;
-import org.pf4j.PluginManager;
-import org.pf4j.PluginWrapper;
+import org.pf4j.*;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -63,13 +60,12 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -79,6 +75,7 @@ public class MainViewController
     private final FrameView frameView;
     private final ActionMap actionMap;
 
+    private List<InfoView> infoViews;
     private List<InfoView> coreInfoViews;
     private List<InfoView> pluggedInfoViews;
     private List<Tracer> tracers;
@@ -86,6 +83,12 @@ public class MainViewController
     private JTabbedPane tabbedPane;
     private Path lastOpenDirectory;
     private volatile boolean willQuit;
+
+    private EventBus bus;
+    private StreamAnalyzer analyzer;
+
+    private Icon consoleMenuIcon, consoleToolbarIcon;
+    private Icon diagramMenuIcon, diagramToolbarIcon;
 
     public MainViewController(FrameView view)
     {
@@ -96,6 +99,7 @@ public class MainViewController
 
     private void initUI()
     {
+        initCustomIcons();
         loadPluginsAndExtensions();
         createAndSetupMenu();
         createAndSetupToolBar();
@@ -103,28 +107,68 @@ public class MainViewController
         setupInitialStates();
     }
 
+    private void initCustomIcons()
+    {
+        // 下面的图标在FluentUI图标集里找不到合适的对应项，因此使用第三方图标。
+        FlatSVGIcon.ColorFilter colorFilter = new FlatSVGIcon.ColorFilter();
+        colorFilter.add(Color.black, UIManager.getColor("Label.foreground"));
+
+        FlatSVGIcon consoleIcon = new FlatSVGIcon("images/console.svg");
+        consoleIcon.setColorFilter(colorFilter);
+        FlatSVGIcon diagramIcon = new FlatSVGIcon("images/diagram.svg");
+        diagramIcon.setColorFilter(colorFilter);
+
+        consoleMenuIcon = consoleIcon.derive(16, 16);
+        consoleToolbarIcon = consoleIcon.derive(22, 22);
+        diagramMenuIcon = diagramIcon.derive(16, 16);
+        diagramToolbarIcon = diagramIcon.derive(24, 24);
+    }
+
     private void loadPluginsAndExtensions()
     {
-        PluginManager pluginManager = new DefaultPluginManager(Paths.get("D:\\Projects\\m2tk\\m2tk-assistant\\modules\\assistant-app\\plugins"));
+        // 采用单例模式加载扩展，保证二次加载的插件扩展与首次加载内容一致。
+        PluginManager pluginManager = new DefaultPluginManager(Paths.get("D:\\Projects\\m2tk\\m2tk-assistant\\modules\\assistant-app\\plugins"))
+        {
+            @Override
+            protected ExtensionFactory createExtensionFactory()
+            {
+                return new SingletonExtensionFactory(this);
+            }
+        };
+
         pluginManager.loadPlugins();
         pluginManager.startPlugins();
-        coreInfoViews = pluginManager.getExtensions(InfoView.class);
+
+        tracers = pluginManager.getExtensions(Tracer.class);
+        infoViews = pluginManager.getExtensions(InfoView.class);
+        coreInfoViews = new ArrayList<>();
         pluggedInfoViews = new ArrayList<>();
+        Set<String> pluggedViewSet = new HashSet<>();
 
         List<PluginWrapper> plugins = pluginManager.getPlugins();
         for (PluginWrapper plugin : plugins)
         {
             List<InfoView> extViews = pluginManager.getExtensions(InfoView.class, plugin.getPluginId());
-            pluggedInfoViews.addAll(extViews);
+            for (InfoView view : extViews)
+            {
+                pluggedInfoViews.add(view);
+                pluggedViewSet.add(view.getClass().getName());
+            }
         }
-        Map<String, InfoView> pluggedViewMap = pluggedInfoViews.stream().collect(Collectors.toMap(view -> view.getClass().getName(), Functions.identity()));
-        coreInfoViews.removeIf(view -> pluggedViewMap.containsKey(view.getClass().getName()));
 
-        tracers = pluginManager.getExtensions(Tracer.class);
-        for (InfoView view : coreInfoViews)
+        for (InfoView view : infoViews)
+        {
             view.setupApplication(frameView.getApplication());
-        for (InfoView view : pluggedInfoViews)
-            view.setupApplication(frameView.getApplication());
+
+            if (view instanceof LogsView)
+            {
+                logsView = (LogsView) view;
+            } else
+            {
+                if (!pluggedViewSet.contains(view.getClass().getName()))
+                    coreInfoViews.add(view);
+            }
+        }
     }
 
     private void createAndSetupMenu()
@@ -134,20 +178,11 @@ public class MainViewController
         Function<Ikon, Icon> iconSupplier = ikon -> FontIcon.of(ikon, iconSize, iconColor);
 
         MenuItemBuilder builder = new MenuItemBuilder();
-        JMenu menuSys = new JMenu("系统(S)");
-        menuSys.setMnemonic(KeyEvent.VK_S);
-        menuSys.add(builder.create(actionMap.get("showSystemInfo"))
-                           .icon(iconSupplier.apply(FluentUiRegularAL.BOOK_INFORMATION_24))
-                           .text("查看系统信息")
-                           .get());
-        menuSys.add(builder.create(actionMap.get("exitApp"))
-                           .text("退出(X)")
-                           .mnemonic(KeyEvent.VK_X).get());
 
         JMenu menuOps = new JMenu("操作(O)");
         menuOps.setMnemonic(KeyEvent.VK_O);
         JMenu sourceMenu = new JMenu("选择输入源");
-        sourceMenu.add(builder.create(actionMap.get("openFile"))
+        sourceMenu.add(builder.create(actionMap.get("openLocalFile"))
                               .icon(iconSupplier.apply(FluentUiRegularMZ.VIDEO_CLIP_20))
                               .text("本地文件")
                               .get());
@@ -177,8 +212,8 @@ public class MainViewController
                            .text("继续刷新")
                            .get());
         menuOps.addSeparator();
-        menuOps.add(builder.create(actionMap.get("openTerminal"))
-                           .icon(iconSupplier.apply(Feather.TERMINAL))
+        menuOps.add(builder.create(actionMap.get("openConsole"))
+                           .icon(consoleMenuIcon)
                            .text("打开命令行")
                            .get());
         menuOps.add(builder.create(actionMap.get("openCalc"))
@@ -190,8 +225,8 @@ public class MainViewController
                            .text("打开记事本")
                            .get());
         menuOps.addSeparator();
-        menuOps.add(builder.create(actionMap.get("drawNetworkGraph"))
-                           .icon(iconSupplier.apply(FluentUiRegularMZ.ORGANIZATION_20))
+        menuOps.add(builder.create(actionMap.get("drawNetworkDiagram"))
+                           .icon(diagramMenuIcon)
                            .text("绘制网络结构图")
                            .get());
         menuOps.addSeparator();
@@ -203,6 +238,10 @@ public class MainViewController
                            .icon(iconSupplier.apply(FluentUiRegularAL.LAYER_20))
                            .text("加载自定义解析模板")
                            .get());
+        menuOps.addSeparator();
+        menuOps.add(builder.create(actionMap.get("exitApp"))
+                           .text("退出(X)")
+                           .mnemonic(KeyEvent.VK_X).get());
 
         JMenu menuViews = new JMenu("查看(V)");
         menuViews.setMnemonic(KeyEvent.VK_V);
@@ -221,6 +260,8 @@ public class MainViewController
 
         JMenu menuLogs = new JMenu("日志(L)");
         menuLogs.setMnemonic(KeyEvent.VK_L);
+        // 日志视图做成可关闭的，所以以类似扩展InfoView的方式进行创建
+        logsView.setupMenu(menuLogs);
         menuLogs.add(builder.create(actionMap.get("clearLogs"))
                             .icon(iconSupplier.apply(FluentUiRegularAL.DELETE_20))
                             .text("清空日志")
@@ -232,16 +273,21 @@ public class MainViewController
 
         JMenu menuHelp = new JMenu("帮助(H)");
         menuHelp.setMnemonic(KeyEvent.VK_H);
+        menuHelp.add(builder.create(actionMap.get("showSystemInfo"))
+                            .icon(iconSupplier.apply(FluentUiRegularAL.BOOK_INFORMATION_24))
+                            .text("查看系统信息")
+                            .get());
         menuHelp.add(builder.create(actionMap.get("showHelp"))
+                            .icon(iconSupplier.apply(FluentUiRegularMZ.QUESTION_CIRCLE_20))
                             .text("帮助")
                             .get());
         menuHelp.add(builder.create(actionMap.get("showAbout"))
-                            .text("关于(A)")
+                            .icon(new FlatSVGIcon("images/logo-a.svg", 20, 20))
+                            .text("关于 M2TK Assistant")
                             .mnemonic(KeyEvent.VK_A)
                             .get());
 
         JMenuBar menuBar = new JMenuBar();
-        menuBar.add(menuSys);
         menuBar.add(menuOps);
         menuBar.add(menuViews);
         menuBar.add(menuLogs);
@@ -259,7 +305,7 @@ public class MainViewController
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
 
-        toolBar.add(builder.create(actionMap.get("openFile"))
+        toolBar.add(builder.create(actionMap.get("openLocalFile"))
                            .icon(iconSupplier.apply(FluentUiRegularMZ.VIDEO_CLIP_24))
                            .text(null)
                            .tooltip("分析码流文件")
@@ -291,8 +337,8 @@ public class MainViewController
                            .tooltip("继续刷新")
                            .get());
         toolBar.addSeparator();
-        toolBar.add(builder.create(actionMap.get("openTerminal"))
-                           .icon(iconSupplier.apply(Feather.TERMINAL))
+        toolBar.add(builder.create(actionMap.get("openConsole"))
+                           .icon(consoleToolbarIcon)
                            .text(null)
                            .tooltip("打开命令行")
                            .get());
@@ -308,7 +354,7 @@ public class MainViewController
                            .get());
         toolBar.addSeparator();
         toolBar.add(builder.create(actionMap.get("drawNetworkGraph"))
-                           .icon(iconSupplier.apply(FluentUiRegularMZ.ORGANIZATION_24))
+                           .icon(diagramToolbarIcon)
                            .text(null)
                            .tooltip("绘制网络结构图")
                            .get());
@@ -318,8 +364,6 @@ public class MainViewController
 
     private void createAndSetupWorkspace()
     {
-        logsView = new LogsView();
-
         tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
 
@@ -329,78 +373,21 @@ public class MainViewController
             tabbedPane.addTab(view.getViewTitle(), view.getViewIcon(), view.getViewComponent());
         }
 
-//        for (InfoView view : pluggedInfoViews)
-//        {
-//            view.setupApplication(frameView.getApplication());
-//            tabbedPane.add(view.getViewTitle(), view.getViewComponent());
-//            JComponent viewComponent = view.getViewComponent();
-//            if (view.isClosable())
-//            {
-//                viewComponent.putClientProperty("JTabbedPane.tabClosable", true);
-//                viewComponent.putClientProperty("JTabbedPane.tabCloseCallback",
-//                                                (IntConsumer) tabIndex -> tabbedPane.remove(tabIndex));
-//            }
-//            tabbedPane.addTab(view.getViewTitle(), view.getViewIcon(), viewComponent);
-//        }
-
-        tabbedPane.addTab("日志",
-                          FontIcon.of(FluentUiRegularMZ.TEXTBOX_20, 20, UIManager.getColor("Label.foreground")),
-                          logsView);
-
         frameView.getRootPane().getContentPane().add(tabbedPane, BorderLayout.CENTER);
     }
 
     private void setupInitialStates()
     {
-        frameView.getFrame().setTitle(AssistantApp.APP_NAME);
-
         initFileChooserCurrentDirectory();
 
-        actionMap.get("openFile").setEnabled(false);
+        actionMap.get("openLocalFile").setEnabled(false);
         actionMap.get("openMulticast").setEnabled(false);
-//        actionMap.get("reopenInput").setEnabled(false);
-//        actionMap.get("stopAnalyzer").setEnabled(false);
-//        actionMap.get("pauseRefreshing").setEnabled(false);
-//        actionMap.get("startRefreshing").setEnabled(false);
+        actionMap.get("reopenInput").setEnabled(false);
+        actionMap.get("stopAnalyzer").setEnabled(false);
+        actionMap.get("pauseRefreshing").setEnabled(false);
+        actionMap.get("startRefreshing").setEnabled(false);
+
         ComponentUtil.setPreferSizeAndLocateToCenter(frameView.getFrame(), 0.5, 0.5);
-    }
-
-    private JMenuItem createMenuItem(String action, String text, String tooltip)
-    {
-        JMenuItem item = new JMenuItem();
-        item.setAction(actionMap.get(action));
-        item.setText(text);
-        item.setToolTipText(tooltip);
-        return item;
-    }
-
-    private JMenuItem createMenuItem(String action, String text, String tooltip, int mnemonic)
-    {
-        JMenuItem item = new JMenuItem();
-        item.setAction(actionMap.get(action));
-        item.setText(text);
-        item.setToolTipText(tooltip);
-        item.setMnemonic(mnemonic);
-        return item;
-    }
-
-    private JMenuItem createMenuItem(String action, String text, String tooltip, int mnemonic, Icon icon)
-    {
-        JMenuItem item = new JMenuItem();
-        item.setAction(actionMap.get(action));
-        item.setText(text);
-        item.setIcon(icon);
-        item.setToolTipText(tooltip);
-        item.setMnemonic(mnemonic);
-        return item;
-    }
-
-    private JButton createButton(String action, String tooltip)
-    {
-        JButton button = new JButton();
-        button.setAction(actionMap.get(action));
-        button.setToolTipText(tooltip);
-        return button;
     }
 
     public void ready()
@@ -408,33 +395,23 @@ public class MainViewController
         AssistantApp application = AssistantApp.getInstance();
         EventBus bus = application.getEventBus();
         M2TKDatabase database = application.getM2TKDatabase();
-        for (InfoView view : coreInfoViews)
-        {
-            view.setupBus(bus);
-            view.setupDatabase(database);
-        }
-        for (InfoView view : pluggedInfoViews)
-        {
-            view.setupBus(bus);
-            view.setupDatabase(database);
-        }
-//        streamInfoView.setupDataSource(bus, database);
-//        networkInfoView.setupDataSource(bus, database);
-//        tr290InfoView.setupDataSource(bus, database);
-//        pcrStatsView.setupDataSource(bus, database);
-//        epgInfoView.setupDataSource(bus, database);
-//        datagramView.setupDataSource(bus, database);
-//        ebInfoView.setupDataSource(bus, database);
 
+        for (InfoView view : infoViews)
+            view.setupDataSource(bus, database);
         bus.register(this);
-        actionMap.get("openFile").setEnabled(true);
+
+        actionMap.get("openLocalFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);
+        actionMap.get("openThirdPartyInputSource").setEnabled(true);
+
+        this.bus = bus;
+        this.analyzer = application.getStreamAnalyzer();
     }
 
     @Subscribe
     public void onShowInfoViewEvent(ShowInfoViewEvent event)
     {
-        InfoView view = event.getView();
+        InfoView view = event.view();
         int tabs = tabbedPane.getTabCount();
         for (int i = 0; i < tabs; i++)
         {
@@ -446,20 +423,13 @@ public class MainViewController
             }
         }
 
-        // Not found
+        // 目标组件不在TabbedPane里，则添加该组件。
         JComponent viewComponent = view.getViewComponent();
         viewComponent.putClientProperty("JTabbedPane.tabClosable", true);
         viewComponent.putClientProperty("JTabbedPane.tabCloseCallback",
                                         (IntConsumer) tabIndex -> tabbedPane.remove(tabIndex));
         tabbedPane.addTab(view.getViewTitle(), view.getViewIcon(), viewComponent);
         tabbedPane.setSelectedIndex(tabs);
-    }
-
-    @Action
-    public void showSystemInfo()
-    {
-        SystemInfoDialog dialog = new SystemInfoDialog(frameView.getFrame());
-        dialog.setVisible(true);
     }
 
     @Action
@@ -470,61 +440,18 @@ public class MainViewController
     }
 
     @Action
-    public void showStreamInfo()
+    public void clearLogs()
     {
-//        tabbedPane.setSelectedComponent(streamInfoView);
-    }
-
-    @Action
-    public void showNetworkInfo()
-    {
-//        tabbedPane.setSelectedComponent(networkInfoView);
-    }
-
-    @Action
-    public void showTR290Info()
-    {
-//        tabbedPane.setSelectedComponent(tr290InfoView);
-    }
-
-    @Action
-    public void showPCRInfo()
-    {
-//        tabbedPane.setSelectedComponent(pcrStatsView);
-    }
-
-    @Action
-    public void showEPGInfo()
-    {
-//        tabbedPane.setSelectedComponent(epgInfoView);
-    }
-
-    @Action
-    public void showNVODInfo()
-    {
-//        tabbedPane.setSelectedComponent(nvodInfoView);
-    }
-
-    @Action
-    public void showPSISIInfo()
-    {
-//        tabbedPane.setSelectedComponent(datagramView);
-    }
-
-    @Action
-    public void showEBInfo()
-    {
-//        tabbedPane.setSelectedComponent(ebInfoView);
+        bus.post(new ClearLogsEvent());
     }
 
     @Action
     public void checkLogs()
     {
-        Path logsDir = Paths.get(System.getProperty("user.home"), "m2tk", "logs");
-
         try
         {
-            Desktop.getDesktop().open(logsDir.toFile());
+            File logsDir = FileUtil.file(FileUtil.getUserHomeDir(), "m2tk", "logs");
+            Desktop.getDesktop().open(logsDir);
         } catch (IOException ex)
         {
             log.warn("打开日志目录异常：{}", ex.getMessage());
@@ -532,9 +459,10 @@ public class MainViewController
     }
 
     @Action
-    public void clearLogs()
+    public void showSystemInfo()
     {
-        logsView.clear();
+        SystemInfoDialog dialog = new SystemInfoDialog(frameView.getFrame());
+        dialog.setVisible(true);
     }
 
     @Action
@@ -545,54 +473,41 @@ public class MainViewController
     }
 
     @Action
-    public void openFile()
+    public void openLocalFile()
     {
-        JnaFileChooser fileChooser = new JnaFileChooser();
+        JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(false);
-        fileChooser.setMode(JnaFileChooser.Mode.Files);
-        fileChooser.setCurrentDirectory(lastOpenDirectory.toString());
-        fileChooser.addFilter("码流文件", "ts", "m2ts", "mpeg");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setCurrentDirectory(lastOpenDirectory.toFile());
+        fileChooser.setFileFilter(new FileNameExtensionFilter("码流文件（ts/m2ts/mpeg）", "ts", "m2ts", "mpeg"));
 
-        if (fileChooser.showOpenDialog(frameView.getFrame()))
+        if (JFileChooser.APPROVE_OPTION == fileChooser.showOpenDialog(frameView.getFrame()))
         {
             File file = fileChooser.getSelectedFile();
             String input = file.getAbsolutePath();
 
-            System.out.println("准备分析 @ " + LocalDateTime.now());
-            log.info("准备分析");
-            Global.resetUserPrivateSectionStreams();
+            log.info("开始分析 {}", file);
             boolean started = false;
             try
             {
-                started = AssistantApp.getInstance()
-                                      .getStreamAnalyzer()
-                                      .start(input,
-                                             List.of(new StreamTracer(),
-                                                     new PSITracer(),
-                                                     new SITracer()),
-                                             this::onAnalyzerStopped);
-                log.info("开始分析：{}", started);
+                Global.resetUserPrivateSectionStreams();
+                started = analyzer.start(input, tracers, this::onAnalyzerStopped);
             } catch (Exception ex)
             {
-                System.err.println(ex.getMessage());
+                log.error("启动本地文件分析时异常：{}", ex.getMessage());
             }
 
             if (!started)
             {
                 actionMap.get("reopenInput").setEnabled(false);
-                JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(frameView.getFrame(),
+                                              "无法启动分析器，详情请查看日志",
+                                              "程序异常",
+                                              JOptionPane.ERROR_MESSAGE);
             } else
             {
                 saveRecentFile(file);
-//                streamInfoView.reset();
-//                networkInfoView.reset();
-//                tr290InfoView.reset();
-//                pcrStatsView.reset();
-//                epgInfoView.reset();
-////                nvodInfoView.reset();
-//                datagramView.reset();
-//                ebInfoView.reset();
-                actionMap.get("openFile").setEnabled(false);
+                actionMap.get("openLocalFile").setEnabled(false);
                 actionMap.get("openMulticast").setEnabled(false);
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
                 actionMap.get("reopenInput").setEnabled(false);
@@ -616,30 +531,31 @@ public class MainViewController
         {
             JOptionPane.showMessageDialog(frameView.getFrame(),
                                           "无效的组播地址" + System.lineSeparator() + input,
-                                          "错误",
-                                          JOptionPane.WARNING_MESSAGE);
+                                          "参数错误",
+                                          JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Global.resetUserPrivateSectionStreams();
-        boolean started = AssistantApp.getInstance()
-                                      .getStreamAnalyzer()
-                                      .start(input, List.of(), this::onAnalyzerStopped);
+        boolean started = false;
+        try
+        {
+            Global.resetUserPrivateSectionStreams();
+            started = analyzer.start(input, tracers, this::onAnalyzerStopped);
+        } catch (Exception ex)
+        {
+            log.error("启动组播流分析时异常：{}", ex.getMessage());
+        }
+
         if (!started)
         {
             actionMap.get("reopenInput").setEnabled(false);
-            JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(frameView.getFrame(),
+                                          "无法启动分析器，详情请查看日志",
+                                          "程序异常",
+                                          JOptionPane.ERROR_MESSAGE);
         } else
         {
-//            streamInfoView.reset();
-//            networkInfoView.reset();
-//            tr290InfoView.reset();
-//            pcrStatsView.reset();
-//            epgInfoView.reset();
-//            nvodInfoView.reset();
-//            datagramView.reset();
-//            ebInfoView.reset();
-            actionMap.get("openFile").setEnabled(false);
+            actionMap.get("openLocalFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
@@ -658,24 +574,26 @@ public class MainViewController
         if (input == null)
             return;
 
-        boolean started = AssistantApp.getInstance()
-                                      .getStreamAnalyzer()
-                                      .start(input, List.of(), this::onAnalyzerStopped);
+        boolean started = false;
+        try
+        {
+            Global.resetUserPrivateSectionStreams();
+            started = analyzer.start(input, tracers, this::onAnalyzerStopped);
+        } catch (Exception ex)
+        {
+            log.error("启动外设源分析时异常：{}", ex.getMessage());
+        }
+
         if (!started)
         {
             actionMap.get("reopenInput").setEnabled(false);
-            JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(frameView.getFrame(),
+                                          "无法启动分析器，详情请查看日志",
+                                          "程序异常",
+                                          JOptionPane.ERROR_MESSAGE);
         } else
         {
-//            streamInfoView.reset();
-//            networkInfoView.reset();
-//            tr290InfoView.reset();
-//            pcrStatsView.reset();
-//            epgInfoView.reset();
-//            nvodInfoView.reset();
-//            datagramView.reset();
-//            ebInfoView.reset();
-            actionMap.get("openFile").setEnabled(false);
+            actionMap.get("openLocalFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
@@ -695,23 +613,26 @@ public class MainViewController
         if (source == null)
             return;
 
-        boolean started = AssistantApp.getInstance()
-                                      .getStreamAnalyzer()
-                                      .start(source, List.of(), this::onAnalyzerStopped);
+        boolean started = false;
+        try
+        {
+            Global.resetUserPrivateSectionStreams();
+            started = analyzer.start(source, tracers, this::onAnalyzerStopped);
+        } catch (Exception ex)
+        {
+            log.error("重启分析时异常：{}", ex.getMessage());
+        }
+
         if (!started)
         {
-            JOptionPane.showMessageDialog(frameView.getFrame(), "无法启动分析器", "请注意", JOptionPane.WARNING_MESSAGE);
+            actionMap.get("reopenInput").setEnabled(false);
+            JOptionPane.showMessageDialog(frameView.getFrame(),
+                                          "无法启动分析器，详情请查看日志",
+                                          "程序异常",
+                                          JOptionPane.ERROR_MESSAGE);
         } else
         {
-//            streamInfoView.reset();
-//            networkInfoView.reset();
-//            tr290InfoView.reset();
-//            pcrStatsView.reset();
-//            epgInfoView.reset();
-//            nvodInfoView.reset();
-//            datagramView.reset();
-//            ebInfoView.reset();
-            actionMap.get("openFile").setEnabled(false);
+            actionMap.get("openLocalFile").setEnabled(false);
             actionMap.get("openMulticast").setEnabled(false);
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
@@ -724,20 +645,14 @@ public class MainViewController
     @Action
     public void stopAnalyzer()
     {
-        AssistantApp.getInstance().getStreamAnalyzer().stop();
+        analyzer.stop();
     }
 
     @Action
     public void pauseRefreshing()
     {
-//        streamInfoView.stopRefreshing();
-//        networkInfoView.stopRefreshing();
-//        tr290InfoView.stopRefreshing();
-//        pcrStatsView.stopRefreshing();
-//        epgInfoView.stopRefreshing();
-////        nvodInfoView.stopRefreshing();
-//        datagramView.stopRefreshing();
-//        ebInfoView.stopRefreshing();
+        bus.post(new InfoViewRefreshingEvent(false));
+
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(true);
     }
@@ -745,20 +660,14 @@ public class MainViewController
     @Action
     public void startRefreshing()
     {
-//        streamInfoView.startRefreshing();
-//        networkInfoView.startRefreshing();
-//        tr290InfoView.startRefreshing();
-//        pcrStatsView.startRefreshing();
-//        epgInfoView.startRefreshing();
-////        nvodInfoView.startRefreshing();
-//        datagramView.startRefreshing();
-//        ebInfoView.startRefreshing();
+        bus.post(new InfoViewRefreshingEvent(true));
+
         actionMap.get("pauseRefreshing").setEnabled(true);
         actionMap.get("startRefreshing").setEnabled(false);
     }
 
     @Action
-    public void openTerminal()
+    public void openConsole()
     {
         try
         {
@@ -798,24 +707,26 @@ public class MainViewController
     }
 
     @Action
-    public void drawNetworkGraph()
+    public void drawNetworkDiagram()
     {
-        DrawNetworkGraphTask task = new DrawNetworkGraphTask(frameView.getApplication());
         ComponentUtil.setWaitingMouseCursor(frameView.getRootPane(), true);
+        DrawNetworkDiagramTask task = new DrawNetworkDiagramTask(frameView.getApplication());
         task.execute();
     }
 
     @Action
     public void exportInternalTemplates()
     {
-        JnaFileChooser fileChooser = new JnaFileChooser();
-        fileChooser.setMode(JnaFileChooser.Mode.Directories);
-        if (fileChooser.showSaveDialog(frameView.getFrame()))
-        {
-            File dir = fileChooser.getSelectedFile();
-            File zip = new File(dir, "模板.zip");
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setCurrentDirectory(FileUtil.getUserHomeDir());
+        fileChooser.setSelectedFile(new File("模板.zip"));
 
-            try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(zip)))
+        if (JFileChooser.APPROVE_OPTION == fileChooser.showSaveDialog(frameView.getFrame()))
+        {
+            File file = fileChooser.getSelectedFile();
+
+            try (ZipOutputStream out = new ZipOutputStream(new FileOutputStream(file)))
             {
                 out.putNextEntry(new ZipEntry("PSITemplates.xml"));
                 try (InputStream in = getClass().getResourceAsStream("/template/PSITemplate.xml"))
@@ -833,7 +744,7 @@ public class MainViewController
                 out.finish();
 
                 JOptionPane.showMessageDialog(frameView.getFrame(),
-                                              "导出模板到 " + zip, "导出成功",
+                                              "导出模板到 " + file, "导出成功",
                                               JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException ex)
             {
@@ -847,12 +758,13 @@ public class MainViewController
     @Action
     public void loadCustomTemplates()
     {
-        JnaFileChooser fileChooser = new JnaFileChooser();
-        fileChooser.setCurrentDirectory(Paths.get(System.getProperty("user.dir"), "template").toString());
-        fileChooser.setMode(JnaFileChooser.Mode.Files);
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setCurrentDirectory(FileUtil.file("template"));
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setMultiSelectionEnabled(true);
-        fileChooser.addFilter("模板文件", "xml");
-        if (fileChooser.showOpenDialog(frameView.getFrame()))
+        fileChooser.setFileFilter(new FileNameExtensionFilter("模板文件（xml）", "xml"));
+
+        if (JFileChooser.APPROVE_OPTION == fileChooser.showOpenDialog(frameView.getFrame()))
         {
             File[] files = fileChooser.getSelectedFiles();
             if (files.length > 0)
@@ -890,22 +802,13 @@ public class MainViewController
         if (!willQuit)
             JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
 
-        actionMap.get("openFile").setEnabled(true);
+        actionMap.get("openLocalFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);
         actionMap.get("openThirdPartyInputSource").setEnabled(true);
         actionMap.get("reopenInput").setEnabled(true);
         actionMap.get("stopAnalyzer").setEnabled(false);
         actionMap.get("pauseRefreshing").setEnabled(false);
         actionMap.get("startRefreshing").setEnabled(false);
-
-//        streamInfoView.stopRefreshing();
-//        networkInfoView.stopRefreshing();
-//        tr290InfoView.stopRefreshing();
-//        pcrStatsView.stopRefreshing();
-//        epgInfoView.stopRefreshing();
-////        nvodInfoView.startRefreshing();
-//        datagramView.startRefreshing();
-//        ebInfoView.startRefreshing();
     }
 
     private boolean isCorrectMulticastAddress(String input)

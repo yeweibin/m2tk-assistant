@@ -24,13 +24,9 @@ import javax.swing.*;
 
 public interface InfoView extends ExtensionPoint
 {
-    void refresh();
-
-    void setupDatabase(M2TKDatabase database);
-
     void setupApplication(Application application);
 
-    void setupBus(EventBus bus);
+    void setupDataSource(EventBus bus, M2TKDatabase database);
 
     void setupMenu(JMenu menu);
 

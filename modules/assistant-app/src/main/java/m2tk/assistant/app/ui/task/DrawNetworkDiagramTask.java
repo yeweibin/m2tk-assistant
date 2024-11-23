@@ -46,9 +46,9 @@ import static guru.nidi.graphviz.attribute.Rank.RankDir.LEFT_TO_RIGHT;
 import static guru.nidi.graphviz.model.Factory.between;
 import static guru.nidi.graphviz.model.Factory.port;
 
-public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
+public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
 {
-    private static final Logger log = LoggerFactory.getLogger(DrawNetworkGraphTask.class);
+    private static final Logger log = LoggerFactory.getLogger(DrawNetworkDiagramTask.class);
 
     static class Context
     {
@@ -58,7 +58,7 @@ public class DrawNetworkGraphTask extends Task<BufferedImage, Void>
         Map<String, List<String>> muxSrvMap = new HashMap<>();
     }
 
-    public DrawNetworkGraphTask(Application application)
+    public DrawNetworkDiagramTask(Application application)
     {
         super(application);
     }

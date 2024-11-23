@@ -16,6 +16,9 @@
 
 package m2tk.assistant.api.event;
 
-public class SourceDetachedEvent
+public record SourceStateEvent(int state)
 {
+    public static final int UNDEFINED = 0;
+    public static final int ATTACHED = 1;
+    public static final int DETACHED = 2;
 }

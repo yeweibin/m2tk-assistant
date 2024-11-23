@@ -13,32 +13,27 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.view;
 
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIMultiplex;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.MultiplexInfoPanel;
 import m2tk.assistant.app.ui.component.NetworkTimePanel;
 import m2tk.assistant.app.ui.component.ServiceInfoPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
-import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
-import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
-import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
@@ -97,9 +92,9 @@ public class NetworkInfoView extends JPanel implements InfoView
         multiplexInfoPanel = new MultiplexInfoPanel();
         serviceInfoPanel = new ServiceInfoPanel();
 
-        ComponentUtil.setTitledBorder(networkTimePanel, "网络时间", TitledBorder.LEFT);
-        ComponentUtil.setTitledBorder(multiplexInfoPanel, "传输流信息", TitledBorder.LEFT);
-        ComponentUtil.setTitledBorder(serviceInfoPanel, "业务信息", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(networkTimePanel, "网络时间");
+        ComponentUtil.setTitledBorder(multiplexInfoPanel, "传输流信息");
+        ComponentUtil.setTitledBorder(serviceInfoPanel, "业务信息");
 
         setLayout(new MigLayout("fill", "[50%][50%]", "[][][grow]"));
         add(networkTimePanel, "span 2, grow, wrap");
@@ -118,31 +113,18 @@ public class NetworkInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        transactionId = 1;
-        timer1.start();
-        timer2.start();
-        timer3.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        transactionId = -1;
-    }
-
     @Override
     public void setupApplication(Application application)
     {
-
     }
 
-    public void setupBus(EventBus bus)
+    @Override
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
 
     @Override
@@ -176,21 +158,57 @@ public class NetworkInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.ORGANIZATION_20, 20, UIManager.getColor("Label.foreground"));
+        FlatSVGIcon icon = new FlatSVGIcon("images/organization.svg", 18, 18);
+        FlatSVGIcon.ColorFilter colorFilter = new FlatSVGIcon.ColorFilter();
+        colorFilter.add(Color.black, UIManager.getColor("Label.foreground"));
+        icon.setColorFilter(colorFilter);
+        return icon;
     }
 
-    @Override
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
+    {
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                transactionId = 1;
+                timer1.start();
+                timer2.start();
+                timer3.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                transactionId = -1;
+            }
+        }
+    }
+
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
+    {
+        if (event.enabled())
+        {
+            if (transactionId != -1)
+            {
+                timer1.start();
+                timer2.start();
+                timer3.start();
+            }
+        } else
+        {
+            timer1.stop();
+            timer2.stop();
+            timer3.stop();
+        }
+    }
+
     public void refresh()
     {
         queryNetworks();
         queryServices();
         queryNetworkTime();
-    }
-
-    @Override
-    public void setupDatabase(M2TKDatabase database)
-    {
-        this.database = database;
     }
 
     private void queryNetworks()
@@ -326,22 +344,5 @@ public class NetworkInfoView extends JPanel implements InfoView
             timer2.restart();
             timer3.restart();
         }
-    }
-
-    public void startRefreshing()
-    {
-        if (transactionId != -1)
-        {
-            timer1.start();
-            timer2.start();
-            timer3.start();
-        }
-    }
-
-    public void stopRefreshing()
-    {
-        timer1.stop();
-        timer2.stop();
-        timer3.stop();
     }
 }

@@ -17,19 +17,6 @@ package m2tk.assistant.app.kernel;
 
 public final class ErrorCode
 {
-    public static final int OK = 200;
-    public static final int QUARANTINE_CHECK_ERROR = 10010;
-    public static final int USER_IDENTITY_MISMATCH = 10012;
-    public static final int TOO_MANY_UPLOADS = 10014;
-    public static final int BAD_REQUEST = 10400;
-    public static final int UNAUTHORIZED = 10401;
-    public static final int NOT_FOUND = 10404;
-    public static final int METHOD_NOT_ALLOWED = 10405;
-    public static final int REJECTED = 10409;
-    public static final int TOO_MANY_REQUEST = 10429;
-    public static final int SYSTEM_BUSY = 10430;
-    public static final int INTERNAL_ERROR = 10500;
-    public static final int SERVICE_UNAVAILABLE = 10503;
     public static final int DATABASE_ERROR = 11000;
     public static final int INTERNAL_DATA_ERROR = 11001;
 }

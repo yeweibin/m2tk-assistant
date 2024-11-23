@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.view;
 
 import com.google.common.eventbus.EventBus;
@@ -22,12 +21,12 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIEvent;
 import m2tk.assistant.api.domain.SIService;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.ServiceEventGuidePanel;
-import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
+import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
 import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
@@ -36,9 +35,6 @@ import org.pf4j.Extension;
 
 import javax.swing.Timer;
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;
@@ -73,7 +69,7 @@ public class EPGInfoView extends JPanel implements InfoView
         });
 
         serviceEventGuidePanel = new ServiceEventGuidePanel();
-        ComponentUtil.setTitledBorder(serviceEventGuidePanel, "EPG", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(serviceEventGuidePanel, "EPG");
 
         setLayout(new MigLayout("fill"));
         add(serviceEventGuidePanel, "center, grow");
@@ -90,30 +86,9 @@ public class EPGInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        transactionId = 1;
-        timer.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        transactionId = -1;
-    }
-
-    @Override
     public void refresh()
     {
         queryServiceAndEvents();
-    }
-
-    @Override
-    public void setupDatabase(M2TKDatabase database)
-    {
-        this.database = database;
     }
 
     @Override
@@ -123,9 +98,12 @@ public class EPGInfoView extends JPanel implements InfoView
     }
 
     @Override
-    public void setupBus(EventBus bus)
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
 
     @Override
@@ -162,22 +140,42 @@ public class EPGInfoView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularAL.CALENDAR_20, 20, UIManager.getColor("Label.foreground"));
     }
 
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
+    {
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                transactionId = 1;
+                timer.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                transactionId = -1;
+            }
+        }
+    }
+
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
+    {
+        if (event.enabled())
+        {
+            if (transactionId != -1)
+                timer.start();
+        } else
+        {
+            timer.stop();
+        }
+    }
+
     public void reset()
     {
         serviceEventGuidePanel.reset();
         if (transactionId != -1)
             timer.restart();
-    }
-
-    public void startRefreshing()
-    {
-        if (transactionId != -1)
-            timer.start();
-    }
-
-    public void stopRefreshing()
-    {
-        timer.stop();
     }
 
     private void queryServiceAndEvents()

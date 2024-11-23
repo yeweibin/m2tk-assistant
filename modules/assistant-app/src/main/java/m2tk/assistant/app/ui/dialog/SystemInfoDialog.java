@@ -15,19 +15,17 @@
  */
 package m2tk.assistant.app.ui.dialog;
 
-import jnafilechooser.api.JnaFileChooser;
+import cn.hutool.core.io.FileUtil;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultCaret;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Properties;
@@ -51,11 +49,11 @@ public class SystemInfoDialog extends JDialog
     private void exportInfo()
     {
         String info = textArea.getText();
-        JnaFileChooser chooser = new JnaFileChooser();
-        chooser.setCurrentDirectory(System.getProperty("user.home"));
-        chooser.setMode(JnaFileChooser.Mode.Files);
-        chooser.setDefaultFileName("system-info.txt");
-        if (chooser.showSaveDialog(this))
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(FileUtil.getUserHomeDir());
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setSelectedFile(new File("system-info.txt"));
+        if (JFileChooser.APPROVE_OPTION == chooser.showSaveDialog(this))
         {
             try
             {

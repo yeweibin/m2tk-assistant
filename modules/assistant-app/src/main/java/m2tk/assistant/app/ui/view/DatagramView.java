@@ -19,22 +19,18 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.SectionDatagramPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
-import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
 import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
@@ -65,7 +61,7 @@ public class DatagramView extends JPanel implements InfoView
         });
 
         sectionDatagramPanel = new SectionDatagramPanel();
-        ComponentUtil.setTitledBorder(sectionDatagramPanel, "PSI/SI", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(sectionDatagramPanel, "PSI/SI");
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
@@ -82,42 +78,23 @@ public class DatagramView extends JPanel implements InfoView
         transactionId = -1;
     }
 
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        transactionId = 1; //event.getSource().getTransactionId();
-        timer.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        transactionId = -1;
-    }
-
-    @Override
     public void refresh()
     {
         queryDatagrams();
     }
 
     @Override
-    public void setupDatabase(M2TKDatabase database)
-    {
-        this.database = database;
-    }
-
-    @Override
     public void setupApplication(Application application)
     {
-
     }
 
     @Override
-    public void setupBus(EventBus bus)
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
 
     @Override
@@ -154,22 +131,43 @@ public class DatagramView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, UIManager.getColor("Label.foreground"));
     }
 
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
+    {
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                transactionId = 1;
+                //event.getSource().getTransactionId();
+                timer.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                transactionId = -1;
+            }
+        }
+    }
+
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
+    {
+        if (event.enabled())
+        {
+            if (transactionId != -1)
+                timer.start();
+        } else
+        {
+            timer.stop();
+        }
+    }
+
     public void reset()
     {
         sectionDatagramPanel.reset();
         if (transactionId != -1)
             timer.restart();
-    }
-
-    public void startRefreshing()
-    {
-        if (transactionId != -1)
-            timer.start();
-    }
-
-    public void stopRefreshing()
-    {
-        timer.stop();
     }
 
     private void queryDatagrams()

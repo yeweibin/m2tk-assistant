@@ -172,11 +172,6 @@
             <artifactId>jaffree</artifactId>
             <version>${jaffree.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.github.steos</groupId>
-            <artifactId>jnafilechooser</artifactId>
-            <version>1.1.2</version>
-        </dependency>
         <!--solon-->
         <dependency>
             <groupId>org.noear</groupId>

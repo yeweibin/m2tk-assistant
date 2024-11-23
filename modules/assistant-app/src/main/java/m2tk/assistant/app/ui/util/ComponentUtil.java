@@ -155,10 +155,10 @@ public final class ComponentUtil
         }
     }
 
-    public static void setTitledBorder(JComponent c, String title, int titleJustification)
+    public static void setTitledBorder(JComponent c, String title)
     {
         TitledBorder border = BorderFactory.createTitledBorder(title);
-        border.setTitleJustification(titleJustification);
+        border.setTitleJustification(TitledBorder.LEFT);
         c.setBorder(border);
     }
 }

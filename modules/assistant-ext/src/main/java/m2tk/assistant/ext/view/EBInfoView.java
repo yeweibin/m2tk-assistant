@@ -13,16 +13,15 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.ext.view;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.ext.component.EBSectionDatagramPanel;
 import m2tk.assistant.ext.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -80,42 +79,18 @@ public class EBInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        transactionId = 1;//event.getSource().getTransactionId();
-        timer.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        transactionId = -1;
-    }
-
-    @Override
-    public void refresh()
-    {
-        queryDatagrams();
-    }
-
-    @Override
-    public void setupDatabase(M2TKDatabase database)
-    {
-        this.database = database;
-    }
-
     @Override
     public void setupApplication(Application application)
     {
-
     }
 
     @Override
-    public void setupBus(EventBus bus)
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
 
     @Override
@@ -151,22 +126,47 @@ public class EBInfoView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularMZ.SOUND_SOURCE_24, 20, UIManager.getColor("Label.foreground"));
     }
 
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
+    {
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                transactionId = 1;//event.getSource().getTransactionId();
+                timer.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                transactionId = -1;
+            }
+        }
+    }
+
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
+    {
+        if (event.enabled())
+        {
+            if (transactionId != -1)
+                timer.start();
+        } else
+        {
+            timer.stop();
+        }
+    }
+
+    public void refresh()
+    {
+        queryDatagrams();
+    }
+
     public void reset()
     {
         sectionDatagramPanel.reset();
         if (transactionId != -1)
             timer.restart();
-    }
-
-    public void startRefreshing()
-    {
-        if (transactionId != -1)
-            timer.start();
-    }
-
-    public void stopRefreshing()
-    {
-        timer.stop();
     }
 
     private void queryDatagrams()

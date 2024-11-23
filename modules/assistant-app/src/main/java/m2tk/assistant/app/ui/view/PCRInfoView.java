@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.view;
 
 import com.google.common.eventbus.EventBus;
@@ -22,9 +21,7 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.PCRCheck;
 import m2tk.assistant.api.domain.PCRStats;
-import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceAttachedEvent;
-import m2tk.assistant.api.event.SourceDetachedEvent;
+import m2tk.assistant.api.event.*;
 import m2tk.assistant.app.ui.component.PCRChartPanel;
 import m2tk.assistant.app.ui.component.PCRStatsPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -90,7 +87,7 @@ public class PCRInfoView extends JPanel implements InfoView
         splitPane.setOneTouchExpandable(true);
         splitPane.add(pcrStatsPanel, JSplitPane.TOP);
         splitPane.add(pcrChartPanel, JSplitPane.BOTTOM);
-        ComponentUtil.setTitledBorder(splitPane, "PCR", TitledBorder.LEFT);
+        ComponentUtil.setTitledBorder(splitPane, "PCR");
 
         setLayout(new MigLayout("fill"));
         add(splitPane, "center, grow");
@@ -109,42 +106,18 @@ public class PCRInfoView extends JPanel implements InfoView
         transactionId = -1;
     }
 
-    @Subscribe
-    public void onSourceAttachedEvent(SourceAttachedEvent event)
-    {
-        transactionId = 1; //event.getSource().getTransactionId();
-        timer.start();
-        refresh();
-    }
-
-    @Subscribe
-    public void onSourceDetachedEvent(SourceDetachedEvent event)
-    {
-        transactionId = -1;
-    }
-
-    @Override
-    public void refresh()
-    {
-        queryPCRStats();
-    }
-
-    @Override
-    public void setupDatabase(M2TKDatabase database)
-    {
-        this.database = database;
-    }
-
     @Override
     public void setupApplication(Application application)
     {
-
     }
 
     @Override
-    public void setupBus(EventBus bus)
+    public void setupDataSource(EventBus bus, M2TKDatabase database)
     {
         this.bus = bus;
+        this.database = database;
+
+        bus.register(this);
     }
 
     @Override
@@ -190,16 +163,42 @@ public class PCRInfoView extends JPanel implements InfoView
             timer.restart();
     }
 
-    public void startRefreshing()
+    @Subscribe
+    public void onSourceStateEvent(SourceStateEvent event)
     {
-        if (transactionId != -1)
-            timer.start();
+        switch (event.state())
+        {
+            case SourceStateEvent.ATTACHED ->
+            {
+                transactionId = 1; //event.getSource().getTransactionId();
+                timer.start();
+                refresh();
+            }
+            case SourceStateEvent.DETACHED ->
+            {
+                transactionId = -1;
+            }
+        }
     }
 
-    public void stopRefreshing()
+    @Subscribe
+    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
     {
-        timer.stop();
+        if (event.enabled())
+        {
+            if (transactionId != -1)
+                timer.start();
+        } else
+        {
+            timer.stop();
+        }
     }
+
+    public void refresh()
+    {
+        queryPCRStats();
+    }
+
 
     private void updatePCRChart(List<PCRCheck> checks)
     {
