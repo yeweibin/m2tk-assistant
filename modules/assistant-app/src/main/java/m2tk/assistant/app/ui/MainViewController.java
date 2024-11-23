@@ -136,7 +136,8 @@ public class MainViewController
     private void loadPluginsAndExtensions()
     {
         // 采用单例模式加载扩展，保证二次加载的插件扩展与首次加载内容一致。
-        PluginManager pluginManager = new DefaultPluginManager(Paths.get("D:\\Projects\\m2tk\\m2tk-assistant\\modules\\assistant-app\\plugins"))
+//        PluginManager pluginManager = new DefaultPluginManager(Paths.get(System.getProperty("user.dir"), "plugins"))
+        PluginManager pluginManager = new DefaultPluginManager()
         {
             @Override
             protected ExtensionFactory createExtensionFactory()
@@ -507,7 +508,6 @@ public class MainViewController
             boolean started = false;
             try
             {
-                Global.resetUserPrivateSectionStreams();
                 started = analyzer.start(input, tracers, this::onAnalyzerStopped);
             } catch (Exception ex)
             {
@@ -556,7 +556,6 @@ public class MainViewController
         boolean started = false;
         try
         {
-            Global.resetUserPrivateSectionStreams();
             started = analyzer.start(input, tracers, this::onAnalyzerStopped);
         } catch (Exception ex)
         {
@@ -594,7 +593,6 @@ public class MainViewController
         boolean started = false;
         try
         {
-            Global.resetUserPrivateSectionStreams();
             started = analyzer.start(input, tracers, this::onAnalyzerStopped);
         } catch (Exception ex)
         {
@@ -633,7 +631,6 @@ public class MainViewController
         boolean started = false;
         try
         {
-            Global.resetUserPrivateSectionStreams();
             started = analyzer.start(source, tracers, this::onAnalyzerStopped);
         } catch (Exception ex)
         {

@@ -85,6 +85,7 @@ public class LogsView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem("查看日志");
         item.setIcon(getViewIcon());
+        item.setAccelerator(KeyStroke.getKeyStroke("ctrl L"));
         item.addActionListener(e -> {
             if (bus != null)
             {

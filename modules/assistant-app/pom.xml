@@ -17,7 +17,6 @@
         <ikonli.version>12.3.1</ikonli.version>
         <miglayout-swing.version>11.0</miglayout-swing.version>
         <guava.version>33.0.0-jre</guava.version>
-        <slf4j.version>2.0.16</slf4j.version>
         <logback.version>1.5.12</logback.version>
         <jackson.version>2.18.1</jackson.version>
         <hutool.version>5.8.32</hutool.version>
@@ -208,12 +207,10 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
         </dependency>
     </dependencies>
 
@@ -303,7 +300,7 @@
                     <mainClass>m2tk.assistant.app.AppLauncher</mainClass>
                     <icon>${project.basedir}/src/main/resources/images/app.ico</icon>
                     <appVersion>2.0.0</appVersion>
-                    <appContent>${project.basedir}/fonts,${project.basedir}/ffmpeg</appContent>
+                    <appContent>${project.basedir}/ffmpeg,${project.basedir}/plugins</appContent>
                     <winConsole>false</winConsole>
                     <winMenu>true</winMenu>
                     <winDirChooser>true</winDirChooser>

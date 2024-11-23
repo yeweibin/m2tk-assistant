@@ -15,51 +15,23 @@
  */
 package m2tk.assistant.app;
 
-import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.app.kernel.entity.StreamSourceEntity;
 import m2tk.assistant.app.ui.template.DescriptorDecoder;
 import m2tk.assistant.app.ui.template.SectionDecoder;
 import m2tk.assistant.app.ui.template.TemplateReader;
 import m2tk.assistant.app.ui.template.definition.M2TKTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 @Slf4j
 public final class Global
 {
-//    private static final Logger log = LoggerFactory.getLogger(Global.class);
-    private static final Set<Integer> userPrivateSectionStreams;
-    private static volatile int maxDatagramPerStream = -1;
-    private static boolean requiresLightTheme;
-    private static String latestSourceUrl;
-
-    private static final ObjectMapper objectMapper;
-
-    static
-    {
-        userPrivateSectionStreams = new HashSet<>();
-        objectMapper = new ObjectMapper();
-    }
-
-    @Data
-    public static class AppConfig
-    {
-        private String appTheme;
-        private int datagramFilteringLimitPerStream;
-    }
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private Global()
     {
@@ -67,35 +39,8 @@ public final class Global
 
     public static void init()
     {
-        loadUserConfigs();
         loadInternalTemplates();
         loadUserDefinedTemplates();
-    }
-
-    private static void loadUserConfigs()
-    {
-        Path cfg = Paths.get(System.getProperty("user.dir"), "user.cfg");
-
-        try
-        {
-            // 默认设置
-            requiresLightTheme = false;
-            maxDatagramPerStream = 1000;
-
-            AppConfig config = objectMapper.readValue(cfg.toFile(), AppConfig.class);
-            if (config != null)
-            {
-                requiresLightTheme = StrUtil.equalsIgnoreCase(config.getAppTheme(), "light");
-                maxDatagramPerStream = config.getDatagramFilteringLimitPerStream();
-            }
-        } catch (Exception ex)
-        {
-            log.warn("加载用户配置时异常：{}", ex.getMessage());
-
-            // 使用默认设置
-            requiresLightTheme = false;
-            maxDatagramPerStream = 1000;
-        }
     }
 
     private static void loadInternalTemplates()
@@ -156,46 +101,5 @@ public final class Global
         log.info("加载自定义模板：{}", file);
 
         return true;
-    }
-
-    public static boolean requiresLightTheme()
-    {
-        return requiresLightTheme;
-    }
-
-    public static void addUserPrivateSectionStreams(Collection<Integer> streams)
-    {
-        userPrivateSectionStreams.addAll(streams);
-    }
-
-    public static void resetUserPrivateSectionStreams()
-    {
-        userPrivateSectionStreams.clear();
-    }
-
-    public static Collection<Integer> getUserPrivateSectionStreamList()
-    {
-        return userPrivateSectionStreams;
-    }
-
-    public static int getPrivateSectionFilteringLimit()
-    {
-        return maxDatagramPerStream;
-    }
-
-    public static List<String> getSourceHistory()
-    {
-        return List.of(); //databaseService.getSourceHistory();
-    }
-
-    public static String getLatestSourceUrl()
-    {
-        return latestSourceUrl;
-    }
-
-    public static void updateSource(StreamSourceEntity source)
-    {
-//        latestTransactionId = source.getTransactionId();
-//        latestSourceUrl = source.getSourceUrl();
     }
 }
