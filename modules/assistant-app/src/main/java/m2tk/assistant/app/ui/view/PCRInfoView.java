@@ -21,26 +21,25 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.PCRCheck;
 import m2tk.assistant.api.domain.PCRStats;
-import m2tk.assistant.api.event.*;
+import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.ShowInfoViewEvent;
+import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.PCRChartPanel;
 import m2tk.assistant.app.ui.component.PCRStatsPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
-import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
 import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.List;
 
-@Extension(ordinal = 7)
+@Extension(ordinal = 4)
 public class PCRInfoView extends JPanel implements InfoView
 {
     private PCRStatsPanel pcrStatsPanel;
@@ -125,7 +124,7 @@ public class PCRInfoView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem("PCR");
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 7"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 4"));
         item.addActionListener(e -> {
             if (bus != null)
             {
@@ -151,7 +150,7 @@ public class PCRInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.SEND_LOGGING_24, 20, UIManager.getColor("Label.foreground"));
+        return FontIcon.of(FluentUiRegularMZ.SEND_LOGGING_24, 20, Color.decode("#FFDC80"));
     }
 
     public void reset()

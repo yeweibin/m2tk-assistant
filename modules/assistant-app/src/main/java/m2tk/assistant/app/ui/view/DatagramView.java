@@ -31,10 +31,11 @@ import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-@Extension(ordinal = 4)
+@Extension(ordinal = 7)
 public class DatagramView extends JPanel implements InfoView
 {
     private SectionDatagramPanel sectionDatagramPanel;
@@ -102,7 +103,7 @@ public class DatagramView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem("数据结构");
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 4"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 7"));
         item.addActionListener(e -> {
             if (bus != null)
             {
@@ -128,7 +129,7 @@ public class DatagramView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, UIManager.getColor("Label.foreground"));
+        return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, Color.decode("#3366FF"));
     }
 
     @Subscribe

@@ -32,7 +32,7 @@ import javax.swing.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-@Extension(ordinal = 5)
+@Extension(ordinal = 6)
 public class NVODInfoView extends JPanel implements InfoView
 {
     private NVODServiceEventGuidePanel serviceEventGuidePanel;
@@ -100,7 +100,7 @@ public class NVODInfoView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem("NVOD");
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 5"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 7"));
         item.addActionListener(e -> {
             if (bus != null)
             {

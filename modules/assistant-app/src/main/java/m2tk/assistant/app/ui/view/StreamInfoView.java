@@ -18,6 +18,7 @@ package m2tk.assistant.app.ui.view;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.*;
@@ -36,10 +37,9 @@ import org.jdesktop.application.Application;
 import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
@@ -54,11 +54,10 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
+@Slf4j
 @Extension(ordinal = 1)
 public class StreamInfoView extends JPanel implements InfoView
 {
-    private static final Logger log = LoggerFactory.getLogger(StreamInfoView.class);
-
     private Application application;
     private SourceInfoPanel sourceInfoPanel;
     private ProgramInfoPanel programInfoPanel;
@@ -168,13 +167,7 @@ public class StreamInfoView extends JPanel implements InfoView
         JMenuItem item = new JMenuItem("传输流信息");
         item.setIcon(getViewIcon());
         item.setAccelerator(KeyStroke.getKeyStroke("alt 1"));
-        item.addActionListener(e -> {
-            if (bus != null)
-            {
-                ShowInfoViewEvent event = new ShowInfoViewEvent(this);
-                bus.post(event);
-            }
-        });
+        item.addActionListener(e -> bus.post(new ShowInfoViewEvent(this)));
         menu.add(item);
     }
 
@@ -193,7 +186,7 @@ public class StreamInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularAL.DATA_USAGE_20, 20, UIManager.getColor("Label.foreground"));
+        return FontIcon.of(FluentUiRegularAL.DATA_USAGE_20, 20, Color.decode("#F56040"));
     }
 
     public void refresh()

@@ -33,6 +33,12 @@ public class ButtonBuilder
         return this;
     }
 
+    public ButtonBuilder disabledIcon(Icon icon)
+    {
+        button.setDisabledIcon(icon);
+        return this;
+    }
+
     public ButtonBuilder text(String text)
     {
         button.setText(text);

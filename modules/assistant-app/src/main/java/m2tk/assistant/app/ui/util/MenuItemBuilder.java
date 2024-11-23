@@ -33,6 +33,12 @@ public class MenuItemBuilder
         return this;
     }
 
+    public MenuItemBuilder disabledIcon(Icon icon)
+    {
+        item.setDisabledIcon(icon);
+        return this;
+    }
+
     public MenuItemBuilder text(String text)
     {
         item.setText(text);

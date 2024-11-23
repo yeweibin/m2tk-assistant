@@ -35,6 +35,7 @@ import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.HashMap;
@@ -42,7 +43,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@Extension(ordinal = 6)
+@Extension(ordinal = 3)
 public class TR290InfoView extends JPanel implements InfoView
 {
     private Application application;
@@ -107,7 +108,7 @@ public class TR290InfoView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem("TR290");
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 6"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 3"));
         item.addActionListener(e -> {
             if (bus != null)
             {
@@ -133,7 +134,7 @@ public class TR290InfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularAL.BUG_20, 20, UIManager.getColor("Label.foreground"));
+        return FontIcon.of(FluentUiRegularAL.BUG_20, 20, Color.decode("#FCAF45"));
     }
 
     public void reset()

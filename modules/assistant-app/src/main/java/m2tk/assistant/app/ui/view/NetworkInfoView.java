@@ -160,7 +160,7 @@ public class NetworkInfoView extends JPanel implements InfoView
     {
         FlatSVGIcon icon = new FlatSVGIcon("images/organization.svg", 18, 18);
         FlatSVGIcon.ColorFilter colorFilter = new FlatSVGIcon.ColorFilter();
-        colorFilter.add(Color.black, UIManager.getColor("Label.foreground"));
+        colorFilter.add(Color.black, Color.decode("#777737"));
         icon.setColorFilter(colorFilter);
         return icon;
     }

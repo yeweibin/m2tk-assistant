@@ -35,13 +35,15 @@ import org.pf4j.Extension;
 
 import javax.swing.Timer;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@Extension(ordinal = 3)
+@Extension(ordinal = 5)
 public class EPGInfoView extends JPanel implements InfoView
 {
     private Application application;
@@ -111,7 +113,7 @@ public class EPGInfoView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem("EPG");
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 3"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 5"));
         item.addActionListener(e -> {
             if (bus != null)
             {
@@ -137,7 +139,7 @@ public class EPGInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularAL.CALENDAR_20, 20, UIManager.getColor("Label.foreground"));
+        return FontIcon.of(FluentUiRegularAL.CALENDAR_20, 20, Color.decode("#0000FF"));
     }
 
     @Subscribe
