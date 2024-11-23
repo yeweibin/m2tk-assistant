@@ -88,6 +88,7 @@ public class MainViewController
 
     private Icon consoleMenuIcon, consoleToolbarIcon;
     private Icon diagramMenuIcon, diagramToolbarIcon;
+    private Icon appIcon;
 
     private static final Color DISABLED = UIManager.getColor("Label.disabledForeground");
     private static final Color MS_ORANGE = Color.decode("#F25022");
@@ -122,12 +123,14 @@ public class MainViewController
         FlatSVGIcon consoleIcon = new FlatSVGIcon("images/console.svg");
         consoleIcon.setColorFilter(colorFilter);
         consoleMenuIcon = consoleIcon.derive(16, 16);
-        consoleToolbarIcon = consoleIcon.derive(22, 22);
+        consoleToolbarIcon = consoleIcon.derive(26, 26);
 
         FlatSVGIcon diagramIcon = new FlatSVGIcon("images/diagram.svg");
         diagramIcon.setColorFilter(colorFilter);
         diagramMenuIcon = diagramIcon.derive(16, 16);
-        diagramToolbarIcon = diagramIcon.derive(24, 24);
+        diagramToolbarIcon = diagramIcon.derive(29, 29);
+
+        appIcon = new FlatSVGIcon("images/logo-a.svg", 20, 20);
     }
 
     private void loadPluginsAndExtensions()
@@ -187,39 +190,39 @@ public class MainViewController
         menuOps.setMnemonic(KeyEvent.VK_O);
         JMenu sourceMenu = new JMenu("选择输入源");
         sourceMenu.add(builder.create(actionMap.get("openLocalFile"))
-                              .icon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, iconSize, MS_ORANGE))
-                              .disabledIcon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, iconSize, DISABLED))
+                              .icon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, 20, MS_ORANGE))
+                              .disabledIcon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, 20, DISABLED))
                               .text("本地文件")
                               .get());
         sourceMenu.add(builder.create(actionMap.get("openMulticast"))
-                              .icon(getFontIcon(FluentUiRegularAL.LIVE_20, iconSize, MS_GREEN))
-                              .disabledIcon(getFontIcon(FluentUiRegularAL.LIVE_20, iconSize, DISABLED))
+                              .icon(getFontIcon(FluentUiRegularAL.LIVE_20, 20, MS_GREEN))
+                              .disabledIcon(getFontIcon(FluentUiRegularAL.LIVE_20, 20, DISABLED))
                               .text("组播流")
                               .get());
         sourceMenu.add(builder.create(actionMap.get("openThirdPartyInputSource"))
-                              .icon(getFontIcon(FluentUiRegularMZ.MAP_DRIVE_20, iconSize, MS_BLUE))
-                              .disabledIcon(getFontIcon(FluentUiRegularMZ.MAP_DRIVE_20, iconSize, DISABLED))
+                              .icon(getFontIcon(FluentUiRegularMZ.MAP_DRIVE_20, 20, MS_BLUE))
+                              .disabledIcon(getFontIcon(FluentUiRegularMZ.MAP_DRIVE_20, 20, DISABLED))
                               .text("扩展外设")
                               .get());
         menuOps.add(sourceMenu);
         menuOps.add(builder.create(actionMap.get("reopenInput"))
-                           .icon(getFontIcon(FluentUiRegularAL.HISTORY_20, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.HISTORY_20, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.HISTORY_20, 20, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.HISTORY_20, 20, DISABLED))
                            .text("重新分析")
                            .get());
         menuOps.add(builder.create(actionMap.get("stopAnalyzer"))
-                           .icon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_20, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_20, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_20, 20, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_20, 20, DISABLED))
                            .text("停止分析")
                            .get());
         menuOps.add(builder.create(actionMap.get("pauseRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_20, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_20, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_20, 20, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_20, 20, DISABLED))
                            .text("暂停刷新")
                            .get());
         menuOps.add(builder.create(actionMap.get("startRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_20, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_20, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_20, 20, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_20, 20, DISABLED))
                            .text("继续刷新")
                            .get());
         menuOps.addSeparator();
@@ -228,11 +231,11 @@ public class MainViewController
                            .text("打开命令行")
                            .get());
         menuOps.add(builder.create(actionMap.get("openCalc"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALCULATOR_20, iconSize, HP_BLUE))
+                           .icon(getFontIcon(FluentUiRegularAL.CALCULATOR_20, 20, HP_BLUE))
                            .text("打开计算器")
                            .get());
         menuOps.add(builder.create(actionMap.get("openNotepad"))
-                           .icon(getFontIcon(FluentUiRegularMZ.NOTEPAD_20, iconSize, HP_BLUE))
+                           .icon(getFontIcon(FluentUiRegularMZ.NOTEPAD_20, 20, HP_BLUE))
                            .text("打开记事本")
                            .get());
         menuOps.addSeparator();
@@ -242,11 +245,11 @@ public class MainViewController
                            .get());
         menuOps.addSeparator();
         menuOps.add(builder.create(actionMap.get("exportInternalTemplates"))
-                           .icon(getFontIcon(FluentUiRegularMZ.SHARE_20, iconSize, SLACK_LIGHT_BLUE))
+                           .icon(getFontIcon(FluentUiRegularMZ.SHARE_20, 20, SLACK_LIGHT_BLUE))
                            .text("导出默认解析模板")
                            .get());
         menuOps.add(builder.create(actionMap.get("loadCustomTemplates"))
-                           .icon(getFontIcon(FluentUiRegularAL.LAYER_20, iconSize, SLACK_LIGHT_BLUE))
+                           .icon(getFontIcon(FluentUiRegularAL.LAYER_20, 20, SLACK_LIGHT_BLUE))
                            .text("加载自定义解析模板")
                            .get());
         menuOps.addSeparator();
@@ -263,7 +266,7 @@ public class MainViewController
         if (!pluggedInfoViews.isEmpty())
         {
             JMenu extViews = new JMenu("扩展视图");
-            extViews.setIcon(getFontIcon(FluentUiRegularAL.EXTENSION_20, iconSize, SLACK_LIGHT_BLUE));
+            extViews.setIcon(getFontIcon(FluentUiRegularAL.EXTENSION_20, 20, SLACK_LIGHT_BLUE));
             menuViews.add(extViews);
             for (InfoView view : pluggedInfoViews)
                 view.setupMenu(extViews);
@@ -274,26 +277,26 @@ public class MainViewController
         // 日志视图做成可关闭的，所以以类似扩展InfoView的方式进行创建
         logsView.setupMenu(menuLogs);
         menuLogs.add(builder.create(actionMap.get("clearLogs"))
-                            .icon(getFontIcon(FluentUiRegularAL.DELETE_20, iconSize, SLACK_LIGHT_BLUE))
+                            .icon(getFontIcon(FluentUiRegularAL.DELETE_20, 20, SLACK_LIGHT_BLUE))
                             .text("清空日志")
                             .get());
         menuLogs.add(builder.create(actionMap.get("checkLogs"))
-                            .icon(getFontIcon(FluentUiRegularAL.DOCUMENT_COPY_20, iconSize, SLACK_LIGHT_BLUE))
+                            .icon(getFontIcon(FluentUiRegularAL.DOCUMENT_COPY_20, 20, SLACK_LIGHT_BLUE))
                             .text("查看历史日志")
                             .get());
 
         JMenu menuHelp = new JMenu("帮助(H)");
         menuHelp.setMnemonic(KeyEvent.VK_H);
         menuHelp.add(builder.create(actionMap.get("showSystemInfo"))
-                            .icon(getFontIcon(FluentUiRegularAL.BOOK_INFORMATION_24, iconSize, SLACK_LIGHT_BLUE))
+                            .icon(getFontIcon(FluentUiRegularAL.BOOK_INFORMATION_24, 20, SLACK_LIGHT_BLUE))
                             .text("查看系统信息")
                             .get());
         menuHelp.add(builder.create(actionMap.get("showHelp"))
-                            .icon(getFontIcon(FluentUiRegularMZ.QUESTION_CIRCLE_20, iconSize, SLACK_LIGHT_BLUE))
+                            .icon(getFontIcon(FluentUiRegularMZ.QUESTION_CIRCLE_20, 20, SLACK_LIGHT_BLUE))
                             .text("帮助")
                             .get());
         menuHelp.add(builder.create(actionMap.get("showAbout"))
-                            .icon(new FlatSVGIcon("images/logo-a.svg", 20, 20))
+                            .icon(appIcon)
                             .text("关于 M2TK Assistant")
                             .mnemonic(KeyEvent.VK_A)
                             .get());
@@ -309,45 +312,44 @@ public class MainViewController
     private void createAndSetupToolBar()
     {
         ButtonBuilder builder = new ButtonBuilder();
-        int iconSize = 24;
 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
 
         toolBar.add(builder.create(actionMap.get("openLocalFile"))
-                           .icon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_24, iconSize, MS_ORANGE))
-                           .disabledIcon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_24, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, 32, MS_ORANGE))
+                           .disabledIcon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, 32, DISABLED))
                            .text(null)
                            .tooltip("分析码流文件")
                            .get());
         toolBar.add(builder.create(actionMap.get("openMulticast"))
-                           .icon(getFontIcon(FluentUiRegularAL.LIVE_24, iconSize, MS_GREEN))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.LIVE_24, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.LIVE_20, 32, MS_GREEN))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.LIVE_20, 32, DISABLED))
                            .text(null)
                            .tooltip("分析组播流")
                            .get());
         toolBar.addSeparator();
         toolBar.add(builder.create(actionMap.get("reopenInput"))
-                           .icon(getFontIcon(FluentUiRegularAL.HISTORY_24, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.HISTORY_24, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.HISTORY_20, 28, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.HISTORY_20, 28, DISABLED))
                            .text(null)
                            .tooltip("重新分析")
                            .get());
         toolBar.add(builder.create(actionMap.get("stopAnalyzer"))
-                           .icon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_24, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_24, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_24, 28, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_24, 28, DISABLED))
                            .text(null)
                            .tooltip("停止分析")
                            .get());
         toolBar.add(builder.create(actionMap.get("pauseRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_24, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_24, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_24, 28, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_24, 28, DISABLED))
                            .text(null)
                            .tooltip("暂停刷新")
                            .get());
         toolBar.add(builder.create(actionMap.get("startRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_24, iconSize, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_24, iconSize, DISABLED))
+                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_24, 28, SLACK_LIGHT_BLUE))
+                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_24, 28, DISABLED))
                            .text(null)
                            .tooltip("继续刷新")
                            .get());
@@ -358,12 +360,12 @@ public class MainViewController
                            .tooltip("打开命令行")
                            .get());
         toolBar.add(builder.create(actionMap.get("openCalc"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALCULATOR_20, iconSize, HP_BLUE))
+                           .icon(getFontIcon(FluentUiRegularAL.CALCULATOR_20, 28, HP_BLUE))
                            .text(null)
                            .tooltip("打开计算器")
                            .get());
         toolBar.add(builder.create(actionMap.get("openNotepad"))
-                           .icon(getFontIcon(FluentUiRegularMZ.NOTEPAD_24, iconSize, HP_BLUE))
+                           .icon(getFontIcon(FluentUiRegularMZ.NOTEPAD_28, 28, HP_BLUE))
                            .text(null)
                            .tooltip("打开记事本")
                            .get());

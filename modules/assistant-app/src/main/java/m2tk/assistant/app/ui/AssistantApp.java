@@ -68,7 +68,7 @@ public final class AssistantApp extends SingleFrameApplication
         registerCustomFont("/fonts/InterVariable.ttf");
         registerCustomFont("/fonts/Wallpoet.ttf");
 
-        FlatLaf.registerCustomDefaultsSource("m2tk.assistant.core.theme");
+        FlatLaf.registerCustomDefaultsSource("m2tk.assistant.app.ui.theme");
         FlatMacDarkLaf.setup();
     }
 

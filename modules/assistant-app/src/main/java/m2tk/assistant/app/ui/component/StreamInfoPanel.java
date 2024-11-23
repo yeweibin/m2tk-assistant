@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.ElementaryStream;
@@ -97,8 +96,15 @@ public class StreamInfoPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 100, false); // 传输错误
         ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 100, false); // 连续计数错误
 
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.putClientProperty("FlatLaf.style",
+                                     """
+                                     borderWidth: 0.75;
+                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                     """);
+
         setLayout(new BorderLayout());
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void setPopupListener(BiConsumer<MouseEvent, ElementaryStream> listener)
