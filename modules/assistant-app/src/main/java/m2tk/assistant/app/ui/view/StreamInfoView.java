@@ -18,17 +18,16 @@ package m2tk.assistant.app.ui.view;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.*;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.api.presets.StreamTypes;
 import m2tk.assistant.app.ui.component.CASystemInfoPanel;
 import m2tk.assistant.app.ui.component.ProgramInfoPanel;
-import m2tk.assistant.app.ui.component.SourceInfoPanel;
 import m2tk.assistant.app.ui.component.StreamInfoPanel;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -40,8 +39,6 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.util.Comparator;
 import java.util.List;
@@ -59,7 +56,6 @@ import static java.util.stream.Collectors.toMap;
 public class StreamInfoView extends JPanel implements InfoView
 {
     private Application application;
-    private SourceInfoPanel sourceInfoPanel;
     private ProgramInfoPanel programInfoPanel;
     private StreamInfoPanel streamInfoPanel;
     private CASystemInfoPanel casInfoPanel;
@@ -69,15 +65,19 @@ public class StreamInfoView extends JPanel implements InfoView
     private JPopupMenu programContextMenu;
     private JMenuItem programContextMenuItem;
 
-    private Timer timer1;
-    private Timer timer2;
-    private Timer timer3;
-    private Timer timer4;
-    private volatile boolean stopped;
     private transient ElementaryStream selectedStream;
     private transient MPEGProgram selectedProgram;
     private EventBus bus;
     private M2TKDatabase database;
+
+    @Data
+    private static class StreamSnapshot
+    {
+        private StreamSource source;
+        private List<ElementaryStream> streams;
+        private List<MPEGProgram> programs;
+        private List<CASystemStream> caStreams;
+    }
 
     public StreamInfoView()
     {
@@ -86,23 +86,6 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer1 = new Timer(500, e -> {
-            if (isVisible() && !stopped)
-                querySourceInfo();
-        });
-        timer2 = new Timer(500, e -> {
-            if (isVisible() && !stopped)
-                queryProgramInfo();
-        });
-        timer3 = new Timer(500, e -> {
-            if (isVisible() && !stopped)
-                queryStreamInfo();
-        });
-        timer4 = new Timer(500, e -> {
-            if (isVisible() && !stopped)
-                queryCASystemInfo();
-        });
-
         streamContextMenuItem1 = new JMenuItem();
         streamContextMenuItem1.addActionListener(e -> playStream());
         streamContextMenuItem2 = new JMenuItem();
@@ -118,7 +101,6 @@ public class StreamInfoView extends JPanel implements InfoView
         programContextMenu.setLabel("播放");
         programContextMenu.add(programContextMenuItem);
 
-        sourceInfoPanel = new SourceInfoPanel();
         streamInfoPanel = new StreamInfoPanel();
         programInfoPanel = new ProgramInfoPanel();
         casInfoPanel = new CASystemInfoPanel();
@@ -126,24 +108,15 @@ public class StreamInfoView extends JPanel implements InfoView
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.add("节目", programInfoPanel);
         tabbedPane.add("条件接收", casInfoPanel);
+        JPanel psiInfoPanel = new JPanel(new MigLayout("fill, insets 5"));
+        psiInfoPanel.add(tabbedPane, "grow");
 
         ComponentUtil.setTitledBorder(streamInfoPanel, "传输流信息");
-        ComponentUtil.setTitledBorder(sourceInfoPanel, "基本信息");
-        ComponentUtil.setTitledBorder(tabbedPane, "PSI信息");
+        ComponentUtil.setTitledBorder(psiInfoPanel, "PSI信息");
 
-        setLayout(new MigLayout("fill", "[grow][fill]", "[fill][grow]"));
-        add(streamInfoPanel, "span 1 2, grow");
-        add(sourceInfoPanel, "wrap");
-        add(tabbedPane, "grow");
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
+        setLayout(new MigLayout("", "[grow][400!]", "[grow]"));
+        add(streamInfoPanel, "grow");
+        add(psiInfoPanel, "grow");
     }
 
     @Override
@@ -189,58 +162,10 @@ public class StreamInfoView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularAL.DATA_USAGE_20, 20, Color.decode("#F56040"));
     }
 
-    public void refresh()
-    {
-        querySourceInfo();
-        queryStreamInfo();
-        queryProgramInfo();
-        queryCASystemInfo();
-    }
-
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                stopped = false;
-                timer1.start();
-                timer2.start();
-                timer3.start();
-                timer4.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                stopped = true;
-            }
-        }
-    }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (!stopped)
-            {
-                timer1.start();
-                timer2.start();
-                timer3.start();
-                timer4.start();
-                streamInfoPanel.setPopupListener(null);
-                programInfoPanel.setPopupListener(null);
-            }
-        } else
-        {
-            timer1.stop();
-            timer2.stop();
-            timer3.stop();
-            timer4.stop();
-            streamInfoPanel.setPopupListener(this::showStreamPopupMenu);
-            programInfoPanel.setPopupListener(this::showProgramPopupMenu);
-        }
+        queryStreamSnapshot();
     }
 
     private void playStream()
@@ -341,95 +266,56 @@ public class StreamInfoView extends JPanel implements InfoView
 //        Global.addUserPrivateSectionStreams(List.of(pid));
     }
 
-    private void querySourceInfo()
+    private void queryStreamSnapshot()
     {
-        Supplier<StreamSource> query = () -> database.getCurrentStreamSource();
-        Consumer<StreamSource> consumer = sourceInfoPanel::updateSourceInfo;
-
-        AsyncQueryTask<StreamSource> task = new AsyncQueryTask<>(application,
-                                                                 query,
-                                                                 consumer);
-        task.execute();
-    }
-
-    private void queryProgramInfo()
-    {
-        Supplier<List<MPEGProgram>> query = () ->
+        Supplier<StreamSnapshot> query = () ->
         {
-            Map<Integer, ElementaryStream> streamRegistry = database.listElementaryStreams(true)
+            StreamSnapshot snapshot = new StreamSnapshot();
+
+            // 查询快照数据
+            snapshot.setSource(database.getCurrentStreamSource());
+            snapshot.setStreams(database.listElementaryStreams(true));
+            snapshot.setPrograms(database.listMPEGPrograms());
+            snapshot.setCaStreams(database.listCASystemStreams());
+
+            Map<Integer, ElementaryStream> streamRegistry = snapshot.getStreams()
                                                                     .stream()
                                                                     .collect(Collectors.toMap(ElementaryStream::getStreamPid,
                                                                                               Function.identity()));
 
-            List<MPEGProgram> programs = database.listMPEGPrograms();
             Map<String, SIService> serviceMap = database.listSIServices()
                                                         .stream()
                                                         .collect(toMap(service -> String.format("%d.%d",
                                                                                                 service.getTransportStreamId(),
                                                                                                 service.getServiceId()),
                                                                        service -> service));
-            for (MPEGProgram program : programs)
+            for (MPEGProgram program : snapshot.getPrograms())
             {
                 String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
                 String programName = Optional.ofNullable(serviceMap.get(key))
                                              .map(SIService::getName)
                                              .orElse(null);
-
                 program.setName(programName);
             }
+            snapshot.getPrograms().sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
 
-            programs.sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
-            return programs;
+            snapshot.getSource().setStreamCount(snapshot.getStreams().size());
+            snapshot.getSource().setProgramCount(snapshot.getPrograms().size());
+
+            log.info("got one snapshot");
+            return snapshot;
         };
 
-        Consumer<List<MPEGProgram>> consumer = programInfoPanel::updateProgramList;
-
-        AsyncQueryTask<List<MPEGProgram>> task = new AsyncQueryTask<>(application,
-                                                                      query,
-                                                                      consumer);
-        task.execute();
-    }
-
-    private void queryStreamInfo()
-    {
-        Supplier<List<ElementaryStream>> query = () -> database.listElementaryStreams(true);
-        Consumer<List<ElementaryStream>> consumer = streamInfoPanel::updateStreamList;
-
-        AsyncQueryTask<List<ElementaryStream>> task = new AsyncQueryTask<>(application,
-                                                                           query,
-                                                                           consumer);
-        task.execute();
-    }
-
-    private void queryCASystemInfo()
-    {
-        Supplier<List<CASystemStream>> query = () -> database.listCASystemStreams();
-        Consumer<List<CASystemStream>> consumer = casInfoPanel::updateStreamList;
-
-        AsyncQueryTask<List<CASystemStream>> task = new AsyncQueryTask<>(application,
-                                                                         query,
-                                                                         consumer);
-        task.execute();
-    }
-
-    public void reset()
-    {
-        programInfoPanel.resetProgramList();
-        streamInfoPanel.resetStreamList();
-        sourceInfoPanel.resetSourceInfo();
-        casInfoPanel.resetStreamList();
-
-        if (!stopped)
+        Consumer<StreamSnapshot> consumer = snapshot ->
         {
-            timer1.restart();
-            timer2.restart();
-            timer3.restart();
-            timer4.restart();
-            streamInfoPanel.setPopupListener(null);
-            programInfoPanel.setPopupListener(null);
-        }
-    }
+            streamInfoPanel.updateStreamInfo(snapshot.getSource(), snapshot.streams);
+            programInfoPanel.updateProgramList(snapshot.programs);
+            casInfoPanel.updateStreamList(snapshot.caStreams);
+        };
 
+        AsyncQueryTask<StreamSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
+    }
 
     private void showStreamPopupMenu(MouseEvent event, ElementaryStream stream)
     {

@@ -28,7 +28,9 @@ import m2tk.dvb.decoder.element.TransportStreamDescriptionDecoder;
 import m2tk.dvb.decoder.section.*;
 import m2tk.mpeg2.decoder.DescriptorLoopDecoder;
 import m2tk.mpeg2.decoder.SectionDecoder;
+import m2tk.multiplex.DemuxStatus;
 import m2tk.multiplex.TSDemux;
+import m2tk.multiplex.TSDemuxEvent;
 import m2tk.multiplex.TSDemuxPayload;
 import org.pf4j.Extension;
 import org.slf4j.Logger;
@@ -68,6 +70,7 @@ public class SITracer implements Tracer
     private final ServiceListDescriptorDecoder sld;
     private final Map<String, Integer> tableVersions;
 
+    private int sourceId;
     private M2TKDatabase databaseService;
 
     public SITracer()
@@ -99,12 +102,25 @@ public class SITracer implements Tracer
     @Override
     public void configure(StreamSource source, TSDemux demux, M2TKDatabase database)
     {
+        sourceId = source.getId();
         databaseService = database;
 
+        demux.registerEventListener(this::processDemuxStatus);
         demux.registerSectionChannel(0x0010, this::processSection);
         demux.registerSectionChannel(0x0011, this::processSection);
         demux.registerSectionChannel(0x0012, this::processSection);
         demux.registerSectionChannel(0x0014, this::processSection);
+    }
+
+    private void processDemuxStatus(TSDemuxEvent event)
+    {
+        if (event instanceof DemuxStatus status)
+        {
+            if (status.isRunning())
+            {
+                tableVersions.clear();
+            }
+        }
     }
 
     private void processSection(TSDemuxPayload payload)
@@ -155,6 +171,7 @@ public class SITracer implements Tracer
             return; // 已经处理过了。
 
         SINetwork network = databaseService.addSINetwork(nit.getNetworkID(), tableId == 0x40);
+        databaseService.updateStreamSourceComponentPresence(sourceId, network.isActualNetwork() ? "NIT_Actual" : "NIT_Other", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "NIT");
         databaseService.addPrivateSection(network.isActualNetwork() ? "NIT_Actual" : "NIT_Other",
                                           payload.getStreamPID(),
@@ -231,6 +248,7 @@ public class SITracer implements Tracer
             return; // 已经处理过了。
 
         SIBouquet bouquet = databaseService.addSIBouquet(bouquetId);
+        databaseService.updateStreamSourceComponentPresence(sourceId, "BAT", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
         databaseService.addPrivateSection("BAT",
                                           payload.getStreamPID(),
@@ -296,6 +314,7 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
+        databaseService.updateStreamSourceComponentPresence(sourceId, tableId == 0x42 ? "SDT_Actual" : "SDT_Other", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
         databaseService.addPrivateSection(tableId == 0x42 ? "SDT_Actual" : "SDT_Other",
                                           payload.getStreamPID(),
@@ -367,6 +386,7 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
+        databaseService.updateStreamSourceComponentPresence(sourceId, getEITTag(tableId), true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "EIT");
         databaseService.addPrivateSection(getEITTag(tableId),
                                           payload.getStreamPID(),

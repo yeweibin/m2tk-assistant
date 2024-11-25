@@ -161,4 +161,12 @@ public final class ComponentUtil
         border.setTitleJustification(TitledBorder.LEFT);
         c.setBorder(border);
     }
+
+    public static JTextField plainTextField()
+    {
+        JTextField field = new JTextField();
+        field.setEditable(false);
+        field.setFocusable(false);
+        return field;
+    }
 }

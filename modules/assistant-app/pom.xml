@@ -101,6 +101,11 @@
             <version>${flatlaf.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf-fonts-roboto-mono</artifactId>
+            <version>3.000</version>
+        </dependency>
+        <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-swing</artifactId>
             <version>${ikonli.version}</version>

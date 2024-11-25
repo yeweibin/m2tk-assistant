@@ -15,6 +15,6 @@
  */
 package m2tk.assistant.api.event;
 
-public record InfoViewRefreshingEvent(boolean enabled)
+public record RefreshInfoViewEvent()
 {
 }

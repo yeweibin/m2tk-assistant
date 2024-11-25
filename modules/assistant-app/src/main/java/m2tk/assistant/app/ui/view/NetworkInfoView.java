@@ -21,9 +21,8 @@ import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIMultiplex;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.MultiplexInfoPanel;
 import m2tk.assistant.app.ui.component.NetworkTimePanel;
 import m2tk.assistant.app.ui.component.ServiceInfoPanel;
@@ -34,8 +33,6 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,10 +43,6 @@ public class NetworkInfoView extends JPanel implements InfoView
     private MultiplexInfoPanel multiplexInfoPanel;
     private ServiceInfoPanel serviceInfoPanel;
 
-    private Timer timer1;
-    private Timer timer2;
-    private Timer timer3;
-    private volatile long transactionId;
     private EventBus bus;
     private M2TKDatabase database;
 
@@ -60,34 +53,6 @@ public class NetworkInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer1 = new Timer(2000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer1.stop();
-            else
-                queryNetworks();
-        });
-        timer2 = new Timer(2000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer2.stop();
-            else
-                queryServices();
-        });
-        timer3 = new Timer(1000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer3.stop();
-            else
-                queryNetworkTime();
-        });
-
         networkTimePanel = new NetworkTimePanel();
         multiplexInfoPanel = new MultiplexInfoPanel();
         serviceInfoPanel = new ServiceInfoPanel();
@@ -100,17 +65,6 @@ public class NetworkInfoView extends JPanel implements InfoView
         add(networkTimePanel, "span 2, grow, wrap");
         add(multiplexInfoPanel, "span 1 2, grow");
         add(serviceInfoPanel, "span 1 2, grow, wrap");
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
-
-        transactionId = -1;
     }
 
     @Override
@@ -166,45 +120,7 @@ public class NetworkInfoView extends JPanel implements InfoView
     }
 
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
-    {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                transactionId = 1;
-                timer1.start();
-                timer2.start();
-                timer3.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                transactionId = -1;
-            }
-        }
-    }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (transactionId != -1)
-            {
-                timer1.start();
-                timer2.start();
-                timer3.start();
-            }
-        } else
-        {
-            timer1.stop();
-            timer2.stop();
-            timer3.stop();
-        }
-    }
-
-    public void refresh()
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
         queryNetworks();
         queryServices();
@@ -333,16 +249,5 @@ public class NetworkInfoView extends JPanel implements InfoView
 //                                                                     query,
 //                                                                     consumer);
 //        task.execute();
-    }
-
-    public void reset()
-    {
-        networkTimePanel.resetTime();
-        if (transactionId != -1)
-        {
-            timer1.restart();
-            timer2.restart();
-            timer3.restart();
-        }
     }
 }

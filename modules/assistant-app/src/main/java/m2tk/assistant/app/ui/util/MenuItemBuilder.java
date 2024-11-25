@@ -27,6 +27,12 @@ public class MenuItemBuilder
         return this;
     }
 
+    public MenuItemBuilder createCheckbox(Action action)
+    {
+        item = new JCheckBoxMenuItem(action);
+        return this;
+    }
+
     public MenuItemBuilder icon(Icon icon)
     {
         item.setIcon(icon);

@@ -19,9 +19,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.SectionDatagramPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -32,14 +31,11 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 
 @Extension(ordinal = 7)
 public class DatagramView extends JPanel implements InfoView
 {
     private SectionDatagramPanel sectionDatagramPanel;
-    private Timer timer;
     private EventBus bus;
     private M2TKDatabase database;
     private volatile long transactionId;
@@ -51,37 +47,11 @@ public class DatagramView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer = new Timer(10000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer.stop();
-            else
-                queryDatagrams();
-        });
-
         sectionDatagramPanel = new SectionDatagramPanel();
         ComponentUtil.setTitledBorder(sectionDatagramPanel, "PSI/SI");
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
-
-        transactionId = -1;
-    }
-
-    public void refresh()
-    {
-        queryDatagrams();
     }
 
     @Override
@@ -129,46 +99,13 @@ public class DatagramView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, Color.decode("#3366FF"));
+        return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, Color.decode("#89D3DF"));
     }
 
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
+    public void onRefreshInfoViewControlEvent(RefreshInfoViewEvent event)
     {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                transactionId = 1;
-                //event.getSource().getTransactionId();
-                timer.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                transactionId = -1;
-            }
-        }
-    }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (transactionId != -1)
-                timer.start();
-        } else
-        {
-            timer.stop();
-        }
-    }
-
-    public void reset()
-    {
-        sectionDatagramPanel.reset();
-        if (transactionId != -1)
-            timer.restart();
+        queryDatagrams();
     }
 
     private void queryDatagrams()

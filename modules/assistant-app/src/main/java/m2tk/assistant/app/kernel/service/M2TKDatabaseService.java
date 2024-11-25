@@ -141,8 +141,27 @@ public class M2TKDatabaseService implements M2TKDatabase
             entity.setSourceUri(sourceUri);
             entity.setBitrate(0);
             entity.setFrameSize(188);
-            entity.setPacketCount(0L);
             entity.setTransportStreamId(-1);
+            entity.setPacketCount(0L);
+            entity.setStreamCount(0);
+            entity.setProgramCount(0);
+            entity.setScrambled(false);
+            entity.setEcmPresent(false);
+            entity.setEmmPresent(false);
+            entity.setPatPresent(false);
+            entity.setPmtPresent(false);
+            entity.setCatPresent(false);
+            entity.setNitActualPresent(false);
+            entity.setNitOtherPresent(false);
+            entity.setSdtActualPresent(false);
+            entity.setSdtOtherPresent(false);
+            entity.setEitPnfActualPresent(false);
+            entity.setEitPnfOtherPresent(false);
+            entity.setEitSchActualPresent(false);
+            entity.setEitSchOtherPresent(false);
+            entity.setBatPresent(false);
+            entity.setTdtPresent(false);
+            entity.setTotPresent(false);
             sourceMapper.insert(entity);
             log.info("本次数据源：{}", sourceUri);
 
@@ -156,34 +175,51 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public void updateStreamSourceStats(int streamRef, int bitrate, int frameSize, long packetCount)
+    public void updateStreamSourceStats(int sourceRef, int bitrate, int frameSize, boolean scrambled, long packetCount, int streamCount)
     {
         StreamSourceEntity change = new StreamSourceEntity();
-        change.setId(streamRef);
-        change.setBitrate(streamRef);
+        change.setId(sourceRef);
+        change.setBitrate(bitrate);
         change.setFrameSize(frameSize);
+        change.setScrambled(scrambled);
         change.setPacketCount(packetCount);
+        change.setStreamCount(streamCount);
         sourceMapper.updateById(change);
     }
 
     @Override
-    public void updateStreamSourceTransportId(int streamRef, int transportStreamId)
+    public void updateStreamSourceTransportId(int sourceRef, int transportStreamId)
     {
         StreamSourceEntity change = new StreamSourceEntity();
-        change.setId(streamRef);
+        change.setId(sourceRef);
         change.setTransportStreamId(transportStreamId);
         sourceMapper.updateById(change);
     }
 
     @Override
-    public void updateStreamSource(StreamSource source)
+    public void updateStreamSourceComponentPresence(int sourceRef, String component, boolean present)
     {
         StreamSourceEntity change = new StreamSourceEntity();
-        change.setId(source.getId());
-        change.setBitrate(source.getBitrate());
-        change.setFrameSize(source.getFrameSize());
-        change.setPacketCount(source.getPacketCount());
-        change.setTransportStreamId(source.getTransportStreamId());
+        change.setId(sourceRef);
+        switch (component)
+        {
+            case "ECM" -> change.setEcmPresent(present);
+            case "EMM" -> change.setEmmPresent(present);
+            case "PAT" -> change.setPatPresent(present);
+            case "PMT" -> change.setPmtPresent(present);
+            case "CAT" -> change.setCatPresent(present);
+            case "NIT_Actual" -> change.setNitActualPresent(present);
+            case "NIT_Other" -> change.setNitOtherPresent(present);
+            case "SDT_Actual" -> change.setSdtActualPresent(present);
+            case "SDT_Other" -> change.setSdtOtherPresent(present);
+            case "EIT_PF_Actual" -> change.setEitPnfActualPresent(present);
+            case "EIT_PF_Other" -> change.setEitPnfOtherPresent(present);
+            case "EIT_Schedule_Actual" -> change.setEitSchActualPresent(present);
+            case "EIT_Schedule_Other" -> change.setEitSchOtherPresent(present);
+            case "BAT" -> change.setBatPresent(present);
+            case "TDT" -> change.setTdtPresent(present);
+            case "TOT" -> change.setTotPresent(present);
+        }
         sourceMapper.updateById(change);
     }
 
@@ -272,10 +308,18 @@ public class M2TKDatabaseService implements M2TKDatabase
         LambdaQueryWrapper<ElementaryStreamEntity> query = Wrappers.lambdaQuery(ElementaryStreamEntity.class)
                                                                    .gt(presentOnly, ElementaryStreamEntity::getPacketCount, 0)
                                                                    .orderByAsc(ElementaryStreamEntity::getPid);
-        return streamMapper.selectList(query)
-                           .stream()
-                           .map(this::convert)
-                           .toList();
+        List<ElementaryStream> streams = streamMapper.selectList(query)
+                                                     .stream()
+                                                     .map(this::convert)
+                                                     .collect(Collectors.toList());
+        if (!streams.isEmpty())
+        {
+            ElementaryStream last = streams.getLast();
+            if (last.getStreamPid() == 8191)
+                last.setDescription("空包");
+        }
+
+        return streams;
     }
 
     @Override
@@ -325,7 +369,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         List<MPEGProgram> programs = programMapper.selectList(Wrappers.emptyWrapper())
                                                   .stream()
                                                   .map(this::convert)
-                                                  .toList();
+                                                  .collect(Collectors.toList());
         for (MPEGProgram program : programs)
         {
             int bandwidth = 0;
@@ -389,7 +433,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return caStreamMapper.selectList(Wrappers.emptyWrapper())
                              .stream()
                              .map(this::convert)
-                             .toList();
+                             .collect(Collectors.toList());
     }
 
     @Override
@@ -600,7 +644,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return serviceMapper.selectList(Wrappers.emptyWrapper())
                             .stream()
                             .map(this::convert)
-                            .toList();
+                            .collect(Collectors.toList());
     }
 
     @Override
@@ -707,7 +751,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return tr290EventMapper.selectList(Wrappers.emptyWrapper())
                                .stream()
                                .map(this::convert)
-                               .toList();
+                               .collect(Collectors.toList());
     }
 
     @Override
@@ -770,7 +814,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return sectionMapper.selectList(query)
                             .stream()
                             .map(this::convert)
-                            .toList();
+                            .collect(Collectors.toList());
     }
 
     @Override
@@ -784,7 +828,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return sectionMapper.selectList(query)
                             .stream()
                             .map(this::convert)
-                            .toList();
+                            .collect(Collectors.toList());
     }
 
     @Override
@@ -820,7 +864,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return packetMapper.selectList(query)
                            .stream()
                            .map(this::convert)
-                           .toList();
+                           .collect(Collectors.toList());
     }
 
     @Override
@@ -842,7 +886,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         return tableVersionMapper.selectList(Wrappers.emptyWrapper())
                                  .stream()
                                  .map(this::convert)
-                                 .toList();
+                                 .collect(Collectors.toList());
     }
 
     @Override
@@ -871,8 +915,27 @@ public class M2TKDatabaseService implements M2TKDatabase
         source.setUri(entity.getSourceUri());
         source.setBitrate(entity.getBitrate());
         source.setFrameSize(entity.getFrameSize());
-        source.setPacketCount(entity.getPacketCount());
         source.setTransportStreamId(entity.getTransportStreamId());
+        source.setPacketCount(entity.getPacketCount());
+        source.setStreamCount(entity.getStreamCount());
+        source.setProgramCount(entity.getProgramCount());
+        source.setScrambled(entity.getScrambled());
+        source.setEcmPresent(entity.getEcmPresent());
+        source.setEmmPresent(entity.getEmmPresent());
+        source.setPatPresent(entity.getPatPresent());
+        source.setPmtPresent(entity.getPmtPresent());
+        source.setCatPresent(entity.getCatPresent());
+        source.setNitActualPresent(entity.getNitActualPresent());
+        source.setNitOtherPresent(entity.getNitOtherPresent());
+        source.setSdtActualPresent(entity.getSdtActualPresent());
+        source.setSdtOtherPresent(entity.getSdtOtherPresent());
+        source.setEitPnfActualPresent(entity.getEitPnfActualPresent());
+        source.setEitPnfOtherPresent(entity.getEitPnfOtherPresent());
+        source.setEitSchActualPresent(entity.getEitSchActualPresent());
+        source.setEitSchOtherPresent(entity.getEitSchOtherPresent());
+        source.setBatPresent(entity.getBatPresent());
+        source.setTdtPresent(entity.getTdtPresent());
+        source.setTotPresent(entity.getTotPresent());
         return source;
     }
 

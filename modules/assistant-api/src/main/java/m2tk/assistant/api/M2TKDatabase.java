@@ -26,11 +26,11 @@ public interface M2TKDatabase
 {
     StreamSource beginDiagnosis(String source, String uri);
 
-    void updateStreamSourceStats(int streamRef, int bitrate, int frameSize, long packetCount);
+    void updateStreamSourceStats(int sourceRef, int bitrate, int frameSize, boolean scrambled, long packetCount, int streamCount);
 
-    void updateStreamSourceTransportId(int streamRef, int transportStreamId);
+    void updateStreamSourceTransportId(int sourceRef, int transportStreamId);
 
-    void updateStreamSource(StreamSource source);
+    void updateStreamSourceComponentPresence(int sourceRef, String component, boolean present);
 
     StreamSource getCurrentStreamSource();
 

@@ -19,9 +19,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.NVODServiceEventGuidePanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -29,15 +28,11 @@ import org.jdesktop.application.Application;
 import org.pf4j.Extension;
 
 import javax.swing.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 
 @Extension(ordinal = 6)
 public class NVODInfoView extends JPanel implements InfoView
 {
     private NVODServiceEventGuidePanel serviceEventGuidePanel;
-    private Timer timer;
-    private volatile long transactionId;
     private EventBus bus;
     private M2TKDatabase database;
 
@@ -48,37 +43,11 @@ public class NVODInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer = new Timer(1000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer.stop();
-            else
-                queryServiceAndEvents();
-        });
-
         serviceEventGuidePanel = new NVODServiceEventGuidePanel();
         ComponentUtil.setTitledBorder(serviceEventGuidePanel, "NVOD");
 
         setLayout(new MigLayout("fill"));
         add(serviceEventGuidePanel, "center, grow");
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
-
-        transactionId = -1;
-    }
-
-    public void refresh()
-    {
-        queryServiceAndEvents();
     }
 
     @Override
@@ -130,43 +99,10 @@ public class NVODInfoView extends JPanel implements InfoView
     }
 
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                transactionId = 1;// event.getSource().getTransactionId();
-                timer.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                transactionId = -1;
-            }
-        }
+        queryServiceAndEvents();
     }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (transactionId != -1)
-                timer.start();
-        } else
-        {
-            timer.stop();
-        }
-    }
-
-    public void reset()
-    {
-        serviceEventGuidePanel.reset();
-        if (transactionId != -1)
-            timer.restart();
-    }
-
 
     private void queryServiceAndEvents()
     {

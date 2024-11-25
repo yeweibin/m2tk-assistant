@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.Global;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
@@ -50,6 +50,7 @@ import org.pf4j.*;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -85,6 +86,7 @@ public class MainViewController
 
     private EventBus bus;
     private StreamAnalyzer analyzer;
+    private Timer timer;
 
     private Icon consoleMenuIcon, consoleToolbarIcon;
     private Icon diagramMenuIcon, diagramToolbarIcon;
@@ -95,6 +97,7 @@ public class MainViewController
     private static final Color MS_GREEN = Color.decode("#7FBA00");
     private static final Color MS_BLUE = Color.decode("#00A4EF");
     private static final Color HP_BLUE = Color.decode("#0096D6");
+    private static final Color INSTA_RED = Color.decode("#FD1D1D");
     private static final Color SLACK_LIGHT_BLUE = Color.decode("#89D3DF");
 
     public MainViewController(FrameView view)
@@ -216,15 +219,9 @@ public class MainViewController
                            .disabledIcon(getFontIcon(FluentUiRegularAL.DISMISS_CIRCLE_20, 20, DISABLED))
                            .text("停止分析")
                            .get());
-        menuOps.add(builder.create(actionMap.get("pauseRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_20, 20, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_20, 20, DISABLED))
-                           .text("暂停刷新")
-                           .get());
-        menuOps.add(builder.create(actionMap.get("startRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_20, 20, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_20, 20, DISABLED))
-                           .text("继续刷新")
+        menuOps.add(builder.create(actionMap.get("manualRefreshing"))
+                           .icon(getFontIcon(FluentUiRegularAL.ARROW_SYNC_20, 20, SLACK_LIGHT_BLUE))
+                           .text("手动刷新")
                            .get());
         menuOps.addSeparator();
         menuOps.add(builder.create(actionMap.get("openConsole"))
@@ -255,6 +252,7 @@ public class MainViewController
                            .get());
         menuOps.addSeparator();
         menuOps.add(builder.create(actionMap.get("exitApp"))
+                           .icon(getFontIcon(FluentUiRegularMZ.POWER_20, 20, INSTA_RED))
                            .text("退出(X)")
                            .mnemonic(KeyEvent.VK_X).get());
 
@@ -291,10 +289,6 @@ public class MainViewController
         menuHelp.add(builder.create(actionMap.get("showSystemInfo"))
                             .icon(getFontIcon(FluentUiRegularAL.BOOK_INFORMATION_24, 20, SLACK_LIGHT_BLUE))
                             .text("查看系统信息")
-                            .get());
-        menuHelp.add(builder.create(actionMap.get("showHelp"))
-                            .icon(getFontIcon(FluentUiRegularMZ.QUESTION_CIRCLE_20, 20, SLACK_LIGHT_BLUE))
-                            .text("帮助")
                             .get());
         menuHelp.add(builder.create(actionMap.get("showAbout"))
                             .icon(appIcon)
@@ -342,17 +336,26 @@ public class MainViewController
                            .text(null)
                            .tooltip("停止分析")
                            .get());
-        toolBar.add(builder.create(actionMap.get("pauseRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_24, 28, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_CLOCK_24, 28, DISABLED))
+        toolBar.add(builder.createToggle(new AbstractAction()
+                           {
+                               @Override
+                               public void actionPerformed(ActionEvent e)
+                               {
+                                   JToggleButton toggle = (JToggleButton) e.getSource();
+                                   if (toggle.isSelected())
+                                       timer.stop();
+                                   else
+                                       timer.start();
+                               }
+                           })
+                           .icon(getFontIcon(FluentUiRegularMZ.PAUSE_20, 28, SLACK_LIGHT_BLUE))
                            .text(null)
                            .tooltip("暂停刷新")
                            .get());
-        toolBar.add(builder.create(actionMap.get("startRefreshing"))
-                           .icon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_24, 28, SLACK_LIGHT_BLUE))
-                           .disabledIcon(getFontIcon(FluentUiRegularAL.CALENDAR_SYNC_24, 28, DISABLED))
+        toolBar.add(builder.create(actionMap.get("manualRefreshing"))
+                           .icon(getFontIcon(FluentUiRegularAL.ARROW_SYNC_20, 28, SLACK_LIGHT_BLUE))
                            .text(null)
-                           .tooltip("继续刷新")
+                           .tooltip("手动刷新")
                            .get());
         toolBar.addSeparator();
         toolBar.add(builder.create(actionMap.get("openConsole"))
@@ -398,12 +401,13 @@ public class MainViewController
     {
         initFileChooserCurrentDirectory();
 
+        timer = new Timer(500, e -> refreshInfoViews());
+        timer.start();
+
         actionMap.get("openLocalFile").setEnabled(false);
         actionMap.get("openMulticast").setEnabled(false);
         actionMap.get("reopenInput").setEnabled(false);
         actionMap.get("stopAnalyzer").setEnabled(false);
-        actionMap.get("pauseRefreshing").setEnabled(false);
-        actionMap.get("startRefreshing").setEnabled(false);
 
         ComponentUtil.setPreferSizeAndLocateToCenter(frameView.getFrame(), 0.5, 0.5);
     }
@@ -529,8 +533,6 @@ public class MainViewController
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
                 actionMap.get("reopenInput").setEnabled(false);
                 actionMap.get("stopAnalyzer").setEnabled(true);
-                actionMap.get("pauseRefreshing").setEnabled(true);
-                actionMap.get("startRefreshing").setEnabled(false);
             }
         }
     }
@@ -576,8 +578,6 @@ public class MainViewController
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
-            actionMap.get("pauseRefreshing").setEnabled(true);
-            actionMap.get("startRefreshing").setEnabled(false);
         }
     }
 
@@ -613,8 +613,6 @@ public class MainViewController
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
-            actionMap.get("pauseRefreshing").setEnabled(true);
-            actionMap.get("startRefreshing").setEnabled(false);
         }
     }
 
@@ -651,8 +649,6 @@ public class MainViewController
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
-            actionMap.get("pauseRefreshing").setEnabled(true);
-            actionMap.get("startRefreshing").setEnabled(false);
         }
     }
 
@@ -663,21 +659,9 @@ public class MainViewController
     }
 
     @Action
-    public void pauseRefreshing()
+    public void manualRefreshing()
     {
-        bus.post(new InfoViewRefreshingEvent(false));
-
-        actionMap.get("pauseRefreshing").setEnabled(false);
-        actionMap.get("startRefreshing").setEnabled(true);
-    }
-
-    @Action
-    public void startRefreshing()
-    {
-        bus.post(new InfoViewRefreshingEvent(true));
-
-        actionMap.get("pauseRefreshing").setEnabled(true);
-        actionMap.get("startRefreshing").setEnabled(false);
+        bus.post(new RefreshInfoViewEvent());
     }
 
     @Action
@@ -821,8 +805,6 @@ public class MainViewController
         actionMap.get("openThirdPartyInputSource").setEnabled(true);
         actionMap.get("reopenInput").setEnabled(true);
         actionMap.get("stopAnalyzer").setEnabled(false);
-        actionMap.get("pauseRefreshing").setEnabled(false);
-        actionMap.get("startRefreshing").setEnabled(false);
     }
 
     private boolean isCorrectMulticastAddress(String input)
@@ -874,6 +856,12 @@ public class MainViewController
         {
             log.debug("无法保存最近使用的文件：{}", ex.getMessage());
         }
+    }
+
+    private void refreshInfoViews()
+    {
+        if (bus != null)
+            bus.post(new RefreshInfoViewEvent());
     }
 
     private Icon getFontIcon(Ikon ikon, int size, Color color)

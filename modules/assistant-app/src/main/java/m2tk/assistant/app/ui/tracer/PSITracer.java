@@ -29,7 +29,9 @@ import m2tk.mpeg2.decoder.element.ProgramElementDecoder;
 import m2tk.mpeg2.decoder.section.CATSectionDecoder;
 import m2tk.mpeg2.decoder.section.PATSectionDecoder;
 import m2tk.mpeg2.decoder.section.PMTSectionDecoder;
+import m2tk.multiplex.DemuxStatus;
 import m2tk.multiplex.TSDemux;
+import m2tk.multiplex.TSDemuxEvent;
 import m2tk.multiplex.TSDemuxPayload;
 import org.pf4j.Extension;
 import org.slf4j.Logger;
@@ -75,10 +77,6 @@ public class PSITracer implements Tracer
         element = new ProgramElementDecoder();
         programs = new HashMap<>();
         pmtVersions = new HashMap<>();
-
-        patSections = new int[0];
-        catSections = new int[0];
-        tsid = -1;
     }
 
     @Override
@@ -87,8 +85,24 @@ public class PSITracer implements Tracer
         sourceId = source.getId();
         databaseService = database;
 
+        demux.registerEventListener(this::processDemuxStatus);
         demux.registerSectionChannel(0x0000, this::processPAT);
         demux.registerSectionChannel(0x0001, this::processCAT);
+    }
+
+    private void processDemuxStatus(TSDemuxEvent event)
+    {
+        if (event instanceof DemuxStatus status)
+        {
+            if (status.isRunning())
+            {
+                pmtVersions.clear();
+                programs.clear();
+                patSections = new int[0];
+                catSections = new int[0];
+                tsid = -1;
+            }
+        }
     }
 
     private void processPAT(TSDemuxPayload payload)
@@ -144,6 +158,7 @@ public class PSITracer implements Tracer
         databaseService.updateStreamSourceTransportId(sourceId, tsid);
 
         patSections[secnum] = version;
+        databaseService.updateStreamSourceComponentPresence(sourceId, "PAT", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "PAT");
         databaseService.addPrivateSection("PAT",
                                           payload.getStreamPID(),
@@ -194,6 +209,7 @@ public class PSITracer implements Tracer
         });
 
         catSections[secnum] = version;
+        databaseService.updateStreamSourceComponentPresence(sourceId, "CAT", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
         databaseService.addPrivateSection("CAT",
                                           payload.getStreamPID(),
@@ -288,6 +304,7 @@ public class PSITracer implements Tracer
                                           program.isFreeAccess());
 
         pmtVersions.put(pmtpid, version);
+        databaseService.updateStreamSourceComponentPresence(sourceId, "PMT", true);
         databaseService.updateElementaryStreamUsage(pmtpid,
                                                     StreamTypes.CATEGORY_DATA,
                                                     String.format("PMT（节目号：%d）", program.getProgramNumber()));

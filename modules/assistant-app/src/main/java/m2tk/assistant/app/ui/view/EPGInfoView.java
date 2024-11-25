@@ -21,9 +21,8 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIEvent;
 import m2tk.assistant.api.domain.SIService;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.ServiceEventGuidePanel;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -33,13 +32,10 @@ import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
-import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -48,7 +44,6 @@ public class EPGInfoView extends JPanel implements InfoView
 {
     private Application application;
     private ServiceEventGuidePanel serviceEventGuidePanel;
-    private Timer timer;
     private volatile long transactionId;
     private EventBus bus;
     private M2TKDatabase database;
@@ -60,37 +55,11 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer = new Timer(5000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer.stop();
-            else
-                queryServiceAndEvents();
-        });
-
         serviceEventGuidePanel = new ServiceEventGuidePanel();
         ComponentUtil.setTitledBorder(serviceEventGuidePanel, "EPG");
 
         setLayout(new MigLayout("fill"));
         add(serviceEventGuidePanel, "center, grow");
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
-
-        transactionId = -1;
-    }
-
-    public void refresh()
-    {
-        queryServiceAndEvents();
     }
 
     @Override
@@ -139,45 +108,13 @@ public class EPGInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularAL.CALENDAR_20, 20, Color.decode("#0000FF"));
+        return FontIcon.of(FluentUiRegularAL.CALENDAR_AGENDA_20, 20, Color.decode("#00A4EF"));
     }
 
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
+    public void onRefreshInfoViewControlEvent(RefreshInfoViewEvent event)
     {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                transactionId = 1;
-                timer.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                transactionId = -1;
-            }
-        }
-    }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (transactionId != -1)
-                timer.start();
-        } else
-        {
-            timer.stop();
-        }
-    }
-
-    public void reset()
-    {
-        serviceEventGuidePanel.reset();
-        if (transactionId != -1)
-            timer.restart();
+        queryServiceAndEvents();
     }
 
     private void queryServiceAndEvents()

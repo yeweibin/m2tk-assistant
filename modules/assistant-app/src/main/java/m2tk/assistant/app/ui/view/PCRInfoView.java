@@ -21,22 +21,19 @@ import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.PCRCheck;
 import m2tk.assistant.api.domain.PCRStats;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.app.ui.component.PCRChartPanel;
 import m2tk.assistant.app.ui.component.PCRStatsPanel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
-import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
+import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.util.List;
 
 @Extension(ordinal = 4)
@@ -45,8 +42,6 @@ public class PCRInfoView extends JPanel implements InfoView
     private PCRStatsPanel pcrStatsPanel;
     private PCRChartPanel pcrChartPanel;
     private JSplitPane splitPane;
-    private Timer timer;
-    private volatile long transactionId;
     private transient PCRStats selectedPCRStat;
     private EventBus bus;
     private M2TKDatabase database;
@@ -58,16 +53,6 @@ public class PCRInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer = new Timer(500, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer.stop();
-            else
-                queryPCRStats();
-        });
-
         pcrStatsPanel = new PCRStatsPanel();
         pcrStatsPanel.addPCRStatConsumer(stat -> {
             if (stat == null)
@@ -92,17 +77,6 @@ public class PCRInfoView extends JPanel implements InfoView
         add(splitPane, "center, grow");
 
         pcrChartPanel.setVisible(false);
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
-
-        transactionId = -1;
     }
 
     @Override
@@ -150,54 +124,15 @@ public class PCRInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.SEND_LOGGING_24, 20, Color.decode("#FFDC80"));
-    }
-
-    public void reset()
-    {
-        pcrStatsPanel.reset();
-        pcrChartPanel.reset();
-
-        if (transactionId != -1)
-            timer.restart();
+        return FontIcon.of(FluentUiRegularAL.CLOCK_20, 20, Color.decode("#FFDC80"));
     }
 
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
-    {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                transactionId = 1; //event.getSource().getTransactionId();
-                timer.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                transactionId = -1;
-            }
-        }
-    }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (transactionId != -1)
-                timer.start();
-        } else
-        {
-            timer.stop();
-        }
-    }
-
-    public void refresh()
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
         queryPCRStats();
+        queryPCRRecords();
     }
-
 
     private void updatePCRChart(List<PCRCheck> checks)
     {

@@ -18,6 +18,7 @@ package m2tk.assistant.app.ui;
 
 import cn.hutool.core.thread.ThreadUtil;
 import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.fonts.roboto_mono.FlatRobotoMonoFont;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
@@ -65,10 +66,12 @@ public final class AssistantApp extends SingleFrameApplication
         cmdArgs = args;
 
         // 加载必要的自定义字体
-        registerCustomFont("/fonts/InterVariable.ttf");
+//        registerCustomFont("/fonts/InterVariable.ttf");
         registerCustomFont("/fonts/Wallpoet.ttf");
 
         FlatLaf.registerCustomDefaultsSource("m2tk.assistant.app.ui.theme");
+        FlatRobotoMonoFont.install();
+        FlatLaf.setPreferredMonospacedFontFamily(FlatRobotoMonoFont.FAMILY);
         FlatMacDarkLaf.setup();
     }
 

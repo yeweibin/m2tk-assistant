@@ -19,11 +19,17 @@ import javax.swing.*;
 
 public class ButtonBuilder
 {
-    private JButton button;
+    private AbstractButton button;
 
     public ButtonBuilder create(Action action)
     {
         button = new JButton(action);
+        return this;
+    }
+
+    public ButtonBuilder createToggle(Action action)
+    {
+        button = new JToggleButton(action);
         return this;
     }
 
@@ -57,7 +63,7 @@ public class ButtonBuilder
         return this;
     }
 
-    public JButton get()
+    public AbstractButton get()
     {
         return button;
     }

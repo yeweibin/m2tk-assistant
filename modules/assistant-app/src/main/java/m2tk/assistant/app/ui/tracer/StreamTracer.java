@@ -24,11 +24,10 @@ import m2tk.mpeg2.ProgramClockReference;
 import m2tk.mpeg2.decoder.TransportPacketDecoder;
 import m2tk.mpeg2.decoder.element.AdaptationFieldDecoder;
 import m2tk.mpeg2.decoder.element.ProgramClockReferenceDecoder;
-import m2tk.multiplex.DemuxStatus;
-import m2tk.multiplex.TSDemux;
-import m2tk.multiplex.TSDemuxEvent;
-import m2tk.multiplex.TSDemuxPayload;
+import m2tk.multiplex.*;
 import org.pf4j.Extension;
+
+import java.util.Arrays;
 
 @Extension
 public class StreamTracer implements Tracer
@@ -54,11 +53,6 @@ public class StreamTracer implements Tracer
         pkt = new TransportPacketDecoder();
         adpt = new AdaptationFieldDecoder();
         pcr = new ProgramClockReferenceDecoder();
-        pcrPid = -1;
-        lastPcrValue = -1;
-        frameSize = -1;
-        avgBitrate = 0;
-        t0 = System.currentTimeMillis();
     }
 
     @Override
@@ -73,22 +67,19 @@ public class StreamTracer implements Tracer
 
     private void processDemuxStatus(TSDemuxEvent event)
     {
-        if (!(event instanceof DemuxStatus status))
-            return;
-
-        if (!status.isRunning())
+        if (event instanceof DemuxStatus status)
         {
-            databaseService.updateStreamSourceStats(sourceId, avgBitrate, frameSize, lastPct);
-
-            for (ElementaryStream stream : streams)
+            if (status.isRunning())
             {
-                if (stream != null && stream.getPacketCount() > 0)
-                {
-                    double ratio = 1.0 * stream.getPacketCount() / lastPct;
-                    stream.setRatio(ratio);
-                    stream.setBitrate((int) (avgBitrate * ratio));
-                    databaseService.updateElementaryStreamStats(stream);
-                }
+                Arrays.fill(streams, null);
+                pcrPid = -1;
+                lastPcrValue = -1;
+                frameSize = -1;
+                avgBitrate = 0;
+                t0 = System.currentTimeMillis();
+            } else
+            {
+                saveToDatabase();
             }
         }
     }
@@ -137,29 +128,38 @@ public class StreamTracer implements Tracer
         }
 
         lastPct = currPct;
-        saveToDatabase();
+
+        long t1 = System.currentTimeMillis();
+        if ((t1 - t0) >= 200) // 超过200ms才更新数据库，避免频繁操作数据库而造成的IO阻塞。
+        {
+            saveToDatabase();
+            t0 = System.currentTimeMillis();
+        }
     }
 
     private void saveToDatabase()
     {
-        long t1 = System.currentTimeMillis();
-        if ((t1 - t0) >= 200) // 超过200ms才更新数据库，避免频繁操作数据库而造成的IO阻塞。
-        {
-            databaseService.updateStreamSourceStats(sourceId, avgBitrate, frameSize, lastPcrPct);
+        boolean scrambled = false;
+        int streamCount = 0;
 
-            for (ElementaryStream stream : streams)
+        for (ElementaryStream stream : streams)
+        {
+            if (stream != null && stream.getLastPct() > 0)
             {
-                if (stream != null && stream.getLastPct() > 0)
-                {
-                    double ratio = 1.0 * stream.getPacketCount() / lastPct;
-                    stream.setRatio(ratio);
-                    stream.setBitrate((int) (avgBitrate * ratio));
-                    databaseService.updateElementaryStreamStats(stream);
-                    stream.setLastPct(-1); // 这里借用lastPct作为是否有新增数据的标志
-                }
+                double ratio = 1.0 * stream.getPacketCount() / lastPct;
+                stream.setRatio(ratio);
+                stream.setBitrate((int) (avgBitrate * ratio));
+                databaseService.updateElementaryStreamStats(stream);
+                stream.setLastPct(-1); // 这里借用lastPct作为是否有新增数据的标志
+
+                if (stream.isScrambled())
+                    scrambled = true;
+
+                streamCount++;
             }
-            t0 = System.currentTimeMillis();
         }
+
+        databaseService.updateStreamSourceStats(sourceId, avgBitrate, frameSize, scrambled, lastPcrPct, streamCount);
     }
 
     private long readPCR()

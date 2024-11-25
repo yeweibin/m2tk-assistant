@@ -19,9 +19,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.event.InfoViewRefreshingEvent;
+import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.event.SourceStateEvent;
 import m2tk.assistant.ext.component.EBSectionDatagramPanel;
 import m2tk.assistant.ext.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -32,15 +31,11 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 
 @Extension(ordinal = 10)
 public class EBInfoView extends JPanel implements InfoView
 {
     private EBSectionDatagramPanel sectionDatagramPanel;
-    private Timer timer;
-    private volatile long transactionId;
     private EventBus bus;
     private M2TKDatabase database;
 
@@ -51,32 +46,11 @@ public class EBInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        timer = new Timer(10000, e -> {
-            if (!isVisible())
-                return; // 不在后台刷新
-
-            if (transactionId == -1)
-                timer.stop();
-            else
-                queryDatagrams();
-        });
-
         sectionDatagramPanel = new EBSectionDatagramPanel();
         ComponentUtil.setTitledBorder(sectionDatagramPanel, "应急广播", TitledBorder.LEFT);
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
-
-        addComponentListener(new ComponentAdapter()
-        {
-            @Override
-            public void componentShown(ComponentEvent e)
-            {
-                refresh();
-            }
-        });
-
-        transactionId = -1;
     }
 
     @Override
@@ -127,46 +101,9 @@ public class EBInfoView extends JPanel implements InfoView
     }
 
     @Subscribe
-    public void onSourceStateEvent(SourceStateEvent event)
-    {
-        switch (event.state())
-        {
-            case SourceStateEvent.ATTACHED ->
-            {
-                transactionId = 1;//event.getSource().getTransactionId();
-                timer.start();
-                refresh();
-            }
-            case SourceStateEvent.DETACHED ->
-            {
-                transactionId = -1;
-            }
-        }
-    }
-
-    @Subscribe
-    public void onInfoViewRefreshingEvent(InfoViewRefreshingEvent event)
-    {
-        if (event.enabled())
-        {
-            if (transactionId != -1)
-                timer.start();
-        } else
-        {
-            timer.stop();
-        }
-    }
-
-    public void refresh()
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
         queryDatagrams();
-    }
-
-    public void reset()
-    {
-        sectionDatagramPanel.reset();
-        if (transactionId != -1)
-            timer.restart();
     }
 
     private void queryDatagrams()

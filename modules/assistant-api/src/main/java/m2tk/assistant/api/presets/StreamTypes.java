@@ -62,6 +62,11 @@ public final class StreamTypes
     public static final String CATEGORY_DATA = "Data";
     public static final String CATEGORY_USER_PRIVATE = "UserPrivate";
 
+    public static void register(int type, String description)
+    {
+        NAMES.put(type, description);
+    }
+
     public static String description(int type)
     {
         String name = NAMES.get(type);

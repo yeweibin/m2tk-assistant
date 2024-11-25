@@ -28,4 +28,23 @@ public class StreamSource
     private int transportStreamId;
     private int bitrate;
     private long packetCount;
+    private int streamCount;
+    private int programCount;
+    private boolean scrambled;
+    private boolean ecmPresent;
+    private boolean emmPresent;
+    private boolean patPresent;
+    private boolean pmtPresent;
+    private boolean catPresent;
+    private boolean nitActualPresent;
+    private boolean nitOtherPresent;
+    private boolean sdtActualPresent;
+    private boolean sdtOtherPresent;
+    private boolean eitPnfActualPresent;
+    private boolean eitPnfOtherPresent;
+    private boolean eitSchActualPresent;
+    private boolean eitSchOtherPresent;
+    private boolean batPresent;
+    private boolean tdtPresent;
+    private boolean totPresent;
 }
