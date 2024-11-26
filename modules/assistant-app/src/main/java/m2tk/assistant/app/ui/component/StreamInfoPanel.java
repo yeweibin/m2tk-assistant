@@ -22,6 +22,7 @@ import m2tk.assistant.api.domain.StreamSource;
 import m2tk.assistant.api.presets.StreamTypes;
 import m2tk.assistant.app.ui.model.StreamInfoTableModel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
+import m2tk.assistant.app.ui.util.FormatUtil;
 import m2tk.assistant.app.ui.util.ThreeStateRowSorterListener;
 import net.miginfocom.swing.MigLayout;
 import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
@@ -289,9 +290,9 @@ public class StreamInfoPanel extends JPanel
             insSourceBitrate = source.getBitrate();
 
             fieldBitrates.setText(String.format("%s / %s / %s",
-                                                formatBitrate(maxSourceBitrate),
-                                                formatBitrate(minSourceBitrate),
-                                                formatBitrate(insSourceBitrate)));
+                                                FormatUtil.formatBitrate(maxSourceBitrate),
+                                                FormatUtil.formatBitrate(minSourceBitrate),
+                                                FormatUtil.formatBitrate(insSourceBitrate)));
         }
 
         fieldPacketCount.setText(String.format("%,d", source.getPacketCount()));
@@ -380,24 +381,13 @@ public class StreamInfoPanel extends JPanel
         return buttons;
     }
 
-    private String formatBitrate(double bitrate)
-    {
-        if (bitrate >= 1000000000)
-            return String.format("%.3f gbps", bitrate / 1000000000);
-        if (bitrate >= 1000000)
-            return String.format("%.3f mbps", bitrate / 1000000);
-        if (bitrate >= 1000)
-            return String.format("%.3f kbps", bitrate / 1000);
-        return String.format("%d bps", (int) bitrate);
-    }
-
     private static class StreamRatioCellRenderer extends JPanel implements TableCellRenderer
     {
         private final JProgressBar progressBar;
 
         StreamRatioCellRenderer()
         {
-            progressBar = new JProgressBar(0, 1000);
+            progressBar = new JProgressBar(0, 100);
             progressBar.setStringPainted(true);
             setLayout(new MigLayout("ins 3, fill"));
             add(progressBar, "grow");
@@ -445,7 +435,7 @@ public class StreamInfoPanel extends JPanel
             try
             {
                 Double ratio = (Double) value;
-                progressBar.setValue((int) (1000 * ratio));
+                progressBar.setValue((int) (100 * ratio));
             } catch (Exception ex)
             {
                 log.error("转译带宽占比表示时异常：{}, ex：{}", value, ex.getMessage());
@@ -455,34 +445,47 @@ public class StreamInfoPanel extends JPanel
 
     private static class StreamStateCellRenderer extends JPanel implements TableCellRenderer
     {
+        private final JLabel labelDataP;
+        private final JLabel labelDataS;
+        private final JLabel labelVideoP;
+        private final JLabel labelVideoS;
+        private final JLabel labelAudioP;
+        private final JLabel labelAudioS;
+        private final JLabel labelPrivate;
+        private final JLabel labelPCR;
         private final JLabel labelTSE;
         private final JLabel labelCCE;
-        private final JLabel labelSCR;
-        private final JLabel labelPCR;
-        private final JLabel labelData;
-        private final JLabel labelVideo;
-        private final JLabel labelAudio;
 
-        private Color unselectedBackground;
+        private final Color RED = Color.decode("#FD1D1D");
+        private final Color GREEN = Color.decode("#7FBA00");
+        private final Color ORANGE = Color.decode("#F25022");
+        private final Color LIGHT_BLUE = Color.decode("#89D3DF");
+        private final Color BRIGHT_BLUE = Color.decode("#4285F4");
 
         StreamStateCellRenderer()
         {
-            labelTSE = new JLabel(FontIcon.of(FluentUiFilledMZ.WARNING_24, 20, Color.decode("#DB4437")));
-            labelCCE = new JLabel(FontIcon.of(FluentUiFilledAL.CLOSED_CAPTION_24, 22, Color.decode("#DB4437")));
-            labelSCR = new JLabel(FontIcon.of(FluentUiFilledMZ.SHIELD_20, 20, Color.decode("#FFDC80")));
-            labelPCR = new JLabel(FontIcon.of(FluentUiFilledAL.CLOCK_24, 20, Color.decode("#4285F4")));
-            labelVideo = new JLabel(FontIcon.of(FluentUiFilledMZ.VIDEO_24, 20, Color.decode("#FCAF45")));
-            labelAudio = new JLabel(FontIcon.of(FluentUiFilledMZ.SPEAKER_24, 20, Color.decode("#FCAF45")));
-            labelData = new JLabel(FontIcon.of(FluentUiFilledAL.DOCUMENT_LANDSCAPE_DATA_24, 20, Color.decode("#FCAF45")));
+            labelDataP = new JLabel(FontIcon.of(FluentUiFilledMZ.TABLE_24, 20, GREEN));
+            labelDataS = new JLabel(FontIcon.of(FluentUiFilledMZ.TABLE_24, 20, RED));
+            labelVideoP = new JLabel(FontIcon.of(FluentUiFilledMZ.VIDEO_24, 20, GREEN));
+            labelVideoS = new JLabel(FontIcon.of(FluentUiFilledMZ.VIDEO_24, 20, RED));
+            labelAudioP = new JLabel(FontIcon.of(FluentUiFilledMZ.SPEAKER_24, 20, GREEN));
+            labelAudioS = new JLabel(FontIcon.of(FluentUiFilledMZ.SPEAKER_24, 20, RED));
+            labelPrivate = new JLabel(FontIcon.of(FluentUiFilledMZ.SLIDE_TEXT_24, 20, LIGHT_BLUE));
+            labelPCR = new JLabel(FontIcon.of(FluentUiFilledAL.CLOCK_24, 20, BRIGHT_BLUE));
+            labelTSE = new JLabel(FontIcon.of(FluentUiFilledMZ.WARNING_24, 20, ORANGE));
+            labelCCE = new JLabel(FontIcon.of(FluentUiFilledAL.CLOSED_CAPTION_24, 22, ORANGE));
 
             setLayout(new MigLayout("ins 2 10 2 10, hidemode 3"));
+            add(labelDataP, "cell 0 0");
+            add(labelDataS, "cell 0 0");
+            add(labelVideoP, "cell 0 0");
+            add(labelVideoS, "cell 0 0");
+            add(labelAudioP, "cell 0 0");
+            add(labelAudioS, "cell 0 0");
+            add(labelPrivate, "cell 0 0");
+            add(labelPCR);
             add(labelTSE);
             add(labelCCE);
-            add(labelData);
-            add(labelVideo);
-            add(labelAudio);
-            add(labelSCR);
-            add(labelPCR);
             add(Box.createHorizontalGlue(), "grow");
         }
 
@@ -528,13 +531,16 @@ public class StreamInfoPanel extends JPanel
                 String s = (String) value;
                 String[] states = s.split(",");
 
-                labelTSE.setVisible(Boolean.parseBoolean(states[0]));
-                labelCCE.setVisible(Boolean.parseBoolean(states[1]));
-                labelSCR.setVisible(Boolean.parseBoolean(states[2]));
-                labelPCR.setVisible(Boolean.parseBoolean(states[3]));
-                labelData.setVisible(StrUtil.equals(states[4], StreamTypes.CATEGORY_DATA));
-                labelVideo.setVisible(StrUtil.equals(states[4], StreamTypes.CATEGORY_VIDEO));
-                labelAudio.setVisible(StrUtil.equals(states[4], StreamTypes.CATEGORY_AUDIO));
+                labelDataP.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_DATA) && !Boolean.parseBoolean(states[1]));
+                labelDataS.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_DATA) && Boolean.parseBoolean(states[1]));
+                labelVideoP.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_VIDEO) && !Boolean.parseBoolean(states[1]));
+                labelVideoS.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_VIDEO) && Boolean.parseBoolean(states[1]));
+                labelAudioP.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_AUDIO) && !Boolean.parseBoolean(states[1]));
+                labelAudioS.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_AUDIO) && Boolean.parseBoolean(states[1]));
+                labelPrivate.setVisible(StrUtil.equals(states[0], StreamTypes.CATEGORY_USER_PRIVATE));
+                labelPCR.setVisible(Boolean.parseBoolean(states[2]));
+                labelTSE.setVisible(Boolean.parseBoolean(states[3]));
+                labelCCE.setVisible(Boolean.parseBoolean(states[4]));
             } catch (Exception ex)
             {
                 log.error("转译流状态表示时异常：{}", value);

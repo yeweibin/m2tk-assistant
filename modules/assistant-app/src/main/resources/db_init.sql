@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_ca_stream` (
   `stream_type` INT DEFAULT 0 NOT NULL,
   `stream_private_data` VARBINARY(255),
   `program_ref` INT DEFAULT -1 NOT NULL,
+  `program_number` INT DEFAULT -1 NOT NULL,
   `es_pid` INT DEFAULT -1 NOT NULL
 );
 

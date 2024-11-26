@@ -26,7 +26,7 @@ public class StreamInfoTableModel extends AbstractTableModel
 {
     private final transient List<ElementaryStream> data;
     private static final String[] COLUMNS = {
-        "序号", "PID", "基本流描述", "带宽占比", "传输包", "传输错误", "连续计数错误", "状态"
+        "序号", "PID", "基本流描述", "带宽占比", "传输包", "传输错误", "连续计数错误", "摘要"
     };
     private static final Class<?>[] COLUMN_CLASSES = {
         Integer.class, String.class, String.class, Double.class, String.class, String.class, String.class, String.class
@@ -89,12 +89,12 @@ public class StreamInfoTableModel extends AbstractTableModel
             case 4 -> String.format("%,d", stream.getPacketCount());
             case 5 -> String.format("%,d", stream.getTransportErrorCount());
             case 6 -> String.format("%,d", stream.getContinuityErrorCount());
-            case 7 -> String.format("%b,%b,%b,%b,%s",  // 依次表示：是否存在传输错误，是否存在连续计数错误，是否加扰，是否存在PCR，流类型。
-                                    stream.getTransportErrorCount() > 0,
-                                    stream.getContinuityErrorCount() > 0,
+            case 7 -> String.format("%s,%b,%b,%b,%b,",  // 依次表示：流类型，是否加扰，是否存在PCR，是否存在传输错误，是否存在连续计数错误。
+                                    stream.getCategory(),
                                     stream.isScrambled(),
                                     stream.getPcrCount() > 0,
-                                    stream.getCategory());
+                                    stream.getTransportErrorCount() > 0,
+                                    stream.getContinuityErrorCount() > 0);
             default -> null;
         };
     }

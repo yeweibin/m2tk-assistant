@@ -381,14 +381,16 @@ public class M2TKDatabaseService implements M2TKDatabase
 
             Map<Integer, ProgramElementaryMappingEntity> esMappings = new HashMap<>();
             List<ProgramElementaryMappingEntity> elementaryMappings = programMappingMapper.selectList(Wrappers.lambdaQuery(ProgramElementaryMappingEntity.class)
-                                                                                                              .eq(ProgramElementaryMappingEntity::getProgramRef,
-                                                                                                                  program.getId()));
+                                                                                                              .eq(ProgramElementaryMappingEntity::getProgramRef, program.getId()));
             for (ProgramElementaryMappingEntity elementaryMapping : elementaryMappings)
             {
                 streamPids.add(elementaryMapping.getStreamPid());
                 esMappings.put(elementaryMapping.getStreamPid(), elementaryMapping);
             }
-            List<CAStreamEntity> ecmStreams = caStreamMapper.selectEcmStreams(program.getId());
+
+            List<CAStreamEntity> ecmStreams = caStreamMapper.selectList(Wrappers.lambdaQuery(CAStreamEntity.class)
+                                                                                .eq(CAStreamEntity::getProgramRef, program.getId())
+                                                                                .eq(CAStreamEntity::getStreamType, CAStreamEntity.TYPE_ECM));
             for (CAStreamEntity ecmStream : ecmStreams)
             {
                 streamPids.add(ecmStream.getStreamPid());
@@ -414,7 +416,7 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public CASystemStream addCASystemStream(int pid, int type, int systemId, byte[] privateData, int programRef, int elementaryStreamPid)
+    public void addCASystemStream(int pid, int type, int systemId, byte[] privateData, int programRef, int programNumber, int elementaryStreamPid)
     {
         CAStreamEntity entity = new CAStreamEntity();
         entity.setSystemId(systemId);
@@ -422,9 +424,9 @@ public class M2TKDatabaseService implements M2TKDatabase
         entity.setStreamType(type);
         entity.setStreamPrivateData(privateData);
         entity.setProgramRef(programRef);
+        entity.setProgramNumber(programNumber);
         entity.setElementaryStreamPid(elementaryStreamPid);
         caStreamMapper.insert(entity);
-        return convert(entity);
     }
 
     @Override
@@ -978,7 +980,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         stream.setStreamPid(entity.getStreamPid());
         stream.setStreamType(entity.getStreamType());
         stream.setStreamPrivateData(entity.getStreamPrivateData());
-        stream.setProgramNumber(entity.getProgramRef());
+        stream.setProgramNumber(entity.getProgramNumber());
         stream.setElementaryStreamPid(entity.getElementaryStreamPid());
         return stream;
     }

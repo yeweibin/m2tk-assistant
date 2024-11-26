@@ -13,11 +13,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.app.kernel.mapper;
+package m2tk.assistant.app.ui.util;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import m2tk.assistant.app.kernel.entity.CAStreamEntity;
-
-public interface CAStreamEntityMapper extends BaseMapper<CAStreamEntity>
+public final class FormatUtil
 {
+    private FormatUtil() {}
+
+    public static String formatBitrate(long bitrate)
+    {
+        if (bitrate >= 1000000000L)
+            return String.format("%.3f Gbps", bitrate / 1000000000.0);
+        if (bitrate >= 1000000)
+            return String.format("%.3f Mbps", bitrate / 1000000.0);
+        if (bitrate >= 1000)
+            return String.format("%.3f Kbps", bitrate / 1000.0);
+        return String.format("%d bps", bitrate);
+    }
 }

@@ -70,6 +70,9 @@ public class StreamInfoView extends JPanel implements InfoView
     private EventBus bus;
     private M2TKDatabase database;
 
+    private volatile long lastTimestamp;
+    private final long MIN_QUERY_INTERVAL_MILLIS = 500;
+
     @Data
     private static class StreamSnapshot
     {
@@ -165,7 +168,62 @@ public class StreamInfoView extends JPanel implements InfoView
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        queryStreamSnapshot();
+        long t1 = System.currentTimeMillis();
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS)
+        {
+            queryStreamSnapshot();
+            lastTimestamp = System.currentTimeMillis();
+        }
+    }
+
+    private void queryStreamSnapshot()
+    {
+        Supplier<StreamSnapshot> query = () ->
+        {
+            StreamSnapshot snapshot = new StreamSnapshot();
+
+            // 查询快照数据
+            snapshot.setSource(database.getCurrentStreamSource());
+            snapshot.setStreams(database.listElementaryStreams(true));
+            snapshot.setPrograms(database.listMPEGPrograms());
+            snapshot.setCaStreams(database.listCASystemStreams());
+
+            Map<Integer, ElementaryStream> streamRegistry = snapshot.getStreams()
+                                                                    .stream()
+                                                                    .collect(Collectors.toMap(ElementaryStream::getStreamPid,
+                                                                                              Function.identity()));
+
+            Map<String, SIService> serviceMap = database.listSIServices()
+                                                        .stream()
+                                                        .collect(toMap(service -> String.format("%d.%d",
+                                                                                                service.getTransportStreamId(),
+                                                                                                service.getServiceId()),
+                                                                       service -> service));
+            for (MPEGProgram program : snapshot.getPrograms())
+            {
+                String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
+                String programName = Optional.ofNullable(serviceMap.get(key))
+                                             .map(SIService::getName)
+                                             .orElse(null);
+                program.setName(programName);
+            }
+            snapshot.getPrograms().sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
+
+            snapshot.getSource().setStreamCount(snapshot.getStreams().size());
+            snapshot.getSource().setProgramCount(snapshot.getPrograms().size());
+
+            return snapshot;
+        };
+
+        Consumer<StreamSnapshot> consumer = snapshot ->
+        {
+            streamInfoPanel.updateStreamInfo(snapshot.getSource(), snapshot.streams);
+            programInfoPanel.updateProgramList(snapshot.programs);
+            casInfoPanel.updateStreamList(snapshot.caStreams);
+        };
+
+        AsyncQueryTask<StreamSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
     }
 
     private void playStream()
@@ -266,56 +324,6 @@ public class StreamInfoView extends JPanel implements InfoView
 //        Global.addUserPrivateSectionStreams(List.of(pid));
     }
 
-    private void queryStreamSnapshot()
-    {
-        Supplier<StreamSnapshot> query = () ->
-        {
-            StreamSnapshot snapshot = new StreamSnapshot();
-
-            // 查询快照数据
-            snapshot.setSource(database.getCurrentStreamSource());
-            snapshot.setStreams(database.listElementaryStreams(true));
-            snapshot.setPrograms(database.listMPEGPrograms());
-            snapshot.setCaStreams(database.listCASystemStreams());
-
-            Map<Integer, ElementaryStream> streamRegistry = snapshot.getStreams()
-                                                                    .stream()
-                                                                    .collect(Collectors.toMap(ElementaryStream::getStreamPid,
-                                                                                              Function.identity()));
-
-            Map<String, SIService> serviceMap = database.listSIServices()
-                                                        .stream()
-                                                        .collect(toMap(service -> String.format("%d.%d",
-                                                                                                service.getTransportStreamId(),
-                                                                                                service.getServiceId()),
-                                                                       service -> service));
-            for (MPEGProgram program : snapshot.getPrograms())
-            {
-                String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
-                String programName = Optional.ofNullable(serviceMap.get(key))
-                                             .map(SIService::getName)
-                                             .orElse(null);
-                program.setName(programName);
-            }
-            snapshot.getPrograms().sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
-
-            snapshot.getSource().setStreamCount(snapshot.getStreams().size());
-            snapshot.getSource().setProgramCount(snapshot.getPrograms().size());
-
-            log.info("got one snapshot");
-            return snapshot;
-        };
-
-        Consumer<StreamSnapshot> consumer = snapshot ->
-        {
-            streamInfoPanel.updateStreamInfo(snapshot.getSource(), snapshot.streams);
-            programInfoPanel.updateProgramList(snapshot.programs);
-            casInfoPanel.updateStreamList(snapshot.caStreams);
-        };
-
-        AsyncQueryTask<StreamSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
-        task.execute();
-    }
 
     private void showStreamPopupMenu(MouseEvent event, ElementaryStream stream)
     {

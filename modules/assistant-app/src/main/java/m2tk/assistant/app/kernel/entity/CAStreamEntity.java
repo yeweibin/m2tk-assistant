@@ -40,6 +40,8 @@ public class CAStreamEntity
     private byte[] streamPrivateData;
     @TableField("program_ref")
     private Integer programRef;
+    @TableField("program_number")
+    private Integer programNumber;
     @TableField("es_pid")
     private Integer elementaryStreamPid;
 }

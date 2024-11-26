@@ -20,7 +20,12 @@ import cn.hutool.core.util.StrUtil;
 import m2tk.assistant.api.domain.CASystemStream;
 import m2tk.assistant.api.domain.ElementaryStream;
 import m2tk.assistant.api.domain.MPEGProgram;
-import m2tk.assistant.app.SmallIcons;
+import m2tk.assistant.api.presets.CASystems;
+import m2tk.assistant.api.presets.StreamTypes;
+import m2tk.assistant.app.ui.util.FormatUtil;
+import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
+import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -35,9 +40,9 @@ import java.util.function.BiConsumer;
 
 public class ProgramInfoPanel extends JPanel
 {
+    private JTree tree;
     private DefaultTreeModel model;
     private DefaultMutableTreeNode root;
-    private JTree tree;
     private BiConsumer<MouseEvent, MPEGProgram> popupListener;
     private final List<MPEGProgram> currentPrograms;
 
@@ -51,6 +56,7 @@ public class ProgramInfoPanel extends JPanel
     {
         root = new DefaultMutableTreeNode("/");
         model = new DefaultTreeModel(root);
+
         tree = new JTree(model);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setRootVisible(false);
@@ -85,19 +91,19 @@ public class ProgramInfoPanel extends JPanel
         ToolTipManager.sharedInstance().registerComponent(tree);
 
         setLayout(new BorderLayout());
-        add(new JScrollPane(tree), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(tree);
+        scrollPane.putClientProperty("FlatLaf.style",
+                                     """
+                                     arc: 10;
+                                     borderWidth: 0.75;
+                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                     """);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void setPopupListener(BiConsumer<MouseEvent, MPEGProgram> listener)
     {
         popupListener = listener;
-    }
-
-    public void resetProgramList()
-    {
-        root.removeAllChildren();
-        model.reload();
-        currentPrograms.clear();
     }
 
     public void updateProgramList(List<MPEGProgram> programs)
@@ -165,13 +171,9 @@ public class ProgramInfoPanel extends JPanel
 
     private DefaultMutableTreeNode createProgramNode(MPEGProgram program)
     {
-        String text = String.format("节目号：%d（PMT：0x%04X",
-                                    program.getProgramNumber(),
-                                    program.getPmtPid());
-        if (StrUtil.isEmpty(program.getName()))
-            text += "）";
-        else
-            text += " 节目名称：" + program.getName() + "）";
+        String text = String.format("%s（节目号：%d）",
+                                    StrUtil.isEmpty(program.getName()) ? "未命名节目" : program.getName(),
+                                    program.getProgramNumber());
         if (program.isFreeAccess())
             text = "[P]" + text;
         else
@@ -180,17 +182,30 @@ public class ProgramInfoPanel extends JPanel
         DefaultMutableTreeNode node = new DefaultMutableTreeNode();
         node.setUserObject(text);
 
-        text = "[BW]带宽：" + formatBitrate(program.getBandwidth());
+        text = "[BW]带宽：" + FormatUtil.formatBitrate(program.getBandwidth());
         DefaultMutableTreeNode nodeBW = new DefaultMutableTreeNode();
         nodeBW.setUserObject(text);
         node.add(nodeBW);
 
+        text = String.format("[PMT]PMT：0x%04X", program.getPmtPid());
+        DefaultMutableTreeNode nodePMT = new DefaultMutableTreeNode();
+        nodePMT.setUserObject(text);
+        node.add(nodePMT);
+
+        if (program.getPcrPid() != 0x1fff)
+        {
+            text = String.format("[PCR]PCR：0x%04X", program.getPcrPid());
+            DefaultMutableTreeNode nodePCR = new DefaultMutableTreeNode();
+            nodePCR.setUserObject(text);
+            node.add(nodePCR);
+        }
+
         for (CASystemStream ecm : program.getEcmStreams())
         {
-            text = String.format("[ECM]PID：0x%04X，%d",
-                                 ecm.getStreamPid(),
-                                 ecm.getStreamType());
-
+            String vendorName = CASystems.vendor(ecm.getSystemId());
+            if (vendorName.isEmpty())
+                vendorName = String.format("系统号：%04X", ecm.getSystemId());
+            text = String.format("[ECM]PID：0x%04X，%s", ecm.getStreamPid(), vendorName);
             DefaultMutableTreeNode nodeECM = new DefaultMutableTreeNode();
             nodeECM.setUserObject(text);
             node.add(nodeECM);
@@ -201,7 +216,7 @@ public class ProgramInfoPanel extends JPanel
             text = String.format("[%s]PID：0x%04X，%s",
                                  es.getCategory(),
                                  es.getStreamPid(),
-                                 es.getDescription());
+                                 StreamTypes.description(es.getStreamType()));
             if (es.isScrambled())
                 text += "，加密";
             if (es.getPacketCount() == 0)
@@ -212,29 +227,18 @@ public class ProgramInfoPanel extends JPanel
             node.add(nodeES);
         }
 
-        if (program.getPcrPid() != 0x1fff)
-        {
-            text = String.format("[PCR]PCR：0x%04X", program.getPcrPid());
-            DefaultMutableTreeNode nodePCR = new DefaultMutableTreeNode();
-            nodePCR.setUserObject(text);
-            node.add(nodePCR);
-        }
-
         return node;
-    }
-
-    private String formatBitrate(int bps)
-    {
-        if (bps > 1000_000)
-            return String.format("%.2f Mbps", 1.0d * bps / 1000000);
-        if (bps > 1000)
-            return String.format("%.2f Kbps", 1.0d * bps / 1000);
-        else
-            return bps + " bps";
     }
 
     class ProgramTreeCellRenderer extends DefaultTreeCellRenderer
     {
+        final Color GREEN = Color.decode("#7FBA00");
+        final Color RED = Color.decode("#FD1D1D");
+        final Color ORANGE = Color.decode("#F25022");
+        final Color YELLOW = Color.decode("#FCAF45");
+        final Color LIGHT_BLUE = Color.decode("#89D3DF");
+        final Color BRIGHT_BLUE = Color.decode("#4285F4");
+
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
         {
@@ -248,55 +252,61 @@ public class ProgramInfoPanel extends JPanel
             if (text.startsWith("[P]"))
             {
                 text = text.substring("[P]".length());
-                setIcon(SmallIcons.FILM);
+                setIcon(FontIcon.of(FluentUiFilledAL.EYE_SHOW_24, 20, GREEN));
                 setText(text);
                 setToolTipText(text);
             } else if (text.startsWith("[P*]"))
             {
                 text = text.substring("[P*]".length());
-                setIcon(SmallIcons.FILM_KEY);
+                setIcon(FontIcon.of(FluentUiFilledAL.EYE_HIDE_24, 20, RED));
                 setText(text);
                 setToolTipText(text);
             } else if (text.startsWith("[BW]"))
             {
                 text = text.substring("[BW]".length());
-                setIcon(SmallIcons.CHART_BAR);
+                setIcon(FontIcon.of(FluentUiFilledAL.DATA_HISTOGRAM_24, 20, BRIGHT_BLUE));
+                setText(text);
+                setToolTipText(text);
+            } else if (text.startsWith("[PMT]"))
+            {
+                text = text.substring("[PMT]".length());
+                setIcon(FontIcon.of(FluentUiFilledMZ.TABLE_24, 20, BRIGHT_BLUE));
                 setText(text);
                 setToolTipText(text);
             } else if (text.startsWith("[PCR]"))
             {
                 text = text.substring("[PCR]".length());
-                setIcon(SmallIcons.CLOCK);
+                setIcon(FontIcon.of(FluentUiFilledAL.CLOCK_24, 20, BRIGHT_BLUE));
                 setText(text);
                 setToolTipText(text);
             } else if (text.startsWith("[ECM]"))
             {
                 text = text.substring("[ECM]".length());
-                setIcon(SmallIcons.KEY);
+                setIcon(FontIcon.of(FluentUiFilledAL.KEY_24, 20, YELLOW));
                 setText(text);
                 setToolTipText(text);
-            } else if (text.startsWith("[V]"))
+            } else if (text.startsWith("[Video]"))
             {
-                text = text.substring("[V]".length());
-                setIcon(SmallIcons.VIDEO);
+                text = text.substring("[Video]".length());
+                setIcon(FontIcon.of(FluentUiFilledMZ.VIDEO_24, 20, LIGHT_BLUE));
                 setText(text);
                 setToolTipText(text);
-            } else if (text.startsWith("[A]"))
+            } else if (text.startsWith("[Audio]"))
             {
-                text = text.substring("[A]".length());
-                setIcon(SmallIcons.SOUND);
+                text = text.substring("[Audio]".length());
+                setIcon(FontIcon.of(FluentUiFilledMZ.SPEAKER_24, 20, LIGHT_BLUE));
                 setText(text);
                 setToolTipText(text);
-            } else if (text.startsWith("[D]"))
+            } else if (text.startsWith("[Data]"))
             {
-                text = text.substring("[D]".length());
-                setIcon(SmallIcons.TEXT);
+                text = text.substring("[Data]".length());
+                setIcon(FontIcon.of(FluentUiFilledMZ.WINDOW_20, 20, LIGHT_BLUE));
                 setText(text);
                 setToolTipText(text);
-            } else if (text.startsWith("[U]"))
+            } else if (text.startsWith("[UserPrivate]"))
             {
-                text = text.substring("[U]".length());
-                setIcon(SmallIcons.PAGE_WHITE);
+                text = text.substring("[UserPrivate]".length());
+                setIcon(FontIcon.of(FluentUiFilledMZ.SLIDE_TEXT_24, 20, LIGHT_BLUE));
                 setText(text);
                 setToolTipText(text);
             } else

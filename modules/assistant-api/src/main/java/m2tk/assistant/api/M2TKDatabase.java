@@ -60,7 +60,7 @@ public interface M2TKDatabase
 
     List<MPEGProgram> listMPEGPrograms();
 
-    CASystemStream addCASystemStream(int pid, int type, int systemId, byte[] privateData, int programRef, int elementaryStreamPid);
+    void addCASystemStream(int pid, int type, int systemId, byte[] privateData, int programRef, int programNumber, int elementaryStreamPid);
 
     List<CASystemStream> listCASystemStreams();
 

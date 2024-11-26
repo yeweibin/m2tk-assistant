@@ -15,16 +15,16 @@
  */
 package m2tk.assistant.app.ui.component;
 
+import cn.hutool.core.util.StrUtil;
 import m2tk.assistant.api.domain.CASystemStream;
 import m2tk.assistant.api.presets.CASystems;
-import m2tk.assistant.app.SmallIcons;
 import m2tk.util.Bytes;
+import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
+import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,9 +35,9 @@ import static java.util.stream.Collectors.groupingBy;
 
 public class CASystemInfoPanel extends JPanel
 {
+    private JTree tree;
     private DefaultTreeModel model;
     private DefaultMutableTreeNode root;
-    private JTree tree;
     private final List<CASystemStream> currentStreams;
 
     public CASystemInfoPanel()
@@ -50,7 +50,9 @@ public class CASystemInfoPanel extends JPanel
     {
         root = new DefaultMutableTreeNode("/");
         model = new DefaultTreeModel(root);
+
         tree = new JTree(model);
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new CAStreamTreeCellRenderer());
@@ -58,18 +60,19 @@ public class CASystemInfoPanel extends JPanel
         ToolTipManager.sharedInstance().registerComponent(tree);
 
         setLayout(new BorderLayout());
-        add(new JScrollPane(tree), BorderLayout.CENTER);
-    }
-
-    public void resetStreamList()
-    {
-        root.removeAllChildren();
-        model.reload();
+        JScrollPane scrollPane = new JScrollPane(tree);
+        scrollPane.putClientProperty("FlatLaf.style",
+                                     """
+                                     arc: 10;
+                                     borderWidth: 0.75;
+                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                     """);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void updateStreamList(List<CASystemStream> streams)
     {
-        if (streams == null || streams.isEmpty() || isSame(currentStreams, streams))
+        if (isSame(currentStreams, streams))
             return;
 
         root.removeAllChildren();
@@ -94,7 +97,6 @@ public class CASystemInfoPanel extends JPanel
         if (current.size() != incoming.size())
             return false;
 
-        incoming = new ArrayList<>(incoming);
         incoming.sort(Comparator.comparingInt(CASystemStream::getStreamPid));
 
         int n = current.size();
@@ -114,10 +116,8 @@ public class CASystemInfoPanel extends JPanel
 
     private DefaultMutableTreeNode createCASystemNode(int systemId, List<CASystemStream> streams)
     {
-        String text = String.format("[CAS]系统号：%04X", systemId);
-        String vendor = CASystems.vendor(systemId);
-        if (!vendor.isEmpty())
-            text += "（" + vendor + "）";
+        String vendor = StrUtil.emptyToDefault(CASystems.vendor(systemId), "未知提供商");
+        String text = String.format("[CAS]%s（系统号：%04X）", vendor, systemId);
 
         DefaultMutableTreeNode node = new DefaultMutableTreeNode();
         node.setUserObject(text);
@@ -136,8 +136,8 @@ public class CASystemInfoPanel extends JPanel
             if (type.equals("ECM"))
             {
                 text += String.format("，关联节目：%d", stream.getProgramNumber());
-                if (stream.getElementaryStreamPid() != 8191)
-                    text += String.format("，目标ES：%X", stream.getElementaryStreamPid());
+                if (1 < stream.getElementaryStreamPid() && stream.getElementaryStreamPid() < 8191)
+                    text += String.format("，关联基本流：%d", stream.getElementaryStreamPid());
             }
 
             DefaultMutableTreeNode nodeStream = new DefaultMutableTreeNode();
@@ -147,7 +147,7 @@ public class CASystemInfoPanel extends JPanel
             byte[] privateData = stream.getStreamPrivateData();
             if (privateData != null && privateData.length > 0)
             {
-                text = "[PD]" + Bytes.toHexString(privateData).toUpperCase();
+                text = "[PD][" + Bytes.toHexStringPrettyPrint(privateData).toUpperCase() + "]";
                 DefaultMutableTreeNode nodeData = new DefaultMutableTreeNode();
                 nodeData.setUserObject(text);
                 nodeStream.add(nodeData);
@@ -159,6 +159,9 @@ public class CASystemInfoPanel extends JPanel
 
     class CAStreamTreeCellRenderer extends DefaultTreeCellRenderer
     {
+        final Color ORANGE = Color.decode("#F25022");
+        final Color YELLOW = Color.decode("#FCAF45");
+        final Color LIGHT_BLUE = Color.decode("#89D3DF");
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
@@ -172,25 +175,24 @@ public class CASystemInfoPanel extends JPanel
                 if (text.startsWith("[CAS]"))
                 {
                     text = text.substring("[CAS]".length());
-                    setIcon(SmallIcons.SHIELD);
                     setText(text);
                     setToolTipText(text);
                 } else if (text.startsWith("[EMM]"))
                 {
                     text = text.substring("[EMM]".length());
-                    setIcon(SmallIcons.LICENSE);
+                    setIcon(FontIcon.of(FluentUiFilledMZ.PAYMENT_24, 20, ORANGE));
                     setText(text);
                     setToolTipText(text);
                 } else if (text.startsWith("[ECM]"))
                 {
                     text = text.substring("[ECM]".length());
-                    setIcon(SmallIcons.KEY);
+                    setIcon(FontIcon.of(FluentUiFilledAL.KEY_24, 20, YELLOW));
                     setText(text);
                     setToolTipText(text);
                 } else if (text.startsWith("[PD]"))
                 {
                     text = text.substring("[PD]".length());
-                    setIcon(SmallIcons.COMPILE);
+                    setIcon(FontIcon.of(FluentUiFilledMZ.SLIDE_TEXT_24, 20, LIGHT_BLUE));
                     setText(text);
                     setToolTipText(text);
                 } else

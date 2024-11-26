@@ -205,7 +205,7 @@ public class PSITracer implements Tracer
             databaseService.updateElementaryStreamUsage(emmpid, StreamTypes.CATEGORY_DATA, description);
             databaseService.addCASystemStream(emmpid, CASystemStream.TYPE_EMM,
                                               systemId, privateData,
-                                              -1, -1);
+                                              -1, -1, -1);
         });
 
         catSections[secnum] = version;
@@ -265,7 +265,7 @@ public class PSITracer implements Tracer
             databaseService.updateElementaryStreamUsage(ecmpid, StreamTypes.CATEGORY_DATA, description);
             databaseService.addCASystemStream(ecmpid, CASystemStream.TYPE_ECM,
                                               systemId, privateData,
-                                              program.getId(), -1);
+                                              program.getId(), program.getProgramNumber(), -1);
         });
 
         pmt.forEachProgramElement(encoding -> {
@@ -294,7 +294,7 @@ public class PSITracer implements Tracer
                 databaseService.updateElementaryStreamUsage(ecmpid, StreamTypes.CATEGORY_DATA, description);
                 databaseService.addCASystemStream(ecmpid, CASystemStream.TYPE_ECM,
                                                   systemId, privateData,
-                                                  program.getId(), esPid);
+                                                  program.getId(), program.getProgramNumber(), esPid);
             });
         });
 
