@@ -18,9 +18,10 @@ package m2tk.assistant.app.ui.view;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.Data;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.domain.SIMultiplex;
+import m2tk.assistant.api.domain.*;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.MultiplexInfoPanel;
@@ -33,6 +34,7 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,9 +48,15 @@ public class NetworkInfoView extends JPanel implements InfoView
     private EventBus bus;
     private M2TKDatabase database;
 
-    public NetworkInfoView()
+    private volatile long lastTimestamp;
+    private final long MIN_QUERY_INTERVAL_MILLIS = 500;
+
+    @Data
+    private static class NetworkSnapshot
     {
-        initUI();
+        private List<SINetwork> networks;
+        private List<SIMultiplex> multiplexes;
+        private OffsetDateTime latestNetworkTime;
     }
 
     private void initUI()

@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.api;
 
 import m2tk.assistant.api.domain.*;

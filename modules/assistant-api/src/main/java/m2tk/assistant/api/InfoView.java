@@ -13,7 +13,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.api;
 
 import com.google.common.eventbus.EventBus;
@@ -24,15 +23,24 @@ import javax.swing.*;
 
 public interface InfoView extends ExtensionPoint
 {
-    void setupApplication(Application application);
+    default void setupApplication(Application application)
+    {
+    }
 
-    void setupDataSource(EventBus bus, M2TKDatabase database);
+    default void setupDataSource(EventBus bus, M2TKDatabase database)
+    {
+    }
 
-    void setupMenu(JMenu menu);
+    default void setupMenu(JMenu menu)
+    {
+    }
 
     JComponent getViewComponent();
 
     String getViewTitle();
 
-    Icon getViewIcon();
+    default Icon getViewIcon()
+    {
+        return null;
+    }
 }
