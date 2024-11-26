@@ -77,6 +77,10 @@ public interface M2TKDatabase
 
     List<SINetwork> listSINetworks();
 
+    SINetwork getCurrenetSINetwork();
+
+    List<SINetwork> getOtherSINetworks();
+
     SIMultiplex addSIMultiplex(int networkRef, int transportStreamId, int originalNetworkId);
 
     void updateSIMultiplex(SIMultiplex multiplex);
@@ -85,11 +89,19 @@ public interface M2TKDatabase
 
     List<SIMultiplex> listSIMultiplexes();
 
-    SIService addSIService(int serviceId, int transportStreamId, int originalNetworkId);
+    List<SIMultiplex> getActualNetworkMultiplexes();
+
+    List<SIMultiplex> getOtherNetworkMultiplexes();
+
+    SIService addSIService(int serviceId, int transportStreamId, int originalNetworkId, boolean actualTransportStream);
 
     void updateSIService(SIService service);
 
     List<SIService> listSIServices();
+
+    List<SIService> getActualTransportStreamServices();
+
+    List<SIService> getOtherTransportStreamServices();
 
     SIEvent addSIEvent(int eventId, int transportStreamId, int originalNetworkId, int serviceId);
 

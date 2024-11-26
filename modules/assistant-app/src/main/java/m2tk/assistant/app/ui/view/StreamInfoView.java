@@ -74,7 +74,7 @@ public class StreamInfoView extends JPanel implements InfoView
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
 
     @Data
-    private static class StreamSnapshot
+    private static class StreamInfoSnapshot
     {
         private StreamSource source;
         private List<ElementaryStream> streams;
@@ -169,7 +169,7 @@ public class StreamInfoView extends JPanel implements InfoView
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
         long t1 = System.currentTimeMillis();
-        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS)
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
         {
             queryStreamSnapshot();
             lastTimestamp = System.currentTimeMillis();
@@ -178,9 +178,9 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void queryStreamSnapshot()
     {
-        Supplier<StreamSnapshot> query = () ->
+        Supplier<StreamInfoSnapshot> query = () ->
         {
-            StreamSnapshot snapshot = new StreamSnapshot();
+            StreamInfoSnapshot snapshot = new StreamInfoSnapshot();
 
             // 查询快照数据
             snapshot.setSource(database.getCurrentStreamSource());
@@ -215,14 +215,14 @@ public class StreamInfoView extends JPanel implements InfoView
             return snapshot;
         };
 
-        Consumer<StreamSnapshot> consumer = snapshot ->
+        Consumer<StreamInfoSnapshot> consumer = snapshot ->
         {
             streamInfoPanel.updateStreamInfo(snapshot.getSource(), snapshot.streams);
             programInfoPanel.updateProgramList(snapshot.programs);
             casInfoPanel.updateStreamList(snapshot.caStreams);
         };
 
-        AsyncQueryTask<StreamSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
+        AsyncQueryTask<StreamInfoSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 

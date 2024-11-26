@@ -13,23 +13,25 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.api.domain;
+package m2tk.assistant.app.kernel.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class SIMultiplex
+@TableName("v_si_network")
+public class SINetworkViewEntity
 {
-    private int id;
-    private int networkId;
-    private int transportStreamId;
-    private int originalNetworkId;
-    private boolean actualNetwork;
+    @TableId
+    private Integer id;
+    @TableField("network_id")
+    private Integer networkId;
+    @TableField("network_name")
     private String networkName;
-    private String transmitFrequency;
-    private String deliverySystemType;
-
-    private List<SIServiceLocator> services;
+    @TableField("is_actual_nw")
+    private Boolean actualNetwork;
+    @TableField("multiplex_count")
+    private Integer multiplexCount;
 }

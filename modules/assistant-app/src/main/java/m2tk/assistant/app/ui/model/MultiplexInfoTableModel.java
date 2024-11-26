@@ -29,10 +29,10 @@ public class MultiplexInfoTableModel extends AbstractTableModel
 {
     private final List<SIMultiplex> data;
     private static final String[] COLUMNS = {
-            "序号", "网络名称", "原始网络号", "传输流号", "传输系统", "传输频点", "业务数量"
+            "序号", "网络名称", "传输系统", "传输频点", "原始网络号", "传输流号", "业务数量"
     };
     private static final Class<?>[] COLUMN_CLASSES = {
-            Integer.class, String.class, Integer.class, Integer.class, String.class, String.class, Integer.class
+            Integer.class, String.class, String.class, String.class, Integer.class, Integer.class, Integer.class
     };
 
     public MultiplexInfoTableModel()
@@ -82,10 +82,10 @@ public class MultiplexInfoTableModel extends AbstractTableModel
         {
             case 0 -> rowIndex + 1;
             case 1 -> multiplex.getNetworkName();
-            case 2 -> multiplex.getOriginalNetworkId();
-            case 3 -> multiplex.getTransportStreamId();
-            case 4 -> multiplex.getDeliverySystemType();
-            case 5 -> multiplex.getTransmitFrequency();
+            case 2 -> multiplex.getDeliverySystemType();
+            case 3 -> multiplex.getTransmitFrequency();
+            case 4 -> multiplex.getOriginalNetworkId();
+            case 5 -> multiplex.getTransportStreamId();
             case 6 -> CollUtil.size(multiplex.getServices());
             default -> null;
         };
@@ -95,8 +95,6 @@ public class MultiplexInfoTableModel extends AbstractTableModel
     {
         if (current.size() != incoming.size())
             return false;
-
-        incoming.sort(Comparator.comparingInt(SIMultiplex::getTransportStreamId));
 
         int n = current.size();
         for (int i = 0; i < n; i ++)

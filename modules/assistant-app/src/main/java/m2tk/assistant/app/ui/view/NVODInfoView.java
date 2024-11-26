@@ -29,7 +29,7 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 
-@Extension(ordinal = 6)
+//@Extension(ordinal = 6)
 public class NVODInfoView extends JPanel implements InfoView
 {
     private NVODServiceEventGuidePanel serviceEventGuidePanel;

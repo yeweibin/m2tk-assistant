@@ -13,23 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.api.domain;
+package m2tk.assistant.app.kernel.mapper;
 
-import lombok.Data;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import m2tk.assistant.app.kernel.entity.SIMultiplexViewEntity;
 
-import java.util.List;
-
-@Data
-public class SIMultiplex
+public interface SIMultiplexViewEntityMapper extends BaseMapper<SIMultiplexViewEntity>
 {
-    private int id;
-    private int networkId;
-    private int transportStreamId;
-    private int originalNetworkId;
-    private boolean actualNetwork;
-    private String networkName;
-    private String transmitFrequency;
-    private String deliverySystemType;
-
-    private List<SIServiceLocator> services;
 }

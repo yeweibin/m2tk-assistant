@@ -19,14 +19,17 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.domain.*;
+import m2tk.assistant.api.domain.SIMultiplex;
+import m2tk.assistant.api.domain.SIService;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.MultiplexInfoPanel;
 import m2tk.assistant.app.ui.component.NetworkTimePanel;
 import m2tk.assistant.app.ui.component.ServiceInfoPanel;
+import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
@@ -37,10 +40,14 @@ import java.awt.*;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
+@Slf4j
 @Extension(ordinal = 2)
 public class NetworkInfoView extends JPanel implements InfoView
 {
+    private Application application;
     private NetworkTimePanel networkTimePanel;
     private MultiplexInfoPanel multiplexInfoPanel;
     private ServiceInfoPanel serviceInfoPanel;
@@ -52,11 +59,18 @@ public class NetworkInfoView extends JPanel implements InfoView
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
 
     @Data
-    private static class NetworkSnapshot
+    private static class NetworkInfoSnapshot
     {
-        private List<SINetwork> networks;
-        private List<SIMultiplex> multiplexes;
+        private List<SIMultiplex> tsActualNetwork;
+        private List<SIMultiplex> tsOtherNetwork;
+        private List<SIService> srvActualTS;
+        private List<SIService> srvOtherTS;
         private OffsetDateTime latestNetworkTime;
+    }
+
+    public NetworkInfoView()
+    {
+        initUI();
     }
 
     private void initUI()
@@ -78,6 +92,7 @@ public class NetworkInfoView extends JPanel implements InfoView
     @Override
     public void setupApplication(Application application)
     {
+        this.application = application;
     }
 
     @Override
@@ -130,132 +145,42 @@ public class NetworkInfoView extends JPanel implements InfoView
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        queryNetworks();
-        queryServices();
-        queryNetworkTime();
+        long t1 = System.currentTimeMillis();
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
+        {
+            queryNetworkSnapshot();
+            lastTimestamp = System.currentTimeMillis();
+        }
     }
 
-    private void queryNetworks()
+    private void queryNetworkSnapshot()
     {
-        List<SIMultiplex> tsActualNW = new ArrayList<>();
-        List<SIMultiplex> tsOtherNW = new ArrayList<>();
+        Supplier<NetworkInfoSnapshot> query = () ->
+        {
+            List<SIMultiplex> tsActualNW = database.getActualNetworkMultiplexes();
+            List<SIMultiplex> tsOtherNW = database.getOtherNetworkMultiplexes();
+            List<SIService> srvActualTS = database.getActualTransportStreamServices();
+            List<SIService> srvOtherTS = database.getOtherTransportStreamServices();
+            OffsetDateTime timestamp = database.getLastTimestamp();
 
-//        Supplier<Void> query = () -> {
-//            DatabaseService databaseService = Global.getDatabaseService();
-//            List<SINetworkEntity> networks = databaseService.listNetworks(currentTransaction);
-//            Map<Integer, List<SIMultiplexEntity>> muxGroups =
-//                    databaseService.listMultiplexes(currentTransaction)
-//                                   .stream()
-//                                   .collect(groupingBy(SIMultiplexEntity::getNetworkId));
-//            Map<String, Integer> srvCnts =
-//                    databaseService.listMultiplexServiceCounts(currentTransaction)
-//                                   .stream()
-//                                   .collect(toMap(srvCnt -> String.format("%d.%d",
-//                                                                          srvCnt.getTransportStreamId(),
-//                                                                          srvCnt.getOriginalNetworkId()),
-//                                                  MultiplexServiceCountViewEntity::getServiceCount));
-//
-//            for (SINetworkEntity network : networks)
-//            {
-//                List<SIMultiplexEntity> group = muxGroups.get(network.getNetworkId());
-//                if (group == null)
-//                    continue;
-//                for (SIMultiplexEntity multiplex : group)
-//                {
-//                    String key = String.format("%d.%d",
-//                                               multiplex.getTransportStreamId(),
-//                                               multiplex.getOriginalNetworkId());
-//                    SIMultiplex mux = new SIMultiplex();
-////                    multiplex.getTransportStreamId(),
-////                                                      multiplex.getOriginalNetworkId(),
-////                                                      network.getNetworkName(),
-////                                                      multiplex.getDeliverySystemType(),
-////                                                      multiplex.getTransmitFrequency(),
-////                                                      srvCnts.getOrDefault(key, 0));
-//                    if (network.isActualNetwork())
-//                        tsActualNW.add(mux);
-//                    else
-//                        tsOtherNW.add(mux);
-//                }
-//            }
-//            return null;
-//        };
-//        Consumer<Void> consumer = nothing ->
-//        {
-//            multiplexInfoPanel.updateActualNetworkMultiplexes(tsActualNW);
-//            multiplexInfoPanel.updateOtherNetworkMultiplexes(tsOtherNW);
-//        };
-//
-//        AsyncQueryTask<Void> task = new AsyncQueryTask<>(frameView.getApplication(),
-//                                                         query,
-//                                                         consumer);
-//        task.execute();
-    }
+            NetworkInfoSnapshot snapshot = new NetworkInfoSnapshot();
+            snapshot.setTsActualNetwork(tsActualNW);
+            snapshot.setTsOtherNetwork(tsOtherNW);
+            snapshot.setSrvActualTS(srvActualTS);
+            snapshot.setSrvOtherTS(srvOtherTS);
+            snapshot.setLatestNetworkTime(timestamp);
+            return snapshot;
+        };
 
-    private void queryServices()
-    {
-//        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-//        if (currentTransaction == -1)
-//            return;
-//
-//        List<SIService> srvActualTS = new ArrayList<>();
-//        List<SIService> srvOtherTS = new ArrayList<>();
-//
-//        Comparator<SIService> comparator = (s1, s2) -> {
-//            if (s1.getOriginalNetworkId() != s2.getOriginalNetworkId())
-//                return Integer.compare(s1.getOriginalNetworkId(), s2.getOriginalNetworkId());
-//            if (s1.getTransportStreamId() != s2.getTransportStreamId())
-//                return Integer.compare(s1.getTransportStreamId(), s2.getTransportStreamId());
-//            return Integer.compare(s1.getServiceId(), s2.getServiceId());
-//        };
-//
-//        Supplier<Void> query = () -> {
-//            List<SIServiceEntity> services = Global.getDatabaseService().listServices(currentTransaction);
-//
-//            for (SIServiceEntity service : services)
-//            {
-//                SIService srv = new SIService();
-////                service.getTransportStreamId(),
-////                                              service.getOriginalNetworkId(),
-////                                              service.getServiceId(),
-////                                              service.getServiceTypeName(),
-////                                              service.getServiceName(),
-////                                              service.getServiceProvider());
-//                if (service.isActualTransportStream())
-//                    srvActualTS.add(srv);
-//                else
-//                    srvOtherTS.add(srv);
-//            }
-//
-//            srvActualTS.sort(comparator);
-//            srvOtherTS.sort(comparator);
-//            return null;
-//        };
-//
-//        Consumer<Void> consumer = nothing ->
-//        {
-//            serviceInfoPanel.updateActualTransportStreamServices(srvActualTS);
-//            serviceInfoPanel.updateOtherTransportStreamsServices(srvOtherTS);
-//        };
-//
-//        AsyncQueryTask<Void> task = new AsyncQueryTask<>(frameView.getApplication(),
-//                                                         query,
-//                                                         consumer);
-//        task.execute();
-    }
+        Consumer<NetworkInfoSnapshot> consumer = snapshot ->
+        {
+            multiplexInfoPanel.updateMultiplexes(snapshot.getTsActualNetwork(), snapshot.getTsOtherNetwork());
+            serviceInfoPanel.updateServices(snapshot.getSrvActualTS(), snapshot.getSrvOtherTS());
+            networkTimePanel.updateTime(snapshot.getLatestNetworkTime());
+        };
 
-    private void queryNetworkTime()
-    {
-//        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-//        if (currentTransaction == -1)
-//            return;
-//
-//        Supplier<SIDateTimeEntity> query = () -> Global.getDatabaseService().getLatestDateTime(currentTransaction);
-//        Consumer<SIDateTimeEntity> consumer = networkTimePanel::updateTime;
-//
-//        AsyncQueryTask<SIDateTimeEntity> task = new AsyncQueryTask<>(frameView.getApplication(),
-//                                                                     query,
-//                                                                     consumer);
-//        task.execute();
+        Consumer<Throwable> exLogger = ex -> log.error("{}", ex.getMessage(), ex);
+        AsyncQueryTask<NetworkInfoSnapshot> task = new AsyncQueryTask<>(application, query, consumer, exLogger);
+        task.execute();
     }
 }

@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.SIMultiplex;
+import m2tk.assistant.app.ui.model.MultiplexInfoTableModel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.util.ThreeStateRowSorterListener;
-import m2tk.assistant.app.ui.model.MultiplexInfoTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -44,21 +43,24 @@ public class MultiplexInfoPanel extends JPanel
     {
         modelActualNW = new MultiplexInfoTableModel();
         modelOtherNW = new MultiplexInfoTableModel();
+
         rowSorterActualNW = new TableRowSorter<>(modelActualNW);
-        rowSorterOtherNW = new TableRowSorter<>(modelOtherNW);
         rowSorterActualNW.addRowSorterListener(new ThreeStateRowSorterListener(rowSorterActualNW));
+        rowSorterOtherNW = new TableRowSorter<>(modelOtherNW);
         rowSorterOtherNW.addRowSorterListener(new ThreeStateRowSorterListener(rowSorterOtherNW));
 
         JTable table1 = new JTable();
+        table1.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table1.setModel(modelActualNW);
         table1.setRowSorter(rowSorterActualNW);
-        table1.getTableHeader().setReorderingAllowed(true);
+        table1.getTableHeader().setReorderingAllowed(false);
         table1.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         JTable table2 = new JTable();
+        table2.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table2.setModel(modelOtherNW);
         table2.setRowSorter(rowSorterOtherNW);
-        table2.getTableHeader().setReorderingAllowed(true);
+        table2.getTableHeader().setReorderingAllowed(false);
         table2.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
@@ -69,37 +71,49 @@ public class MultiplexInfoPanel extends JPanel
         trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
 
         TableColumnModel columnModel = table1.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false);  // 序号
-        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 300, true);   // 网络名称
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 100, false); // 原始网络号
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 100, false); // 传输流号
-        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 160, true);  // 传输系统
-        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 160, true);  // 传输频点
-        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false); // 业务数量
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 80, false);  // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 360, true);   // 网络名称
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 120, true);  // 传输系统
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, true);  // 传输频点
+        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 80, false);  // 原始网络号
+        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false);  // 传输流号
+        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false);  // 业务数量
 
         columnModel = table2.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false);  // 序号
-        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 300, true);   // 网络名称
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 100, false); // 原始网络号
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 100, false); // 传输流号
-        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 160, true);  // 传输系统
-        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 160, true);  // 传输频点
-        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false); // 业务数量
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 80, false);  // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 360, true);   // 网络名称
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 120, true);  // 传输系统
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, true);  // 传输频点
+        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 80, false);  // 原始网络号
+        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false);  // 传输流号
+        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false);  // 业务数量
+
+        JScrollPane scrollPane1 = new JScrollPane(table1);
+        scrollPane1.putClientProperty("FlatLaf.style",
+                                      """
+                                      arc: 10;
+                                      borderWidth: 0.75;
+                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                      """);
+
+        JScrollPane scrollPane2 = new JScrollPane(table2);
+        scrollPane2.putClientProperty("FlatLaf.style",
+                                      """
+                                      arc: 10;
+                                      borderWidth: 0.75;
+                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                      """);
 
         setLayout(new BorderLayout());
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.add("当前网络", new JScrollPane(table1));
-        tabbedPane.add("其他网络", new JScrollPane(table2));
+        tabbedPane.add("当前网络", scrollPane1);
+        tabbedPane.add("其他网络", scrollPane2);
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    public void updateActualNetworkMultiplexes(List<SIMultiplex> multiplexes)
+    public void updateMultiplexes(List<SIMultiplex> tsActualNW, List<SIMultiplex> tsOtherNW)
     {
-        modelActualNW.update(multiplexes);
-    }
-
-    public void updateOtherNetworkMultiplexes(List<SIMultiplex> multiplexes)
-    {
-        modelOtherNW.update(multiplexes);
+        modelActualNW.update(tsActualNW);
+        modelOtherNW.update(tsOtherNW);
     }
 }

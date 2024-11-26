@@ -94,6 +94,10 @@ public class M2TKDatabaseService implements M2TKDatabase
     private MultiplexServiceMappingEntityMapper multiplexMappingMapper;
     @Db("m2tk")
     private BouquetServiceMappingEntityMapper bouquetMappingMapper;
+    @Db("m2tk")
+    private SINetworkViewEntityMapper networkViewMapper;
+    @Db("m2tk")
+    private SIMultiplexViewEntityMapper multiplexViewMapper;
 
     @Init
     public void initDatabase()
@@ -518,18 +522,32 @@ public class M2TKDatabaseService implements M2TKDatabase
     @Override
     public List<SINetwork> listSINetworks()
     {
-        List<SINetwork> networks = new ArrayList<>();
-        List<SINetworkEntity> entities = networkMapper.selectList(Wrappers.emptyWrapper());
-        for (SINetworkEntity entity : entities)
-        {
-            SINetwork network = convert(entity);
-            int multiplexCount = Math.toIntExact(multiplexMapper.selectCount(Wrappers.lambdaQuery(SIMultiplexEntity.class)
-                                                                                     .eq(SIMultiplexEntity::getNetworkRef,
-                                                                                         entity.getId())));
-            network.setMultiplexCount(multiplexCount);
-            networks.add(network);
-        }
-        return networks;
+        return networkViewMapper.selectList(Wrappers.emptyWrapper())
+                                .stream()
+                                .map(this::convert)
+                                .collect(Collectors.toList());
+    }
+
+    @Override
+    public SINetwork getCurrenetSINetwork()
+    {
+        LambdaQueryWrapper<SINetworkViewEntity> query = Wrappers.lambdaQuery(SINetworkViewEntity.class)
+                                                                .eq(SINetworkViewEntity::getActualNetwork, true)
+                                                                .orderByDesc(SINetworkViewEntity::getId)
+                                                                .last("limit 1");
+        SINetworkViewEntity entity = networkViewMapper.selectOne(query);
+        return (entity == null) ? null : convert(entity);
+    }
+
+    @Override
+    public List<SINetwork> getOtherSINetworks()
+    {
+        LambdaQueryWrapper<SINetworkViewEntity> query = Wrappers.lambdaQuery(SINetworkViewEntity.class)
+                                                                .eq(SINetworkViewEntity::getActualNetwork, false);
+        return networkViewMapper.selectList(query)
+                                .stream()
+                                .map(this::convert)
+                                .collect(Collectors.toList());
     }
 
     @Override
@@ -570,20 +588,17 @@ public class M2TKDatabaseService implements M2TKDatabase
     public List<SIMultiplex> listSIMultiplexes()
     {
         List<SIMultiplex> multiplexes = new ArrayList<>();
-        List<SIMultiplexEntity> entities = multiplexMapper.selectList(Wrappers.emptyWrapper());
-        for (SIMultiplexEntity entity : entities)
+        List<SIMultiplexViewEntity> entities = multiplexViewMapper.selectList(Wrappers.emptyWrapper());
+        for (SIMultiplexViewEntity entity : entities)
         {
             SIMultiplex multiplex = convert(entity);
 
-            SINetworkEntity networkEntity = networkMapper.selectById(entity.getNetworkRef());
-            multiplex.setNetworkId(networkEntity.getNetworkId());
-            multiplex.setNetworkName(networkEntity.getNetworkName());
-
             multiplex.setServices(new ArrayList<>());
-            List<Integer> serviceIds = multiplexMappingMapper.selectObjs(Wrappers.lambdaQuery(MultiplexServiceMappingEntity.class)
-                                                                                 .select(MultiplexServiceMappingEntity::getServiceId)
-                                                                                 .eq(MultiplexServiceMappingEntity::getMultiplexRef,
-                                                                                     entity.getId()));
+            LambdaQueryWrapper<MultiplexServiceMappingEntity> query =
+                Wrappers.lambdaQuery(MultiplexServiceMappingEntity.class)
+                        .select(MultiplexServiceMappingEntity::getServiceId)
+                        .eq(MultiplexServiceMappingEntity::getMultiplexRef, entity.getId());
+            List<Integer> serviceIds = multiplexMappingMapper.selectObjs(query);
             for (Integer serviceId : serviceIds)
             {
                 SIServiceLocator locator = new SIServiceLocator();
@@ -598,7 +613,65 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public SIService addSIService(int serviceId, int transportStreamId, int originalNetworkId)
+    public List<SIMultiplex> getActualNetworkMultiplexes()
+    {
+        List<SIMultiplex> multiplexes = new ArrayList<>();
+        List<SIMultiplexViewEntity> entities = multiplexViewMapper.selectList(Wrappers.lambdaQuery(SIMultiplexViewEntity.class)
+                                                                                      .eq(SIMultiplexViewEntity::getActualNetwork, true));
+        for (SIMultiplexViewEntity entity : entities)
+        {
+            SIMultiplex multiplex = convert(entity);
+
+            multiplex.setServices(new ArrayList<>());
+            LambdaQueryWrapper<MultiplexServiceMappingEntity> query =
+                Wrappers.lambdaQuery(MultiplexServiceMappingEntity.class)
+                        .select(MultiplexServiceMappingEntity::getServiceId)
+                        .eq(MultiplexServiceMappingEntity::getMultiplexRef, entity.getId());
+            List<Integer> serviceIds = multiplexMappingMapper.selectObjs(query);
+            for (Integer serviceId : serviceIds)
+            {
+                SIServiceLocator locator = new SIServiceLocator();
+                locator.setTransportStreamId(multiplex.getTransportStreamId());
+                locator.setOriginalNetworkId(multiplex.getOriginalNetworkId());
+                locator.setServiceId(serviceId);
+                multiplex.getServices().add(locator);
+            }
+            multiplexes.add(multiplex);
+        }
+        return multiplexes;
+    }
+
+    @Override
+    public List<SIMultiplex> getOtherNetworkMultiplexes()
+    {
+        List<SIMultiplex> multiplexes = new ArrayList<>();
+        List<SIMultiplexViewEntity> entities = multiplexViewMapper.selectList(Wrappers.lambdaQuery(SIMultiplexViewEntity.class)
+                                                                                      .eq(SIMultiplexViewEntity::getActualNetwork, false));
+        for (SIMultiplexViewEntity entity : entities)
+        {
+            SIMultiplex multiplex = convert(entity);
+
+            multiplex.setServices(new ArrayList<>());
+            LambdaQueryWrapper<MultiplexServiceMappingEntity> query =
+                Wrappers.lambdaQuery(MultiplexServiceMappingEntity.class)
+                        .select(MultiplexServiceMappingEntity::getServiceId)
+                        .eq(MultiplexServiceMappingEntity::getMultiplexRef, entity.getId());
+            List<Integer> serviceIds = multiplexMappingMapper.selectObjs(query);
+            for (Integer serviceId : serviceIds)
+            {
+                SIServiceLocator locator = new SIServiceLocator();
+                locator.setTransportStreamId(multiplex.getTransportStreamId());
+                locator.setOriginalNetworkId(multiplex.getOriginalNetworkId());
+                locator.setServiceId(serviceId);
+                multiplex.getServices().add(locator);
+            }
+            multiplexes.add(multiplex);
+        }
+        return multiplexes;
+    }
+
+    @Override
+    public SIService addSIService(int serviceId, int transportStreamId, int originalNetworkId, boolean actualTransportStream)
     {
         SIServiceEntity entity = new SIServiceEntity();
         entity.setServiceId(serviceId);
@@ -613,7 +686,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         entity.setScheduleEITEnabled(true);
         entity.setPresentFollowingEITEnabled(true);
         entity.setNvodReferenceService(false);
-        entity.setActualTransportStream(true);
+        entity.setActualTransportStream(actualTransportStream);
         serviceMapper.insert(entity);
         return convert(entity);
     }
@@ -643,7 +716,39 @@ public class M2TKDatabaseService implements M2TKDatabase
     @Override
     public List<SIService> listSIServices()
     {
-        return serviceMapper.selectList(Wrappers.emptyWrapper())
+        LambdaQueryWrapper<SIServiceEntity> query =
+            Wrappers.lambdaQuery(SIServiceEntity.class)
+                    .orderByAsc(SIServiceEntity::getTransportStreamId)
+                    .orderByAsc(SIServiceEntity::getServiceId);
+        return serviceMapper.selectList(query)
+                            .stream()
+                            .map(this::convert)
+                            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SIService> getActualTransportStreamServices()
+    {
+        LambdaQueryWrapper<SIServiceEntity> query =
+            Wrappers.lambdaQuery(SIServiceEntity.class)
+                    .eq(SIServiceEntity::getActualTransportStream, true)
+                    .orderByAsc(SIServiceEntity::getTransportStreamId)
+                    .orderByAsc(SIServiceEntity::getServiceId);
+        return serviceMapper.selectList(query)
+                            .stream()
+                            .map(this::convert)
+                            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SIService> getOtherTransportStreamServices()
+    {
+        LambdaQueryWrapper<SIServiceEntity> query =
+            Wrappers.lambdaQuery(SIServiceEntity.class)
+                    .eq(SIServiceEntity::getActualTransportStream, false)
+                    .orderByAsc(SIServiceEntity::getTransportStreamId)
+                    .orderByAsc(SIServiceEntity::getServiceId);
+        return serviceMapper.selectList(query)
                             .stream()
                             .map(this::convert)
                             .collect(Collectors.toList());
@@ -725,12 +830,11 @@ public class M2TKDatabaseService implements M2TKDatabase
     public OffsetDateTime getLastTimestamp()
     {
         LambdaQueryWrapper<SIDateTimeEntity> query = Wrappers.lambdaQuery(SIDateTimeEntity.class)
-                                                             .select(SIDateTimeEntity::getTimepoint)
                                                              .orderByDesc(SIDateTimeEntity::getId)
                                                              .last("limit 1");
-        List<LocalDateTime> times = datetimeMapper.selectObjs(query);
-        return times.isEmpty() ? null
-                               : times.getFirst().atOffset(ZoneOffset.UTC);
+        SIDateTimeEntity entity = datetimeMapper.selectOne(query);
+        return (entity == null) ? null
+                                : entity.getTimepoint().atOffset(ZoneOffset.UTC);
     }
 
     @Override
@@ -1004,12 +1108,35 @@ public class M2TKDatabaseService implements M2TKDatabase
         return network;
     }
 
+    private SINetwork convert(SINetworkViewEntity entity)
+    {
+        SINetwork network = new SINetwork();
+        network.setId(entity.getId());
+        network.setNetworkId(entity.getNetworkId());
+        network.setName(entity.getNetworkName());
+        network.setActualNetwork(entity.getActualNetwork());
+        network.setMultiplexCount(entity.getMultiplexCount());
+        return network;
+    }
+
     private SIMultiplex convert(SIMultiplexEntity entity)
     {
         SIMultiplex multiplex = new SIMultiplex();
         multiplex.setId(entity.getId());
         multiplex.setTransportStreamId(entity.getTransportStreamId());
         multiplex.setOriginalNetworkId(entity.getOriginalNetworkId());
+        return multiplex;
+    }
+
+    private SIMultiplex convert(SIMultiplexViewEntity entity)
+    {
+        SIMultiplex multiplex = new SIMultiplex();
+        multiplex.setId(entity.getId());
+        multiplex.setTransportStreamId(entity.getTransportStreamId());
+        multiplex.setOriginalNetworkId(entity.getOriginalNetworkId());
+        multiplex.setNetworkId(entity.getNetworkId());
+        multiplex.setNetworkName(entity.getNetworkName());
+        multiplex.setActualNetwork(entity.getActualNetwork());
         return multiplex;
     }
 
@@ -1030,6 +1157,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         service.setPresentFollowingEITEnabled(entity.getPresentFollowingEITEnabled());
         service.setScheduleEITEnabled(entity.getScheduleEITEnabled());
         service.setReferenceServiceId(entity.getReferenceServiceId());
+        service.setActualTransportStream(entity.getActualTransportStream());
         return service;
     }
 

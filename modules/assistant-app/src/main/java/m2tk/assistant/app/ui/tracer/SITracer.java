@@ -314,9 +314,10 @@ public class SITracer implements Tracer
         if (tableVersions.containsKey(uid) && tableVersions.get(uid) == version)
             return; // 已经处理过了。
 
-        databaseService.updateStreamSourceComponentPresence(sourceId, tableId == 0x42 ? "SDT_Actual" : "SDT_Other", true);
+        boolean actualTS = (tableId == 0x42);
+        databaseService.updateStreamSourceComponentPresence(sourceId, actualTS ? "SDT_Actual" : "SDT_Other", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "SDT/BAT");
-        databaseService.addPrivateSection(tableId == 0x42 ? "SDT_Actual" : "SDT_Other",
+        databaseService.addPrivateSection(actualTS ? "SDT_Actual" : "SDT_Other",
                                           payload.getStreamPID(),
                                           payload.getFinishPacketCounter(),
                                           payload.getEncoding().getBytes());
@@ -325,12 +326,11 @@ public class SITracer implements Tracer
         sdt.forEachServiceDescription(encoding -> {
             sdd.attach(encoding);
 
-            SIService service = databaseService.addSIService(sdd.getServiceID(), transportStreamId, originalNetworkId);
+            SIService service = databaseService.addSIService(sdd.getServiceID(), transportStreamId, originalNetworkId, actualTS);
             service.setRunningStatus(sdd.getRunningStatus());
             service.setFreeAccess(sdd.getFreeCAMode() == 0);
             service.setPresentFollowingEITEnabled(sdd.getEITPresentFollowingFlag() == 1);
             service.setScheduleEITEnabled(sdd.getEITScheduleFlag() == 1);
-            service.setActualTransportStream(tableId == 0x42);
 
             descloop.attach(sdd.getDescriptorLoop());
             descloop.forEach(descriptor -> {

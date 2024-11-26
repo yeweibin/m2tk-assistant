@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.SIService;
+import m2tk.assistant.app.ui.model.ServiceInfoTableModel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.util.ThreeStateRowSorterListener;
-import m2tk.assistant.app.ui.model.ServiceInfoTableModel;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -51,15 +50,17 @@ public class ServiceInfoPanel extends JPanel
         rowSorterOtherTS.addRowSorterListener(new ThreeStateRowSorterListener(rowSorterOtherTS));
 
         JTable table1 = new JTable();
+        table1.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table1.setModel(modelActualTS);
         table1.setRowSorter(rowSorterActualTS);
-        table1.getTableHeader().setReorderingAllowed(true);
+        table1.getTableHeader().setReorderingAllowed(false);
         table1.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         JTable table2 = new JTable();
+        table2.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table2.setModel(modelOtherTS);
         table2.setRowSorter(rowSorterOtherTS);
-        table2.getTableHeader().setReorderingAllowed(true);
+        table2.getTableHeader().setReorderingAllowed(false);
         table2.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
@@ -70,37 +71,49 @@ public class ServiceInfoPanel extends JPanel
         trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
 
         TableColumnModel columnModel = table1.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false); // 序号
-        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 180, true);  // 业务名称
-        ComponentUtil.configTableColumn(columnModel, 2, leadingRenderer, 120, true);  // 提供商
-        ComponentUtil.configTableColumn(columnModel, 3, leadingRenderer, 140, true);  // 业务类型
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 80, false); // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 200, true);  // 业务名称
+        ComponentUtil.configTableColumn(columnModel, 2, leadingRenderer, 100, true);  // 提供商
+        ComponentUtil.configTableColumn(columnModel, 3, leadingRenderer, 120, true);  // 业务类型
         ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 80, false); // 业务号
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false); // 原始网络号
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false); // 传输流号
 
         columnModel = table2.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false); // 序号
-        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 180, true);  // 业务名称
-        ComponentUtil.configTableColumn(columnModel, 2, leadingRenderer, 120, true);  // 提供商
-        ComponentUtil.configTableColumn(columnModel, 3, leadingRenderer, 140, true);  // 业务类型
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 80, false); // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 200, true);  // 业务名称
+        ComponentUtil.configTableColumn(columnModel, 2, leadingRenderer, 100, true);  // 提供商
+        ComponentUtil.configTableColumn(columnModel, 3, leadingRenderer, 120, true);  // 业务类型
         ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 80, false); // 业务号
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false); // 原始网络号
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false); // 传输流号
 
+        JScrollPane scrollPane1 = new JScrollPane(table1);
+        scrollPane1.putClientProperty("FlatLaf.style",
+                                      """
+                                      arc: 10;
+                                      borderWidth: 0.75;
+                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                      """);
+
+        JScrollPane scrollPane2 = new JScrollPane(table2);
+        scrollPane2.putClientProperty("FlatLaf.style",
+                                      """
+                                      arc: 10;
+                                      borderWidth: 0.75;
+                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
+                                      """);
+
         setLayout(new BorderLayout());
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.add("当前传输流", new JScrollPane(table1));
-        tabbedPane.add("其他传输流", new JScrollPane(table2));
+        tabbedPane.add("当前传输流", scrollPane1);
+        tabbedPane.add("其他传输流", scrollPane2);
         add(tabbedPane, BorderLayout.CENTER);
     }
 
-    public void updateActualTransportStreamServices(List<SIService> services)
+    public void updateServices(List<SIService> srvActualTS, List<SIService> srvOtherTS)
     {
-        modelActualTS.update(services);
-    }
-
-    public void updateOtherTransportStreamsServices(List<SIService> services)
-    {
-        modelOtherTS.update(services);
+        modelActualTS.update(srvActualTS);
+        modelOtherTS.update(srvOtherTS);
     }
 }

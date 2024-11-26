@@ -30,7 +30,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-@Extension
+//@Extension
 public class UserPrivateSectionTracer implements Tracer
 {
     private static final Logger log = LoggerFactory.getLogger(UserPrivateSectionTracer.class);

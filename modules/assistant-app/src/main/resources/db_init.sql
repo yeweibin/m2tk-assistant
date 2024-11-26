@@ -1,5 +1,7 @@
 DROP VIEW IF EXISTS `PUBLIC`.`v_pcr_stat`;
 DROP VIEW IF EXISTS `PUBLIC`.`v_tr290_stat`;
+DROP VIEW IF EXISTS `PUBLIC`.`v_si_network`;
+DROP VIEW IF EXISTS `PUBLIC`.`v_si_multiplex`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_stream_source`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_elementary_stream`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_mpeg_program`;
@@ -276,6 +278,34 @@ INNER JOIN
   (SELECT MAX(`id`) AS `id`, COUNT(`id`) AS `cnt` FROM `PUBLIC`.`t_tr290_event` GROUP BY `type`) `B`
 ON A.`id` = B.`id`
 ORDER BY A.`type` ASC;
+
+CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_si_network` AS
+SELECT `A`.`id` AS `id`,
+       `A`.`network_id` AS `network_id`,
+       `A`.`network_name` AS `network_name`,
+       `A`.`is_actual_nw` AS `is_actual_nw`,
+       `B`.`cnt` AS `multiplex_count`
+FROM `PUBLIC`.`t_si_network` `A`
+LEFT JOIN
+  (SELECT `network_ref`, COUNT(`id`) AS `cnt` FROM `PUBLIC`.`t_si_multiplex` GROUP BY `network_ref`) `B`
+ON `A`.`id` = `B`.`network_ref`
+ORDER BY `A`.`id` ASC;
+
+CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_si_multiplex` AS
+SELECT `A`.`id` AS `id`,
+       `A`.`network_ref` AS `network_ref`,
+       `A`.`transport_stream_id` AS `transport_stream_id`,
+       `A`.`original_network_id` AS `original_network_id`,
+       `A`.`delivery_type` AS `delivery_type`,
+       `A`.`transmit_frequency` AS `transmit_frequency`,
+       `B`.`network_id` AS `network_id`,
+       `B`.`network_name` AS `network_name`,
+       `B`.`is_actual_nw` AS `is_actual_nw`
+FROM `PUBLIC`.`t_si_multiplex` `A`
+LEFT JOIN
+  (SELECT `id`, `network_id`, `network_name`, `is_actual_nw` FROM `PUBLIC`.`t_si_network`) `B`
+ON `A`.`network_ref` = `B`.`id`
+ORDER BY `A`.`id` ASC;
 
 -- 初始化基本流
 INSERT INTO `PUBLIC`.`t_elementary_stream` (`pid`)
