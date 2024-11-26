@@ -87,7 +87,6 @@ public class SystemInfoDialog extends JDialog
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.putClientProperty("FlatLaf.style",
                                      """
-                                     arc: 10;
                                      borderWidth: 0.75;
                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
                                      """);

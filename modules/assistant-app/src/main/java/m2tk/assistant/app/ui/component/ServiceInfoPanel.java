@@ -91,7 +91,6 @@ public class ServiceInfoPanel extends JPanel
         JScrollPane scrollPane1 = new JScrollPane(table1);
         scrollPane1.putClientProperty("FlatLaf.style",
                                       """
-                                      arc: 10;
                                       borderWidth: 0.75;
                                       focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
                                       """);
@@ -99,7 +98,6 @@ public class ServiceInfoPanel extends JPanel
         JScrollPane scrollPane2 = new JScrollPane(table2);
         scrollPane2.putClientProperty("FlatLaf.style",
                                       """
-                                      arc: 10;
                                       borderWidth: 0.75;
                                       focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
                                       """);

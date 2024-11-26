@@ -38,7 +38,6 @@ import org.pf4j.Extension;
 import javax.swing.*;
 import java.awt.*;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -86,7 +85,7 @@ public class NetworkInfoView extends JPanel implements InfoView
         setLayout(new MigLayout("fill", "[50%][50%]", "[][][grow]"));
         add(networkTimePanel, "span 2, grow, wrap");
         add(multiplexInfoPanel, "span 1 2, grow");
-        add(serviceInfoPanel, "span 1 2, grow, wrap");
+        add(serviceInfoPanel, "span 1 2, grow");
     }
 
     @Override

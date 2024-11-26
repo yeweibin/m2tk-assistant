@@ -226,7 +226,6 @@ public class StreamInfoPanel extends JPanel
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.putClientProperty("FlatLaf.style",
                                      """
-                                     arc: 10;
                                      borderWidth: 0.75;
                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
                                      """);
