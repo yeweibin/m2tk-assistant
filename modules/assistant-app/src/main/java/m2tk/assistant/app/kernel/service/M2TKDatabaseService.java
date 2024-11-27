@@ -861,9 +861,24 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public List<TR290Stats> listTR290Stats()
+    public TR290Stats getTR290Stats()
     {
-        return List.of();
+        TR290Stats stats = new TR290Stats();
+        List<TR290StatViewEntity> entities = tr290StatMapper.selectList(Wrappers.emptyWrapper());
+        for (TR290StatViewEntity entity : entities)
+        {
+            TR290Event event = new TR290Event();
+            event.setType(entity.getType());
+            event.setDescription(entity.getDescription());
+            event.setStream(entity.getPid());
+            event.setPosition(entity.getPosition());
+            event.setTimestamp(entity.getTimepoint()
+                                     .atZone(ZoneId.systemDefault())
+                                     .toOffsetDateTime());
+
+            stats.setStat(entity.getType(), entity.getCount(), event);
+        }
+        return stats;
     }
 
     @Override

@@ -71,7 +71,7 @@ public class DatagramView extends JPanel implements InfoView
     @Override
     public void setupMenu(JMenu menu)
     {
-        JMenuItem item = new JMenuItem("数据结构");
+        JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
         item.setAccelerator(KeyStroke.getKeyStroke("alt 7"));
         item.addActionListener(e -> {

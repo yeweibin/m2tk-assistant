@@ -106,7 +106,7 @@ public class NetworkInfoView extends JPanel implements InfoView
     @Override
     public void setupMenu(JMenu menu)
     {
-        JMenuItem item = new JMenuItem("网络信息");
+        JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
         item.setAccelerator(KeyStroke.getKeyStroke("alt 2"));
         item.addActionListener(e -> {

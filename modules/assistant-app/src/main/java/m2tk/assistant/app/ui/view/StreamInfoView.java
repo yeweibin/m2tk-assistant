@@ -140,7 +140,7 @@ public class StreamInfoView extends JPanel implements InfoView
     @Override
     public void setupMenu(JMenu menu)
     {
-        JMenuItem item = new JMenuItem("传输流信息");
+        JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
         item.setAccelerator(KeyStroke.getKeyStroke("alt 1"));
         item.addActionListener(e -> bus.post(new ShowInfoViewEvent(this)));

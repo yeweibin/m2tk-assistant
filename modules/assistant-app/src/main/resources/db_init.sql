@@ -270,6 +270,8 @@ ORDER BY `A`.`pid` ASC;
 CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_tr290_stat` AS
 SELECT `A`.`id` AS `id`,
        `A`.`type` AS `type`,
+       `A`.`pid` AS `pid`,
+       `A`.`pct` AS `pct`,
        `A`.`timepoint` AS `timepoint`,
        `A`.`description` AS `description`,
        `B`.`cnt` AS `cnt`

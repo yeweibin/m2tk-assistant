@@ -19,11 +19,9 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.domain.TR290Event;
 import m2tk.assistant.api.domain.TR290Stats;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.api.presets.TR290ErrorTypes;
 import m2tk.assistant.app.ui.component.TR290StatsPanel;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -35,8 +33,6 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -48,6 +44,9 @@ public class TR290InfoView extends JPanel implements InfoView
     private EventBus bus;
     private M2TKDatabase database;
 
+    private volatile long lastTimestamp;
+    private final long MIN_QUERY_INTERVAL_MILLIS = 500;
+
     public TR290InfoView()
     {
         initUI();
@@ -56,7 +55,7 @@ public class TR290InfoView extends JPanel implements InfoView
     private void initUI()
     {
         tr290StatsPanel = new TR290StatsPanel();
-        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101 290");
+        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101.290");
 
         setLayout(new MigLayout("fill"));
         add(tr290StatsPanel, "center, grow");
@@ -80,7 +79,7 @@ public class TR290InfoView extends JPanel implements InfoView
     @Override
     public void setupMenu(JMenu menu)
     {
-        JMenuItem item = new JMenuItem("TR290");
+        JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
         item.setAccelerator(KeyStroke.getKeyStroke("alt 3"));
         item.addActionListener(e -> {
@@ -102,7 +101,7 @@ public class TR290InfoView extends JPanel implements InfoView
     @Override
     public String getViewTitle()
     {
-        return "TR290";
+        return "TR 290";
     }
 
     @Override
@@ -114,58 +113,17 @@ public class TR290InfoView extends JPanel implements InfoView
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        queryTR290Events();
+        long t1 = System.currentTimeMillis();
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
+        {
+            queryTR290Events();
+            lastTimestamp = System.currentTimeMillis();
+        }
     }
 
     private void queryTR290Events()
     {
-        Supplier<TR290Stats> query = () -> {
-            Map<String, TR290Stats> statsMap = new HashMap<>();
-//                Global.getDatabaseService()
-//                                                          .listTR290Stats(currentTransaction)
-//                                                          .stream()
-//                                                          .collect(toMap(TR290StatEntity::getIndicator,
-//                                                                         entity -> entity));
-
-            TR290Stats stats = new TR290Stats();
-            Consumer<TR290Stats> operator = stat -> {
-                if (stat != null)
-                {
-                    stats.setStat("123",
-                                  stat.getErrorCount("123"),
-                                  new TR290Event());
-//                    stat.getLastEventTimestamp(),
-//                                                 stat.getIndicator(),
-//                                                 stat.getLastEventDescription()));
-                }
-            };
-
-            operator.accept(statsMap.get(TR290ErrorTypes.TS_SYNC_LOSS));
-            operator.accept(statsMap.get(TR290ErrorTypes.SYNC_BYTE_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.PAT_ERROR_2));
-            operator.accept(statsMap.get(TR290ErrorTypes.CONTINUITY_COUNT_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.PMT_ERROR_2));
-            operator.accept(statsMap.get(TR290ErrorTypes.PID_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.TRANSPORT_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.CRC_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.PCR_REPETITION_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.PCR_ACCURACY_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.CAT_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.NIT_ACTUAL_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.NIT_OTHER_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.SI_REPETITION_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.UNREFERENCED_PID));
-            operator.accept(statsMap.get(TR290ErrorTypes.SDT_ACTUAL_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.SDT_OTHER_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.EIT_ACTUAL_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.EIT_OTHER_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.RST_ERROR));
-            operator.accept(statsMap.get(TR290ErrorTypes.TDT_ERROR));
-
-            return stats;
-        };
-
+        Supplier<TR290Stats> query = () -> database.getTR290Stats();
         Consumer<TR290Stats> consumer = tr290StatsPanel::update;
 
         AsyncQueryTask<TR290Stats> task = new AsyncQueryTask<>(application,

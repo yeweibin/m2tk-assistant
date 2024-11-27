@@ -49,10 +49,10 @@ public class TR290StatsPanel extends JPanel
 
         TableColumnModel columnModel = table.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, 40, false);  // 状态
-        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 160, false);   // 错误名称
+        ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 220, false);  // 错误名称
         ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 100, false); // 错误数
-        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 200, false); // 最近发生时间
-        ComponentUtil.configTableColumn(columnModel, 4, leadingRenderer, 500, true);  // 错误描述
+        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 220, false); // 最近发生时间
+        ComponentUtil.configTableColumn(columnModel, 4, leadingRenderer, 500, true);   // 错误描述
 
         setLayout(new BorderLayout());
         add(new JScrollPane(table), BorderLayout.CENTER);

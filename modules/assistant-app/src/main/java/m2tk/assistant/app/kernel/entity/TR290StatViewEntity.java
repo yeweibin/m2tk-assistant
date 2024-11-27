@@ -30,6 +30,10 @@ public class TR290StatViewEntity
     private Integer id;
     @TableField("type")
     private String type;
+    @TableField("pid")
+    private Integer pid;
+    @TableField("pct")
+    private Long position;
     @TableField("timepoint")
     private LocalDateTime timepoint;
     @TableField("description")

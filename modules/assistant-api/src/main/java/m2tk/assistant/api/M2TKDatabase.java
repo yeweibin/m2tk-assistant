@@ -119,7 +119,7 @@ public interface M2TKDatabase
 
     List<TR290Event> listTR290Events();
 
-    List<TR290Stats> listTR290Stats();
+    TR290Stats getTR290Stats();
 
     void addPCR(PCR pcr);
 
