@@ -17,6 +17,8 @@ package m2tk.assistant.api.domain;
 
 import lombok.Data;
 
+import java.util.Objects;
+
 @Data
 public class SIService
 {
@@ -47,5 +49,19 @@ public class SIService
     public boolean isNVODTimeShiftedService()
     {
         return serviceType == 0x05;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == null || getClass() != o.getClass()) return false;
+        SIService service = (SIService) o;
+        return id == service.id;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hashCode(id);
     }
 }

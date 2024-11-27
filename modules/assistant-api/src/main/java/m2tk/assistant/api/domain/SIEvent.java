@@ -18,12 +18,12 @@ package m2tk.assistant.api.domain;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Data
 public class SIEvent
 {
     private int id;
-    private int version;
 
     private String title;
     private String description;
@@ -43,4 +43,18 @@ public class SIEvent
     private int referenceServiceId;
     private int referenceEventId;
     private boolean nvodTimeShiftedEvent;
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == null || getClass() != o.getClass()) return false;
+        SIEvent siEvent = (SIEvent) o;
+        return id == siEvent.id;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hashCode(id);
+    }
 }

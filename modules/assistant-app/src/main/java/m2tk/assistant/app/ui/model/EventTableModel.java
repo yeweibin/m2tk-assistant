@@ -27,23 +27,19 @@ import java.util.List;
 public class EventTableModel extends AbstractTableModel
 {
     private final List<SIEvent> data = new ArrayList<>();
-    private final String[] COLUMNS = {
-        "类型", "事件号", "开始时间", "持续时长", "语言", "标题", "描述"
-    };
-    private final Class<?>[] COLUMN_CLASSES = {
-        String.class, Integer.class, String.class, String.class, String.class, String.class, String.class
-    };
+    private final String[] COLUMNS = {"类型", "事件号", "开始时间", "持续时长", "语言", "标题", "描述"};
+    private final Class<?>[] COLUMN_CLASSES = {String.class, Integer.class, String.class, String.class, String.class, String.class, String.class};
 
-    private static final SIEvent EMPTY_PRESENT_EVENT = new SIEvent();//0, 0, 0, 0, "", "", "", "", "", false, true);
-    private static final SIEvent EMPTY_FOLLOWING_EVENT = new SIEvent();//0, 0, 0, 0, "", "", "", "", "", false, false);
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final SIEvent PLACEHOLDER_PRESENT_EVENT = new SIEvent();
+    private static final SIEvent PLACEHOLDER_FOLLOWING_EVENT = new SIEvent();
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
 
     static
     {
-        EMPTY_PRESENT_EVENT.setPresentEvent(true);
-        EMPTY_PRESENT_EVENT.setScheduleEvent(false);
-        EMPTY_FOLLOWING_EVENT.setPresentEvent(false);
-        EMPTY_FOLLOWING_EVENT.setScheduleEvent(false);
+        PLACEHOLDER_PRESENT_EVENT.setPresentEvent(true);
+        PLACEHOLDER_PRESENT_EVENT.setScheduleEvent(false);
+        PLACEHOLDER_FOLLOWING_EVENT.setPresentEvent(false);
+        PLACEHOLDER_FOLLOWING_EVENT.setScheduleEvent(false);
     }
 
     public void update(List<SIEvent> events)
@@ -51,11 +47,11 @@ public class EventTableModel extends AbstractTableModel
         SIEvent pEvent = events.stream()
                                .filter(e -> !e.isScheduleEvent() && e.isPresentEvent())
                                .findFirst()
-                               .orElse(EMPTY_PRESENT_EVENT);
+                               .orElse(PLACEHOLDER_PRESENT_EVENT);
         SIEvent fEvent = events.stream()
                                .filter(e -> !e.isScheduleEvent() && !e.isPresentEvent())
                                .findFirst()
-                               .orElse(EMPTY_FOLLOWING_EVENT);
+                               .orElse(PLACEHOLDER_FOLLOWING_EVENT);
 
         List<SIEvent> copy = new ArrayList<>(events);
         copy.removeIf(e -> !e.isScheduleEvent());
@@ -100,24 +96,24 @@ public class EventTableModel extends AbstractTableModel
             case 0 -> event.isScheduleEvent()
                       ? ""
                       : event.isPresentEvent() ? "当前" : "后续";
-            case 1 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+            case 1 -> (event == PLACEHOLDER_PRESENT_EVENT || event == PLACEHOLDER_FOLLOWING_EVENT)
                       ? null
                       : event.getEventId();
-            case 2 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+            case 2 -> (event == PLACEHOLDER_PRESENT_EVENT || event == PLACEHOLDER_FOLLOWING_EVENT)
                       ? null
                       : event.getStartTime()
                              .atZoneSameInstant(ZoneId.systemDefault())
                              .format(TIME_FORMATTER);
-            case 3 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+            case 3 -> (event == PLACEHOLDER_PRESENT_EVENT || event == PLACEHOLDER_FOLLOWING_EVENT)
                       ? null
                       : FormatUtil.formatDuration(event.getDuration());
-            case 4 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+            case 4 -> (event == PLACEHOLDER_PRESENT_EVENT || event == PLACEHOLDER_FOLLOWING_EVENT)
                       ? null
                       : event.getLanguageCode();
-            case 5 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+            case 5 -> (event == PLACEHOLDER_PRESENT_EVENT || event == PLACEHOLDER_FOLLOWING_EVENT)
                       ? null
                       : event.getTitle();
-            case 6 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
+            case 6 -> (event == PLACEHOLDER_PRESENT_EVENT || event == PLACEHOLDER_FOLLOWING_EVENT)
                       ? null
                       : event.getDescription();
             default -> null;

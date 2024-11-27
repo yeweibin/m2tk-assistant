@@ -15,6 +15,7 @@
  */
 package m2tk.assistant.app.ui.component;
 
+import cn.hutool.core.collection.CollUtil;
 import m2tk.assistant.api.domain.SIEvent;
 import m2tk.assistant.api.domain.SIService;
 import m2tk.assistant.app.ui.model.EventTableModel;
@@ -133,33 +134,17 @@ public class ServiceEventGuidePanel extends JPanel
 
     private boolean isSameServices(List<SIService> current, List<SIService> incoming)
     {
-        if (current.size() != incoming.size())
-            return false;
-
-        incoming.sort(Comparator.comparing(SIService::getId));
-
-        int n = current.size();
-        for (int i = 0; i < n; i++)
-        {
-            SIService s1 = current.get(i);
-            SIService s2 = incoming.get(i);
-
-            if (!Objects.equals(s1, s2) &&
-                !Objects.equals(s1.getName(), s2.getName()))
-                return false;
-        }
-
-        return true;
+        return CollUtil.isEqualList(current, incoming);
     }
 
     private boolean isSameEventGroups(Map<SIService, List<SIEvent>> current, Map<SIService, List<SIEvent>> incoming)
     {
-        if (!Objects.equals(current.keySet(), incoming.keySet()))
+        if (!CollUtil.isEqualList(current.keySet(), incoming.keySet()))
             return false;
 
         for (SIService key : incoming.keySet())
         {
-            if (!Objects.equals(current.get(key), incoming.get(key)))
+            if (!CollUtil.isEqualList(current.get(key), incoming.get(key)))
                 return false;
         }
         return true;
