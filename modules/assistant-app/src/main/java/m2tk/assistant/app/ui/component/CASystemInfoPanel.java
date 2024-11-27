@@ -60,13 +60,7 @@ public class CASystemInfoPanel extends JPanel
         ToolTipManager.sharedInstance().registerComponent(tree);
 
         setLayout(new BorderLayout());
-        JScrollPane scrollPane = new JScrollPane(tree);
-        scrollPane.putClientProperty("FlatLaf.style",
-                                     """
-                                     borderWidth: 0.75;
-                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
-                                     """);
-        add(scrollPane, BorderLayout.CENTER);
+        add(new JScrollPane(tree), BorderLayout.CENTER);
     }
 
     public void updateStreamList(List<CASystemStream> streams)

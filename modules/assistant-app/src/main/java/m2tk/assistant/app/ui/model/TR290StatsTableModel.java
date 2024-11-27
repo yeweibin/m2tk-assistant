@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.model;
 
 import m2tk.assistant.api.domain.TR290Event;
@@ -23,7 +22,6 @@ import m2tk.assistant.app.LargeIcons;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
-import java.util.Objects;
 
 public class TR290StatsTableModel extends AbstractTableModel
 {
@@ -75,7 +73,7 @@ public class TR290StatsTableModel extends AbstractTableModel
 
     public void update(TR290Stats stats)
     {
-        if (!Objects.equals(data, stats))
+        if (stats != null && data != stats)
         {
             data = stats;
             fireTableDataChanged();

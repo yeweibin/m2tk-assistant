@@ -99,6 +99,7 @@ public class MainViewController
     private static final Color HP_BLUE = Color.decode("#0096D6");
     private static final Color INSTA_RED = Color.decode("#FD1D1D");
     private static final Color SLACK_LIGHT_BLUE = Color.decode("#89D3DF");
+    private static final int TIMER_INTERVAL_MILLIS = 200;
 
     public MainViewController(FrameView view)
     {
@@ -139,7 +140,6 @@ public class MainViewController
     private void loadPluginsAndExtensions()
     {
         // 采用单例模式加载扩展，保证二次加载的插件扩展与首次加载内容一致。
-//        PluginManager pluginManager = new DefaultPluginManager(Paths.get(System.getProperty("user.dir"), "plugins"))
         PluginManager pluginManager = new DefaultPluginManager()
         {
             @Override
@@ -401,7 +401,7 @@ public class MainViewController
     {
         initFileChooserCurrentDirectory();
 
-        timer = new Timer(200, e -> refreshInfoViews());
+        timer = new Timer(TIMER_INTERVAL_MILLIS, e -> refreshInfoViews());
         timer.start();
 
         actionMap.get("openLocalFile").setEnabled(false);

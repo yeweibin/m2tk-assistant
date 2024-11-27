@@ -223,20 +223,13 @@ public class StreamInfoPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false);
         ComponentUtil.configTableColumn(columnModel, 7, stateRenderer, 200, true);
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.putClientProperty("FlatLaf.style",
-                                     """
-                                     borderWidth: 0.75;
-                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
-                                     """);
-
         setLayout(new MigLayout("", "[][grow][]", "[][][grow]"));
 
         add(new JLabel("输入源"));
         add(fieldSourceName, "growx");
         add(btnShowDetails, "wrap");
         add(sourceDetailsPanel, "hidemode 2, span 3, growx, wrap");
-        add(scrollPane, "span 3, grow, push");
+        add(new JScrollPane(table), "span 3, grow, push");
 
         sourceDetailsPanel.setVisible(false);
     }

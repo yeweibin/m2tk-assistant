@@ -19,8 +19,6 @@ import cn.hutool.core.io.FileUtil;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 
 import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -84,13 +82,7 @@ public class SystemInfoDialog extends JDialog
         textArea = new JTextArea();
         textArea.setEditable(false);
         textArea.setLineWrap(true);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        scrollPane.putClientProperty("FlatLaf.style",
-                                     """
-                                     borderWidth: 0.75;
-                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
-                                     """);
-        root.add(scrollPane, BorderLayout.CENTER);
+        root.add(new JScrollPane(textArea), BorderLayout.CENTER);
 
         JButton export = new JButton("导出到文件");
         export.addActionListener(e -> exportInfo());
@@ -119,7 +111,6 @@ public class SystemInfoDialog extends JDialog
         {
             appendTextArea(objectObjectEntry.getKey() + "=" + objectObjectEntry.getValue());
         }
-        removeLastLineSeparator();
         textArea.setCaretPosition(0);
 
         pack();
@@ -138,18 +129,5 @@ public class SystemInfoDialog extends JDialog
     {
         textArea.append(str);
         textArea.append(System.lineSeparator());
-    }
-
-    private void removeLastLineSeparator()
-    {
-        try
-        {
-            Document doc = textArea.getDocument();
-            String lineSeparator = System.lineSeparator();
-            int length = lineSeparator.length();
-            doc.remove(doc.getLength() - length, length);
-        } catch (BadLocationException ignored)
-        {
-        }
     }
 }

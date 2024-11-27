@@ -62,9 +62,4 @@ public class TR290StatsPanel extends JPanel
     {
         tableModel.update(stats);
     }
-
-    public void reset()
-    {
-        tableModel.update(new TR290Stats());
-    }
 }

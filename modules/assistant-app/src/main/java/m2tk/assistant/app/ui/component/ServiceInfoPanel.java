@@ -88,24 +88,10 @@ public class ServiceInfoPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false); // 原始网络号
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false); // 传输流号
 
-        JScrollPane scrollPane1 = new JScrollPane(table1);
-        scrollPane1.putClientProperty("FlatLaf.style",
-                                      """
-                                      borderWidth: 0.75;
-                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
-                                      """);
-
-        JScrollPane scrollPane2 = new JScrollPane(table2);
-        scrollPane2.putClientProperty("FlatLaf.style",
-                                      """
-                                      borderWidth: 0.75;
-                                      focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
-                                      """);
-
         setLayout(new BorderLayout());
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.add("当前传输流", scrollPane1);
-        tabbedPane.add("其他传输流", scrollPane2);
+        tabbedPane.add("当前传输流", new JScrollPane(table1));
+        tabbedPane.add("其他传输流", new JScrollPane(table2));
         add(tabbedPane, BorderLayout.CENTER);
     }
 
