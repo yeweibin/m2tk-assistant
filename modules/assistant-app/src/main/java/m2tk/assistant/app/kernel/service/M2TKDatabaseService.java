@@ -884,25 +884,50 @@ public class M2TKDatabaseService implements M2TKDatabase
     @Override
     public void addPCR(PCR pcr)
     {
-
+        PCREntity entity = new PCREntity();
+        entity.setPid(pcr.getPid());
+        entity.setPosition(pcr.getPosition());
+        entity.setValue(pcr.getValue());
+        pcrMapper.insert(entity);
     }
 
     @Override
     public void addPCRCheck(PCRCheck check)
     {
-
+        PCRCheckEntity entity = new PCRCheckEntity();
+        entity.setPid(check.getPid());
+        entity.setPreviousValue(check.getPrevValue());
+        entity.setPreviousPosition(check.getPrevPosition());
+        entity.setCurrentValue(check.getCurrValue());
+        entity.setCurrentPosition(check.getCurrPosition());
+        entity.setBitrate(check.getBitrate());
+        entity.setIntervalNanos(check.getIntervalNanos());
+        entity.setDiffNanos(check.getDiffNanos());
+        entity.setAccuracyNanos(check.getAccuracyNanos());
+        entity.setRepetitionCheckFailed(check.isRepetitionCheckFailed());
+        entity.setDiscontinuityCheckFailed(check.isDiscontinuityCheckFailed());
+        entity.setAccuracyCheckFailed(check.isAccuracyCheckFailed());
+        pcrCheckMapper.insert(entity);
     }
 
     @Override
     public List<PCRStats> listPCRStats()
     {
-        return List.of();
+        return pcrStatMapper.selectList(Wrappers.emptyWrapper())
+                            .stream()
+                            .map(this::convert)
+                            .collect(Collectors.toList());
     }
 
     @Override
     public List<PCRCheck> getRecentPCRChecks(int pid, int limit)
     {
-        return List.of();
+        return pcrCheckMapper.selectList(Wrappers.lambdaQuery(PCRCheckEntity.class)
+                                                 .eq(PCRCheckEntity::getPid, pid)
+                                                 .last("limit " + limit))
+                             .stream()
+                             .map(this::convert)
+                             .collect(Collectors.toList());
     }
 
     @Override
@@ -1214,6 +1239,42 @@ public class M2TKDatabaseService implements M2TKDatabase
                                  .atZone(ZoneId.systemDefault())
                                  .toOffsetDateTime());
         return event;
+    }
+
+    private PCRStats convert(PCRStatViewEntity entity)
+    {
+        PCRStats stats = new PCRStats();
+        stats.setPid(entity.getPid());
+        stats.setPcrCount(entity.getPcrCount());
+        stats.setAvgBitrate(entity.getAvgBitrate());
+        stats.setAvgInterval(entity.getAvgInterval());
+        stats.setMinInterval(entity.getMinInterval());
+        stats.setMaxInterval(entity.getMaxInterval());
+        stats.setAvgAccuracy(entity.getAvgAccuracy());
+        stats.setMinAccuracy(entity.getMinAccuracy());
+        stats.setMaxAccuracy(entity.getMaxAccuracy());
+        stats.setRepetitionErrors(entity.getRepetitionErrors());
+        stats.setDiscontinuityErrors(entity.getDiscontinuityErrors());
+        stats.setAccuracyErrors(entity.getAccuracyErrors());
+        return stats;
+    }
+
+    private PCRCheck convert(PCRCheckEntity entity)
+    {
+        PCRCheck check = new PCRCheck();
+        check.setPid(entity.getPid());
+        check.setPrevValue(entity.getPreviousValue());
+        check.setPrevPosition(entity.getPreviousPosition());
+        check.setCurrValue(entity.getCurrentValue());
+        check.setCurrPosition(entity.getCurrentPosition());
+        check.setBitrate(entity.getBitrate());
+        check.setIntervalNanos(entity.getIntervalNanos());
+        check.setDiffNanos(entity.getDiffNanos());
+        check.setAccuracyNanos(entity.getAccuracyNanos());
+        check.setRepetitionCheckFailed(entity.getRepetitionCheckFailed());
+        check.setDiscontinuityCheckFailed(entity.getDiscontinuityCheckFailed());
+        check.setAccuracyCheckFailed(entity.getAccuracyCheckFailed());
+        return check;
     }
 
     private PrivateSection convert(PrivateSectionEntity entity)

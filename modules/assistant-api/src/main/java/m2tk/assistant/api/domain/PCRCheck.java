@@ -21,10 +21,10 @@ import lombok.Data;
 public class PCRCheck
 {
     private int pid;
-    private long prevPosition;
     private long prevValue;
-    private long currPosition;
+    private long prevPosition;
     private long currValue;
+    private long currPosition;
     private long bitrate;
     private long intervalNanos;
     private long diffNanos;

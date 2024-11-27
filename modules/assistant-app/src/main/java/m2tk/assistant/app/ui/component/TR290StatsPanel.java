@@ -47,7 +47,7 @@ public class TR290StatsPanel extends JPanel
         leadingRenderer.setHorizontalAlignment(SwingConstants.LEADING);
 
         TableColumnModel columnModel = table.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, 40, false);  // 状态
+        ComponentUtil.configTableColumn(columnModel, 0, 40, false);                    // 状态
         ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 220, false);  // 错误名称
         ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 100, false); // 错误数
         ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 220, false); // 最近发生时间

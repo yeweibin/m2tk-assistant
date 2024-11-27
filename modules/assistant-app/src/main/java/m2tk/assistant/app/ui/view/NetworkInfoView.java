@@ -178,8 +178,7 @@ public class NetworkInfoView extends JPanel implements InfoView
             networkTimePanel.updateTime(snapshot.getLatestNetworkTime());
         };
 
-        Consumer<Throwable> exLogger = ex -> log.error("{}", ex.getMessage(), ex);
-        AsyncQueryTask<NetworkInfoSnapshot> task = new AsyncQueryTask<>(application, query, consumer, exLogger);
+        AsyncQueryTask<NetworkInfoSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 }

@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.PCRStats;
-import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.model.PCRStatsTableModel;
+import m2tk.assistant.app.ui.util.ComponentUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Consumer;
 
 public class PCRStatsPanel extends JPanel
@@ -62,17 +59,17 @@ public class PCRStatsPanel extends JPanel
         trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
 
         TableColumnModel columnModel = table.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, 40, false);  // 状态
-        ComponentUtil.configTableColumn(columnModel, 1, centeredRenderer, 80, false); // PID
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 80, false); // PCR总数
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, false); // 平均码率
-        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 100, false); // 平均间隔
-        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, false); // 最小间隔
-        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false); // 最大间隔
-        ComponentUtil.configTableColumn(columnModel, 7, trailingRenderer, 100, false); // 间隔越界
-        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 180, false); // 平均精度
-        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 180, false); // 最小精度
-        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 180, false); // 最大精度
+        ComponentUtil.configTableColumn(columnModel, 0, 40, false);                     // 状态
+        ComponentUtil.configTableColumn(columnModel, 1, centeredRenderer, 80, false);   // PID
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 120, false);  // PCR总数
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, false);  // 平均码率
+        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 100, false);  // 平均间隔
+        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, false);  // 最小间隔
+        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false);  // 最大间隔
+        ComponentUtil.configTableColumn(columnModel, 7, trailingRenderer, 100, false);  // 间隔越界
+        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 160, false);  // 平均精度
+        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 160, false);  // 最小精度
+        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 160, false); // 最大精度
         ComponentUtil.configTableColumn(columnModel, 11, trailingRenderer, 100, false); // 精度越界
 
         setLayout(new BorderLayout());
@@ -81,12 +78,7 @@ public class PCRStatsPanel extends JPanel
 
     public void update(List<PCRStats> stats)
     {
-        tableModel.update(Objects.requireNonNull(stats));
-    }
-
-    public void reset()
-    {
-        tableModel.update(Collections.emptyList());
+        tableModel.update(stats);
     }
 
     public void addPCRStatConsumer(Consumer<PCRStats> consumer)

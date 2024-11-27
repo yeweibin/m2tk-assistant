@@ -25,6 +25,7 @@ import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.PCRChartPanel;
 import m2tk.assistant.app.ui.component.PCRStatsPanel;
+import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
@@ -35,16 +36,22 @@ import org.pf4j.Extension;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Extension(ordinal = 4)
 public class PCRInfoView extends JPanel implements InfoView
 {
+    private Application application;
     private PCRStatsPanel pcrStatsPanel;
     private PCRChartPanel pcrChartPanel;
     private JSplitPane splitPane;
-    private transient PCRStats selectedPCRStat;
+
     private EventBus bus;
     private M2TKDatabase database;
+
+    private volatile long lastTimestamp;
+    private final long MIN_QUERY_INTERVAL_MILLIS = 500;
 
     public PCRInfoView()
     {
@@ -54,15 +61,11 @@ public class PCRInfoView extends JPanel implements InfoView
     private void initUI()
     {
         pcrStatsPanel = new PCRStatsPanel();
-        pcrStatsPanel.addPCRStatConsumer(stat -> {
-            if (stat == null)
-            {
+        pcrStatsPanel.addPCRStatConsumer(stats -> {
+            if (stats == null)
                 pcrChartPanel.setVisible(false);
-            } else
-            {
-                selectedPCRStat = stat;
-                queryPCRRecords();
-            }
+            else
+                queryPCRRecords(stats.getPid());
         });
 
         pcrChartPanel = new PCRChartPanel();
@@ -82,6 +85,7 @@ public class PCRInfoView extends JPanel implements InfoView
     @Override
     public void setupApplication(Application application)
     {
+        this.application = application;
     }
 
     @Override
@@ -130,46 +134,34 @@ public class PCRInfoView extends JPanel implements InfoView
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        queryPCRStats();
-        queryPCRRecords();
-    }
-
-    private void updatePCRChart(List<PCRCheck> checks)
-    {
-        pcrChartPanel.setVisible(true);
-        pcrChartPanel.update(checks);
-        splitPane.setDividerLocation(0.25);
+        long t1 = System.currentTimeMillis();
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
+        {
+            queryPCRStats();
+            lastTimestamp = System.currentTimeMillis();
+        }
     }
 
     private void queryPCRStats()
     {
-//        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-//        if (currentTransaction == -1)
-//            return;
-//
-//        Supplier<List<PCRStatViewEntity>> query = () -> Global.getDatabaseService().listPCRStats0(currentTransaction);
-//        Consumer<List<PCRStatViewEntity>> consumer = pcrStatsPanel::update;
-//
-//        AsyncQueryTask<List<PCRStatViewEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
-//                                                                            query,
-//                                                                            consumer);
-//        task.execute();
+        Supplier<List<PCRStats>> query = () -> database.listPCRStats();
+        Consumer<List<PCRStats>> consumer = pcrStatsPanel::update;
+
+        AsyncQueryTask<List<PCRStats>> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
     }
 
-    private void queryPCRRecords()
+    private void queryPCRRecords(int stream)
     {
-//        PCRStatViewEntity target = selectedPCRStat;
-//        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-//        if (currentTransaction == -1 || target == null)
-//            return;
-//
-//        Supplier<List<PCRCheckEntity>> query = () -> Global.getDatabaseService()
-//                                                           .getRecentPCRChecks0(currentTransaction, target.getPid(), 1000);
-//
-//        Consumer<List<PCRCheckEntity>> consumer = this::updatePCRChart;
-//        AsyncQueryTask<List<PCRCheckEntity>> task = new AsyncQueryTask<>(frameView.getApplication(),
-//                                                                         query,
-//                                                                         consumer);
-//        task.execute();
+        Supplier<List<PCRCheck>> query = () -> database.getRecentPCRChecks(stream, 1000);
+        Consumer<List<PCRCheck>> consumer = checks ->
+        {
+            pcrChartPanel.update(checks);
+            pcrChartPanel.setVisible(true);
+            splitPane.setDividerLocation(0.25);
+        };
+
+        AsyncQueryTask<List<PCRCheck>> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
     }
 }

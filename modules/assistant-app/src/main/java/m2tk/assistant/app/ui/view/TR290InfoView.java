@@ -55,7 +55,7 @@ public class TR290InfoView extends JPanel implements InfoView
     private void initUI()
     {
         tr290StatsPanel = new TR290StatsPanel();
-        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 101.290");
+        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 290");
 
         setLayout(new MigLayout("fill"));
         add(tr290StatsPanel, "center, grow");
@@ -126,9 +126,7 @@ public class TR290InfoView extends JPanel implements InfoView
         Supplier<TR290Stats> query = () -> database.getTR290Stats();
         Consumer<TR290Stats> consumer = tr290StatsPanel::update;
 
-        AsyncQueryTask<TR290Stats> task = new AsyncQueryTask<>(application,
-                                                               query,
-                                                               consumer);
+        AsyncQueryTask<TR290Stats> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 }
