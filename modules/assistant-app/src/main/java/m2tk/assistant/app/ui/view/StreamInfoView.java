@@ -111,7 +111,7 @@ public class StreamInfoView extends JPanel implements InfoView
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.add("节目", programInfoPanel);
         tabbedPane.add("条件接收", casInfoPanel);
-        JPanel psiInfoPanel = new JPanel(new MigLayout("fill, insets 5"));
+        JPanel psiInfoPanel = new JPanel(new MigLayout("fill, insets 7"));
         psiInfoPanel.add(tabbedPane, "grow");
 
         ComponentUtil.setTitledBorder(streamInfoPanel, "传输流信息");

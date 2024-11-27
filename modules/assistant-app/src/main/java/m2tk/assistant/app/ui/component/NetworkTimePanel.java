@@ -40,15 +40,13 @@ public class NetworkTimePanel extends JPanel
     public void updateTime(OffsetDateTime time)
     {
         if (time == null)
-            return;
-
-        LocalDateTime utcTime = time.atZoneSameInstant(ZoneId.systemDefault())
-                                    .toLocalDateTime();
-        text.setText(utcTime.format(formatter));
-    }
-
-    public void resetTime()
-    {
-        text.setText("--/--/-- --:--:--");
+        {
+            text.setText("--/--/-- --:--:--");
+        } else
+        {
+            LocalDateTime utcTime = time.atZoneSameInstant(ZoneId.systemDefault())
+                                        .toLocalDateTime();
+            text.setText(utcTime.format(formatter));
+        }
     }
 }

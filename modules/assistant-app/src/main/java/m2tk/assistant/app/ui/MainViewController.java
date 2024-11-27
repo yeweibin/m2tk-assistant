@@ -401,7 +401,7 @@ public class MainViewController
     {
         initFileChooserCurrentDirectory();
 
-        timer = new Timer(500, e -> refreshInfoViews());
+        timer = new Timer(200, e -> refreshInfoViews());
         timer.start();
 
         actionMap.get("openLocalFile").setEnabled(false);

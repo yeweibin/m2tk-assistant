@@ -66,7 +66,6 @@ public final class AssistantApp extends SingleFrameApplication
         cmdArgs = args;
 
         // 加载必要的自定义字体
-//        registerCustomFont("/fonts/InterVariable.ttf");
         registerCustomFont("/fonts/Wallpoet.ttf");
 
         FlatLaf.registerCustomDefaultsSource("m2tk.assistant.app.ui.theme");
