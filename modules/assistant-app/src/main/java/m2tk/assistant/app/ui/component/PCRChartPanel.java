@@ -74,7 +74,7 @@ public class PCRChartPanel extends JPanel
         // TabbedPane里面的图表太顶，给加上一点内边距。
         Function<JComponent, JComponent> addBorder = c ->
         {
-            c.setBorder(new EmptyBorder(10, 0, 0, 0));
+            c.setBorder(new EmptyBorder(15, 0, 0, 0));
             return c;
         };
         JTabbedPane tabbedPane1 = new JTabbedPane();
