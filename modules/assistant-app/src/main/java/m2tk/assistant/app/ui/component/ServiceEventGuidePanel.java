@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.SIEvent;
 import m2tk.assistant.api.domain.SIService;
-import m2tk.assistant.app.ui.util.ComponentUtil;
-import m2tk.assistant.app.SmallIcons;
 import m2tk.assistant.app.ui.model.EventTableModel;
+import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
+import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -43,7 +43,8 @@ public class ServiceEventGuidePanel extends JPanel
     private DefaultTreeModel treeModel;
     private DefaultMutableTreeNode treeRoot;
     private EventTableModel eventTableModel;
-    private final transient List<SIService> serviceList = new ArrayList<>();
+
+    private transient List<SIService> serviceList = Collections.emptyList();
     private transient Map<SIService, List<SIEvent>> eventRegistry = Collections.emptyMap();
 
     public ServiceEventGuidePanel()
@@ -61,9 +62,8 @@ public class ServiceEventGuidePanel extends JPanel
         serviceTree.setCellRenderer(new ServiceTreeCellRenderer());
         serviceTree.addTreeSelectionListener(e -> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) serviceTree.getLastSelectedPathComponent();
-            if (node != null && node.getUserObject() instanceof SIService)
+            if (node != null && node.getUserObject() instanceof SIService service)
             {
-                SIService service = (SIService) node.getUserObject();
                 Map<SIService, List<SIEvent>> registry = eventRegistry;
                 if (registry != null)
                 {
@@ -89,8 +89,8 @@ public class ServiceEventGuidePanel extends JPanel
         TableColumnModel columnModel = eventTable.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 70, false); // 类型
         ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 70, false);  // 事件号
-        ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 150, false);  // 开始时间
-        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 90, false);  // 持续时间
+        ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 160, false);  // 开始时间
+        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 120, false);  // 持续时间
         ComponentUtil.configTableColumn(columnModel, 4, centeredRenderer, 60, false); // 语言
         ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 160, true); // 标题
         ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 160, true); // 描述
@@ -98,15 +98,6 @@ public class ServiceEventGuidePanel extends JPanel
         setLayout(new MigLayout("insets 2", "[360!][grow]", "grow"));
         add(new JScrollPane(serviceTree), "grow");
         add(new JScrollPane(eventTable), "grow");
-    }
-
-    public void reset()
-    {
-        treeRoot.removeAllChildren();
-        treeModel.reload();
-        eventTableModel.update(Collections.emptyList());
-        serviceList.clear();
-        eventRegistry = Collections.emptyMap();
     }
 
     public void update(List<SIService> services, Map<SIService, List<SIEvent>> events)
@@ -136,8 +127,7 @@ public class ServiceEventGuidePanel extends JPanel
             treeModel.reload();
 
             eventRegistry = events;
-            serviceList.clear();
-            serviceList.addAll(services);
+            serviceList = services;
         }
     }
 
@@ -201,6 +191,10 @@ public class ServiceEventGuidePanel extends JPanel
 
     class ServiceTreeCellRenderer extends DefaultTreeCellRenderer
     {
+        final Color LIGHT_BLUE = Color.decode("#89D3DF");
+        final Icon TRANSMIT = FontIcon.of(FluentUiFilledMZ.SOUND_SOURCE_24, 20, LIGHT_BLUE);
+        final Icon TELEVISION = FontIcon.of(FluentUiFilledMZ.MOVIES_AND_TV_24, 20, LIGHT_BLUE);
+
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
         {
@@ -210,16 +204,15 @@ public class ServiceEventGuidePanel extends JPanel
             {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                 Object userObject = node.getUserObject();
-                if (userObject instanceof String)
+                if (userObject instanceof String name)
                 {
-                    setText((String) userObject);
-                    setIcon(SmallIcons.TRANSMIT);
+                    setText(name);
+                    setIcon(TRANSMIT);
                 }
-                if (userObject instanceof SIService)
+                if (userObject instanceof SIService service)
                 {
-                    SIService service = (SIService) userObject;
                     setText(service.getName());
-                    setIcon(SmallIcons.TELEVISION);
+                    setIcon(TELEVISION);
                 }
             }
 

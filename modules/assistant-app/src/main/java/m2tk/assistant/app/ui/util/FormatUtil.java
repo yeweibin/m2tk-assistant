@@ -17,7 +17,9 @@ package m2tk.assistant.app.ui.util;
 
 public final class FormatUtil
 {
-    private FormatUtil() {}
+    private FormatUtil()
+    {
+    }
 
     public static String formatBitrate(long bitrate)
     {
@@ -28,5 +30,13 @@ public final class FormatUtil
         if (bitrate >= 1000)
             return String.format("%.3f Kbps", bitrate / 1000.0);
         return String.format("%d bps", bitrate);
+    }
+
+    public static String formatDuration(int duration)
+    {
+        int hh = duration / 3600;
+        int mm = duration % 3600 / 60;
+        int ss = duration % 60;
+        return String.format("%02d:%02d:%02d", hh, mm, ss);
     }
 }

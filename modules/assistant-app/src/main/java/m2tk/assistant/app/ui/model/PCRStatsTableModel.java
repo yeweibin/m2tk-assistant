@@ -96,9 +96,9 @@ public class PCRStatsTableModel extends AbstractTableModel
             case 5 -> String.format("%,d ms", stats.getMinInterval() / 1000000);
             case 6 -> String.format("%,d ms", stats.getMaxInterval() / 1000000);
             case 7 -> String.format("%,d", stats.getRepetitionErrors());
-            case 8 -> String.format("%,d ns", stats.getAvgAccuracy());
-            case 9 -> String.format("%,d ns", stats.getMinAccuracy());
-            case 10 -> String.format("%,d ns", stats.getMaxAccuracy());
+            case 8 -> Math.abs(stats.getAvgAccuracy()) > 1000 ? "溢出" : String.format("%,d ns", stats.getAvgAccuracy());
+            case 9 -> Math.abs(stats.getMinAccuracy()) > 1000 ? "溢出" : String.format("%,d ns", stats.getMinAccuracy());
+            case 10 -> Math.abs(stats.getMaxAccuracy()) > 1000 ? "溢出" : String.format("%,d ns", stats.getMaxAccuracy());
             case 11 -> String.format("%,d", stats.getAccuracyErrors());
             default -> null;
         };

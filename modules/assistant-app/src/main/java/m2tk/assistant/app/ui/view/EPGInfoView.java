@@ -17,6 +17,7 @@ package m2tk.assistant.app.ui.view;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.Data;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIEvent;
@@ -44,9 +45,18 @@ public class EPGInfoView extends JPanel implements InfoView
 {
     private Application application;
     private ServiceEventGuidePanel serviceEventGuidePanel;
-    private volatile long transactionId;
     private EventBus bus;
     private M2TKDatabase database;
+
+    private volatile long lastTimestamp;
+    private final long MIN_QUERY_INTERVAL_MILLIS = 500;
+
+    @Data
+    private static class EPGSnapshot
+    {
+        private List<SIService> services;
+        private Map<SIService, List<SIEvent>> events;
+    }
 
     public EPGInfoView()
     {
@@ -108,13 +118,18 @@ public class EPGInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularAL.CALENDAR_AGENDA_20, 20, Color.decode("#00A4EF"));
+        return FontIcon.of(FluentUiRegularAL.CALENDAR_AGENDA_24, 20, Color.decode("#00A4EF"));
     }
 
     @Subscribe
-    public void onRefreshInfoViewControlEvent(RefreshInfoViewEvent event)
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        queryServiceAndEvents();
+        long t1 = System.currentTimeMillis();
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
+        {
+            queryServiceAndEvents();
+            lastTimestamp = System.currentTimeMillis();
+        }
     }
 
     private void queryServiceAndEvents()
@@ -140,8 +155,26 @@ public class EPGInfoView extends JPanel implements InfoView
             return e1.getStartTime().compareTo(e2.getStartTime());
         };
 
-        Supplier<Void> query = () -> {
-//            List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
+        Supplier<EPGSnapshot> query = () -> {
+            List<SIService> services = database.listSIServices();
+            Map<SIService, List<SIEvent>> events = new HashMap<>();
+
+            for (SIService service : services)
+            {
+                List<SIEvent> list = database.listSIEvents(service.getTransportStreamId(),
+                                                           service.getOriginalNetworkId(),
+                                                           service.getServiceId(),
+                                                           false, false, false,
+                                                           null, null);
+                events.put(service, list);
+            }
+
+            EPGSnapshot snapshot = new EPGSnapshot();
+            snapshot.setServices(services);
+            snapshot.setEvents(events);
+            return snapshot;
+
+            //            List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
 //            List<SIEventEntity> events = databaseService.listEvents(currentTransaction);
 //
 //            services.stream()
@@ -182,15 +215,11 @@ public class EPGInfoView extends JPanel implements InfoView
 //                      List<SIEvent> eventList = eventRegistry.computeIfAbsent(service, any -> new ArrayList<>());
 //                      eventList.add(event);
 //                  });
-
-            return null;
         };
 
-        Consumer<Void> consumer = nothing -> serviceEventGuidePanel.update(serviceList, eventRegistry);
+        Consumer<EPGSnapshot> consumer = snapshot -> serviceEventGuidePanel.update(snapshot.getServices(), snapshot.getEvents());
 
-        AsyncQueryTask<Void> task = new AsyncQueryTask<>(application,
-                                                         query,
-                                                         consumer);
+        AsyncQueryTask<EPGSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 }

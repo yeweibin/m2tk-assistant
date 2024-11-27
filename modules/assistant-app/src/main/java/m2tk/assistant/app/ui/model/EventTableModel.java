@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.model;
 
 import m2tk.assistant.api.domain.SIEvent;
+import m2tk.assistant.app.ui.util.FormatUtil;
 
 import javax.swing.table.AbstractTableModel;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,14 +28,23 @@ public class EventTableModel extends AbstractTableModel
 {
     private final List<SIEvent> data = new ArrayList<>();
     private final String[] COLUMNS = {
-            "类型", "事件号", "开始时间", "持续时间", "语言", "标题", "描述"
+        "类型", "事件号", "开始时间", "持续时长", "语言", "标题", "描述"
     };
     private final Class<?>[] COLUMN_CLASSES = {
-            String.class, Integer.class, String.class, String.class, String.class, String.class, String.class
+        String.class, Integer.class, String.class, String.class, String.class, String.class, String.class
     };
 
     private static final SIEvent EMPTY_PRESENT_EVENT = new SIEvent();//0, 0, 0, 0, "", "", "", "", "", false, true);
     private static final SIEvent EMPTY_FOLLOWING_EVENT = new SIEvent();//0, 0, 0, 0, "", "", "", "", "", false, false);
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+    static
+    {
+        EMPTY_PRESENT_EVENT.setPresentEvent(true);
+        EMPTY_PRESENT_EVENT.setScheduleEvent(false);
+        EMPTY_FOLLOWING_EVENT.setPresentEvent(false);
+        EMPTY_FOLLOWING_EVENT.setScheduleEvent(false);
+    }
 
     public void update(List<SIEvent> events)
     {
@@ -43,7 +54,8 @@ public class EventTableModel extends AbstractTableModel
                                .orElse(EMPTY_PRESENT_EVENT);
         SIEvent fEvent = events.stream()
                                .filter(e -> !e.isScheduleEvent() && !e.isPresentEvent())
-                               .findFirst().orElse(EMPTY_FOLLOWING_EVENT);
+                               .findFirst()
+                               .orElse(EMPTY_FOLLOWING_EVENT);
 
         List<SIEvent> copy = new ArrayList<>(events);
         copy.removeIf(e -> !e.isScheduleEvent());
@@ -93,10 +105,12 @@ public class EventTableModel extends AbstractTableModel
                       : event.getEventId();
             case 2 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
-                      : event.getStartTime();
+                      : event.getStartTime()
+                             .atZoneSameInstant(ZoneId.systemDefault())
+                             .format(TIME_FORMATTER);
             case 3 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
-                      : event.getDuration();
+                      : FormatUtil.formatDuration(event.getDuration());
             case 4 -> (event == EMPTY_PRESENT_EVENT || event == EMPTY_FOLLOWING_EVENT)
                       ? null
                       : event.getLanguageCode();

@@ -108,7 +108,7 @@ public interface M2TKDatabase
     void updateSIEvent(SIEvent event);
 
     List<SIEvent> listSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
-                               boolean presentOnly, boolean scheduleOnly,
+                               boolean presentOnly, boolean scheduleOnly, boolean includeNVODEvents,
                                OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd);
 
     void addTimestamp(OffsetDateTime timestamp);

@@ -67,9 +67,9 @@ public class PCRStatsPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, false);  // 最小间隔
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false);  // 最大间隔
         ComponentUtil.configTableColumn(columnModel, 7, trailingRenderer, 100, false);  // 间隔越界
-        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 160, false);  // 平均精度
-        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 160, false);  // 最小精度
-        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 160, false); // 最大精度
+        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 100, false);  // 平均精度
+        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 100, false);  // 最小精度
+        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 100, false); // 最大精度
         ComponentUtil.configTableColumn(columnModel, 11, trailingRenderer, 100, false); // 精度越界
 
         setLayout(new BorderLayout());

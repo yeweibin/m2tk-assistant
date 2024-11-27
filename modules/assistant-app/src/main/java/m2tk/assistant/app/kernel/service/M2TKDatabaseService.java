@@ -15,6 +15,8 @@
  */
 package m2tk.assistant.app.kernel.service;
 
+import cn.hutool.core.util.NumberUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import m2tk.assistant.api.M2TKDatabase;
@@ -38,10 +40,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -143,29 +142,8 @@ public class M2TKDatabaseService implements M2TKDatabase
             StreamSourceEntity entity = new StreamSourceEntity();
             entity.setSourceName(sourceName);
             entity.setSourceUri(sourceUri);
-            entity.setBitrate(0);
             entity.setFrameSize(188);
             entity.setTransportStreamId(-1);
-            entity.setPacketCount(0L);
-            entity.setStreamCount(0);
-            entity.setProgramCount(0);
-            entity.setScrambled(false);
-            entity.setEcmPresent(false);
-            entity.setEmmPresent(false);
-            entity.setPatPresent(false);
-            entity.setPmtPresent(false);
-            entity.setCatPresent(false);
-            entity.setNitActualPresent(false);
-            entity.setNitOtherPresent(false);
-            entity.setSdtActualPresent(false);
-            entity.setSdtOtherPresent(false);
-            entity.setEitPnfActualPresent(false);
-            entity.setEitPnfOtherPresent(false);
-            entity.setEitSchActualPresent(false);
-            entity.setEitSchOtherPresent(false);
-            entity.setBatPresent(false);
-            entity.setTdtPresent(false);
-            entity.setTotPresent(false);
             sourceMapper.insert(entity);
             log.info("本次数据源：{}", sourceUri);
 
@@ -334,8 +312,6 @@ public class M2TKDatabaseService implements M2TKDatabase
         entity.setTransportStreamId(transportStreamId);
         entity.setPmtPid(pmtPid);
         entity.setPcrPid(8191);
-        entity.setPmtVersion(0);
-        entity.setFreeAccess(true);
         programMapper.insert(entity);
         return convert(entity);
     }
@@ -762,12 +738,9 @@ public class M2TKDatabaseService implements M2TKDatabase
         entity.setTransportStreamId(transportStreamId);
         entity.setOriginalNetworkId(originalNetworkId);
         entity.setServiceId(serviceId);
-        entity.setDuration(0);
-        entity.setRunningStatus(0);
         entity.setFreeAccess(true);
         entity.setLanguageCode("chi");
         entity.setEventName("未命名事件");
-        entity.setEventDescription("");
         entity.setReferenceEventId(-1);
         entity.setReferenceServiceId(-1);
         entity.setNvodTimeShiftedEvent(false);
@@ -801,7 +774,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         if (event.getStartTime() != null)
         {
             LocalDateTime utcStartTime = event.getStartTime()
-                                              .atZoneSameInstant(ZoneId.of("UTC"))
+                                              .atZoneSameInstant(ZoneOffset.UTC)
                                               .toLocalDateTime();
             change.setStartTime(utcStartTime);
         }
@@ -811,10 +784,27 @@ public class M2TKDatabaseService implements M2TKDatabase
 
     @Override
     public List<SIEvent> listSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
-                                      boolean presentOnly, boolean scheduleOnly,
+                                      boolean presentOnly, boolean scheduleOnly, boolean includeNVODEvents,
                                       OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd)
     {
-        return List.of();
+        LambdaQueryWrapper<SIEventEntity> query = Wrappers.lambdaQuery(SIEventEntity.class)
+                                                          .eq(SIEventEntity::getTransportStreamId, transportStreamId)
+                                                          .eq(SIEventEntity::getOriginalNetworkId, originalNetworkId)
+                                                          .eq(SIEventEntity::getServiceId, serviceId)
+                                                          .eq(SIEventEntity::getNvodTimeShiftedEvent, includeNVODEvents)
+                                                          .eq(presentOnly, SIEventEntity::getPresentEvent, Boolean.TRUE)
+                                                          .eq(scheduleOnly, SIEventEntity::getScheduleEvent, Boolean.TRUE);
+        if (timeFilterBegin != null)
+            query.ge(SIEventEntity::getStartTime,
+                     timeFilterBegin.atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime());
+        if (timeFilterEnd != null)
+            query.le(SIEventEntity::getStartTime,
+                     timeFilterEnd.atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime());
+
+        return eventMapper.selectList(query)
+                          .stream()
+                          .map(this::convert)
+                          .collect(Collectors.toList());
     }
 
     @Override
@@ -1057,31 +1047,31 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         StreamSource source = new StreamSource();
         source.setId(entity.getId());
-        source.setName(entity.getSourceName());
-        source.setUri(entity.getSourceUri());
-        source.setBitrate(entity.getBitrate());
-        source.setFrameSize(entity.getFrameSize());
-        source.setTransportStreamId(entity.getTransportStreamId());
-        source.setPacketCount(entity.getPacketCount());
-        source.setStreamCount(entity.getStreamCount());
-        source.setProgramCount(entity.getProgramCount());
-        source.setScrambled(entity.getScrambled());
-        source.setEcmPresent(entity.getEcmPresent());
-        source.setEmmPresent(entity.getEmmPresent());
-        source.setPatPresent(entity.getPatPresent());
-        source.setPmtPresent(entity.getPmtPresent());
-        source.setCatPresent(entity.getCatPresent());
-        source.setNitActualPresent(entity.getNitActualPresent());
-        source.setNitOtherPresent(entity.getNitOtherPresent());
-        source.setSdtActualPresent(entity.getSdtActualPresent());
-        source.setSdtOtherPresent(entity.getSdtOtherPresent());
-        source.setEitPnfActualPresent(entity.getEitPnfActualPresent());
-        source.setEitPnfOtherPresent(entity.getEitPnfOtherPresent());
-        source.setEitSchActualPresent(entity.getEitSchActualPresent());
-        source.setEitSchOtherPresent(entity.getEitSchOtherPresent());
-        source.setBatPresent(entity.getBatPresent());
-        source.setTdtPresent(entity.getTdtPresent());
-        source.setTotPresent(entity.getTotPresent());
+        source.setName(StrUtil.nullToEmpty(entity.getSourceName()));
+        source.setUri(StrUtil.nullToEmpty(entity.getSourceUri()));
+        source.setBitrate(NumberUtil.nullToZero(entity.getBitrate()));
+        source.setFrameSize(NumberUtil.nullToZero(entity.getFrameSize()));
+        source.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        source.setPacketCount(NumberUtil.nullToZero(entity.getPacketCount()));
+        source.setStreamCount(NumberUtil.nullToZero(entity.getStreamCount()));
+        source.setProgramCount(NumberUtil.nullToZero(entity.getProgramCount()));
+        source.setScrambled(entity.getScrambled() == Boolean.TRUE);
+        source.setEcmPresent(entity.getEcmPresent() == Boolean.TRUE);
+        source.setEmmPresent(entity.getEmmPresent() == Boolean.TRUE);
+        source.setPatPresent(entity.getPatPresent() == Boolean.TRUE);
+        source.setPmtPresent(entity.getPmtPresent() == Boolean.TRUE);
+        source.setCatPresent(entity.getCatPresent() == Boolean.TRUE);
+        source.setNitActualPresent(entity.getNitActualPresent() == Boolean.TRUE);
+        source.setNitOtherPresent(entity.getNitOtherPresent() == Boolean.TRUE);
+        source.setSdtActualPresent(entity.getSdtActualPresent() == Boolean.TRUE);
+        source.setSdtOtherPresent(entity.getSdtOtherPresent() == Boolean.TRUE);
+        source.setEitPnfActualPresent(entity.getEitPnfActualPresent() == Boolean.TRUE);
+        source.setEitPnfOtherPresent(entity.getEitPnfOtherPresent() == Boolean.TRUE);
+        source.setEitSchActualPresent(entity.getEitSchActualPresent() == Boolean.TRUE);
+        source.setEitSchOtherPresent(entity.getEitSchOtherPresent() == Boolean.TRUE);
+        source.setBatPresent(entity.getBatPresent() == Boolean.TRUE);
+        source.setTdtPresent(entity.getTdtPresent() == Boolean.TRUE);
+        source.setTotPresent(entity.getTotPresent() == Boolean.TRUE);
         return source;
     }
 
@@ -1089,16 +1079,16 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         ElementaryStream stream = new ElementaryStream();
         stream.setStreamPid(entity.getPid());
-        stream.setBitrate(entity.getBitrate());
-        stream.setRatio(entity.getRatio());
-        stream.setLastPct(entity.getLastPct());
-        stream.setPacketCount(entity.getPacketCount());
-        stream.setPcrCount(entity.getPcrCount());
-        stream.setContinuityErrorCount(entity.getContinuityErrorCount());
-        stream.setTransportErrorCount(entity.getTransportErrorCount());
-        stream.setCategory(entity.getCategory());
-        stream.setDescription(entity.getDescription());
-        stream.setScrambled(entity.getScrambled());
+        stream.setBitrate(NumberUtil.nullToZero(entity.getBitrate()));
+        stream.setRatio(NumberUtil.nullToZero(entity.getRatio()));
+        stream.setLastPct(NumberUtil.nullToZero(entity.getLastPct()));
+        stream.setPacketCount(NumberUtil.nullToZero(entity.getPacketCount()));
+        stream.setPcrCount(NumberUtil.nullToZero(entity.getPcrCount()));
+        stream.setContinuityErrorCount(NumberUtil.nullToZero(entity.getContinuityErrorCount()));
+        stream.setTransportErrorCount(NumberUtil.nullToZero(entity.getTransportErrorCount()));
+        stream.setCategory(StrUtil.nullToEmpty(entity.getCategory()));
+        stream.setDescription(StrUtil.nullToEmpty(entity.getDescription()));
+        stream.setScrambled(entity.getScrambled() == Boolean.TRUE);
         stream.setStreamType(-1);
         stream.setProgramNumber(-1);
         return stream;
@@ -1108,11 +1098,11 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         MPEGProgram program = new MPEGProgram();
         program.setId(entity.getId());
-        program.setProgramNumber(entity.getProgramNumber());
-        program.setTransportStreamId(entity.getTransportStreamId());
-        program.setPmtPid(entity.getPmtPid());
-        program.setPmtVersion(entity.getPmtVersion());
-        program.setFreeAccess(entity.getFreeAccess());
+        program.setProgramNumber(NumberUtil.nullToZero(entity.getProgramNumber()));
+        program.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        program.setPmtPid(NumberUtil.nullToZero(entity.getPmtPid()));
+        program.setPmtVersion(NumberUtil.nullToZero(entity.getPmtVersion()));
+        program.setFreeAccess(entity.getFreeAccess() == Boolean.TRUE);
         return program;
     }
 
@@ -1120,12 +1110,12 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         CASystemStream stream = new CASystemStream();
         stream.setId(entity.getId());
-        stream.setSystemId(entity.getSystemId());
-        stream.setStreamPid(entity.getStreamPid());
-        stream.setStreamType(entity.getStreamType());
+        stream.setSystemId(NumberUtil.nullToZero(entity.getSystemId()));
+        stream.setStreamPid(NumberUtil.nullToZero(entity.getStreamPid()));
+        stream.setStreamType(NumberUtil.nullToZero(entity.getStreamType()));
         stream.setStreamPrivateData(entity.getStreamPrivateData());
-        stream.setProgramNumber(entity.getProgramNumber());
-        stream.setElementaryStreamPid(entity.getElementaryStreamPid());
+        stream.setProgramNumber(NumberUtil.nullToZero(entity.getProgramNumber()));
+        stream.setElementaryStreamPid(NumberUtil.nullToZero(entity.getElementaryStreamPid()));
         return stream;
     }
 
@@ -1133,8 +1123,9 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SIBouquet bouquet = new SIBouquet();
         bouquet.setId(entity.getId());
-        bouquet.setBouquetId(entity.getBouquetId());
-        bouquet.setName(entity.getBouquetName());
+        bouquet.setBouquetId(NumberUtil.nullToZero(entity.getBouquetId()));
+        bouquet.setName(StrUtil.nullToEmpty(entity.getBouquetName()));
+        bouquet.setServices(Collections.emptyList());
         return bouquet;
     }
 
@@ -1142,9 +1133,10 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SINetwork network = new SINetwork();
         network.setId(entity.getId());
-        network.setNetworkId(entity.getNetworkId());
-        network.setName(entity.getNetworkName());
-        network.setActualNetwork(entity.getActualNetwork());
+        network.setNetworkId(NumberUtil.nullToZero(entity.getNetworkId()));
+        network.setName(StrUtil.nullToEmpty(entity.getNetworkName()));
+        network.setActualNetwork(entity.getActualNetwork() == Boolean.TRUE);
+        network.setMultiplexCount(0);
         return network;
     }
 
@@ -1152,10 +1144,10 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SINetwork network = new SINetwork();
         network.setId(entity.getId());
-        network.setNetworkId(entity.getNetworkId());
-        network.setName(entity.getNetworkName());
-        network.setActualNetwork(entity.getActualNetwork());
-        network.setMultiplexCount(entity.getMultiplexCount());
+        network.setNetworkId(NumberUtil.nullToZero(entity.getNetworkId()));
+        network.setName(StrUtil.nullToDefault(entity.getNetworkName(), "未命名网络"));
+        network.setActualNetwork(entity.getActualNetwork() == Boolean.TRUE);
+        network.setMultiplexCount(NumberUtil.nullToZero(entity.getMultiplexCount()));
         return network;
     }
 
@@ -1163,10 +1155,14 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SIMultiplex multiplex = new SIMultiplex();
         multiplex.setId(entity.getId());
-        multiplex.setTransportStreamId(entity.getTransportStreamId());
-        multiplex.setOriginalNetworkId(entity.getOriginalNetworkId());
-        multiplex.setDeliverySystemType(entity.getDeliveryType());
-        multiplex.setTransmitFrequency(entity.getTransmitFrequency());
+        multiplex.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        multiplex.setOriginalNetworkId(NumberUtil.nullToZero(entity.getOriginalNetworkId()));
+        multiplex.setDeliverySystemType(StrUtil.nullToEmpty(entity.getDeliveryType()));
+        multiplex.setTransmitFrequency(StrUtil.nullToEmpty(entity.getTransmitFrequency()));
+        multiplex.setNetworkId(multiplex.getOriginalNetworkId());
+        multiplex.setNetworkName("未命名网络");
+        multiplex.setServices(Collections.emptyList());
+        multiplex.setActualNetwork(true);
         return multiplex;
     }
 
@@ -1174,13 +1170,14 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SIMultiplex multiplex = new SIMultiplex();
         multiplex.setId(entity.getId());
-        multiplex.setTransportStreamId(entity.getTransportStreamId());
-        multiplex.setOriginalNetworkId(entity.getOriginalNetworkId());
-        multiplex.setDeliverySystemType(entity.getDeliveryType());
-        multiplex.setTransmitFrequency(entity.getTransmitFrequency());
-        multiplex.setNetworkId(entity.getNetworkId());
-        multiplex.setNetworkName(entity.getNetworkName());
-        multiplex.setActualNetwork(entity.getActualNetwork());
+        multiplex.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        multiplex.setOriginalNetworkId(NumberUtil.nullToZero(entity.getOriginalNetworkId()));
+        multiplex.setDeliverySystemType(StrUtil.nullToDefault(entity.getDeliveryType(), "未知"));
+        multiplex.setTransmitFrequency(StrUtil.nullToEmpty(entity.getTransmitFrequency()));
+        multiplex.setNetworkId(NumberUtil.nullToZero(entity.getNetworkId()));
+        multiplex.setNetworkName(StrUtil.nullToDefault(entity.getNetworkName(), "未命名网络"));
+        multiplex.setServices(Collections.emptyList());
+        multiplex.setActualNetwork(entity.getActualNetwork() == Boolean.TRUE);
         return multiplex;
     }
 
@@ -1188,20 +1185,20 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SIService service = new SIService();
         service.setId(entity.getId());
-        service.setName(entity.getServiceName());
-        service.setProvider(entity.getServiceProvider());
-        service.setTransportStreamId(entity.getTransportStreamId());
-        service.setOriginalNetworkId(entity.getOriginalNetworkId());
-        service.setServiceId(entity.getServiceId());
-        service.setServiceType(entity.getServiceType());
-        service.setServiceTypeName(ServiceTypes.name(entity.getServiceType()));
-        service.setRunningStatus(entity.getRunningStatus());
-        service.setRunningStatusName(RunningStatus.name(entity.getRunningStatus()));
-        service.setFreeAccess(entity.getFreeAccess());
-        service.setPresentFollowingEITEnabled(entity.getPresentFollowingEITEnabled());
-        service.setScheduleEITEnabled(entity.getScheduleEITEnabled());
-        service.setReferenceServiceId(entity.getReferenceServiceId());
-        service.setActualTransportStream(entity.getActualTransportStream());
+        service.setName(StrUtil.nullToDefault(entity.getServiceName(), "未命名业务"));
+        service.setProvider(StrUtil.nullToDefault(entity.getServiceProvider(), "未知提供商"));
+        service.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        service.setOriginalNetworkId(NumberUtil.nullToZero(entity.getOriginalNetworkId()));
+        service.setServiceId(NumberUtil.nullToZero(entity.getServiceId()));
+        service.setServiceType(NumberUtil.nullToZero(entity.getServiceType()));
+        service.setServiceTypeName(ServiceTypes.name(service.getServiceType()));
+        service.setRunningStatus(NumberUtil.nullToZero(entity.getRunningStatus()));
+        service.setRunningStatusName(RunningStatus.name(service.getRunningStatus()));
+        service.setFreeAccess(entity.getFreeAccess() == Boolean.TRUE);
+        service.setPresentFollowingEITEnabled(entity.getPresentFollowingEITEnabled() == Boolean.TRUE);
+        service.setScheduleEITEnabled(entity.getScheduleEITEnabled() == Boolean.TRUE);
+        service.setReferenceServiceId(NumberUtil.nullToZero(entity.getReferenceServiceId()));
+        service.setActualTransportStream(entity.getActualTransportStream() == Boolean.TRUE);
         return service;
     }
 
@@ -1209,26 +1206,26 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         SIEvent event = new SIEvent();
         event.setId(entity.getId());
-        event.setTitle(entity.getEventName());
-        event.setDescription(entity.getEventDescription());
-        event.setEventId(entity.getEventId());
-        event.setTransportStreamId(entity.getTransportStreamId());
-        event.setOriginalNetworkId(entity.getOriginalNetworkId());
-        event.setServiceId(entity.getServiceId());
-        event.setDuration(entity.getDuration());
-        event.setRunningStatus(entity.getRunningStatus());
-        event.setFreeAccess(entity.getFreeAccess());
-        event.setPresentEvent(entity.getPresentEvent());
-        event.setScheduleEvent(entity.getScheduleEvent());
+        event.setTitle(StrUtil.nullToDefault(entity.getEventName(), "未定义事件"));
+        event.setDescription(StrUtil.nullToEmpty(entity.getEventDescription()));
+        event.setEventId(NumberUtil.nullToZero(entity.getEventId()));
+        event.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        event.setOriginalNetworkId(NumberUtil.nullToZero(entity.getOriginalNetworkId()));
+        event.setServiceId(NumberUtil.nullToZero(entity.getServiceId()));
+        event.setDuration(NumberUtil.nullToZero(entity.getDuration()));
+        event.setRunningStatus(NumberUtil.nullToZero(entity.getRunningStatus()));
+        event.setFreeAccess(entity.getFreeAccess() == Boolean.TRUE);
+        event.setPresentEvent(entity.getPresentEvent() == Boolean.TRUE);
+        event.setScheduleEvent(entity.getScheduleEvent() == Boolean.TRUE);
 
         if (entity.getStartTime() != null)
         {
             event.setStartTime(entity.getStartTime().atOffset(ZoneOffset.UTC));
         }
 
-        event.setNvodTimeShiftedEvent(entity.getNvodTimeShiftedEvent());
-        event.setReferenceServiceId(entity.getReferenceServiceId());
-        event.setReferenceEventId(entity.getReferenceEventId());
+        event.setNvodTimeShiftedEvent(entity.getNvodTimeShiftedEvent() == Boolean.TRUE);
+        event.setReferenceServiceId(NumberUtil.nullToZero(entity.getReferenceServiceId()));
+        event.setReferenceEventId(NumberUtil.nullToZero(entity.getReferenceEventId()));
         return event;
     }
 
@@ -1236,7 +1233,7 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         TR290Event event = new TR290Event();
         event.setType(entity.getType());
-        event.setDescription(entity.getDescription());
+        event.setDescription(StrUtil.nullToEmpty(entity.getDescription()));
         event.setStream(entity.getStream());
         event.setPosition(entity.getPosition());
         event.setTimestamp(entity.getTimestamp()

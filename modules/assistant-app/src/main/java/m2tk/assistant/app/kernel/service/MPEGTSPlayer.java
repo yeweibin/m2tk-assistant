@@ -18,10 +18,11 @@ package m2tk.assistant.app.kernel.service;
 import com.github.kokorin.jaffree.ffmpeg.Frame;
 import com.github.kokorin.jaffree.ffmpeg.*;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.app.LargeIcons;
 import m2tk.assistant.app.ui.AssistantApp;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.util.BigEndian;
+import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
+import org.kordamp.ikonli.swing.FontIcon;
 import org.noear.solon.annotation.Component;
 
 import javax.sound.sampled.*;
@@ -250,7 +251,9 @@ public class MPEGTSPlayer
             }
         });
 
-        Image audioImage = ((ImageIcon) LargeIcons.SOUND_WAVE_128).getImage();
+        Image audioImage = FontIcon.of(FluentUiRegularMZ.SPEAKER_48, 48, UIManager.getColor("Label.foreground"))
+                                   .toImageIcon()
+                                   .getImage();
         canvasFrame.adjust(audioImage.getWidth(null), audioImage.getHeight(null));
         canvasFrame.show(audioImage);
         canvasFrame.setAlwaysOnTop(true);
