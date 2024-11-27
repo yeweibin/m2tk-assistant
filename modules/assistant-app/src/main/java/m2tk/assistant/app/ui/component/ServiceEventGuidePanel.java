@@ -126,6 +126,7 @@ public class ServiceEventGuidePanel extends JPanel
 
             serviceTree.expandPath(new TreePath(treeRoot));
             treeModel.reload();
+            eventTableModel.update(Collections.emptyList());
 
             eventRegistry = events;
             serviceList = services;

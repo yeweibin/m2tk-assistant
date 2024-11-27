@@ -30,7 +30,7 @@ public class PCRStatsTableModel extends AbstractTableModel
 {
     private List<PCRStats> data = Collections.emptyList();
 
-    private static final Icon BAD = FontIcon.of(FluentUiFilledAL.ERROR_CIRCLE_24, 20, Color.decode("#FD1D1D"));
+    private static final Icon BAD = FontIcon.of(FluentUiFilledAL.ERROR_CIRCLE_24, 20, Color.decode("#F25022"));
     private static final Icon GOOD = FontIcon.of(FluentUiFilledAL.CHECKMARK_CIRCLE_24, 20, Color.decode("#7FBA00"));
 
     private static final String[] COLUMNS = {
@@ -96,9 +96,9 @@ public class PCRStatsTableModel extends AbstractTableModel
             case 5 -> String.format("%,d ms", stats.getMinInterval() / 1000000);
             case 6 -> String.format("%,d ms", stats.getMaxInterval() / 1000000);
             case 7 -> String.format("%,d", stats.getRepetitionErrors());
-            case 8 -> Math.abs(stats.getAvgAccuracy()) > 1000 ? "溢出" : String.format("%,d ns", stats.getAvgAccuracy());
-            case 9 -> Math.abs(stats.getMinAccuracy()) > 1000 ? "溢出" : String.format("%,d ns", stats.getMinAccuracy());
-            case 10 -> Math.abs(stats.getMaxAccuracy()) > 1000 ? "溢出" : String.format("%,d ns", stats.getMaxAccuracy());
+            case 8 -> Math.abs(stats.getAvgAccuracy()) > 1000 ? "<html><font color='#F25022'>&lt;值溢出&gt;</font>" : String.format("%,d ns", stats.getAvgAccuracy());
+            case 9 -> Math.abs(stats.getMinAccuracy()) > 1000 ? "<html><font color='#F25022'>&lt;值溢出&gt;</font>" : String.format("%,d ns", stats.getMinAccuracy());
+            case 10 -> Math.abs(stats.getMaxAccuracy()) > 1000 ? "<html><font color='#F25022'>&lt;值溢出&gt;</font>" : String.format("%,d ns", stats.getMaxAccuracy());
             case 11 -> String.format("%,d", stats.getAccuracyErrors());
             default -> null;
         };

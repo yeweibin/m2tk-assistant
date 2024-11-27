@@ -61,7 +61,7 @@ public class TR290StatsTableModel extends AbstractTableModel
     private static final int ROW_RST_ERROR = 23;
     private static final int ROW_TDT_ERROR = 24;
 
-    private static final Icon BAD = FontIcon.of(FluentUiFilledAL.ERROR_CIRCLE_24, 20, Color.decode("#FD1D1D"));
+    private static final Icon BAD = FontIcon.of(FluentUiFilledAL.ERROR_CIRCLE_24, 20, Color.decode("#F25022"));
     private static final Icon GOOD = FontIcon.of(FluentUiFilledAL.CHECKMARK_CIRCLE_24, 20, Color.decode("#7FBA00"));
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 

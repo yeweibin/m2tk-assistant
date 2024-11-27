@@ -134,28 +134,8 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
-        List<SIService> serviceList = new ArrayList<>();
-        Map<SIService, List<SIEvent>> eventRegistry = new HashMap<>();
-
-        Comparator<SIService> comparator1 = (s1, s2) -> {
-            if (s1.getOriginalNetworkId() != s2.getOriginalNetworkId())
-                return Integer.compare(s1.getOriginalNetworkId(), s2.getOriginalNetworkId());
-            if (s1.getTransportStreamId() != s2.getTransportStreamId())
-                return Integer.compare(s1.getTransportStreamId(), s2.getTransportStreamId());
-            return Integer.compare(s1.getServiceId(), s2.getServiceId());
-        };
-
-        Comparator<SIEvent> comparator2 = (e1, e2) -> {
-            if (e1.getOriginalNetworkId() != e2.getOriginalNetworkId())
-                return Integer.compare(e1.getOriginalNetworkId(), e2.getOriginalNetworkId());
-            if (e1.getTransportStreamId() != e2.getTransportStreamId())
-                return Integer.compare(e1.getTransportStreamId(), e2.getTransportStreamId());
-            if (e1.getServiceId() != e2.getServiceId())
-                return Integer.compare(e1.getServiceId(), e2.getServiceId());
-            return e1.getStartTime().compareTo(e2.getStartTime());
-        };
-
-        Supplier<EPGSnapshot> query = () -> {
+        Supplier<EPGSnapshot> query = () ->
+        {
             List<SIService> services = database.listSIServices();
             Map<SIService, List<SIEvent>> events = new HashMap<>();
 
@@ -173,48 +153,6 @@ public class EPGInfoView extends JPanel implements InfoView
             snapshot.setServices(services);
             snapshot.setEvents(events);
             return snapshot;
-
-            //            List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
-//            List<SIEventEntity> events = databaseService.listEvents(currentTransaction);
-//
-//            services.stream()
-//                    .filter(service -> service.getServiceType() != 0x04 && service.getServiceType() != 0x05)
-//                    .map(service -> new SIService())
-////                    service.getTransportStreamId(),
-////                                                  service.getOriginalNetworkId(),
-////                                                  service.getServiceId(),
-////                                                  service.getServiceTypeName(),
-////                                                  service.getServiceName(),
-////                                                  service.getServiceProvider()))
-//                    .sorted(comparator1)
-//                    .forEach(serviceList::add);
-//
-//            events.stream()
-//                  .filter(event -> !event.isNvodReferenceEvent() && !event.isNvodTimeShiftedEvent())
-//                  .map(event -> new SIEvent())
-////        event.getTransportStreamId(),
-////                                            event.getOriginalNetworkId(),
-////                                            event.getServiceId(),
-////                                            event.getEventId(),
-////                                            event.getEventName(),
-////                                            event.getEventDescription(),
-////                                            event.getLanguageCode(),
-////                                            event.getStartTime(),
-////                                            event.getDuration(),
-////                                            event.getEventType().equals(SIEventEntity.TYPE_SCHEDULE),
-////                                            event.isPresentEvent()))
-//                  .sorted(comparator2)
-//                  .forEach(event -> {
-//                      SIService service = new SIService();
-////                      event.getTransportStreamId(),
-////                                                        event.getOriginalNetworkId(),
-////                                                        event.getServiceId(),
-////                                                        "数字电视业务",
-////                                                        String.format("未知业务（业务号：%d）", event.getServiceId()),
-////                                                        "未知提供商");
-//                      List<SIEvent> eventList = eventRegistry.computeIfAbsent(service, any -> new ArrayList<>());
-//                      eventList.add(event);
-//                  });
         };
 
         Consumer<EPGSnapshot> consumer = snapshot -> serviceEventGuidePanel.update(snapshot.getServices(), snapshot.getEvents());
