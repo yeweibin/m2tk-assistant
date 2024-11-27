@@ -1165,6 +1165,8 @@ public class M2TKDatabaseService implements M2TKDatabase
         multiplex.setId(entity.getId());
         multiplex.setTransportStreamId(entity.getTransportStreamId());
         multiplex.setOriginalNetworkId(entity.getOriginalNetworkId());
+        multiplex.setDeliverySystemType(entity.getDeliveryType());
+        multiplex.setTransmitFrequency(entity.getTransmitFrequency());
         return multiplex;
     }
 
@@ -1174,6 +1176,8 @@ public class M2TKDatabaseService implements M2TKDatabase
         multiplex.setId(entity.getId());
         multiplex.setTransportStreamId(entity.getTransportStreamId());
         multiplex.setOriginalNetworkId(entity.getOriginalNetworkId());
+        multiplex.setDeliverySystemType(entity.getDeliveryType());
+        multiplex.setTransmitFrequency(entity.getTransmitFrequency());
         multiplex.setNetworkId(entity.getNetworkId());
         multiplex.setNetworkName(entity.getNetworkName());
         multiplex.setActualNetwork(entity.getActualNetwork());

@@ -199,19 +199,19 @@ public class SITracer implements Tracer
                 if (cdsd.isAttachable(descriptor))
                 {
                     cdsd.attach(descriptor);
-                    multiplex.setDeliverySystemType("有线");
+                    multiplex.setDeliverySystemType("有线数字电视系统");
                     multiplex.setTransmitFrequency(DVB.translateCableFrequencyCode(cdsd.getFrequencyCode()));
                 }
                 if (sdsd.isAttachable(descriptor))
                 {
                     sdsd.attach(descriptor);
-                    multiplex.setDeliverySystemType("卫星");
+                    multiplex.setDeliverySystemType("卫星数字电视系统");
                     multiplex.setTransmitFrequency(DVB.translateSatelliteFrequencyCode(sdsd.getFrequencyCode()));
                 }
                 if (tdsd.isAttachable(descriptor))
                 {
                     tdsd.attach(descriptor);
-                    multiplex.setDeliverySystemType("地面");
+                    multiplex.setDeliverySystemType("地面数字电视系统");
                     multiplex.setTransmitFrequency(DVB.translateTerrestrialFrequencyCode(tdsd.getCentreFrequencyCode()));
                 }
             });

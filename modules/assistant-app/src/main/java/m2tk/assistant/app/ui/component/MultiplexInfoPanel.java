@@ -73,8 +73,8 @@ public class MultiplexInfoPanel extends JPanel
         TableColumnModel columnModel = table1.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 80, false);  // 序号
         ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 360, true);   // 网络名称
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 120, true);  // 传输系统
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, true);  // 传输频点
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 200, true);  // 传输系统
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 200, true);  // 传输频点
         ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 80, false);  // 原始网络号
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false);  // 传输流号
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false);  // 业务数量
@@ -82,8 +82,8 @@ public class MultiplexInfoPanel extends JPanel
         columnModel = table2.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 80, false);  // 序号
         ComponentUtil.configTableColumn(columnModel, 1, leadingRenderer, 360, true);   // 网络名称
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 120, true);  // 传输系统
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, true);  // 传输频点
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 200, true);  // 传输系统
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 200, true);  // 传输频点
         ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 80, false);  // 原始网络号
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 80, false);  // 传输流号
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 80, false);  // 业务数量
