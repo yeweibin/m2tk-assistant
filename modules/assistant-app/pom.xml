@@ -305,7 +305,7 @@
                     <mainClass>m2tk.assistant.app.AppLauncher</mainClass>
                     <icon>${project.basedir}/src/main/resources/images/app.ico</icon>
                     <appVersion>2.0.0</appVersion>
-                    <appContent>${project.basedir}/ffmpeg,${project.basedir}/plugins</appContent>
+                    <appContent>${project.basedir}/../ffmpeg,${project.basedir}/../plugins</appContent>
                     <winConsole>false</winConsole>
                     <winMenu>true</winMenu>
                     <winDirChooser>true</winDirChooser>

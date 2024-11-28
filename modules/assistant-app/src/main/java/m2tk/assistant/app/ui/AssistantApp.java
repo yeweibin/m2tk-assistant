@@ -38,6 +38,7 @@ import org.noear.solon.core.AppContext;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.io.InputStream;
 import java.util.Objects;
 
@@ -236,5 +237,34 @@ public final class AssistantApp extends SingleFrameApplication
             siTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
             siTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
         }
+    }
+
+    public int loadUserDefinedTemplates(File[] files)
+    {
+        TemplateReader reader = new TemplateReader();
+
+        int success = 0;
+        for (File file : files)
+        {
+            if (loadTemplate(reader, file))
+                success += 1;
+        }
+        return success;
+    }
+
+    private boolean loadTemplate(TemplateReader reader, File file)
+    {
+        if (file == null || !file.getName().endsWith(".xml"))
+            return false;
+
+        M2TKTemplate userTemplate = reader.parse(file);
+        if (userTemplate == null)
+            return false;
+
+        userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+        userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        log.info("加载自定义模板：{}", file);
+
+        return true;
     }
 }

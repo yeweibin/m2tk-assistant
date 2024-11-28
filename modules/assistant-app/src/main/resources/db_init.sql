@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_mpeg_program` (
   `tsid` INT NOT NULL,
   `prg_num` INT NOT NULL,
   `pmt_pid` INT NOT NULL,
-  `pcr_pid` INT DEFAULT -1 NOT NULL,
+  `pcr_pid` INT DEFAULT 8191 NOT NULL,
   `pmt_version` INT DEFAULT -1 NOT NULL,
   `is_free_access` BOOLEAN DEFAULT TRUE NOT NULL
 );

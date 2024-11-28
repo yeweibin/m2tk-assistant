@@ -27,7 +27,6 @@ import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
-import m2tk.assistant.app.Global;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
 import m2tk.assistant.app.ui.dialog.AboutDialog;
 import m2tk.assistant.app.ui.dialog.SourceHistoryDialog;
@@ -62,9 +61,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.IntConsumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -146,41 +143,47 @@ public class MainViewController
             @Override
             protected ExtensionFactory createExtensionFactory()
             {
-                return new SingletonExtensionFactory(this);
+                return new SingletonExtensionFactory(this,
+                                                     Tracer.class.getName(),
+                                                     InfoView.class.getName());
             }
         };
 
         pluginManager.loadPlugins();
         pluginManager.startPlugins();
 
-        tracers = pluginManager.getExtensions(Tracer.class);
-        infoViews = pluginManager.getExtensions(InfoView.class);
+        tracers = new ArrayList<>();
+        infoViews = new ArrayList<>();
         coreInfoViews = new ArrayList<>();
         pluggedInfoViews = new ArrayList<>();
-        Set<String> pluggedViewSet = new HashSet<>();
 
-        List<PluginWrapper> plugins = pluginManager.getPlugins();
+        List<?> internalExtensions = pluginManager.getExtensions((String) null);
+        for (Object extension : internalExtensions)
+        {
+            if (extension instanceof Tracer tracer)
+            {
+                tracers.add(tracer);
+            }
+            if (extension instanceof InfoView view)
+            {
+                if (view instanceof LogsView lv)
+                    logsView = lv;
+                else
+                    coreInfoViews.add(view);
+                infoViews.add(view);
+                view.setupApplication(frameView.getApplication());
+            }
+        }
+
+        List<PluginWrapper> plugins = pluginManager.getStartedPlugins();
         for (PluginWrapper plugin : plugins)
         {
             List<InfoView> extViews = pluginManager.getExtensions(InfoView.class, plugin.getPluginId());
             for (InfoView view : extViews)
             {
+                infoViews.add(view);
                 pluggedInfoViews.add(view);
-                pluggedViewSet.add(view.getClass().getName());
-            }
-        }
-
-        for (InfoView view : infoViews)
-        {
-            view.setupApplication(frameView.getApplication());
-
-            if (view instanceof LogsView)
-            {
-                logsView = (LogsView) view;
-            } else
-            {
-                if (!pluggedViewSet.contains(view.getClass().getName()))
-                    coreInfoViews.add(view);
+                view.setupApplication(frameView.getApplication());
             }
         }
     }
@@ -767,7 +770,7 @@ public class MainViewController
             File[] files = fileChooser.getSelectedFiles();
             if (files.length > 0)
             {
-                int count = Global.loadUserDefinedTemplates(files);
+                int count = AssistantApp.getInstance().loadUserDefinedTemplates(files);
                 if (count == files.length)
                 {
                     JOptionPane.showMessageDialog(frameView.getFrame(), "加载成功");

@@ -31,10 +31,12 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import java.awt.*;
 
 @Extension(ordinal = 10)
 public class EBInfoView extends JPanel implements InfoView
 {
+    private Application application;
     private EBSectionDatagramPanel sectionDatagramPanel;
     private EventBus bus;
     private M2TKDatabase database;
@@ -56,6 +58,7 @@ public class EBInfoView extends JPanel implements InfoView
     @Override
     public void setupApplication(Application application)
     {
+        this.application = application;
     }
 
     @Override
@@ -70,7 +73,7 @@ public class EBInfoView extends JPanel implements InfoView
     @Override
     public void setupMenu(JMenu menu)
     {
-        JMenuItem item = new JMenuItem("应急广播");
+        JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
         item.addActionListener(e -> {
             if (bus != null)
@@ -97,7 +100,7 @@ public class EBInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.SOUND_SOURCE_24, 20, UIManager.getColor("Label.foreground"));
+        return FontIcon.of(FluentUiRegularMZ.MEGAPHONE_24, 20, Color.decode("#F25022"));
     }
 
     @Subscribe

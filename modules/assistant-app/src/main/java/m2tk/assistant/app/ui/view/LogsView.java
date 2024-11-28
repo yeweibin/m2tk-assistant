@@ -25,7 +25,6 @@ import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.util.ListModelOutputStream;
 import m2tk.assistant.app.util.TextListLogAppender;
 import net.miginfocom.swing.MigLayout;
-import org.jdesktop.application.Application;
 import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
@@ -51,26 +50,14 @@ public class LogsView extends JPanel implements InfoView
         list.setDragEnabled(false);
         list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        JScrollPane scrollPane = new JScrollPane(list);
-        scrollPane.putClientProperty("FlatLaf.style",
-                                     """
-                                     borderWidth: 0;
-                                     focusWidth: 0; innerFocusWidth: 0.5; innerOutlineWidth: 0.5;
-                                     """);
-
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(new JScrollPane(list), BorderLayout.CENTER);
         ComponentUtil.setTitledBorder(panel, "日志");
 
         setLayout(new MigLayout("fill"));
         add(panel, "center, grow");
 
         TextListLogAppender.setStaticOutputStream(new ListModelOutputStream(model));
-    }
-
-    @Override
-    public void setupApplication(Application application)
-    {
     }
 
     @Override

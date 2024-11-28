@@ -1145,6 +1145,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         program.setId(entity.getId());
         program.setProgramNumber(NumberUtil.nullToZero(entity.getProgramNumber()));
         program.setTransportStreamId(NumberUtil.nullToZero(entity.getTransportStreamId()));
+        program.setPcrPid(NumberUtil.nullToZero(entity.getPcrPid()));
         program.setPmtPid(NumberUtil.nullToZero(entity.getPmtPid()));
         program.setPmtVersion(NumberUtil.nullToZero(entity.getPmtVersion()));
         program.setFreeAccess(entity.getFreeAccess() == Boolean.TRUE);

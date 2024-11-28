@@ -25,6 +25,7 @@ import m2tk.assistant.api.domain.*;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.api.presets.StreamTypes;
+import m2tk.assistant.app.ui.AssistantApp;
 import m2tk.assistant.app.ui.component.CASystemInfoPanel;
 import m2tk.assistant.app.ui.component.ProgramInfoPanel;
 import m2tk.assistant.app.ui.component.StreamInfoPanel;
@@ -263,11 +264,10 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'流{}'，类型：{}", selectedStream.getStreamPid(), selectedStream.getDescription());
 
-//        RxChannel channel = ProtocolManager.openRxChannel(Global.getLatestSourceUrl());
-//        if (videoPid != 0x1FFF)
-//            AssistantApp.getInstance().playVideo(Global.getLatestSourceUrl(), videoPid);
-//        else
-//            AssistantApp.getInstance().playAudio(Global.getLatestSourceUrl(), audioPid);
+        if (videoPid != 0x1FFF)
+            AssistantApp.getInstance().playVideo(currentSource.getUri(), videoPid);
+        else
+            AssistantApp.getInstance().playAudio(currentSource.getUri(), audioPid);
     }
 
     private void playProgram()
@@ -302,7 +302,7 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'{}'，视频PID：{}，音频PID：{}", programName, videoPid, audioPid);
 
-//        AssistantApp.getInstance().playProgram(Global.getLatestSourceUrl(), selectedProgram.getProgramNumber());
+        AssistantApp.getInstance().playProgram(currentSource.getUri(), selectedProgram.getProgramNumber());
     }
 
     private void filterPrivateSection()
