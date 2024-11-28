@@ -85,6 +85,7 @@ public class MainViewController
     private volatile boolean willQuit;
 
     private EventBus bus;
+    private M2TKDatabase database;
     private StreamAnalyzer analyzer;
     private Timer timer;
 
@@ -186,8 +187,6 @@ public class MainViewController
 
     private void createAndSetupMenu()
     {
-        int iconSize = 20;
-
         MenuItemBuilder builder = new MenuItemBuilder();
 
         JMenu menuOps = new JMenu("操作(O)");
@@ -427,6 +426,7 @@ public class MainViewController
         actionMap.get("openThirdPartyInputSource").setEnabled(true);
 
         this.bus = bus;
+        this.database = database;
         this.analyzer = application.getStreamAnalyzer();
     }
 
@@ -705,10 +705,10 @@ public class MainViewController
     }
 
     @Action
-    public void drawNetworkDiagram()
+    public void drawNetworkGraph()
     {
         ComponentUtil.setWaitingMouseCursor(frameView.getRootPane(), true);
-        DrawNetworkDiagramTask task = new DrawNetworkDiagramTask(frameView.getApplication());
+        DrawNetworkDiagramTask task = new DrawNetworkDiagramTask(frameView.getApplication(), database);
         task.execute();
     }
 

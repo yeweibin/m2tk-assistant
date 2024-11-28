@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.task;
 
 import guru.nidi.graphviz.attribute.GraphAttr;
@@ -27,6 +26,8 @@ import guru.nidi.graphviz.model.Factory;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.LinkSource;
 import guru.nidi.graphviz.model.Node;
+import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIMultiplex;
 import m2tk.assistant.api.domain.SINetwork;
 import m2tk.assistant.api.domain.SIService;
@@ -35,8 +36,6 @@ import m2tk.assistant.app.ui.dialog.NetworkGraphDialog;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import org.jdesktop.application.Application;
 import org.jdesktop.application.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -46,11 +45,12 @@ import static guru.nidi.graphviz.attribute.Rank.RankDir.LEFT_TO_RIGHT;
 import static guru.nidi.graphviz.model.Factory.between;
 import static guru.nidi.graphviz.model.Factory.port;
 
+@Slf4j
 public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
 {
-    private static final Logger log = LoggerFactory.getLogger(DrawNetworkDiagramTask.class);
+    private final M2TKDatabase databaseService;
 
-    static class Context
+    private static class Context
     {
         Map<String, Node> nodes = new HashMap<>();
         Map<String, Object> siObjects = new HashMap<>();
@@ -58,9 +58,10 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
         Map<String, List<String>> muxSrvMap = new HashMap<>();
     }
 
-    public DrawNetworkDiagramTask(Application application)
+    public DrawNetworkDiagramTask(Application application, M2TKDatabase database)
     {
         super(application);
+        databaseService = database;
     }
 
     @Override
@@ -80,7 +81,7 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
     {
         log.warn("构建网络结构图时异常：{}", cause.getMessage(), cause);
         ComponentUtil.setWaitingMouseCursor(getContext().getFocusOwner().getRootPane(), false);
-        JOptionPane.showMessageDialog(getContext().getFocusOwner(),
+        JOptionPane.showMessageDialog(null,
                                       "运行时异常，无法创建网络结构图",
                                       "请注意",
                                       JOptionPane.ERROR_MESSAGE);
@@ -89,21 +90,20 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
 
     private BufferedImage query()
     {
-//        DatabaseService databaseService = Global.getDatabaseService();
-//        List<SINetworkEntity> networks = databaseService.listNetworks(currentTransaction);
-//        List<SIMultiplexEntity> multiplexes = databaseService.listMultiplexes(currentTransaction);
-//        List<SIServiceEntity> services = databaseService.listServices(currentTransaction);
-//
-//        Context context = new Context();
-//        createNodes(context, networks, multiplexes, services);
-//        List<LinkSource> linkSources = createNodeLinks(context);
+        List<SINetwork> networks = databaseService.listSINetworks();
+        List<SIMultiplex> multiplexes = databaseService.listSIMultiplexes();
+        List<SIService> services = databaseService.listSIServices();
+
+        Context context = new Context();
+        createNodes(context, networks, multiplexes, services);
+        List<LinkSource> linkSources = createNodeLinks(context);
 
         Graph graph = Factory.graph("NetworkGraph")
                              .directed()
                              .graphAttr().with(Rank.dir(LEFT_TO_RIGHT), Rank.sep(1.75), GraphAttr.splines(GraphAttr.SplineMode.LINE))
                              .nodeAttr().with("fontname", "SimSun")
                              .linkAttr().with("class", "link-class")
-                             .with(List.of());
+                             .with(linkSources);
 
         Graphviz.useEngine(new GraphvizV8Engine());
 
@@ -135,8 +135,8 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
             String muxKey = parentKey(service);
             context.muxSrvMap.computeIfAbsent(muxKey, k -> new ArrayList<>()).add(srvKey);
 
-//            if (service.isActualTransportStream())
-//                actualTransportStreamId = service.getTransportStreamId();
+            if (service.isActualTransportStream())
+                actualTransportStreamId = service.getTransportStreamId();
         }
 
         for (SIMultiplex multiplex : multiplexes)
@@ -210,13 +210,13 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
                                                               service.getServiceId())),
                                     Records.rec(String.format(" service_id：%d %n " +
                                                               " transport_stream_id：%d %n " +
-                                                              " original_network_id：%d",
+                                                              " original_network_id：%d ",
                                                               service.getServiceId(),
                                                               service.getTransportStreamId(),
                                                               service.getOriginalNetworkId())),
                                     Records.rec(String.format(" 业务类型：0x%02X（%s） %n " +
                                                               " 业务名称：%s %n " +
-                                                              " 提供商：%s",
+                                                              " 提供商：%s ",
                                                               service.getServiceType(),
                                                               ServiceTypes.name(service.getServiceType()),
                                                               (service.getName() == null) ? "未命名业务" : service.getName(),
@@ -224,7 +224,7 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
                                     Records.rec(String.format(" 运行状态：%s %n " +
                                                               " 条件接收：%s %n " +
                                                               " 发送EIT_P/f：%s %n " +
-                                                              " 发送EIT_Sch：%s",
+                                                              " 发送EIT_Sch：%s ",
                                                               service.getRunningStatus(),
                                                               service.isFreeAccess() ? "否" : "是",
                                                               service.isPresentFollowingEITEnabled() ? "是" : "否",
