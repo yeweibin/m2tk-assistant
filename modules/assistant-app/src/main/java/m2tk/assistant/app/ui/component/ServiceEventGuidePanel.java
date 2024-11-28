@@ -21,6 +21,7 @@ import m2tk.assistant.api.domain.SIService;
 import m2tk.assistant.app.ui.model.EventTableModel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
+import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
 import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 
@@ -93,8 +94,8 @@ public class ServiceEventGuidePanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 160, false);  // 开始时间
         ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 120, false);  // 持续时间
         ComponentUtil.configTableColumn(columnModel, 4, centeredRenderer, 60, false); // 语言
-        ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 160, true); // 标题
-        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 160, true); // 描述
+        ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 320, true); // 标题
+        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 640, true); // 描述
 
         setLayout(new MigLayout("insets 2", "[360!][grow]", "grow"));
         add(new JScrollPane(serviceTree), "grow");
@@ -154,7 +155,7 @@ public class ServiceEventGuidePanel extends JPanel
     private Map<String, List<SIService>> groupServices(Collection<SIService> services)
     {
         return services.stream()
-                       .collect(groupingBy(service -> String.format("TS ID: %d（Net ID: %d）",
+                       .collect(groupingBy(service -> String.format("传输流：%d（原始网络：%d）",
                                                                     service.getTransportStreamId(),
                                                                     service.getOriginalNetworkId()),
                                            TreeMap::new, toList()));
@@ -177,9 +178,9 @@ public class ServiceEventGuidePanel extends JPanel
 
     class ServiceTreeCellRenderer extends DefaultTreeCellRenderer
     {
-        final Color LIGHT_BLUE = Color.decode("#89D3DF");
-        final Icon TRANSMIT = FontIcon.of(FluentUiFilledMZ.SOUND_SOURCE_24, 20, LIGHT_BLUE);
-        final Icon TELEVISION = FontIcon.of(FluentUiFilledMZ.MOVIES_AND_TV_24, 20, LIGHT_BLUE);
+        final Icon TRANSMIT = FontIcon.of(FluentUiFilledMZ.SOUND_SOURCE_24, 20, Color.decode("#89D3DF"));
+        final Icon LOCK = FontIcon.of(FluentUiFilledAL.LOCK_24, 20, Color.decode("#F25022"));
+        final Icon UNLOCK = FontIcon.of(FluentUiFilledMZ.UNLOCK_24, 20, Color.decode("#7FBA00"));
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
@@ -190,15 +191,15 @@ public class ServiceEventGuidePanel extends JPanel
             {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                 Object userObject = node.getUserObject();
-                if (userObject instanceof String name)
+                if (userObject instanceof String groupName)
                 {
-                    setText(name);
+                    setText(groupName);
                     setIcon(TRANSMIT);
                 }
                 if (userObject instanceof SIService service)
                 {
                     setText(service.getName());
-                    setIcon(TELEVISION);
+                    setIcon(service.isFreeAccess() ? UNLOCK : LOCK);
                 }
             }
 
