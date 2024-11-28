@@ -2499,7 +2499,7 @@
                     <Field name="local_time_offset" length="4" encoding="nibbles">
                         <FieldPresentation>
                             <Prefix str="本地时间偏移量"/>
-                            <Format str="lowercase"/>
+                            <Format str="compact,lowercase"/>
                         </FieldPresentation>
                     </Field>
                     <Field name="time_of_change" length="40" encoding="bslbf">
@@ -2513,7 +2513,7 @@
                     <Field name="next_time_offset" length="4" encoding="nibbles">
                         <FieldPresentation>
                             <Prefix str="下一时间偏移"/>
-                            <Format str="lowercase"/>
+                            <Format str="compact,lowercase"/>
                         </FieldPresentation>
                     </Field>
                 </Body>
