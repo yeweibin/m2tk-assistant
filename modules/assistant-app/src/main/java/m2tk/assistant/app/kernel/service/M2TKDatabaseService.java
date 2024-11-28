@@ -52,6 +52,8 @@ public class M2TKDatabaseService implements M2TKDatabase
     private SqlUtils sqlUtils;
 
     @Db("m2tk")
+    private PreferenceEntityMapper preferenceMapper;
+    @Db("m2tk")
     private StreamSourceEntityMapper sourceMapper;
     @Db("m2tk")
     private ElementaryStreamEntityMapper streamMapper;
@@ -97,6 +99,8 @@ public class M2TKDatabaseService implements M2TKDatabase
     private SINetworkViewEntityMapper networkViewMapper;
     @Db("m2tk")
     private SIMultiplexViewEntityMapper multiplexViewMapper;
+    @Db("m2tk")
+    private FilteringHookEntityMapper hookMapper;
 
     @Init
     public void initDatabase()
@@ -119,6 +123,35 @@ public class M2TKDatabaseService implements M2TKDatabase
             log.error("无法初始化数据库：{}", ex.getMessage(), ex);
             throw new KernelException(ErrorCode.DATABASE_ERROR, "无法初始化数据库");
         }
+    }
+
+    @Override
+    public void setPreference(String key, String value)
+    {
+        Objects.requireNonNull(key);
+        PreferenceEntity entity = new PreferenceEntity();
+        entity.setName(key);
+        entity.setValue(StrUtil.nullToEmpty(value));
+        if (preferenceMapper.updateById(entity) == 0)
+            preferenceMapper.insert(entity);
+    }
+
+    @Override
+    public String getPreference(String key, String defaultValue)
+    {
+        Objects.requireNonNull(key);
+        PreferenceEntity entity = preferenceMapper.selectById(key);
+        return (entity == null || entity.getValue().isEmpty())
+               ? defaultValue
+               : entity.getValue();
+    }
+
+    @Override
+    public List<String> listPreferenceKeys()
+    {
+        return preferenceMapper.selectObjs(Wrappers.lambdaQuery(PreferenceEntity.class)
+                                                   .select(PreferenceEntity::getName)
+                                                   .orderByAsc(PreferenceEntity::getName));
     }
 
     @Override
@@ -290,18 +323,10 @@ public class M2TKDatabaseService implements M2TKDatabase
         LambdaQueryWrapper<ElementaryStreamEntity> query = Wrappers.lambdaQuery(ElementaryStreamEntity.class)
                                                                    .gt(presentOnly, ElementaryStreamEntity::getPacketCount, 0)
                                                                    .orderByAsc(ElementaryStreamEntity::getPid);
-        List<ElementaryStream> streams = streamMapper.selectList(query)
-                                                     .stream()
-                                                     .map(this::convert)
-                                                     .collect(Collectors.toList());
-        if (!streams.isEmpty())
-        {
-            ElementaryStream last = streams.getLast();
-            if (last.getStreamPid() == 8191)
-                last.setDescription("空包");
-        }
-
-        return streams;
+        return streamMapper.selectList(query)
+                           .stream()
+                           .map(this::convert)
+                           .collect(Collectors.toList());
     }
 
     @Override
@@ -971,8 +996,7 @@ public class M2TKDatabaseService implements M2TKDatabase
     public Map<String, List<PrivateSection>> getPrivateSectionGroups()
     {
         LambdaQueryWrapper<PrivateSectionEntity> query = Wrappers.lambdaQuery(PrivateSectionEntity.class)
-                                                                 .orderByAsc(PrivateSectionEntity::getPosition)
-                                                                 .last("limit 1000");
+                                                                 .orderByAsc(PrivateSectionEntity::getPosition);
         return sectionMapper.selectList(query)
                             .stream()
                             .map(this::convert)
@@ -984,8 +1008,7 @@ public class M2TKDatabaseService implements M2TKDatabase
     {
         LambdaQueryWrapper<PrivateSectionEntity> query = Wrappers.lambdaQuery(PrivateSectionEntity.class)
                                                                  .eq(StrUtil.isNotEmpty(tag), PrivateSectionEntity::getTag, tag)
-                                                                 .orderByAsc(PrivateSectionEntity::getPosition)
-                                                                 .last("limit 1000");
+                                                                 .orderByAsc(PrivateSectionEntity::getPosition);
         return sectionMapper.selectList(query)
                             .stream()
                             .map(this::convert)
@@ -1040,19 +1063,29 @@ public class M2TKDatabaseService implements M2TKDatabase
     @Override
     public void addFilteringHook(FilteringHook hook)
     {
-
+        FilteringHookEntity entity = new FilteringHookEntity();
+        entity.setSourceUri(hook.getSourceUri());
+        entity.setSubjectType(hook.getSubjectType());
+        entity.setSubjectPid(hook.getSubjectPid());
+        entity.setSubjectTableId(hook.getSubjectTableId());
+        hookMapper.insert(entity);
     }
 
     @Override
-    public void removeFilteringHook(long hookRef)
+    public void clearFilteringHooks(String sourceUri)
     {
-
+        hookMapper.delete(Wrappers.lambdaQuery(FilteringHookEntity.class)
+                                  .eq(FilteringHookEntity::getSourceUri, sourceUri));
     }
 
     @Override
-    public List<FilteringHook> listFilteringHooks()
+    public List<FilteringHook> listFilteringHooks(String sourceUri)
     {
-        return List.of();
+        return hookMapper.selectList(Wrappers.lambdaQuery(FilteringHookEntity.class)
+                                             .eq(FilteringHookEntity::getSourceUri, sourceUri))
+                         .stream()
+                         .map(this::convert)
+                         .collect(Collectors.toList());
     }
 
     private StreamSource convert(StreamSourceEntity entity)
@@ -1320,5 +1353,16 @@ public class M2TKDatabaseService implements M2TKDatabase
         version.setPosition(entity.getPosition());
         version.setTag(entity.getTag());
         return version;
+    }
+
+    private FilteringHook convert(FilteringHookEntity entity)
+    {
+        FilteringHook hook = new FilteringHook();
+        hook.setId(entity.getId());
+        hook.setSourceUri(entity.getSourceUri());
+        hook.setSubjectType(entity.getSubjectType());
+        hook.setSubjectPid(entity.getSubjectPid());
+        hook.setSubjectTableId(entity.getSubjectTableId());
+        return hook;
     }
 }

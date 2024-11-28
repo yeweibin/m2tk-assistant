@@ -15,6 +15,7 @@
  */
 package m2tk.assistant.app.ui.tracer;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
 import m2tk.assistant.api.domain.StreamSource;
@@ -22,8 +23,6 @@ import m2tk.mpeg2.decoder.ExtendedSectionDecoder;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxPayload;
 import org.pf4j.Extension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,11 +30,10 @@ import java.util.Set;
 /**
  * 应急广播（地面）数据段分析器
  */
+@Slf4j
 @Extension
 public class EBTSectionTracer implements Tracer
 {
-    private static final Logger log = LoggerFactory.getLogger(EBTSectionTracer.class);
-
     private static final int MAX_SECTION_COUNT = 1000;
 
     private final ExtendedSectionDecoder decoder;

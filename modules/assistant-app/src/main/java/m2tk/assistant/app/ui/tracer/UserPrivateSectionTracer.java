@@ -13,39 +13,40 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.tracer;
 
+import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
+import m2tk.assistant.api.domain.FilteringHook;
 import m2tk.assistant.api.domain.StreamSource;
 import m2tk.mpeg2.decoder.SectionDecoder;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxPayload;
 import org.pf4j.Extension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-//@Extension
+@Slf4j
+@Extension
 public class UserPrivateSectionTracer implements Tracer
 {
-    private static final Logger log = LoggerFactory.getLogger(UserPrivateSectionTracer.class);
-
+    private final List<FilteringHook> hooks;
     private final Set<Integer> targetStreams;
     private final SectionDecoder sec;
-    private final int limitPerStream;
     private final int[] secCounts;
+    private int limitPerStream;
 
     private M2TKDatabase databaseService;
 
-    public UserPrivateSectionTracer(Collection<Integer> streams, int maxSectionCountPerStream)
+    public UserPrivateSectionTracer()
     {
-        targetStreams = new HashSet<>(streams);
-        limitPerStream = maxSectionCountPerStream;
+        hooks = new ArrayList<>();
+        targetStreams = new HashSet<>();
         sec = new SectionDecoder();
         secCounts = new int[8192];
     }
@@ -55,33 +56,60 @@ public class UserPrivateSectionTracer implements Tracer
     {
         databaseService = database;
 
-        for (Integer pid : targetStreams)
+        hooks.clear();
+        targetStreams.clear();
+
+        List<FilteringHook> allHooks = database.listFilteringHooks(source.getUri());
+        for (FilteringHook hook : allHooks)
         {
-            demux.registerSectionChannel(pid, this::processSection);
+            if (StrUtil.equalsIgnoreCase(hook.getSubjectType(), "section"))
+            {
+                hooks.add(hook);
+                targetStreams.add(hook.getSubjectPid());
+            }
         }
+        for (Integer pid : targetStreams)
+            demux.registerSectionChannel(pid, this::processSection);
+
+        String limit = database.getPreference("filtering.section.limit-per-stream", "1000");
+        limitPerStream = Math.max(Math.min(Integer.parseInt(limit), 10000), 0);
     }
 
     private void processSection(TSDemuxPayload payload)
     {
-        if (!targetStreams.contains(payload.getStreamPID()) ||
-            payload.getType() != TSDemuxPayload.Type.SECTION ||
+        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
             !sec.isAttachable(payload.getEncoding()))
             return;
 
+        sec.attach(payload.getEncoding());
         int pid = payload.getStreamPID();
-        if (secCounts[pid] >= limitPerStream)
+        int tableId = sec.getTableID();
+
+        boolean filterable = false;
+        for (FilteringHook hook : hooks)
         {
-            int drops = (int) (limitPerStream * 0.25);
-            databaseService.removePrivateSections("UserPrivate", pid);
-            secCounts[pid] = 0;
-            log.info("丢弃位于流 {} 上的 {} 个私有分段记录", pid, drops);
+            if ((hook.getSubjectPid() == pid) &&
+                (hook.getSubjectTableId() == tableId || hook.getSubjectTableId() == -1))
+            {
+                filterable = true;
+                break;
+            }
         }
 
-        databaseService.addPrivateSection("UserPrivate",
-                                          payload.getStreamPID(),
-                                          payload.getFinishPacketCounter(),
-                                          payload.getEncoding().getBytes());
+        if (filterable)
+        {
+            if (secCounts[pid] >= limitPerStream)
+            {
+                databaseService.removePrivateSections("UserPrivate", pid);
+                secCounts[pid] = 0;
+                log.info("过滤记录达到上限，丢弃位于流 {} 上的私有分段记录", pid);
+            }
 
-        secCounts[pid] += 1;
+            databaseService.addPrivateSection("UserPrivate",
+                                              payload.getStreamPID(),
+                                              payload.getFinishPacketCounter(),
+                                              payload.getEncoding().getBytes());
+            secCounts[pid] += 1;
+        }
     }
 }

@@ -13,18 +13,27 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.api.domain;
+package m2tk.assistant.app.kernel.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
-public class SIBouquet
+@TableName("t_filtering_hook")
+public class FilteringHookEntity
 {
-    private int id;
+    @TableId(type = IdType.AUTO)
+    private Integer id;
 
-    private String name;
-    private int bouquetId;
-    private List<SIServiceLocator> services;
+    @TableField("source_uri")
+    private String sourceUri;
+    @TableField("subject_type")
+    private String subjectType;
+    @TableField("subject_pid")
+    private Integer subjectPid;
+    @TableField("subject_table_id")
+    private Integer subjectTableId;
 }

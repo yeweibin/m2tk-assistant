@@ -18,7 +18,6 @@ package m2tk.assistant.app.ui.view;
 import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
@@ -39,15 +38,15 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -65,6 +64,7 @@ public class StreamInfoView extends JPanel implements InfoView
     private JPopupMenu programContextMenu;
     private JMenuItem programContextMenuItem;
 
+    private transient StreamSource currentSource;
     private transient ElementaryStream selectedStream;
     private transient MPEGProgram selectedProgram;
     private EventBus bus;
@@ -73,7 +73,6 @@ public class StreamInfoView extends JPanel implements InfoView
     private volatile long lastTimestamp;
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
 
-    @Data
     private static class StreamInfoSnapshot
     {
         private StreamSource source;
@@ -108,6 +107,9 @@ public class StreamInfoView extends JPanel implements InfoView
         programInfoPanel = new ProgramInfoPanel();
         casInfoPanel = new CASystemInfoPanel();
 
+        streamInfoPanel.setPopupListener(this::showStreamPopupMenu);
+        programInfoPanel.setPopupListener(this::showProgramPopupMenu);
+
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.add("节目", programInfoPanel);
         tabbedPane.add("条件接收", casInfoPanel);
@@ -120,6 +122,16 @@ public class StreamInfoView extends JPanel implements InfoView
         setLayout(new MigLayout("", "[grow][400!]", "[grow]"));
         add(streamInfoPanel, "grow");
         add(psiInfoPanel, "grow");
+
+        addComponentListener(new ComponentAdapter()
+        {
+            @Override
+            public void componentShown(ComponentEvent e)
+            {
+                if (database != null)
+                    queryStreamSnapshot();
+            }
+        });
     }
 
     @Override
@@ -183,15 +195,10 @@ public class StreamInfoView extends JPanel implements InfoView
             StreamInfoSnapshot snapshot = new StreamInfoSnapshot();
 
             // 查询快照数据
-            snapshot.setSource(database.getCurrentStreamSource());
-            snapshot.setStreams(database.listElementaryStreams(true));
-            snapshot.setPrograms(database.listMPEGPrograms());
-            snapshot.setCaStreams(database.listCASystemStreams());
-
-            Map<Integer, ElementaryStream> streamRegistry = snapshot.getStreams()
-                                                                    .stream()
-                                                                    .collect(Collectors.toMap(ElementaryStream::getStreamPid,
-                                                                                              Function.identity()));
+            snapshot.source = database.getCurrentStreamSource();
+            snapshot.streams = database.listElementaryStreams(true);
+            snapshot.programs = database.listMPEGPrograms();
+            snapshot.caStreams = database.listCASystemStreams();
 
             Map<String, SIService> serviceMap = database.listSIServices()
                                                         .stream()
@@ -199,7 +206,7 @@ public class StreamInfoView extends JPanel implements InfoView
                                                                                                 service.getTransportStreamId(),
                                                                                                 service.getServiceId()),
                                                                        service -> service));
-            for (MPEGProgram program : snapshot.getPrograms())
+            for (MPEGProgram program : snapshot.programs)
             {
                 String key = String.format("%d.%d", program.getTransportStreamId(), program.getProgramNumber());
                 String programName = Optional.ofNullable(serviceMap.get(key))
@@ -207,19 +214,21 @@ public class StreamInfoView extends JPanel implements InfoView
                                              .orElse(null);
                 program.setName(programName);
             }
-            snapshot.getPrograms().sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
+            snapshot.programs.sort(Comparator.comparingInt(MPEGProgram::getProgramNumber));
 
-            snapshot.getSource().setStreamCount(snapshot.getStreams().size());
-            snapshot.getSource().setProgramCount(snapshot.getPrograms().size());
+            snapshot.source.setStreamCount(snapshot.streams.size());
+            snapshot.source.setProgramCount(snapshot.programs.size());
 
             return snapshot;
         };
 
         Consumer<StreamInfoSnapshot> consumer = snapshot ->
         {
-            streamInfoPanel.updateStreamInfo(snapshot.getSource(), snapshot.streams);
+            streamInfoPanel.updateStreamInfo(snapshot.source, snapshot.streams);
             programInfoPanel.updateProgramList(snapshot.programs);
             casInfoPanel.updateStreamList(snapshot.caStreams);
+
+            currentSource = snapshot.source;
         };
 
         AsyncQueryTask<StreamInfoSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
@@ -306,11 +315,7 @@ public class StreamInfoView extends JPanel implements InfoView
             return;
         }
 
-        int pid = 0x1FFF;
-        if (StreamTypes.CATEGORY_DATA.equals(selectedStream.getCategory()) ||
-            StreamTypes.CATEGORY_USER_PRIVATE.equals(selectedStream.getCategory()))
-            pid = selectedStream.getStreamPid();
-
+        int pid = selectedStream.getStreamPid();
         if (pid == 0x1FFF)
         {
             String text = String.format("不支持的流类型：%s", selectedStream.getDescription());
@@ -321,7 +326,12 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("添加私有段过滤器：'流{}'，类型：{}", selectedStream.getStreamPid(), selectedStream.getDescription());
 
-//        Global.addUserPrivateSectionStreams(List.of(pid));
+        FilteringHook hook = new FilteringHook();
+        hook.setSourceUri(currentSource.getUri());
+        hook.setSubjectType("section");
+        hook.setSubjectPid(selectedStream.getStreamPid());
+        hook.setSubjectTableId(-1);
+        database.addFilteringHook(hook);
     }
 
 
@@ -334,7 +344,7 @@ public class StreamInfoView extends JPanel implements InfoView
         boolean playable = !stream.isScrambled() &&
                            StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO);
         boolean filterable = !stream.isScrambled() &&
-                             StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_DATA, StreamTypes.CATEGORY_USER_PRIVATE);
+                             !StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO);
         streamContextMenuItem1.setVisible(playable);
         streamContextMenuItem2.setVisible(filterable);
 

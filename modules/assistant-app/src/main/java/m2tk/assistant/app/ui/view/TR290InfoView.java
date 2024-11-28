@@ -33,6 +33,8 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -59,6 +61,16 @@ public class TR290InfoView extends JPanel implements InfoView
 
         setLayout(new MigLayout("fill"));
         add(tr290StatsPanel, "center, grow");
+
+        addComponentListener(new ComponentAdapter()
+        {
+            @Override
+            public void componentShown(ComponentEvent e)
+            {
+                if (database != null)
+                    queryTR290Events();
+            }
+        });
     }
 
     @Override

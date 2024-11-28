@@ -20,6 +20,7 @@ import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
 import m2tk.assistant.api.domain.ElementaryStream;
 import m2tk.assistant.api.domain.StreamSource;
+import m2tk.assistant.api.presets.StreamTypes;
 import m2tk.mpeg2.ProgramClockReference;
 import m2tk.mpeg2.decoder.TransportPacketDecoder;
 import m2tk.mpeg2.decoder.element.AdaptationFieldDecoder;
@@ -77,6 +78,10 @@ public class StreamTracer implements Tracer
                 frameSize = -1;
                 avgBitrate = 0;
                 t0 = System.currentTimeMillis();
+
+                databaseService.updateElementaryStreamUsage(8191,
+                                                            StreamTypes.CATEGORY_NULL_PACKET,
+                                                            "空包");
             } else
             {
                 saveToDatabase();

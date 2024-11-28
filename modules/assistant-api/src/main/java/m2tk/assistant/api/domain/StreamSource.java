@@ -21,14 +21,17 @@ import lombok.Data;
 public class StreamSource
 {
     private int id;
+
     private String name;
     private String uri;
+
     private int frameSize;
     private int transportStreamId;
     private int bitrate;
     private long packetCount;
     private int streamCount;
     private int programCount;
+
     private boolean scrambled;
     private boolean ecmPresent;
     private boolean emmPresent;

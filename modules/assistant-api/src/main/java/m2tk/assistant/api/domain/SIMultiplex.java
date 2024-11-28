@@ -23,6 +23,7 @@ import java.util.List;
 public class SIMultiplex
 {
     private int id;
+
     private int networkId;
     private int transportStreamId;
     private int originalNetworkId;

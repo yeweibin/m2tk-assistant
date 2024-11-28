@@ -15,6 +15,7 @@
  */
 package m2tk.assistant.app.ui.component;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.domain.PrivateSection;
 import m2tk.assistant.app.ui.template.PlainTreeNodeSyntaxPresenter;
 import m2tk.assistant.app.ui.template.SectionDecoder;
@@ -35,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.*;
 
+@Slf4j
 public class SectionDatagramPanel extends JPanel
 {
     private DefaultTreeModel model;
@@ -90,9 +92,9 @@ public class SectionDatagramPanel extends JPanel
 
     private void constructTreeSkeleton()
     {
-        groupPSI = new DefaultMutableTreeNode("PSI");
-        groupSI = new DefaultMutableTreeNode("SI");
-        groupPrivate = new DefaultMutableTreeNode("UserPrivate");
+        groupPSI = new DefaultMutableTreeNode("MPEG标准段");
+        groupSI = new DefaultMutableTreeNode("DVB标准段");
+        groupPrivate = new DefaultMutableTreeNode("自定义私有段");
 
         groupPAT = new DefaultMutableTreeNode("PAT");
         groupCAT = new DefaultMutableTreeNode("CAT");
@@ -474,21 +476,28 @@ public class SectionDatagramPanel extends JPanel
 
         for (PrivateSection section : sections)
         {
-            Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
-            if (node == null)
-                continue;
+            try
+            {
+                Encoding encoding = Encoding.wrap(section.getEncoding());
+                SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+                if (node == null)
+                    continue;
 
-            node.setUserObject(String.format("%s @ 0x%X",
-                                             node.getUserObject(),
-                                             section.getPid()));
+                node.setUserObject(String.format("[PS]%s @ 0x%X:%d",
+                                                 node.getUserObject(),
+                                                 section.getPid(),
+                                                 section.getPosition()));
 
-            DefaultMutableTreeNode group = (syntax.getGroup() == null)
-                                           ? defaultGroup
-                                           : namedGroups.computeIfAbsent(syntax.getGroup(),
-                                                                         any -> new DefaultMutableTreeNode(syntax.getGroup()));
-            group.add(node);
+                DefaultMutableTreeNode group = (syntax.getGroup() == null)
+                                               ? defaultGroup
+                                               : namedGroups.computeIfAbsent(syntax.getGroup(),
+                                                                             any -> new DefaultMutableTreeNode(syntax.getGroup()));
+                group.add(node);
+            } catch (Exception ex)
+            {
+                log.error("解码私有段时出现异常：{}", ex.getMessage());
+            }
         }
 
         List<String> groupNames = new ArrayList<>(namedGroups.keySet());
@@ -539,11 +548,16 @@ public class SectionDatagramPanel extends JPanel
         {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+            String text = (String) node.getUserObject();
+            boolean isPrivateSectionNode = text.startsWith("[PS]");
+            if (isPrivateSectionNode)
+                text = text.substring("[PS]".length());
+            setText(text);
+            setToolTipText(text);
+
             if (value == root)
                 return this;
-
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-            setToolTipText((String) node.getUserObject());
 
             if (root.isNodeChild(node))
                 setIcon(GROUP);
@@ -560,7 +574,8 @@ public class SectionDatagramPanel extends JPanel
                      groupEITPFActual.isNodeChild(node) || groupEITPFOther.isNodeChild(node) ||
                      groupEITScheduleActual.isNodeChild(node) || groupEITScheduleOther.isNodeChild(node) ||
                      groupTDT.isNodeChild(node) ||
-                     groupTOT.isNodeChild(node))
+                     groupTOT.isNodeChild(node) ||
+                     isPrivateSectionNode)
                 setIcon(DATA);
             else
                 setIcon(DOT);

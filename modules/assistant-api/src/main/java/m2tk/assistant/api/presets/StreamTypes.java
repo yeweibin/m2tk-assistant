@@ -60,6 +60,7 @@ public final class StreamTypes
     public static final String CATEGORY_AUDIO = "Audio";
     public static final String CATEGORY_DATA = "Data";
     public static final String CATEGORY_USER_PRIVATE = "UserPrivate";
+    public static final String CATEGORY_NULL_PACKET = "NullPacket";
 
     public static void register(int type, String description)
     {

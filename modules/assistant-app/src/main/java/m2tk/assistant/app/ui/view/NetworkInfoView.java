@@ -18,7 +18,6 @@ package m2tk.assistant.app.ui.view;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
@@ -37,6 +36,8 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,7 +58,6 @@ public class NetworkInfoView extends JPanel implements InfoView
     private volatile long lastTimestamp;
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
 
-    @Data
     private static class NetworkInfoSnapshot
     {
         private List<SIMultiplex> tsActualNetwork;
@@ -86,6 +86,16 @@ public class NetworkInfoView extends JPanel implements InfoView
         add(networkTimePanel, "span 2, grow, wrap");
         add(multiplexInfoPanel, "span 1 2, grow");
         add(serviceInfoPanel, "span 1 2, grow");
+
+        addComponentListener(new ComponentAdapter()
+        {
+            @Override
+            public void componentShown(ComponentEvent e)
+            {
+                if (database != null)
+                    queryNetworkSnapshot();
+            }
+        });
     }
 
     @Override
@@ -156,26 +166,20 @@ public class NetworkInfoView extends JPanel implements InfoView
     {
         Supplier<NetworkInfoSnapshot> query = () ->
         {
-            List<SIMultiplex> tsActualNW = database.getActualNetworkMultiplexes();
-            List<SIMultiplex> tsOtherNW = database.getOtherNetworkMultiplexes();
-            List<SIService> srvActualTS = database.getActualTransportStreamServices();
-            List<SIService> srvOtherTS = database.getOtherTransportStreamServices();
-            OffsetDateTime timestamp = database.getLastTimestamp();
-
             NetworkInfoSnapshot snapshot = new NetworkInfoSnapshot();
-            snapshot.setTsActualNetwork(tsActualNW);
-            snapshot.setTsOtherNetwork(tsOtherNW);
-            snapshot.setSrvActualTS(srvActualTS);
-            snapshot.setSrvOtherTS(srvOtherTS);
-            snapshot.setLatestNetworkTime(timestamp);
+            snapshot.tsActualNetwork = database.getActualNetworkMultiplexes();
+            snapshot.tsOtherNetwork = database.getOtherNetworkMultiplexes();
+            snapshot.srvActualTS = database.getActualTransportStreamServices();
+            snapshot.srvOtherTS = database.getOtherTransportStreamServices();
+            snapshot.latestNetworkTime = database.getLastTimestamp();
             return snapshot;
         };
 
         Consumer<NetworkInfoSnapshot> consumer = snapshot ->
         {
-            multiplexInfoPanel.updateMultiplexes(snapshot.getTsActualNetwork(), snapshot.getTsOtherNetwork());
-            serviceInfoPanel.updateServices(snapshot.getSrvActualTS(), snapshot.getSrvOtherTS());
-            networkTimePanel.updateTime(snapshot.getLatestNetworkTime());
+            multiplexInfoPanel.updateMultiplexes(snapshot.tsActualNetwork, snapshot.tsOtherNetwork);
+            serviceInfoPanel.updateServices(snapshot.srvActualTS, snapshot.srvOtherTS);
+            networkTimePanel.updateTime(snapshot.latestNetworkTime);
         };
 
         AsyncQueryTask<NetworkInfoSnapshot> task = new AsyncQueryTask<>(application, query, consumer);

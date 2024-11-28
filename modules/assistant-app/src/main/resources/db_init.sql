@@ -21,6 +21,7 @@ DROP TABLE IF EXISTS `PUBLIC`.`t_transport_packet`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_program_elementary_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_bouquet_service_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_multiplex_service_mapping`;
+DROP TABLE IF EXISTS `PUBLIC`.`t_filtering_hook`;
 
 CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_preference` (
   `key` VARCHAR(100) NOT NULL PRIMARY KEY,
@@ -233,6 +234,14 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_bouquet_service_mapping` (
   `original_network_id` INT NOT NULL,
   `transport_stream_id` INT NOT NULL,
   `service_id` INT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_filtering_hook` (
+  `id` INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  `source_uri` VARCHAR(1000) NOT NULL,
+  `subject_type` VARCHAR(100) NOT NULL,
+  `subject_pid` INT DEFAULT -1 NOT NULL,
+  `subject_table_id` INT DEFAULT -1 NOT NULL
 );
 
 CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_pcr_stat` AS

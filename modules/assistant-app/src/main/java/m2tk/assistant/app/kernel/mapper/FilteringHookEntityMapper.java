@@ -13,18 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.api.domain;
+package m2tk.assistant.app.kernel.mapper;
 
-import lombok.Data;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import m2tk.assistant.app.kernel.entity.FilteringHookEntity;
 
-import java.util.List;
-
-@Data
-public class SIBouquet
+public interface FilteringHookEntityMapper extends BaseMapper<FilteringHookEntity>
 {
-    private int id;
-
-    private String name;
-    private int bouquetId;
-    private List<SIServiceLocator> services;
 }

@@ -39,7 +39,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -59,7 +58,6 @@ public class StreamInfoPanel extends JPanel
     private JCheckBox checkNITActualPresent, checkNITOtherPresent, checkSDTActualPresent, checkSDTOtherPresent;
     private JCheckBox checkEITPnfActualPresent, checkEITPnfOtherPresent, checkEITSchActualPresent, checkEITSchOtherPresent;
     private JCheckBox checkBATPresent, checkTDTPresent, checkTOTPresent;
-    private StreamSource currentSource;
     private StreamInfoTableModel model;
 
     private transient BiConsumer<MouseEvent, ElementaryStream> popupListener;
@@ -186,22 +184,30 @@ public class StreamInfoPanel extends JPanel
             @Override
             public void mouseReleased(MouseEvent e)
             {
-                if (e.isPopupTrigger())
+                if (e.isPopupTrigger() && popupListener != null)
                 {
                     int selectedRow = table.getSelectedRow();
                     int rowAtPoint = table.rowAtPoint(e.getPoint());
-                    if (selectedRow == rowAtPoint && popupListener != null)
+
+                    if (rowAtPoint == -1)
+                        return;
+                    if (rowAtPoint != selectedRow)
                     {
-                        try
-                        {
-                            popupListener.accept(e, model.getRow(table.convertRowIndexToModel(selectedRow)));
-                        } catch (Exception ignored)
-                        {
-                        }
+                        table.getSelectionModel().setSelectionInterval(table.convertRowIndexToModel(rowAtPoint),
+                                                                       table.convertRowIndexToModel(rowAtPoint));
+                        selectedRow = rowAtPoint;
+                    }
+                    try
+                    {
+                        popupListener.accept(e, model.getRow(table.convertRowIndexToModel(selectedRow)));
+                    } catch (Exception ignored)
+                    {
                     }
                 }
             }
         });
+
+        ToolTipManager.sharedInstance().registerComponent(table);
 
         DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
         centeredRenderer.setHorizontalAlignment(SwingConstants.CENTER);
@@ -237,33 +243,6 @@ public class StreamInfoPanel extends JPanel
     public void setPopupListener(BiConsumer<MouseEvent, ElementaryStream> listener)
     {
         popupListener = listener;
-    }
-
-    public void resetStreamInfo()
-    {
-        fieldSourceName.setText("");
-        fieldBitrates.setText("0 bps / 0 bps / 0 bps");
-        fieldPacketCount.setText("0");
-        fieldStreamCount.setText("0");
-        fieldProgramCount.setText("0");
-        fieldTransportStreamId.setText("未知");
-
-        radio188Bytes.setSelected(true);
-        radioClear.setSelected(true);
-        List<JCheckBox> checkboxes = List.of(checkECMPresent, checkEMMPresent,
-                                             checkPATPresent, checkPMTPresent, checkCATPresent,
-                                             checkNITActualPresent, checkNITOtherPresent, checkSDTActualPresent, checkSDTOtherPresent,
-                                             checkEITPnfActualPresent, checkEITPnfOtherPresent, checkEITSchActualPresent, checkEITSchOtherPresent,
-                                             checkBATPresent, checkTDTPresent, checkTOTPresent);
-        for (JCheckBox checkbox : checkboxes)
-            checkbox.setSelected(false);
-
-        maxSourceBitrate = 0;
-        minSourceBitrate = Integer.MAX_VALUE;
-        insSourceBitrate = 0;
-
-        currentSource = null;
-        model.update(Collections.emptyList());
     }
 
     public void updateStreamInfo(StreamSource source, List<ElementaryStream> streams)
@@ -319,7 +298,6 @@ public class StreamInfoPanel extends JPanel
                 checkEMMPresent.setSelected(true);
         }
 
-        currentSource = source;
         model.update(streams);
     }
 
@@ -428,6 +406,7 @@ public class StreamInfoPanel extends JPanel
             {
                 Double ratio = (Double) value;
                 progressBar.setValue((int) (100 * ratio));
+                setToolTipText(String.format("%.2f", ratio));
             } catch (Exception ex)
             {
                 log.error("转译带宽占比表示时异常：{}, ex：{}", value, ex.getMessage());
@@ -533,6 +512,23 @@ public class StreamInfoPanel extends JPanel
                 labelPCR.setVisible(Boolean.parseBoolean(states[2]));
                 labelTSE.setVisible(Boolean.parseBoolean(states[3]));
                 labelCCE.setVisible(Boolean.parseBoolean(states[4]));
+
+                String category = switch (states[0])
+                {
+                    case StreamTypes.CATEGORY_DATA -> "数据";
+                    case StreamTypes.CATEGORY_VIDEO -> "视频";
+                    case StreamTypes.CATEGORY_AUDIO -> "音频";
+                    case StreamTypes.CATEGORY_USER_PRIVATE -> "用户私有格式";
+                    default -> "未知";
+                };
+                setToolTipText(String.format("""
+                                             流类型：%s
+                                             携带PCR：%s
+                                             加扰：%s
+                                             """,
+                                             category,
+                                             Boolean.parseBoolean(states[2]) ? "是" : "否",
+                                             Boolean.parseBoolean(states[1]) ? "是" : "否"));
             } catch (Exception ex)
             {
                 log.error("转译流状态表示时异常：{}", value);

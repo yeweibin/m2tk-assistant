@@ -23,6 +23,12 @@ import java.util.Map;
 
 public interface M2TKDatabase
 {
+    void setPreference(String key, String value);
+
+    String getPreference(String key, String defaultValue);
+
+    List<String> listPreferenceKeys();
+
     StreamSource beginDiagnosis(String source, String uri);
 
     void updateStreamSourceStats(int sourceRef, int bitrate, int frameSize, boolean scrambled, long packetCount, int streamCount);
@@ -151,7 +157,7 @@ public interface M2TKDatabase
 
     void addFilteringHook(FilteringHook hook);
 
-    void removeFilteringHook(long hookRef);
+    void clearFilteringHooks(String sourceUri);
 
-    List<FilteringHook> listFilteringHooks();
+    List<FilteringHook> listFilteringHooks(String sourceUri);
 }

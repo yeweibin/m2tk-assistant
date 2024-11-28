@@ -21,6 +21,7 @@ import lombok.Data;
 public class SINetwork
 {
     private int id;
+
     private String name;
     private int networkId;
     private int multiplexCount;

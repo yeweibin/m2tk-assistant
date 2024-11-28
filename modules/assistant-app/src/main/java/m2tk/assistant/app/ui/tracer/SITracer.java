@@ -13,9 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.tracer;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
 import m2tk.assistant.api.domain.*;
@@ -33,8 +33,6 @@ import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxEvent;
 import m2tk.multiplex.TSDemuxPayload;
 import org.pf4j.Extension;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -42,11 +40,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Extension
 public class SITracer implements Tracer
 {
-    private static final Logger log = LoggerFactory.getLogger(SITracer.class);
-
     private final SectionDecoder sec;
     private final NITSectionDecoder nit;
     private final BATSectionDecoder bat;

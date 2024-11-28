@@ -20,7 +20,8 @@ import lombok.Data;
 @Data
 public class FilteringHook
 {
-    private long ref;
+    private int id;
+
     private String sourceUri;
     private String subjectType;
     private int subjectPid;

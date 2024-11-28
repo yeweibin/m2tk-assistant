@@ -13,9 +13,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package m2tk.assistant.app.ui.tracer;
 
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;
 import m2tk.assistant.api.domain.StreamSource;
@@ -41,6 +41,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
 
+@Slf4j
 @Extension
 public class TR290Tracer2 implements Tracer
 {
@@ -233,26 +234,32 @@ public class TR290Tracer2 implements Tracer
 
     private void calculateBitrate(TSDemuxPayload payload)
     {
-        long currPcrValue = readPCR();
-        long currPct = payload.getStartPacketCounter();
-        if (currPcrValue == -1)
-            return; // 无PCR
-
-        if (pcrPid == -1)
+        try
         {
-            // 遇到的第一个PCR
-            pcrPid = payload.getStreamPID();
-            lastPcrValue = currPcrValue;
-            lastPcrPct = currPct;
-            return;
-        }
+            long currPcrValue = readPCR();
+            long currPct = payload.getStartPacketCounter();
+            if (currPcrValue == -1)
+                return; // 无PCR
 
-        if (pcrPid == payload.getStreamPID())
+            if (pcrPid == -1)
+            {
+                // 遇到的第一个PCR
+                pcrPid = payload.getStreamPID();
+                lastPcrValue = currPcrValue;
+                lastPcrPct = currPct;
+                return;
+            }
+
+            if (pcrPid == payload.getStreamPID())
+            {
+                int bitrate = ProgramClockReference.bitrate(lastPcrValue, currPcrValue, currPct - lastPcrPct);
+                avgBitrate = (avgBitrate == 0) ? bitrate : (avgBitrate + bitrate) / 2;
+                lastPcrValue = currPcrValue;
+                lastPcrPct = currPct;
+            }
+        } catch (Exception ex)
         {
-            int bitrate = ProgramClockReference.bitrate(lastPcrValue, currPcrValue, currPct - lastPcrPct);
-            avgBitrate = (avgBitrate == 0) ? bitrate : (avgBitrate + bitrate) / 2;
-            lastPcrValue = currPcrValue;
-            lastPcrPct = currPct;
+            log.warn("{}", ex.getMessage());
         }
     }
 
