@@ -968,10 +968,22 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
+    public Map<String, List<PrivateSection>> getPrivateSectionGroups()
+    {
+        LambdaQueryWrapper<PrivateSectionEntity> query = Wrappers.lambdaQuery(PrivateSectionEntity.class)
+                                                                 .orderByAsc(PrivateSectionEntity::getPosition)
+                                                                 .last("limit 1000");
+        return sectionMapper.selectList(query)
+                            .stream()
+                            .map(this::convert)
+                            .collect(Collectors.groupingBy(PrivateSection::getTag));
+    }
+
+    @Override
     public Map<Integer, List<PrivateSection>> getPrivateSectionGroups(String tag)
     {
         LambdaQueryWrapper<PrivateSectionEntity> query = Wrappers.lambdaQuery(PrivateSectionEntity.class)
-                                                                 .eq(PrivateSectionEntity::getTag, tag)
+                                                                 .eq(StrUtil.isNotEmpty(tag), PrivateSectionEntity::getTag, tag)
                                                                  .orderByAsc(PrivateSectionEntity::getPosition)
                                                                  .last("limit 1000");
         return sectionMapper.selectList(query)

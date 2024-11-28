@@ -19,9 +19,11 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.domain.PrivateSection;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.SectionDatagramPanel;
+import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
@@ -31,14 +33,21 @@ import org.pf4j.Extension;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Extension(ordinal = 7)
 public class DatagramView extends JPanel implements InfoView
 {
+    private Application application;
     private SectionDatagramPanel sectionDatagramPanel;
     private EventBus bus;
     private M2TKDatabase database;
-    private volatile long transactionId;
+
+    private volatile long lastTimestamp;
+    private final long MIN_QUERY_INTERVAL_MILLIS = 500;
 
     public DatagramView()
     {
@@ -48,7 +57,7 @@ public class DatagramView extends JPanel implements InfoView
     private void initUI()
     {
         sectionDatagramPanel = new SectionDatagramPanel();
-        ComponentUtil.setTitledBorder(sectionDatagramPanel, "PSI/SI");
+        ComponentUtil.setTitledBorder(sectionDatagramPanel, "数据段结构");
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
@@ -57,6 +66,7 @@ public class DatagramView extends JPanel implements InfoView
     @Override
     public void setupApplication(Application application)
     {
+        this.application = application;
     }
 
     @Override
@@ -103,24 +113,22 @@ public class DatagramView extends JPanel implements InfoView
     }
 
     @Subscribe
-    public void onRefreshInfoViewControlEvent(RefreshInfoViewEvent event)
+    public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
-        queryDatagrams();
+        long t1 = System.currentTimeMillis();
+        if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
+        {
+            queryDatagrams();
+            lastTimestamp = System.currentTimeMillis();
+        }
     }
 
     private void queryDatagrams()
     {
-//        long currentTransaction = Math.max(transactionId, Global.getLatestTransactionId());
-//        if (currentTransaction == -1)
-//            return;
-//
-//        Supplier<Map<String, List<PrivateSectionEntity>>> query = () ->
-//                Global.getDatabaseService().getSectionGroups(currentTransaction);
-//
-//        Consumer<Map<String, List<PrivateSectionEntity>>> consumer = sectionDatagramPanel::update;
-//
-//        AsyncQueryTask<Map<String, List<PrivateSectionEntity>>> task =
-//                new AsyncQueryTask<>(frameView.getApplication(), query, consumer);
-//        task.execute();
+        Supplier<Map<String, List<PrivateSection>>> query = database::getPrivateSectionGroups;
+        Consumer<Map<String, List<PrivateSection>>> consumer = sectionDatagramPanel::update;
+
+        AsyncQueryTask<Map<String, List<PrivateSection>>> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
     }
 }

@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.PrivateSection;
 import m2tk.assistant.app.ui.template.PlainTreeNodeSyntaxPresenter;
 import m2tk.assistant.app.ui.template.SectionDecoder;
 import m2tk.assistant.app.ui.template.SyntaxField;
-import m2tk.assistant.app.SmallIcons;
 import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
+import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
+import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -149,26 +150,6 @@ public class SectionDatagramPanel extends JPanel
         model.reload();
     }
 
-    public void reset()
-    {
-        groupPAT.removeAllChildren();
-        groupCAT.removeAllChildren();
-        groupPMT.removeAllChildren();
-        groupBAT.removeAllChildren();
-        groupNITActual.removeAllChildren();
-        groupNITOther.removeAllChildren();
-        groupSDTActual.removeAllChildren();
-        groupSDTOther.removeAllChildren();
-        groupEITPFActual.removeAllChildren();
-        groupEITPFOther.removeAllChildren();
-        groupEITScheduleActual.removeAllChildren();
-        groupEITScheduleOther.removeAllChildren();
-        groupTDT.removeAllChildren();
-        groupTOT.removeAllChildren();
-        groupPrivate.removeAllChildren();
-        model.reload();
-    }
-
     private void addPATSectionNodes(List<PrivateSection> sections)
     {
         groupPAT.removeAllChildren();
@@ -181,7 +162,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 传输流号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -204,7 +185,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x]",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X]",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number")));
@@ -226,7 +207,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 节目号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 节目号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -249,7 +230,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务群号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务群号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -272,7 +253,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 网络号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 网络号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -295,7 +276,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 网络号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 网络号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -318,7 +299,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 传输流号：%d，原始网络号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d，原始网络号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -342,7 +323,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 传输流号：%d，原始网络号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d，原始网络号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -366,7 +347,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -389,7 +370,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -412,7 +393,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -435,7 +416,7 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02x, S:%02x, L:%02x] 业务号：%d",
+            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
                                              getFieldValue(syntax, "version_number"),
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number"),
@@ -542,6 +523,11 @@ public class SectionDatagramPanel extends JPanel
 
     class SectionDatagramTreeCellRenderer extends DefaultTreeCellRenderer
     {
+        final Icon GROUP = FontIcon.of(FluentUiFilledAL.GROUP_24, 20, Color.decode("#89D3DF"));
+        final Icon TABLE = FontIcon.of(FluentUiFilledMZ.TABLE_24, 20, Color.decode("#89D3DF"));
+        final Icon DATA = FontIcon.of(FluentUiFilledMZ.TEXT_BULLET_LIST_TREE_24, 20, Color.decode("#89D3DF"));
+        final Icon DOT = FontIcon.of(FluentUiFilledAL.CIRCLE_SMALL_24, 20, Color.decode("#89D3DF"));
+
         @Override
         public Component getTreeCellRendererComponent(JTree tree,
                                                       Object value,
@@ -560,11 +546,24 @@ public class SectionDatagramPanel extends JPanel
             setToolTipText((String) node.getUserObject());
 
             if (root.isNodeChild(node))
-                setIcon(SmallIcons.NODE_TREE);
-            else if (groupPrivate.isNodeChild(node))
-                setIcon(SmallIcons.TABLE);
+                setIcon(GROUP);
+            else if (groupPSI.isNodeChild(node) ||
+                     groupSI.isNodeChild(node) ||
+                     groupPrivate.isNodeChild(node))
+                setIcon(TABLE);
+            else if (groupPAT.isNodeChild(node) ||
+                     groupCAT.isNodeChild(node) ||
+                     groupPMT.isNodeChild(node) ||
+                     groupBAT.isNodeChild(node) ||
+                     groupNITActual.isNodeChild(node) || groupNITOther.isNodeChild(node) ||
+                     groupSDTActual.isNodeChild(node) || groupSDTOther.isNodeChild(node) ||
+                     groupEITPFActual.isNodeChild(node) || groupEITPFOther.isNodeChild(node) ||
+                     groupEITScheduleActual.isNodeChild(node) || groupEITScheduleOther.isNodeChild(node) ||
+                     groupTDT.isNodeChild(node) ||
+                     groupTOT.isNodeChild(node))
+                setIcon(DATA);
             else
-                setIcon(SmallIcons.DOT_ORANGE);
+                setIcon(DOT);
 
             return this;
         }

@@ -25,6 +25,10 @@ import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.app.kernel.KernelEntry;
 import m2tk.assistant.app.kernel.service.MPEGTSPlayer;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
+import m2tk.assistant.app.ui.template.DescriptorDecoder;
+import m2tk.assistant.app.ui.template.SectionDecoder;
+import m2tk.assistant.app.ui.template.TemplateReader;
+import m2tk.assistant.app.ui.template.definition.M2TKTemplate;
 import org.jdesktop.application.FrameView;
 import org.jdesktop.application.SingleFrameApplication;
 import org.jdesktop.application.Task;
@@ -92,6 +96,7 @@ public final class AssistantApp extends SingleFrameApplication
             @Override
             protected SolonApp doInBackground()
             {
+                loadInternalTemplates();
                 return Solon.start(KernelEntry.class, cmdArgs);
             }
 
@@ -213,6 +218,23 @@ public final class AssistantApp extends SingleFrameApplication
         } catch (Throwable any)
         {
             log.warn("无法加载字体：{}", file);
+        }
+    }
+
+    private void loadInternalTemplates()
+    {
+        TemplateReader reader = new TemplateReader();
+        M2TKTemplate psiTemplate = reader.parse(getClass().getResource("/template/PSITemplate.xml"));
+        if (psiTemplate != null)
+        {
+            psiTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+            psiTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        }
+        M2TKTemplate siTemplate = reader.parse(getClass().getResource("/template/SITemplate.xml"));
+        if (siTemplate != null)
+        {
+            siTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+            siTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
         }
     }
 }
