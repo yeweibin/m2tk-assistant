@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.util;
 
 import javax.swing.*;
@@ -21,7 +20,7 @@ import javax.swing.event.RowSorterEvent;
 import javax.swing.event.RowSorterListener;
 import java.util.List;
 
-public class ThreeStateRowSorterListener implements RowSorterListener
+public final class ThreeStateRowSorterListener implements RowSorterListener
 {
     private int counter = 0;
     private int lastColumn = -1;

@@ -17,12 +17,7 @@
 package m2tk.assistant.ext.component;
 
 import m2tk.assistant.api.domain.PrivateSection;
-//import m2tk.assistant.app.ui.builder.section.EBCertAuthSectionNodeBuilder;
-//import m2tk.assistant.app.ui.builder.section.EBConfigureSectionNodeBuilder;
-//import m2tk.assistant.app.ui.builder.section.EBContentSectionNodeBuilder;
-//import m2tk.assistant.app.ui.builder.section.EBIndexSectionNodeBuilder;
 import m2tk.assistant.ext.SmallIcons;
-//import m2tk.encoding.Encoding;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -30,7 +25,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 

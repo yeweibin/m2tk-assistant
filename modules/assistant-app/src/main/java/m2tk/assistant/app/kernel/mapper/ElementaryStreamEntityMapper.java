@@ -30,7 +30,7 @@ public interface ElementaryStreamEntityMapper extends BaseMapper<ElementaryStrea
             WHERE
              `pid` = #{pid}
             """)
-    int accumulateStreamErrors(@Param("pid") int pid,
-                               @Param("tse") int transportErrors,
-                               @Param("cce") int continuityErrors);
+    void accumulateStreamErrors(@Param("pid") int pid,
+                                @Param("tse") int transportErrors,
+                                @Param("cce") int continuityErrors);
 }

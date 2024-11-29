@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.util;
 
 import javax.swing.*;
@@ -23,7 +22,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-public class ListModelOutputStream extends OutputStream
+public final class ListModelOutputStream extends OutputStream
 {
     private final DefaultListModel<String> model;
     private final ByteArrayOutputStream buffer;

@@ -17,7 +17,7 @@ package m2tk.assistant.app.ui.util;
 
 import javax.swing.*;
 
-public class MenuItemBuilder
+public final class MenuItemBuilder
 {
     private JMenuItem item;
 
