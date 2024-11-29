@@ -32,6 +32,7 @@ import m2tk.assistant.app.ui.dialog.AboutDialog;
 import m2tk.assistant.app.ui.dialog.SourceHistoryDialog;
 import m2tk.assistant.app.ui.dialog.SystemInfoDialog;
 import m2tk.assistant.app.ui.event.ClearLogsEvent;
+import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.task.DrawNetworkDiagramTask;
 import m2tk.assistant.app.ui.util.ButtonBuilder;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -62,7 +63,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -157,6 +160,7 @@ public class MainViewController
         coreInfoViews = new ArrayList<>();
         pluggedInfoViews = new ArrayList<>();
 
+        // 加载classpath里的扩展
         List<?> internalExtensions = pluginManager.getExtensions((String) null);
         for (Object extension : internalExtensions)
         {
@@ -175,11 +179,16 @@ public class MainViewController
             }
         }
 
+        // 加载插件中的扩展
         List<PluginWrapper> plugins = pluginManager.getStartedPlugins();
         for (PluginWrapper plugin : plugins)
         {
-            List<InfoView> extViews = pluginManager.getExtensions(InfoView.class, plugin.getPluginId());
-            for (InfoView view : extViews)
+            String pluginId = plugin.getPluginId();
+            List<Tracer> pluginTracers = pluginManager.getExtensions(Tracer.class, pluginId);
+            tracers.addAll(pluginTracers);
+
+            List<InfoView> pluginViews = pluginManager.getExtensions(InfoView.class, pluginId);
+            for (InfoView view : pluginViews)
             {
                 infoViews.add(view);
                 pluggedInfoViews.add(view);
@@ -404,7 +413,6 @@ public class MainViewController
         initFileChooserCurrentDirectory();
 
         timer = new Timer(TIMER_INTERVAL_MILLIS, e -> refreshInfoViews());
-        timer.start();
 
         actionMap.get("openLocalFile").setEnabled(false);
         actionMap.get("openMulticast").setEnabled(false);
@@ -460,6 +468,7 @@ public class MainViewController
     @Action
     public void exitApp()
     {
+        timer.stop();
         willQuit = true;
         frameView.getApplication().exit();
     }
@@ -523,7 +532,6 @@ public class MainViewController
 
             if (!started)
             {
-                actionMap.get("reopenInput").setEnabled(false);
                 JOptionPane.showMessageDialog(frameView.getFrame(),
                                               "无法启动分析器，详情请查看日志",
                                               "程序异常",
@@ -536,6 +544,7 @@ public class MainViewController
                 actionMap.get("openThirdPartyInputSource").setEnabled(false);
                 actionMap.get("reopenInput").setEnabled(false);
                 actionMap.get("stopAnalyzer").setEnabled(true);
+                timer.start();
             }
         }
     }
@@ -569,7 +578,6 @@ public class MainViewController
 
         if (!started)
         {
-            actionMap.get("reopenInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(),
                                           "无法启动分析器，详情请查看日志",
                                           "程序异常",
@@ -581,6 +589,7 @@ public class MainViewController
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
+            timer.start();
         }
     }
 
@@ -604,7 +613,6 @@ public class MainViewController
 
         if (!started)
         {
-            actionMap.get("reopenInput").setEnabled(false);
             JOptionPane.showMessageDialog(frameView.getFrame(),
                                           "无法启动分析器，详情请查看日志",
                                           "程序异常",
@@ -616,43 +624,52 @@ public class MainViewController
             actionMap.get("openThirdPartyInputSource").setEnabled(false);
             actionMap.get("reopenInput").setEnabled(false);
             actionMap.get("stopAnalyzer").setEnabled(true);
+            timer.start();
         }
     }
 
     @Action
     public void reopenInput()
     {
-        SourceHistoryDialog dialog = new SourceHistoryDialog(frameView.getFrame());
-        ComponentUtil.setPreferSizeAndLocateToCenter(dialog, 0.5, 0.4);
+        Supplier<List<String>> query = () -> database.listStreamSourceUris();
+        Consumer<List<String>> consumer = sourceUris ->
+        {
+            SourceHistoryDialog dialog = new SourceHistoryDialog(frameView.getFrame());
+            ComponentUtil.setPreferSizeAndLocateToCenter(dialog, 0.5, 0.4);
 
-        String source = dialog.selectFromSourceHistory();
-        if (source == null)
-            return;
+            String source = dialog.selectFromSourceHistory(sourceUris);
+            if (source == null)
+                return;
 
-        boolean started = false;
-        try
-        {
-            started = analyzer.start(source, tracers, this::onAnalyzerStopped);
-        } catch (Exception ex)
-        {
-            log.error("重启分析时异常：{}", ex.getMessage());
-        }
+            boolean started = false;
+            try
+            {
+                started = analyzer.start(source, tracers, this::onAnalyzerStopped);
+            } catch (Exception ex)
+            {
+                log.error("重启分析时异常：{}", ex.getMessage());
+            }
 
-        if (!started)
-        {
-            actionMap.get("reopenInput").setEnabled(false);
-            JOptionPane.showMessageDialog(frameView.getFrame(),
-                                          "无法启动分析器，详情请查看日志",
-                                          "程序异常",
-                                          JOptionPane.ERROR_MESSAGE);
-        } else
-        {
-            actionMap.get("openLocalFile").setEnabled(false);
-            actionMap.get("openMulticast").setEnabled(false);
-            actionMap.get("openThirdPartyInputSource").setEnabled(false);
-            actionMap.get("reopenInput").setEnabled(false);
-            actionMap.get("stopAnalyzer").setEnabled(true);
-        }
+            if (!started)
+            {
+                JOptionPane.showMessageDialog(frameView.getFrame(),
+                                              "无法启动分析器，详情请查看日志",
+                                              "程序异常",
+                                              JOptionPane.ERROR_MESSAGE);
+            } else
+            {
+                actionMap.get("openLocalFile").setEnabled(false);
+                actionMap.get("openMulticast").setEnabled(false);
+                actionMap.get("openThirdPartyInputSource").setEnabled(false);
+                actionMap.get("reopenInput").setEnabled(false);
+                actionMap.get("stopAnalyzer").setEnabled(true);
+                timer.start();
+            }
+        };
+        Consumer<Throwable> failed = t -> log.error("exception: {}", t.getMessage(), t);
+
+        AsyncQueryTask<List<String>> task = new AsyncQueryTask<>(frameView.getApplication(), query, consumer, failed);
+        task.execute();
     }
 
     @Action
@@ -808,6 +825,7 @@ public class MainViewController
         actionMap.get("openThirdPartyInputSource").setEnabled(true);
         actionMap.get("reopenInput").setEnabled(true);
         actionMap.get("stopAnalyzer").setEnabled(false);
+        timer.stop();
     }
 
     private boolean isCorrectMulticastAddress(String input)

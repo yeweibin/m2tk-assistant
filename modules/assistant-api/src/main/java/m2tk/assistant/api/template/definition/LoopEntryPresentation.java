@@ -13,16 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template.definition;
 
-package m2tk.assistant.app.ui.template.definition;
-
-public class DescriptorFieldDefinition implements SyntaxFieldDefinition
+public class LoopEntryPresentation
 {
-    public static final DescriptorFieldDefinition INSTANCE = new DescriptorFieldDefinition();
+    private Label fixed;
+    private Label prefix;
 
-    @Override
-    public boolean verify()
+    public Label getFixed()
     {
-        return true;
+        return fixed;
+    }
+
+    public void setFixed(Label fixed)
+    {
+        this.fixed = fixed;
+    }
+
+    public Label getPrefix()
+    {
+        return prefix;
+    }
+
+    public void setPrefix(Label prefix)
+    {
+        this.prefix = prefix;
     }
 }

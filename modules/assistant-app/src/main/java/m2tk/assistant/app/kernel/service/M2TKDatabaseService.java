@@ -259,6 +259,15 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
+    public List<String> listStreamSourceUris()
+    {
+        LambdaQueryWrapper<StreamSourceEntity> query = Wrappers.lambdaQuery(StreamSourceEntity.class)
+                                                               .select(StreamSourceEntity::getSourceUri)
+                                                               .orderByAsc(StreamSourceEntity::getId);
+        return sourceMapper.selectObjs(query);
+    }
+
+    @Override
     public void updateElementaryStreamStats(int pid, long pktCount, long pcrCount, int bitrate, double ratio, boolean scrambled)
     {
         ElementaryStreamEntity change = new ElementaryStreamEntity();

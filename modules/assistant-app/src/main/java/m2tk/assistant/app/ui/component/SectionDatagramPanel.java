@@ -17,9 +17,9 @@ package m2tk.assistant.app.ui.component;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.domain.PrivateSection;
-import m2tk.assistant.app.ui.template.PlainTreeNodeSyntaxPresenter;
-import m2tk.assistant.app.ui.template.SectionDecoder;
-import m2tk.assistant.app.ui.template.SyntaxField;
+import m2tk.assistant.api.template.PlainTreeNodeSyntaxPresenter;
+import m2tk.assistant.api.template.SectionDecoder;
+import m2tk.assistant.api.template.SyntaxField;
 import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
 import org.kordamp.ikonli.fluentui.FluentUiFilledAL;

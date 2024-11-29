@@ -13,36 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template.definition;
 
-package m2tk.assistant.app.ui.template.definition;
-
-import java.util.List;
-
-public class UniqueKey
+public class DescriptorFieldDefinition implements SyntaxFieldDefinition
 {
-    private List<String> fields;
+    public static final DescriptorFieldDefinition INSTANCE = new DescriptorFieldDefinition();
 
-    public static UniqueKey of(String... fields)
+    @Override
+    public boolean verify()
     {
-        UniqueKey key = new UniqueKey();
-        key.setFields(List.of(fields));
-        return key;
-    }
-
-    public static UniqueKey of(List<String> fields)
-    {
-        UniqueKey key = new UniqueKey();
-        key.setFields(fields);
-        return key;
-    }
-
-    public List<String> getFields()
-    {
-        return fields;
-    }
-
-    public void setFields(List<String> fields)
-    {
-        this.fields = fields;
+        return true;
     }
 }

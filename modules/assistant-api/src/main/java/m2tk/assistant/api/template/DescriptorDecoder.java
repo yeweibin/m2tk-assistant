@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template;
 
-package m2tk.assistant.app.ui.template;
-
-import m2tk.assistant.app.ui.template.definition.*;
+import m2tk.assistant.api.template.definition.*;
 import m2tk.encoding.Encoding;
 
 import java.util.*;

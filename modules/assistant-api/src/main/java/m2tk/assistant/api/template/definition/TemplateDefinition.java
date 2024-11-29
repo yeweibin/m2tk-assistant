@@ -13,18 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template.definition;
 
-package m2tk.assistant.app.ui.template.definition;
-
-public interface SyntaxFieldDefinition
+public interface TemplateDefinition
 {
     default String type()
     {
         return getClass().getSimpleName();
-    }
-
-    default boolean verify()
-    {
-        return false;
     }
 }

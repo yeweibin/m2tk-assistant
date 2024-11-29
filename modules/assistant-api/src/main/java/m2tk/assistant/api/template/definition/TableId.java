@@ -13,31 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template.definition;
 
-package m2tk.assistant.app.ui.template.definition;
-
-public class LoopEntryPresentation
+public class TableId
 {
-    private Label fixed;
-    private Label prefix;
+    private int id;
+    private Label displayName;
 
-    public Label getFixed()
+    public int getId()
     {
-        return fixed;
+        return id;
     }
 
-    public void setFixed(Label fixed)
+    public void setId(int id)
     {
-        this.fixed = fixed;
+        this.id = id;
     }
 
-    public Label getPrefix()
+    public Label getDisplayName()
     {
-        return prefix;
+        return displayName;
     }
 
-    public void setPrefix(Label prefix)
+    public void setDisplayName(Label displayName)
     {
-        this.prefix = prefix;
+        this.displayName = displayName;
+    }
+
+    public static TableId of(int id, String name)
+    {
+        TableId tableId = new TableId();
+        tableId.setId(id);
+        tableId.setDisplayName(Label.plain(name));
+        return tableId;
     }
 }

@@ -41,6 +41,8 @@ public interface M2TKDatabase
 
     List<StreamSource> listStreamSources();
 
+    List<String> listStreamSourceUris();
+
     void updateElementaryStreamStats(int pid, long pktCount, long pcrCount, int bitrate, double ratio, boolean scrambled);
 
     void updateElementaryStreamStats(ElementaryStream stream);

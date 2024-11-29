@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package m2tk.assistant.app.ui.dialog;
 
 import javax.swing.*;
@@ -21,6 +20,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 public class SourceHistoryDialog extends JDialog
 {
@@ -34,9 +34,10 @@ public class SourceHistoryDialog extends JDialog
         setupUI(parent);
     }
 
-    public String selectFromSourceHistory()
+    public String selectFromSourceHistory(List<String> sourceUris)
     {
-//        model.addAll(Global.getSourceHistory());
+        model.clear();
+        model.addAll(sourceUris);
         setVisible(true);
         return source;
     }
@@ -48,7 +49,7 @@ public class SourceHistoryDialog extends JDialog
         dispose();
     }
 
-    private void openSource()
+    private void selectSource()
     {
         source = list.getSelectedValue();
         setVisible(false);
@@ -70,13 +71,13 @@ public class SourceHistoryDialog extends JDialog
             {
                 int clicks = e.getClickCount();
                 if (clicks > 1)
-                    openSource();
+                    selectSource();
             }
         });
         root.add(new JScrollPane(list), BorderLayout.CENTER);
 
         JButton open = new JButton("选择");
-        open.addActionListener(e -> openSource());
+        open.addActionListener(e -> selectSource());
         open.setEnabled(false);
         JButton close = new JButton("取消");
         close.addActionListener(e -> closeDialog());
@@ -106,7 +107,7 @@ public class SourceHistoryDialog extends JDialog
 
         pack();
         setModal(true);
-        setTitle("选择历史输入源");
+        setTitle("输入源历史");
         setLocationRelativeTo(parent);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         getRootPane().setDefaultButton(close);

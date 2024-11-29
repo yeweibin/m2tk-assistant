@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template;
 
-package m2tk.assistant.app.ui.template;
-
-import cn.hutool.core.util.StrUtil;
-import m2tk.assistant.app.ui.template.definition.*;
+import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.api.template.definition.*;
 import org.eaxy.Element;
 import org.eaxy.SchemaValidationException;
 import org.eaxy.Validator;
 import org.eaxy.Xml;
 import org.eaxy.experimental.SampleXmlBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,10 +33,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 public final class TemplateReader
 {
-    private static final Logger logger = LoggerFactory.getLogger(TemplateReader.class);
-
     private final Validator validator;
 
     public TemplateReader()
@@ -48,7 +44,7 @@ public final class TemplateReader
         {
             URL xsd = getClass().getResource("/schema/M2TKTemplate.xsd");
             if (xsd == null)
-                throw new IllegalStateException("template schema file is missing");
+                throw new IllegalStateException("缺少模板规格文件：M2TKTemplate.xsd");
 
             SampleXmlBuilder generator = new SampleXmlBuilder(xsd, "");
             validator = generator.getValidator();
@@ -66,7 +62,7 @@ public final class TemplateReader
 
             // 首先验证XML结构是否合规
             validator.validate(root);
-            logger.debug("文件[{}]通过Schema验证", file);
+            log.debug("文件[{}]通过Schema验证", file);
 
             // 解析模板内容（解析过程中将会对部分字段进行验证）
             List<TemplateDefinition> templates =
@@ -79,16 +75,16 @@ public final class TemplateReader
                         })
                         .filter(Objects::nonNull)
                         .toList();
-            logger.info("模板文件：{}，共解析 {} 个模板定义。", file, templates.size());
+            log.info("模板文件：{}，共解析 {} 个模板定义。", file, templates.size());
 
             return new M2TKTemplate(templates);
         } catch (SchemaValidationException ex)
         {
-            logger.warn("文件[{}]未通过Schema验证：{}", file, ex.getMessage());
+            log.warn("文件[{}]未通过Schema验证：{}", file, ex.getMessage());
             return null;
         } catch (Exception ex)
         {
-            logger.warn("执行异常：{}", ex.getMessage(), ex);
+            log.warn("执行异常：{}", ex.getMessage(), ex);
             return null;
         }
     }
@@ -100,7 +96,7 @@ public final class TemplateReader
             return parse(file.toURI().toURL());
         } catch (Exception ex)
         {
-            logger.warn("执行异常：{}", ex.getMessage(), ex);
+            log.warn("执行异常：{}", ex.getMessage(), ex);
             return null;
         }
     }
@@ -122,7 +118,7 @@ public final class TemplateReader
 
         if (template.getTableSyntax().isEmpty())
         {
-            logger.error("缺少有效的TableBody定义");
+            log.error("缺少有效的TableBody定义");
             return null;
         }
 
@@ -149,7 +145,7 @@ public final class TemplateReader
     {
         DescriptorTemplate template = new DescriptorTemplate();
         template.setTag(Integer.decode(element.attr("tag")));
-        template.setTagExtension(Integer.decode(StrUtil.nullToDefault(element.attr("tag_ext"), "-1")));
+        template.setTagExtension((element.attr("tag_ext") == null) ? -1 : Integer.decode(element.attr("tag_ext")));
         template.setName(element.attr("name"));
         template.setDisplayName(interpretLabel(element.select("DisplayName")));
         template.setMayOccurIns(StreamSupport.stream(element.find("MayOccurIn").spliterator(), false)
@@ -164,7 +160,7 @@ public final class TemplateReader
 
         if (template.getDescriptorSyntax().isEmpty())
         {
-            logger.error("缺少有效的DescriptorBody定义");
+            log.error("缺少有效的DescriptorBody定义");
             return null;
         }
 
@@ -176,7 +172,7 @@ public final class TemplateReader
         Label label = new Label();
         label.setText(element.attr("str"));
         label.setColor(element.attr("color"));
-        label.setBold(Boolean.parseBoolean(StrUtil.emptyToDefault(element.attr("bold"), "false")));
+        label.setBold(Boolean.parseBoolean(element.attr("bold")));
         return label;
     }
 
@@ -206,7 +202,7 @@ public final class TemplateReader
 
         if (!definition.verify())
         {
-            logger.error("DataField定义不符合要求");
+            log.error("DataField定义不符合要求");
             return null;
         }
 
@@ -254,7 +250,7 @@ public final class TemplateReader
 
         if (!definition.verify())
         {
-            logger.error("Condition定义不符合要求");
+            log.error("Condition定义不符合要求");
             return null;
         }
 
@@ -280,7 +276,7 @@ public final class TemplateReader
 
         if (!definition.verify())
         {
-            logger.error("Loop定义不符合要求");
+            log.error("Loop定义不符合要求");
             return null;
         }
 

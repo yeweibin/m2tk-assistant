@@ -4,10 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>mpeg2-toolkit</groupId>
     <artifactId>m2tk-assistant-api</artifactId>
-    <version>2.0-incubation</version>
     <packaging>jar</packaging>
+
+    <parent>
+        <groupId>mpeg2-toolkit</groupId>
+        <artifactId>m2tk-assistant</artifactId>
+        <version>2.0-incubation</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
 
     <properties>
         <jdk.version>21</jdk.version>
@@ -15,6 +20,8 @@
         <pf4j.version>3.12.1</pf4j.version>
         <guava.version>33.0.0-jre</guava.version>
         <lombok.version>1.18.36</lombok.version>
+        <eaxy.version>0.2.2</eaxy.version>
+        <jaxp-api.version>1.4.5</jaxp-api.version>
         <maven.compiler.source>${jdk.version}</maven.compiler.source>
         <maven.compiler.target>${jdk.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,6 +30,17 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.eaxy</groupId>
+            <artifactId>eaxy</artifactId>
+            <version>${eaxy.version}</version>
+        </dependency>
+        <dependency>
+            <!--XML Schema校验-->
+            <groupId>javax.xml.parsers</groupId>
+            <artifactId>jaxp-api</artifactId>
+            <version>${jaxp-api.version}</version>
+        </dependency>
         <dependency>
             <groupId>mpeg2-toolkit</groupId>
             <artifactId>m2tk-multiplex</artifactId>

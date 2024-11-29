@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package m2tk.assistant.app.ui.template.definition;
-
-import cn.hutool.core.util.StrUtil;
+package m2tk.assistant.api.template.definition;
 
 public class DataFieldDefinition implements SyntaxFieldDefinition
 {
@@ -116,29 +113,29 @@ public class DataFieldDefinition implements SyntaxFieldDefinition
     public boolean isDirectLength()
     {
         // 非负整数
-        return StrUtil.isNotEmpty(length) && length.matches(UNSIGNED_INTEGER_PATTERN);
+        return length != null && !length.isEmpty() && length.matches(UNSIGNED_INTEGER_PATTERN);
     }
 
     public boolean isIndirectLength()
     {
-        return StrUtil.isNotEmpty(lengthField) && !lengthField.equals(ATTRIBUTE_NOT_AVAILABLE);
+        return lengthField != null && !lengthField.isEmpty() && !lengthField.equals(ATTRIBUTE_NOT_AVAILABLE);
     }
 
     public boolean isImplicitLength()
     {
-        return StrUtil.isNotEmpty(lengthField) && lengthField.equals(IMPLICIT_LENGTH);
+        return lengthField != null && !lengthField.isEmpty() && lengthField.equals(IMPLICIT_LENGTH);
     }
 
     public boolean hasLengthCorrection()
     {
-        return StrUtil.isNotEmpty(lengthCorrection) && lengthCorrection.matches(SIGNED_INTEGER_PATTERN);
+        return lengthCorrection != null && !lengthCorrection.isEmpty() && lengthCorrection.matches(SIGNED_INTEGER_PATTERN);
     }
 
     @Override
     public boolean verify()
     {
-        return StrUtil.isNotEmpty(name) &&
-               StrUtil.isNotEmpty(encoding) &&
+        return (name != null && !name.isEmpty()) &&
+               (encoding != null && !encoding.isEmpty()) &&
                (isDirectLength() || isIndirectLength());
     }
 

@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.app.ui.tracer;
+package m2tk.assistant.ext.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
@@ -80,7 +80,7 @@ public class EBTSectionTracer implements Tracer
         if (cache.contains(key))
             return;
 
-        databaseService.addPrivateSection("eb-section" + translateSectionType(tableId),
+        databaseService.addPrivateSection("EBSection." + translateSectionType(tableId),
                                           payload.getStreamPID(),
                                           payload.getFinishPacketCounter(),
                                           payload.getEncoding().getBytes());

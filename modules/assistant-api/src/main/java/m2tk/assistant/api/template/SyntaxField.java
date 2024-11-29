@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template;
 
-package m2tk.assistant.app.ui.template;
-
-import cn.hutool.core.util.StrUtil;
 import m2tk.util.Bytes;
 
 import java.util.*;
@@ -344,11 +342,12 @@ public class SyntaxField
         if (!visible)
             return getName() + ": [***]";
 
-        if (StrUtil.isEmpty(labelFormat))
+        if (labelFormat == null || labelFormat.isEmpty())
             return getName() + ": " + getValueAsString();
 
-        return StrUtil.isEmpty(prefixText) ? labelFormat
-                                           : prefixText + ": " + labelFormat;
+        return (prefixText == null || prefixText.isEmpty())
+               ? labelFormat
+               : prefixText + ": " + labelFormat;
     }
 
     private static String formatRawValueAsString(Type type, Object rawValue)

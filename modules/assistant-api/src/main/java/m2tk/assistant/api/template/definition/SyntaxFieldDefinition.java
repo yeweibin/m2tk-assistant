@@ -13,39 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template.definition;
 
-package m2tk.assistant.app.ui.template.definition;
-
-public class TableId
+public interface SyntaxFieldDefinition
 {
-    private int id;
-    private Label displayName;
-
-    public int getId()
+    default String type()
     {
-        return id;
+        return getClass().getSimpleName();
     }
 
-    public void setId(int id)
+    default boolean verify()
     {
-        this.id = id;
-    }
-
-    public Label getDisplayName()
-    {
-        return displayName;
-    }
-
-    public void setDisplayName(Label displayName)
-    {
-        this.displayName = displayName;
-    }
-
-    public static TableId of(int id, String name)
-    {
-        TableId tableId = new TableId();
-        tableId.setId(id);
-        tableId.setDisplayName(Label.plain(name));
-        return tableId;
+        return false;
     }
 }

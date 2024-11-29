@@ -1,6 +1,19 @@
-package m2tk.assistant.app.ui.template;
-
-import cn.hutool.core.util.StrUtil;
+/*
+ *  Copyright (c) M2TK Project. All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+package m2tk.assistant.api.template;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
@@ -9,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * 基于Swing TreeNode实现的语法绘制器，仅实现前缀与格式化效果。
@@ -173,7 +187,7 @@ public class PlainTreeNodeSyntaxPresenter
                     if (c == '#')
                     {
                         sbuf.append(Character.forDigit(nibbles[offset], 16));
-                        offset ++;
+                        offset++;
                     } else
                         sbuf.append(c);
                 }
@@ -187,7 +201,9 @@ public class PlainTreeNodeSyntaxPresenter
         {
             // 普通格式
 
-            Set<String> options = new HashSet<>(StrUtil.split(format, ",", true, true));
+            Set<String> options = Stream.of(format.split(","))
+                                        .map(String::trim)
+                                        .collect(Collectors.toSet());
             boolean compact = options.contains("compact");
             boolean lowercase = options.contains("lowercase");
 
@@ -212,7 +228,9 @@ public class PlainTreeNodeSyntaxPresenter
         boolean lowercase = false;
         if (format != null)
         {
-            Set<String> options = new HashSet<>(StrUtil.split(format, ",", true, true));
+            Set<String> options = Stream.of(format.split(","))
+                                        .map(String::trim)
+                                        .collect(Collectors.toSet());
             compact = options.contains("compact");
             lowercase = options.contains("lowercase");
         }

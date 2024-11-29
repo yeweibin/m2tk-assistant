@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package m2tk.assistant.api.template;
 
-package m2tk.assistant.app.ui.template;
-
-import cn.hutool.core.collection.CollUtil;
-import m2tk.assistant.app.ui.template.definition.*;
+import m2tk.assistant.api.template.definition.*;
 import m2tk.encoding.Encoding;
 
 import java.util.*;
@@ -70,9 +68,10 @@ public class SectionDecoder
         TableTemplate template = TEMPLATE_MAP.getOrDefault(key, DEFAULT_TABLE_TEMPLATE);
 
         String displayName = String.format("私有数据段（TableID: 0x%02X）", tableId);
-        if (CollUtil.isNotEmpty(template.getTableIds()))
+        List<TableId> tableIds = template.getTableIds();
+        if (tableIds != null && !tableIds.isEmpty())
         {
-            for (TableId tid : template.getTableIds())
+            for (TableId tid : tableIds)
             {
                 if (tid.getId() == tableId)
                 {

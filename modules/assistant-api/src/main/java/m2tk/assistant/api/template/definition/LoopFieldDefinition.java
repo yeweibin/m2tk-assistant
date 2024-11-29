@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package m2tk.assistant.app.ui.template.definition;
-
-import cn.hutool.core.util.StrUtil;
+package m2tk.assistant.api.template.definition;
 
 import java.util.List;
 
@@ -95,17 +92,17 @@ public class LoopFieldDefinition implements SyntaxFieldDefinition
 
     public boolean isLengthInBytes()
     {
-        return StrUtil.isEmpty(lengthType) || lengthField.equals("length_in_bytes");
+        return lengthType == null || lengthType.isEmpty() || lengthField.equals("length_in_bytes");
     }
 
     public boolean isLengthOfCount()
     {
-        return StrUtil.isNotEmpty(lengthType) && lengthType.equals("count");
+        return lengthType != null && !lengthType.isEmpty() && lengthType.equals("count");
     }
 
     public boolean isImplicitLength()
     {
-        return StrUtil.isNotEmpty(lengthField) && lengthField.equals(IMPLICIT_LENGTH);
+        return lengthField != null && !lengthField.isEmpty() && lengthField.equals(IMPLICIT_LENGTH);
     }
 
     public int getLengthCorrectionValue()
@@ -115,14 +112,14 @@ public class LoopFieldDefinition implements SyntaxFieldDefinition
 
     public boolean hasLengthCorrection()
     {
-        return StrUtil.isNotEmpty(lengthCorrection) && lengthCorrection.matches(SIGNED_INTEGER_PATTERN);
+        return lengthCorrection != null && !lengthCorrection.isEmpty() && lengthCorrection.matches(SIGNED_INTEGER_PATTERN);
     }
 
     @Override
     public boolean verify()
     {
-        return StrUtil.isNotEmpty(name) &&
-               StrUtil.isNotEmpty(lengthField) &&
+        return (name != null && !name.isEmpty()) &&
+               (lengthField != null && !lengthField.isEmpty()) &&
                (body != null && !body.isEmpty()) &&
                (isLengthInBytes() || isLengthOfCount());
     }
