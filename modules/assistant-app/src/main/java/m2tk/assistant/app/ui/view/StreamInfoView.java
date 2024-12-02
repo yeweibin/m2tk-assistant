@@ -29,6 +29,7 @@ import m2tk.assistant.app.ui.AssistantApp;
 import m2tk.assistant.app.ui.component.CASystemInfoPanel;
 import m2tk.assistant.app.ui.component.ProgramInfoPanel;
 import m2tk.assistant.app.ui.component.StreamInfoPanel;
+import m2tk.assistant.app.ui.event.ShowStreamDensityEvent;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -62,6 +63,7 @@ public class StreamInfoView extends JPanel implements InfoView
     private JPopupMenu streamContextMenu;
     private JMenuItem streamContextMenuItem1;
     private JMenuItem streamContextMenuItem2;
+    private JMenuItem streamContextMenuItem3;
     private JPopupMenu programContextMenu;
     private JMenuItem programContextMenuItem;
 
@@ -93,10 +95,13 @@ public class StreamInfoView extends JPanel implements InfoView
         streamContextMenuItem1.addActionListener(e -> playStream());
         streamContextMenuItem2 = new JMenuItem();
         streamContextMenuItem2.addActionListener(e -> filterPrivateSection());
+        streamContextMenuItem3 = new JMenuItem();
+        streamContextMenuItem3.addActionListener(e -> showSectionDensity());
         streamContextMenu = new JPopupMenu();
         streamContextMenu.setLabel("播放");
         streamContextMenu.add(streamContextMenuItem1);
         streamContextMenu.add(streamContextMenuItem2);
+        streamContextMenu.add(streamContextMenuItem3);
 
         programContextMenuItem = new JMenuItem();
         programContextMenuItem.addActionListener(e -> playProgram());
@@ -334,12 +339,17 @@ public class StreamInfoView extends JPanel implements InfoView
         database.addFilteringHook(hook);
     }
 
+    private void showSectionDensity()
+    {
+        bus.post(new ShowStreamDensityEvent(selectedStream.getStreamPid()));
+    }
 
     private void showStreamPopupMenu(MouseEvent event, ElementaryStream stream)
     {
         selectedStream = stream;
         streamContextMenuItem1.setText("播放 " + selectedStream.getDescription());
         streamContextMenuItem2.setText("过滤私有段");
+        streamContextMenuItem3.setText("查看密度");
 
         boolean playable = !stream.isScrambled() &&
                            StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO);
@@ -348,8 +358,7 @@ public class StreamInfoView extends JPanel implements InfoView
         streamContextMenuItem1.setVisible(playable);
         streamContextMenuItem2.setVisible(filterable);
 
-        if (playable || filterable)
-            streamContextMenu.show(event.getComponent(), event.getX(), event.getY());
+        streamContextMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 
     private void showProgramPopupMenu(MouseEvent event, MPEGProgram program)

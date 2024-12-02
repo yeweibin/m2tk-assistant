@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_density_bulk` (
   `id` INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   `pid` INT NOT NULL,
   `bulk_size` INT DEFAULT 0 NOT NULL,
-  `bulk_encoding` BLOB(10K) NOT NULL,
+  `bulk_encoding` VARBINARY(4096) NOT NULL,
   `start_position` BIGINT DEFAULT 0 NOT NULL,
   `max_density` BIGINT DEFAULT 0 NOT NULL,
   `min_density` BIGINT DEFAULT 0 NOT NULL,

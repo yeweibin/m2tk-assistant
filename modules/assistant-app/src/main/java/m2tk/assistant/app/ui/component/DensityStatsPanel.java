@@ -29,6 +29,7 @@ import java.util.function.Consumer;
 public class DensityStatsPanel extends JPanel
 {
     private DensityStatsTableModel tableModel;
+    private JTable table;
     private Consumer<StreamDensityStats> consumer;
 
     public DensityStatsPanel()
@@ -39,7 +40,7 @@ public class DensityStatsPanel extends JPanel
     private void initUI()
     {
         tableModel = new DensityStatsTableModel();
-        JTable table = new JTable();
+        table = new JTable();
         table.setModel(tableModel);
         table.getTableHeader().setReorderingAllowed(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
@@ -78,5 +79,12 @@ public class DensityStatsPanel extends JPanel
     public void addDensityStatConsumer(Consumer<StreamDensityStats> consumer)
     {
         this.consumer = consumer;
+    }
+
+    public void selectStreamStats(int pid)
+    {
+        int row = tableModel.getStatRow(pid);
+        if (row != -1)
+            table.getSelectionModel().setSelectionInterval(row, row);
     }
 }

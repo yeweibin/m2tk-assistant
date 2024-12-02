@@ -53,8 +53,8 @@ public class DensityChartPanel extends JPanel
 
     private ChartPanel drawBulk(StreamDensityBulk bulk)
     {
-        XYSeries series = new XYSeries("传输包密度");
-        long[] densities = bulk.getDensities();
+        XYSeries series = new XYSeries("传输密度");
+        int[] densities = bulk.getDensities();
         for (int i = 0; i < bulk.getBulkSize(); i++)
         {
             series.add(i, densities[i]);

@@ -38,6 +38,18 @@ public class DensityStatsTableModel extends AbstractTableModel
         fireTableDataChanged();
     }
 
+    public int getStatRow(int pid)
+    {
+        int size = data.size();
+        for (int i = 0; i < size; i++)
+        {
+            StreamDensityStats stat = data.get(i);
+            if (stat.getPid() == pid)
+                return i;
+        }
+        return -1;
+    }
+
     public StreamDensityStats getStatAtRow(int row)
     {
         try

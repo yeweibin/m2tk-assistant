@@ -25,6 +25,7 @@ import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.DensityChartPanel;
 import m2tk.assistant.app.ui.component.DensityStatsPanel;
+import m2tk.assistant.app.ui.event.ShowStreamDensityEvent;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -67,7 +68,7 @@ public class DensityInfoView extends JPanel implements InfoView
             if (stats == null)
             {
                 densityChartPanel.setVisible(false);
-                splitPane.setDividerLocation(0.25);
+                splitPane.setDividerLocation(0.3);
             } else
             {
                 queryDensityBulks(stats.getPid());
@@ -138,7 +139,7 @@ public class DensityInfoView extends JPanel implements InfoView
     @Override
     public String getViewTitle()
     {
-        return "传输流密度";
+        return "传输密度";
     }
 
     @Override
@@ -156,6 +157,13 @@ public class DensityInfoView extends JPanel implements InfoView
             queryDensityStats();
             lastTimestamp = System.currentTimeMillis();
         }
+    }
+
+    @Subscribe
+    public void onShowStreamDensityEvent(ShowStreamDensityEvent event)
+    {
+        bus.post(new ShowInfoViewEvent(this));
+        densityStatsPanel.selectStreamStats(event.getStream());
     }
 
     private void queryDensityStats()

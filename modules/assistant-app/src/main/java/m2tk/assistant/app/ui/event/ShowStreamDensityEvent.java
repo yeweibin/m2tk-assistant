@@ -13,28 +13,14 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.api.domain;
+package m2tk.assistant.app.ui.event;
 
-import lombok.Data;
-import m2tk.util.BigEndian;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
-public class StreamDensityBulk
+@Getter
+@AllArgsConstructor
+public class ShowStreamDensityEvent
 {
-    private int id;
-    private int pid;
-    private int bulkSize;
-    private byte[] bulkEncoding;
-    private long startPosition;
-    private long maxDensity;
-    private long minDensity;
-    private long avgDensity;
-
-    public final int[] getDensities()
-    {
-        int[] array = new int[bulkSize];
-        for (int i = 0; i < array.length; i ++)
-            array[i] = (int) BigEndian.getUINT32(bulkEncoding, i * 4);
-        return array;
-    }
+    private final int stream;
 }
