@@ -89,7 +89,7 @@ public class PCRStatsTableModel extends AbstractTableModel
         {
             case 0 -> (stats.getRepetitionErrors() + stats.getDiscontinuityErrors() + stats.getAccuracyErrors()) > 0
                       ? BAD : GOOD;
-            case 1 -> String.format("0x%04X", stats.getPid());
+            case 1 -> String.format("%d (0x%04X)", stats.getPid(), stats.getPid());
             case 2 -> String.format("%,d", stats.getPcrCount());
             case 3 -> FormatUtil.formatBitrate(stats.getAvgBitrate());
             case 4 -> String.format("%,d ms", stats.getAvgInterval() / 1000000);

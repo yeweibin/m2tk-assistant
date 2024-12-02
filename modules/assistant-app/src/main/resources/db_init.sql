@@ -1,3 +1,4 @@
+DROP VIEW IF EXISTS `PUBLIC`.`v_density_stat`;
 DROP VIEW IF EXISTS `PUBLIC`.`v_pcr_stat`;
 DROP VIEW IF EXISTS `PUBLIC`.`v_tr290_stat`;
 DROP VIEW IF EXISTS `PUBLIC`.`v_si_network`;
@@ -22,6 +23,7 @@ DROP TABLE IF EXISTS `PUBLIC`.`t_program_elementary_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_bouquet_service_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_multiplex_service_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_filtering_hook`;
+DROP TABLE IF EXISTS `PUBLIC`.`t_density_bulk`;
 
 CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_preference` (
   `key` VARCHAR(100) NOT NULL PRIMARY KEY,
@@ -243,6 +245,26 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_filtering_hook` (
   `subject_pid` INT DEFAULT -1 NOT NULL,
   `subject_table_id` INT DEFAULT -1 NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_density_bulk` (
+  `id` INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  `pid` INT NOT NULL,
+  `bulk_size` INT DEFAULT 0 NOT NULL,
+  `bulk_encoding` BLOB(10K) NOT NULL,
+  `start_position` BIGINT DEFAULT 0 NOT NULL,
+  `max_density` BIGINT DEFAULT 0 NOT NULL,
+  `min_density` BIGINT DEFAULT 0 NOT NULL,
+  `avg_density` BIGINT DEFAULT 0 NOT NULL
+);
+
+CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_density_stat` AS
+SELECT `pid`,
+       SUM(`bulk_size`) AS `count`,
+       MAX(`max_density`) AS `max_density`,
+       MIN(`min_density`) AS `min_density`,
+       AVG(`avg_density`) AS `avg_density`
+FROM `PUBLIC`.`t_density_bulk` GROUP BY `pid`
+ORDER BY `pid` ASC;
 
 CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_pcr_stat` AS
 SELECT `A`.`pid` AS `pid`,

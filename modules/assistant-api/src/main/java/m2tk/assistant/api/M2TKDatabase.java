@@ -17,6 +17,7 @@ package m2tk.assistant.api;
 
 import m2tk.assistant.api.domain.*;
 
+import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -162,4 +163,16 @@ public interface M2TKDatabase
     void clearFilteringHooks(String sourceUri);
 
     List<FilteringHook> listFilteringHooks(String sourceUri);
+
+    int addStreamDensity(int pid, long position, int count, byte[] density);
+
+    void updateStreamDensity(int densityRef, int count, byte[] density, long avgDensity, long maxDensity, long minDensity);
+
+    List<StreamDensityStats> listStreamDensityStats();
+
+    List<StreamDensityBulk> getRecentStreamDensityBulks(int pid, int limit);
+
+    int update(String sql) throws SQLException;
+
+    <T> List<T> query(String sql, Class<T> clazz) throws SQLException;
 }

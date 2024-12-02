@@ -15,8 +15,8 @@
  */
 package m2tk.assistant.app.ui.component;
 
-import m2tk.assistant.api.domain.PCRStats;
-import m2tk.assistant.app.ui.model.PCRStatsTableModel;
+import m2tk.assistant.api.domain.StreamDensityStats;
+import m2tk.assistant.app.ui.model.DensityStatsTableModel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 
 import javax.swing.*;
@@ -26,19 +26,19 @@ import java.awt.*;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class PCRStatsPanel extends JPanel
+public class DensityStatsPanel extends JPanel
 {
-    private PCRStatsTableModel tableModel;
-    private Consumer<PCRStats> consumer;
+    private DensityStatsTableModel tableModel;
+    private Consumer<StreamDensityStats> consumer;
 
-    public PCRStatsPanel()
+    public DensityStatsPanel()
     {
         initUI();
     }
 
     private void initUI()
     {
-        tableModel = new PCRStatsTableModel();
+        tableModel = new DensityStatsTableModel();
         JTable table = new JTable();
         table.setModel(tableModel);
         table.getTableHeader().setReorderingAllowed(false);
@@ -53,33 +53,29 @@ public class PCRStatsPanel extends JPanel
                 consumer.accept(tableModel.getStatAtRow(row));
         });
 
+        DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
+        centeredRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         DefaultTableCellRenderer trailingRenderer = new DefaultTableCellRenderer();
         trailingRenderer.setHorizontalAlignment(SwingConstants.TRAILING);
 
         TableColumnModel columnModel = table.getColumnModel();
-        ComponentUtil.configTableColumn(columnModel, 0, 40, false);                     // 状态
-        ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 150, false);   // PID
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 120, false);  // PCR总数
-        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 120, false);  // 平均码率
-        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 100, false);  // 平均间隔
-        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 100, false);  // 最小间隔
-        ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false);  // 最大间隔
-        ComponentUtil.configTableColumn(columnModel, 7, trailingRenderer, 100, false);  // 间隔越界
-        ComponentUtil.configTableColumn(columnModel, 8, trailingRenderer, 100, false);  // 平均精度
-        ComponentUtil.configTableColumn(columnModel, 9, trailingRenderer, 100, false);  // 最小精度
-        ComponentUtil.configTableColumn(columnModel, 10, trailingRenderer, 100, false); // 最大精度
-        ComponentUtil.configTableColumn(columnModel, 11, trailingRenderer, 100, false); // 精度越界
+        ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false);   // 序号
+        ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 150, false);  // PID
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 200, false);  // PCR总数
+        ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 200, false);  // 平均间隔
+        ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 200, false);  // 最小间隔
+        ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 200, false);  // 最大间隔
 
         setLayout(new BorderLayout());
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
-    public void update(List<PCRStats> stats)
+    public void update(List<StreamDensityStats> stats)
     {
         tableModel.update(stats);
     }
 
-    public void addPCRStatConsumer(Consumer<PCRStats> consumer)
+    public void addDensityStatConsumer(Consumer<StreamDensityStats> consumer)
     {
         this.consumer = consumer;
     }

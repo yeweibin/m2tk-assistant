@@ -19,6 +19,7 @@ import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.*;
 import m2tk.assistant.api.presets.RunningStatus;
@@ -32,10 +33,10 @@ import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Init;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.core.util.ResourceUtil;
+import org.noear.solon.data.sql.RowIterator;
 import org.noear.solon.data.sql.SqlUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -43,11 +44,10 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 public class M2TKDatabaseService implements M2TKDatabase
 {
-    private static final Logger log = LoggerFactory.getLogger(M2TKDatabaseService.class);
-
     @Inject("m2tk")
     private SqlUtils sqlUtils;
 
@@ -101,6 +101,10 @@ public class M2TKDatabaseService implements M2TKDatabase
     private SIMultiplexViewEntityMapper multiplexViewMapper;
     @Db("m2tk")
     private FilteringHookEntityMapper hookMapper;
+    @Db("m2tk")
+    private DensityBulkEntityMapper densityMapper;
+    @Db("m2tk")
+    private DensityStatViewEntityMapper densityStatMapper;
 
     @Init
     public void initDatabase()
@@ -109,14 +113,9 @@ public class M2TKDatabaseService implements M2TKDatabase
         {
             log.info("准备初始化数据库");
             String initScript = ResourceUtil.getResourceAsString("/db_init.sql");
-            for (String statement : initScript.split(";"))
-            {
-                statement = statement.trim();
-                if (!statement.isEmpty())
-                {
-                    sqlUtils.sql(statement).update();
-                }
-            }
+            List<String> statements = StrUtil.split(initScript, ";", true, true);
+            for (String statement : statements)
+                sqlUtils.sql(statement).update();
             log.info("数据库初始化完毕");
         } catch (Exception ex)
         {
@@ -162,14 +161,9 @@ public class M2TKDatabaseService implements M2TKDatabase
             log.info("开始设置分析上下文");
 
             String resetScript = ResourceUtil.getResourceAsString("/db_reset.sql");
-            for (String statement : resetScript.split(";"))
-            {
-                statement = statement.trim();
-                if (!statement.isEmpty())
-                {
-                    sqlUtils.sql(statement).update();
-                }
-            }
+            List<String> statements = StrUtil.split(resetScript, ";", true, true);
+            for (String statement : statements)
+                sqlUtils.sql(statement).update();
             log.info("清空历史数据");
 
             StreamSourceEntity entity = new StreamSourceEntity();
@@ -1097,6 +1091,73 @@ public class M2TKDatabaseService implements M2TKDatabase
                          .collect(Collectors.toList());
     }
 
+    @Override
+    public int addStreamDensity(int pid, long position, int count, byte[] density)
+    {
+        DensityBulkEntity entity = new DensityBulkEntity();
+        entity.setPid(pid);
+        entity.setStartPosition(position);
+        entity.setBulkSize(count);
+        entity.setBulkEncoding(density);
+        densityMapper.insert(entity);
+        return entity.getId();
+    }
+
+    @Override
+    public void updateStreamDensity(int densityRef, int count, byte[] density, long avgDensity, long maxDensity, long minDensity)
+    {
+        DensityBulkEntity change = new DensityBulkEntity();
+        change.setId(densityRef);
+        change.setBulkSize(count);
+        change.setBulkEncoding(density);
+        change.setAvgDensity(avgDensity);
+        change.setMaxDensity(maxDensity);
+        change.setMinDensity(minDensity);
+        densityMapper.updateById(change);
+    }
+
+    @Override
+    public List<StreamDensityStats> listStreamDensityStats()
+    {
+        return densityStatMapper.selectList(Wrappers.emptyWrapper())
+                                .stream()
+                                .map(this::convert)
+                                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<StreamDensityBulk> getRecentStreamDensityBulks(int pid, int limit)
+    {
+        return densityMapper.selectList(Wrappers.lambdaQuery(DensityBulkEntity.class)
+                                                .eq(DensityBulkEntity::getPid, pid)
+                                                .orderByDesc(DensityBulkEntity::getId)
+                                                .last("limit " + limit))
+                            .stream()
+                            .map(this::convert)
+                            .collect(Collectors.toList());
+    }
+
+    @Override
+    public int update(String sql) throws SQLException
+    {
+        return sqlUtils.sql(sql).update();
+    }
+
+    @Override
+    public <T> List<T> query(String sql, Class<T> clazz) throws SQLException
+    {
+        List<T> result = new ArrayList<>();
+        try (RowIterator iterator = sqlUtils.sql(sql).queryRowIterator(100))
+        {
+            while (iterator.hasNext())
+            {
+                T obj = iterator.next().toBean(clazz);
+                result.add(obj);
+            }
+            return result;
+        }
+    }
+
     private StreamSource convert(StreamSourceEntity entity)
     {
         StreamSource source = new StreamSource();
@@ -1374,5 +1435,30 @@ public class M2TKDatabaseService implements M2TKDatabase
         hook.setSubjectPid(entity.getSubjectPid());
         hook.setSubjectTableId(entity.getSubjectTableId());
         return hook;
+    }
+
+    private StreamDensityStats convert(DensityStatViewEntity entity)
+    {
+        StreamDensityStats stats = new StreamDensityStats();
+        stats.setPid(entity.getPid());
+        stats.setCount(entity.getCount());
+        stats.setAvgDensity(entity.getAvgDensity());
+        stats.setMaxDensity(entity.getMaxDensity());
+        stats.setMinDensity(entity.getMinDensity());
+        return stats;
+    }
+
+    private StreamDensityBulk convert(DensityBulkEntity entity)
+    {
+        StreamDensityBulk bulk = new StreamDensityBulk();
+        bulk.setId(entity.getId());
+        bulk.setPid(entity.getPid());
+        bulk.setBulkSize(entity.getBulkSize());
+        bulk.setBulkEncoding(entity.getBulkEncoding());
+        bulk.setStartPosition(entity.getStartPosition());
+        bulk.setAvgDensity(entity.getAvgDensity());
+        bulk.setMaxDensity(entity.getMaxDensity());
+        bulk.setMinDensity(entity.getMinDensity());
+        return bulk;
     }
 }

@@ -42,7 +42,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@Extension(ordinal = 5)
+@Extension(ordinal = 6)
 public class EPGInfoView extends JPanel implements InfoView
 {
     private Application application;
@@ -104,7 +104,7 @@ public class EPGInfoView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 5"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 6"));
         item.addActionListener(e -> {
             if (bus != null)
             {

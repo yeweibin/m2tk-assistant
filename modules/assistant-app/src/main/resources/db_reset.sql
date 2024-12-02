@@ -16,6 +16,7 @@ TRUNCATE TABLE `PUBLIC`.`t_transport_packet`;
 TRUNCATE TABLE `PUBLIC`.`t_program_elementary_mapping`;
 TRUNCATE TABLE `PUBLIC`.`t_bouquet_service_mapping`;
 TRUNCATE TABLE `PUBLIC`.`t_multiplex_service_mapping`;
+TRUNCATE TABLE `PUBLIC`.`t_density_bulk`;
 
 -- 初始化基本流
 INSERT INTO `PUBLIC`.`t_elementary_stream` (`pid`)
