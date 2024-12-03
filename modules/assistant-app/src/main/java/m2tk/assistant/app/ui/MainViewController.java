@@ -207,7 +207,7 @@ public class MainViewController
         sourceMenu.add(builder.create(actionMap.get("openLocalFile"))
                               .icon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, 20, MS_ORANGE))
                               .disabledIcon(getFontIcon(FluentUiRegularMZ.VIDEO_CLIP_20, 20, DISABLED))
-                              .text("本地文件")
+                              .text("文件")
                               .get());
         sourceMenu.add(builder.create(actionMap.get("openMulticast"))
                               .icon(getFontIcon(FluentUiRegularAL.LIVE_20, 20, MS_GREEN))
@@ -217,7 +217,7 @@ public class MainViewController
         sourceMenu.add(builder.create(actionMap.get("openThirdPartyInputSource"))
                               .icon(getFontIcon(FluentUiRegularMZ.MAP_DRIVE_20, 20, MS_BLUE))
                               .disabledIcon(getFontIcon(FluentUiRegularMZ.MAP_DRIVE_20, 20, DISABLED))
-                              .text("扩展外设")
+                              .text("第三方设备")
                               .get());
         menuOps.add(sourceMenu);
         menuOps.add(builder.create(actionMap.get("reopenInput"))
@@ -275,7 +275,7 @@ public class MainViewController
         }
         if (!pluggedInfoViews.isEmpty())
         {
-            JMenu extViews = new JMenu("扩展视图");
+            JMenu extViews = new JMenu("扩展");
             extViews.setIcon(getFontIcon(FluentUiRegularAL.EXTENSION_20, 20, SLACK_LIGHT_BLUE));
             menuViews.add(extViews);
             for (InfoView view : pluggedInfoViews)
