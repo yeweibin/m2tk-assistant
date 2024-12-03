@@ -3,21 +3,22 @@
 #### 介绍
 传输流分析工具，支持静态文件分析和UDP组播流实时分析。支持TR 101.290故障检测，PSI/SI语法分析，SI解析，EPG解析，PCR统计。
 
+
 #### 软件架构
-1.  GUI：Java Swing
-2.  解复用：m2tk-core + m2tk-multiplex + m2tk-io
-3.  音视频解码：ffmpeg（借助 [Jaffree](https://github.com/kokorin/Jaffree/) 调用本地ffmpeg程序）
+1. GUI：Java Swing
+2. 模块化：pf4j
+3. 解复用：m2tk-core + m2tk-multiplex + m2tk-io
+4. 音视频解码：ffmpeg（借助 [Jaffree](https://github.com/kokorin/Jaffree/) 调用本地ffmpeg程序）
 
 
 #### 安装教程
 
-1.  安装JDK 8+
-2.  安装maven
-3.  下载源代码，执行build.bat脚本，target目录里生成m2tk-assistant-{version}.zip。
-4.  解压zip，双击exe启动程序。运行时可以将Java环境（64位）拷贝到m2tk-assistant目录下（命名为java），则程序将引用java目录里的运行时环境。目录结构如下：
-
+1. 安装JDK 13+
+2. 安装maven
+3. 下载项目源代码，在项目主目录下执行`mvn clean package`，modules/assistant-app/target目录里将生成可移动的运行时环境（含JRE），目录结构如下：
 
 ![目录结构](screenshots/目录结构.png)
+
 
 #### 自定义Syntax解析模板（1.7+可用）
 
@@ -119,12 +120,12 @@
 </M2TKTemplate>
 ```
 
-#### 待完善
+#### 2.0版本主要变化
 
-1.  ~~支持用户自定义结构解析与语法呈现（通用解析模型）~~ ☑️
-2.  ~~支持指定流数据过滤~~ ☑️
-3.  结果导出和报表
-4.  对PES结构的解析和呈现，对视频质量进行评估
+1. 模块化（基于pf4j的插件系统），支持动态插件扩展。
+2. 增加流密度展视。
+3. UI更新（采用暗色主题，矢量图标）。
+4. 错误修复。
 
 
 #### 运行界面
@@ -140,6 +141,9 @@ TR290分析
 
 PCR分析
 ![PCR分析](screenshots/PCR分析.png)
+
+传输密度分析
+![传输密度分析](screenshots/传输密度.png)
 
 EPG解析
 ![EPG信息](screenshots/EPG分析.png)

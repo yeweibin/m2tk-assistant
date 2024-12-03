@@ -340,6 +340,7 @@ public class M2TKDatabaseService implements M2TKDatabase
         entity.setTransportStreamId(transportStreamId);
         entity.setPmtPid(pmtPid);
         entity.setPcrPid(8191);
+        entity.setFreeAccess(Boolean.TRUE);
         programMapper.insert(entity);
         return convert(entity);
     }
