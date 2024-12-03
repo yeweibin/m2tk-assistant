@@ -18,6 +18,7 @@ package m2tk.assistant.app.ui;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;
+import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -458,8 +459,8 @@ public class MainViewController
 
         // 目标组件不在TabbedPane里，则添加该组件。
         JComponent viewComponent = view.getViewComponent();
-        viewComponent.putClientProperty("JTabbedPane.tabClosable", true);
-        viewComponent.putClientProperty("JTabbedPane.tabCloseCallback",
+        viewComponent.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSABLE, true);
+        viewComponent.putClientProperty(FlatClientProperties.TABBED_PANE_TAB_CLOSE_CALLBACK,
                                         (IntConsumer) tabIndex -> tabbedPane.remove(tabIndex));
         tabbedPane.addTab(view.getViewTitle(), view.getViewIcon(), viewComponent);
         tabbedPane.setSelectedIndex(tabs);

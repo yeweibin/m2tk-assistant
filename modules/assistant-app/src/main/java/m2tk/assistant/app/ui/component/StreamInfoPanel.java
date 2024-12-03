@@ -16,6 +16,8 @@
 package m2tk.assistant.app.ui.component;
 
 import cn.hutool.core.util.StrUtil;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.icons.FlatSearchIcon;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.domain.ElementaryStream;
 import m2tk.assistant.api.domain.StreamSource;
@@ -28,6 +30,7 @@ import net.miginfocom.swing.MigLayout;
 import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
 import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
 import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
+import org.kordamp.ikonli.fluentui.FluentUiRegularMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
@@ -51,6 +54,7 @@ public class StreamInfoPanel extends JPanel
     private JTextField fieldPacketCount, fieldStreamCount, fieldProgramCount;
     private JTextField fieldTransportStreamId;
     private JToggleButton btnShowDetails;
+    private JToggleButton btnTableSearch;
     private JRadioButton radio188Bytes, radio204Bytes;
     private JRadioButton radioClear, radioScrambled;
     private JCheckBox checkECMPresent, checkEMMPresent;
@@ -158,7 +162,7 @@ public class StreamInfoPanel extends JPanel
         Icon iconHideDetails = FontIcon.of(FluentUiRegularAL.CHEVRON_UP_20, 20, UIManager.getColor("Label.foreground"));
         btnShowDetails = new JToggleButton();
         btnShowDetails.setIcon(iconShowDetails);
-        btnShowDetails.putClientProperty("JButton.buttonType", "toolBarButton");
+        btnShowDetails.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
         btnShowDetails.addActionListener(event -> {
             if (btnShowDetails.isSelected())
             {
@@ -169,6 +173,28 @@ public class StreamInfoPanel extends JPanel
                 sourceDetailsPanel.setVisible(false);
                 btnShowDetails.setIcon(iconShowDetails);
             }
+            revalidate();
+        });
+
+        JTextField fieldSearch = new JTextField();
+        fieldSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, new FlatSearchIcon());
+        fieldSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+        fieldSearch.addActionListener(e -> {
+            String keyword = fieldSearch.getText();
+            if (StrUtil.isEmpty(keyword))
+                rowSorter.setRowFilter(null);
+            else
+                rowSorter.setRowFilter(RowFilter.regexFilter(keyword));
+        });
+
+        Icon iconTableSearch = FontIcon.of(FluentUiRegularMZ.SEARCH_24, 20, UIManager.getColor("Label.foreground"));
+        btnTableSearch = new JToggleButton();
+        btnTableSearch.setIcon(iconTableSearch);
+        btnTableSearch.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+        btnTableSearch.addActionListener(event -> {
+            rowSorter.setRowFilter(null);
+            fieldSearch.setVisible(btnTableSearch.isSelected());
+            revalidate();
         });
 
         JTable table = new JTable();
@@ -229,15 +255,18 @@ public class StreamInfoPanel extends JPanel
         ComponentUtil.configTableColumn(columnModel, 6, trailingRenderer, 100, false);
         ComponentUtil.configTableColumn(columnModel, 7, stateRenderer, 200, true);
 
-        setLayout(new MigLayout("", "[][grow][]", "[][][grow]"));
+        setLayout(new MigLayout("", "[][grow][][]", "[][][][grow]"));
 
         add(new JLabel("输入源"));
         add(fieldSourceName, "growx");
-        add(btnShowDetails, "wrap");
-        add(sourceDetailsPanel, "hidemode 2, span 3, growx, wrap");
-        add(new JScrollPane(table), "span 3, grow, push");
+        add(btnShowDetails);
+        add(btnTableSearch, "wrap");
+        add(sourceDetailsPanel, "hidemode 2, span 4, growx, wrap");
+        add(fieldSearch, "hidemode 2, span 4, growx, wrap");
+        add(new JScrollPane(table), "span 4, grow, push");
 
         sourceDetailsPanel.setVisible(false);
+        fieldSearch.setVisible(false);
     }
 
     public void setPopupListener(BiConsumer<MouseEvent, ElementaryStream> listener)

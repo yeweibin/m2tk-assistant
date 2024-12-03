@@ -15,11 +15,11 @@
  */
 package m2tk.assistant.app.ui.dialog;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatSVGIcon;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.app.ui.AssistantApp;
-import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
@@ -52,20 +52,20 @@ public class AboutDialog extends JDialog
 
         JLabel appNameLabel = new JLabel(AssistantApp.APP_NAME);
         appNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        appNameLabel.putClientProperty("FlatLaf.styleClass", "h2.regular");
+        appNameLabel.putClientProperty(FlatClientProperties.STYLE, "h2.regular");
 
         JLabel appVersionLabel = new JLabel(AssistantApp.APP_VERSION);
         appVersionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        appVersionLabel.putClientProperty("FlatLaf.styleClass", "h3");
+        appVersionLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "h3");
 
         JLabel copyrightLabel = new JLabel("版权所有 © 2020-" + Year.now() + "，" + AssistantApp.APP_VENDOR);
         copyrightLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        copyrightLabel.putClientProperty("FlatLaf.styleClass", "h4");
+        copyrightLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "h4");
 
         String link = "https://gitee.com/craftworks/m2tk-assistant";
         JLabel linkLabel = new JLabel("<html><a href='#'>" + link + "</a>");
         linkLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        linkLabel.putClientProperty("FlatLaf.styleClass", "h4");
+        linkLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "h4");
         linkLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         linkLabel.addMouseListener(new MouseAdapter()
         {
