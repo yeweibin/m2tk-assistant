@@ -108,7 +108,7 @@ public class NVODInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularAL.CALENDAR_MONTH_24, 20, Color.decode("#00A4EF"));
+        return FontIcon.of(FluentUiRegularAL.CALENDAR_3_DAY_24, 20, Color.decode("#00A4EF"));
     }
 
     @Subscribe
