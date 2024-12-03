@@ -26,7 +26,7 @@ public class DensityStatsTableModel extends AbstractTableModel
     private List<StreamDensityStats> data = Collections.emptyList();
 
     private static final String[] COLUMNS = {
-       "", "PID", "记录总数", "平均间隔", "最小间隔", "最大间隔", ""
+       "", "PID", "间隔采样", "平均间隔（四舍五入）", "最小间隔", "最大间隔", ""
     };
 
     public void update(List<StreamDensityStats> stats)
@@ -94,7 +94,7 @@ public class DensityStatsTableModel extends AbstractTableModel
             case 0 -> rowIndex + 1;
             case 1 -> String.format("%d (0x%04X)", stats.getPid(), stats.getPid());
             case 2 -> String.format("%,d", stats.getCount());
-            case 3 -> String.format("%,d", stats.getAvgDensity());
+            case 3 -> String.format("%,d", Math.round(stats.getAvgDensity()));
             case 4 -> String.format("%,d", stats.getMinDensity());
             case 5 -> String.format("%,d", stats.getMaxDensity());
             default -> null;

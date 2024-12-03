@@ -62,7 +62,7 @@ public class DensityStatsPanel extends JPanel
         TableColumnModel columnModel = table.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 60, false);   // 序号
         ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 150, false);  // PID
-        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 200, false);  // PCR总数
+        ComponentUtil.configTableColumn(columnModel, 2, trailingRenderer, 200, false);  // 间隔总数
         ComponentUtil.configTableColumn(columnModel, 3, trailingRenderer, 200, false);  // 平均间隔
         ComponentUtil.configTableColumn(columnModel, 4, trailingRenderer, 200, false);  // 最小间隔
         ComponentUtil.configTableColumn(columnModel, 5, trailingRenderer, 200, false);  // 最大间隔

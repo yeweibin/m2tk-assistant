@@ -28,7 +28,7 @@ public class StreamDensityBulk
     private long startPosition;
     private long maxDensity;
     private long minDensity;
-    private long avgDensity;
+    private double avgDensity;
 
     public final int[] getDensities()
     {

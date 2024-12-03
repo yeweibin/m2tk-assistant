@@ -22,7 +22,7 @@ public class StreamDensityStats
 {
     private int pid;
     private int count;
-    private long avgDensity;
+    private double avgDensity;
     private long maxDensity;
     private long minDensity;
 }

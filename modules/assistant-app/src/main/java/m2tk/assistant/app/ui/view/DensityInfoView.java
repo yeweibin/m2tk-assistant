@@ -145,7 +145,7 @@ public class DensityInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return FontIcon.of(FluentUiRegularMZ.PULSE_24, 20, Color.decode("#89D3DF"));
+        return FontIcon.of(FluentUiRegularMZ.PULSE_24, 20, Color.decode("#FFDC80"));
     }
 
     @Subscribe

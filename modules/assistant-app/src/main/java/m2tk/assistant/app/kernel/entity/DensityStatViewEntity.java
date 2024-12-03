@@ -29,7 +29,7 @@ public class DensityStatViewEntity
     @TableField("`count`")
     private Integer count;
     @TableField("avg_density")
-    private Long avgDensity;
+    private Double avgDensity;
     @TableField("min_density")
     private Long minDensity;
     @TableField("max_density")

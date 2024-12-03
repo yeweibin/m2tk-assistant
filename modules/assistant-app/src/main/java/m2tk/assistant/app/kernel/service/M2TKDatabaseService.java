@@ -718,10 +718,29 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public List<SIService> listSIServices()
+    public List<SIService> listRegularSIServices()
     {
         LambdaQueryWrapper<SIServiceEntity> query =
             Wrappers.lambdaQuery(SIServiceEntity.class)
+                    .ne(SIServiceEntity::getServiceType, 0x04)
+                    .ne(SIServiceEntity::getServiceType, 0x05)
+                    .orderByAsc(SIServiceEntity::getTransportStreamId)
+                    .orderByAsc(SIServiceEntity::getServiceId);
+        return serviceMapper.selectList(query)
+                            .stream()
+                            .map(this::convert)
+                            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SIService> listNVODSIServices()
+    {
+        LambdaQueryWrapper<SIServiceEntity> query =
+            Wrappers.lambdaQuery(SIServiceEntity.class)
+                    .nested(q ->
+                                q.eq(SIServiceEntity::getServiceType, 0x04)
+                                 .or()
+                                 .eq(SIServiceEntity::getServiceType, 0x05))
                     .orderByAsc(SIServiceEntity::getTransportStreamId)
                     .orderByAsc(SIServiceEntity::getServiceId);
         return serviceMapper.selectList(query)
@@ -811,15 +830,40 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public List<SIEvent> listSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
-                                      boolean presentOnly, boolean scheduleOnly, boolean includeNVODEvents,
-                                      OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd)
+    public List<SIEvent> listRegularSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
+                                             boolean presentOnly, boolean scheduleOnly,
+                                             OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd)
     {
         LambdaQueryWrapper<SIEventEntity> query = Wrappers.lambdaQuery(SIEventEntity.class)
                                                           .eq(SIEventEntity::getTransportStreamId, transportStreamId)
                                                           .eq(SIEventEntity::getOriginalNetworkId, originalNetworkId)
                                                           .eq(SIEventEntity::getServiceId, serviceId)
-                                                          .eq(SIEventEntity::getNvodTimeShiftedEvent, includeNVODEvents)
+                                                          .eq(SIEventEntity::getNvodTimeShiftedEvent, Boolean.FALSE)
+                                                          .eq(presentOnly, SIEventEntity::getPresentEvent, Boolean.TRUE)
+                                                          .eq(scheduleOnly, SIEventEntity::getScheduleEvent, Boolean.TRUE);
+        if (timeFilterBegin != null)
+            query.ge(SIEventEntity::getStartTime,
+                     timeFilterBegin.atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime());
+        if (timeFilterEnd != null)
+            query.le(SIEventEntity::getStartTime,
+                     timeFilterEnd.atZoneSameInstant(ZoneOffset.UTC).toLocalDateTime());
+
+        return eventMapper.selectList(query)
+                          .stream()
+                          .map(this::convert)
+                          .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SIEvent> listNVODSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
+                                          boolean presentOnly, boolean scheduleOnly,
+                                          OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd)
+    {
+        LambdaQueryWrapper<SIEventEntity> query = Wrappers.lambdaQuery(SIEventEntity.class)
+                                                          .eq(SIEventEntity::getTransportStreamId, transportStreamId)
+                                                          .eq(SIEventEntity::getOriginalNetworkId, originalNetworkId)
+                                                          .eq(SIEventEntity::getServiceId, serviceId)
+                                                          .eq(SIEventEntity::getNvodTimeShiftedEvent, Boolean.TRUE)
                                                           .eq(presentOnly, SIEventEntity::getPresentEvent, Boolean.TRUE)
                                                           .eq(scheduleOnly, SIEventEntity::getScheduleEvent, Boolean.TRUE);
         if (timeFilterBegin != null)
@@ -1104,7 +1148,7 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public void updateStreamDensity(int densityRef, int count, byte[] density, long avgDensity, long maxDensity, long minDensity)
+    public void updateStreamDensity(int densityRef, int count, byte[] density, double avgDensity, long maxDensity, long minDensity)
     {
         DensityBulkEntity change = new DensityBulkEntity();
         change.setId(densityRef);

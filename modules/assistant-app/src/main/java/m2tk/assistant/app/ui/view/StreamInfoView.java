@@ -206,7 +206,7 @@ public class StreamInfoView extends JPanel implements InfoView
             snapshot.programs = database.listMPEGPrograms();
             snapshot.caStreams = database.listCASystemStreams();
 
-            Map<String, SIService> serviceMap = database.listSIServices()
+            Map<String, SIService> serviceMap = database.listRegularSIServices()
                                                         .stream()
                                                         .collect(toMap(service -> String.format("%d.%d",
                                                                                                 service.getTransportStreamId(),

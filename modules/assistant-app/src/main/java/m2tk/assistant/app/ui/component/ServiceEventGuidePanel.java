@@ -26,6 +26,7 @@ import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
+import javax.swing.event.TreeSelectionEvent;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -41,13 +42,12 @@ import static java.util.stream.Collectors.toList;
 
 public class ServiceEventGuidePanel extends JPanel
 {
-    private JTree serviceTree;
-    private DefaultTreeModel treeModel;
-    private DefaultMutableTreeNode treeRoot;
-    private EventTableModel eventTableModel;
+    protected JTree serviceTree;
+    protected DefaultTreeModel treeModel;
+    protected DefaultMutableTreeNode treeRoot;
+    protected EventTableModel eventTableModel;
 
-    private transient List<SIService> serviceList = Collections.emptyList();
-    private transient Map<SIService, List<SIEvent>> eventRegistry = Collections.emptyMap();
+    protected transient Map<SIService, List<SIEvent>> eventRegistry = Collections.emptyMap();
 
     public ServiceEventGuidePanel()
     {
@@ -62,18 +62,7 @@ public class ServiceEventGuidePanel extends JPanel
         serviceTree.setRootVisible(false);
         serviceTree.setShowsRootHandles(true);
         serviceTree.setCellRenderer(new ServiceTreeCellRenderer());
-        serviceTree.addTreeSelectionListener(e -> {
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) serviceTree.getLastSelectedPathComponent();
-            if (node != null && node.getUserObject() instanceof SIService service)
-            {
-                Map<SIService, List<SIEvent>> registry = eventRegistry;
-                if (registry != null)
-                {
-                    List<SIEvent> events = registry.getOrDefault(service, Collections.emptyList());
-                    eventTableModel.update(events);
-                }
-            }
-        });
+        serviceTree.addTreeSelectionListener(this::onServiceSelected);
 
         eventTableModel = new EventTableModel();
         JTable eventTable = new JTable();
@@ -90,39 +79,29 @@ public class ServiceEventGuidePanel extends JPanel
 
         TableColumnModel columnModel = eventTable.getColumnModel();
         ComponentUtil.configTableColumn(columnModel, 0, centeredRenderer, 70, false); // 类型
-        ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 70, false);  // 事件号
-        ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 160, false);  // 开始时间
-        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 120, false);  // 持续时间
+        ComponentUtil.configTableColumn(columnModel, 1, trailingRenderer, 70, false); // 事件号
+        ComponentUtil.configTableColumn(columnModel, 2, centeredRenderer, 160, false);// 开始时间
+        ComponentUtil.configTableColumn(columnModel, 3, centeredRenderer, 120, false);// 持续时间
         ComponentUtil.configTableColumn(columnModel, 4, centeredRenderer, 60, false); // 语言
-        ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 320, true); // 标题
-        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 640, true); // 描述
+        ComponentUtil.configTableColumn(columnModel, 5, leadingRenderer, 320, true);  // 标题
+        ComponentUtil.configTableColumn(columnModel, 6, leadingRenderer, 640, true);  // 描述
 
         setLayout(new MigLayout("insets 2", "[360!][grow]", "grow"));
         add(new JScrollPane(serviceTree), "grow");
         add(new JScrollPane(eventTable), "grow");
     }
 
-    public void update(List<SIService> services, Map<SIService, List<SIEvent>> events)
+    public void update(Map<SIService, List<SIEvent>> events)
     {
-        if (!isSameServices(serviceList, services) || !isSameEventGroups(eventRegistry, events))
+        if (!isSame(eventRegistry, events))
         {
             treeRoot.removeAllChildren();
 
             // 这里Map是排好序的
-            Map<String, List<SIService>> groups1 = groupServices(services);
-            for (Map.Entry<String, List<SIService>> entry : groups1.entrySet())
+            Map<String, List<SIService>> groups = groupServices(events.keySet());
+            for (Map.Entry<String, List<SIService>> entry : groups.entrySet())
             {
                 treeRoot.add(createServiceGroupNode(entry.getKey(), entry.getValue()));
-            }
-
-            Map<String, List<SIService>> groups2 = groupServices(events.keySet());
-            for (Map.Entry<String, List<SIService>> entry : groups2.entrySet())
-            {
-                // 其他流的节目描述，且该业务无对应的SDT描述。
-                if (!groups1.containsKey(entry.getKey()))
-                {
-                    treeRoot.add(createServiceGroupNode(entry.getKey(), entry.getValue()));
-                }
             }
 
             serviceTree.expandPath(new TreePath(treeRoot));
@@ -130,16 +109,24 @@ public class ServiceEventGuidePanel extends JPanel
             eventTableModel.update(Collections.emptyList());
 
             eventRegistry = events;
-            serviceList = services;
         }
     }
 
-    private boolean isSameServices(List<SIService> current, List<SIService> incoming)
+    protected void onServiceSelected(TreeSelectionEvent e)
     {
-        return CollUtil.isEqualList(current, incoming);
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) serviceTree.getLastSelectedPathComponent();
+        if (node != null && node.getUserObject() instanceof SIService service)
+        {
+            Map<SIService, List<SIEvent>> registry = eventRegistry;
+            if (registry != null)
+            {
+                List<SIEvent> events = registry.getOrDefault(service, Collections.emptyList());
+                eventTableModel.update(events);
+            }
+        }
     }
 
-    private boolean isSameEventGroups(Map<SIService, List<SIEvent>> current, Map<SIService, List<SIEvent>> incoming)
+    protected boolean isSame(Map<SIService, List<SIEvent>> current, Map<SIService, List<SIEvent>> incoming)
     {
         if (!CollUtil.isEqualList(current.keySet(), incoming.keySet()))
             return false;
@@ -152,7 +139,7 @@ public class ServiceEventGuidePanel extends JPanel
         return true;
     }
 
-    private Map<String, List<SIService>> groupServices(Collection<SIService> services)
+    protected Map<String, List<SIService>> groupServices(Collection<SIService> services)
     {
         return services.stream()
                        .collect(groupingBy(service -> String.format("传输流：%d（原始网络：%d）",

@@ -92,7 +92,7 @@ public class DrawNetworkDiagramTask extends Task<BufferedImage, Void>
     {
         List<SINetwork> networks = databaseService.listSINetworks();
         List<SIMultiplex> multiplexes = databaseService.listSIMultiplexes();
-        List<SIService> services = databaseService.listSIServices();
+        List<SIService> services = databaseService.listRegularSIServices();
 
         Context context = new Context();
         createNodes(context, networks, multiplexes, services);

@@ -17,7 +17,6 @@ package m2tk.assistant.app.ui.view;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import lombok.Data;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.domain.SIEvent;
@@ -37,8 +36,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.util.HashMap;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -52,13 +52,6 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private volatile long lastTimestamp;
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
-
-    @Data
-    private static class EPGSnapshot
-    {
-        private List<SIService> services;
-        private Map<SIService, List<SIEvent>> events;
-    }
 
     public EPGInfoView()
     {
@@ -146,30 +139,27 @@ public class EPGInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
-        Supplier<EPGSnapshot> query = () ->
+        Supplier<Map<SIService, List<SIEvent>>> query = () ->
         {
-            List<SIService> services = database.listSIServices();
-            Map<SIService, List<SIEvent>> events = new HashMap<>();
+            List<SIService> services = database.listRegularSIServices();
+            Map<SIService, List<SIEvent>> registry = new HashMap<>();
 
             for (SIService service : services)
             {
-                List<SIEvent> list = database.listSIEvents(service.getTransportStreamId(),
-                                                           service.getOriginalNetworkId(),
-                                                           service.getServiceId(),
-                                                           false, false, false,
-                                                           null, null);
-                events.put(service, list);
+                List<SIEvent> events = database.listRegularSIEvents(service.getTransportStreamId(),
+                                                                    service.getOriginalNetworkId(),
+                                                                    service.getServiceId(),
+                                                                    false, false,
+                                                                    null, null);
+                registry.put(service, events);
             }
 
-            EPGSnapshot snapshot = new EPGSnapshot();
-            snapshot.setServices(services);
-            snapshot.setEvents(events);
-            return snapshot;
+            return registry;
         };
 
-        Consumer<EPGSnapshot> consumer = snapshot -> serviceEventGuidePanel.update(snapshot.getServices(), snapshot.getEvents());
+        Consumer<Map<SIService, List<SIEvent>>> consumer = registry -> serviceEventGuidePanel.update(registry);
 
-        AsyncQueryTask<EPGSnapshot> task = new AsyncQueryTask<>(application, query, consumer);
+        AsyncQueryTask<Map<SIService, List<SIEvent>>> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 }

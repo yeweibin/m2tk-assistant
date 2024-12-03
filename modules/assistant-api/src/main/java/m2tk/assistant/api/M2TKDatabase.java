@@ -106,7 +106,9 @@ public interface M2TKDatabase
 
     void updateSIService(SIService service);
 
-    List<SIService> listSIServices();
+    List<SIService> listRegularSIServices();
+
+    List<SIService> listNVODSIServices();
 
     List<SIService> getActualTransportStreamServices();
 
@@ -116,9 +118,13 @@ public interface M2TKDatabase
 
     void updateSIEvent(SIEvent event);
 
-    List<SIEvent> listSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
-                               boolean presentOnly, boolean scheduleOnly, boolean includeNVODEvents,
-                               OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd);
+    List<SIEvent> listRegularSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
+                                      boolean presentOnly, boolean scheduleOnly,
+                                      OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd);
+
+    List<SIEvent> listNVODSIEvents(int transportStreamId, int originalNetworkId, int serviceId,
+                                   boolean presentOnly, boolean scheduleOnly,
+                                   OffsetDateTime timeFilterBegin, OffsetDateTime timeFilterEnd);
 
     void addTimestamp(OffsetDateTime timestamp);
 
@@ -166,7 +172,7 @@ public interface M2TKDatabase
 
     int addStreamDensity(int pid, long position, int count, byte[] density);
 
-    void updateStreamDensity(int densityRef, int count, byte[] density, long avgDensity, long maxDensity, long minDensity);
+    void updateStreamDensity(int densityRef, int count, byte[] density, double avgDensity, long maxDensity, long minDensity);
 
     List<StreamDensityStats> listStreamDensityStats();
 

@@ -57,7 +57,7 @@ public class TR290InfoView extends JPanel implements InfoView
     private void initUI()
     {
         tr290StatsPanel = new TR290StatsPanel();
-        ComponentUtil.setTitledBorder(tr290StatsPanel, "TR 290");
+        ComponentUtil.setTitledBorder(tr290StatsPanel, getViewTitle());
 
         setLayout(new MigLayout("fill"));
         add(tr290StatsPanel, "center, grow");
@@ -113,7 +113,7 @@ public class TR290InfoView extends JPanel implements InfoView
     @Override
     public String getViewTitle()
     {
-        return "TR 290";
+        return "TR 101.290";
     }
 
     @Override

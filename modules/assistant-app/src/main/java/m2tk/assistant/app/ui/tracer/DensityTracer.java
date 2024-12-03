@@ -46,7 +46,7 @@ public class DensityTracer implements Tracer
         private long lastPosition;
         private long maxDensity;
         private long minDensity;
-        private long avgDensity;
+        private double avgDensity; // 用整型会降低数据精度，导致数值错误
     }
 
     public DensityTracer()

@@ -53,18 +53,22 @@ public class DensityChartPanel extends JPanel
 
     private ChartPanel drawBulk(StreamDensityBulk bulk)
     {
-        XYSeries series = new XYSeries("传输密度");
+        XYSeries series0 = new XYSeries("传输密度");
+        XYSeries series1 = new XYSeries("平均密度");
         int[] densities = bulk.getDensities();
         for (int i = 0; i < bulk.getBulkSize(); i++)
         {
-            series.add(i, densities[i]);
+            series0.add(i, densities[i]);
+            series1.add(i, bulk.getAvgDensity());
         }
 
         XYSeriesCollection collection = new XYSeriesCollection();
-        collection.addSeries(series);
+        collection.addSeries(series0);
+        collection.addSeries(series1);
 
         XYDotRenderer renderer = new XYDotRenderer();
-        renderer.setSeriesPaint(0, Color.decode("#CCCC00")); // #F25022
+        renderer.setSeriesPaint(0, Color.decode("#CCCC00"));
+        renderer.setSeriesPaint(1, Color.decode("#F25022"));
         renderer.setDefaultItemLabelPaint(foreground);
         renderer.setDotWidth(2);
         renderer.setDotHeight(2);

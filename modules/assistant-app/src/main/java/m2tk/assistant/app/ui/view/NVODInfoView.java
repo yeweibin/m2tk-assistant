@@ -19,19 +19,31 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.domain.SIEvent;
+import m2tk.assistant.api.domain.SIService;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.NVODServiceEventGuidePanel;
+import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
 import org.jdesktop.application.Application;
+import org.kordamp.ikonli.fluentui.FluentUiRegularAL;
+import org.kordamp.ikonli.swing.FontIcon;
 import org.pf4j.Extension;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-//@Extension(ordinal = 6)
+@Extension(ordinal = 7)
 public class NVODInfoView extends JPanel implements InfoView
 {
+    private Application application;
     private NVODServiceEventGuidePanel serviceEventGuidePanel;
     private EventBus bus;
     private M2TKDatabase database;
@@ -44,7 +56,7 @@ public class NVODInfoView extends JPanel implements InfoView
     private void initUI()
     {
         serviceEventGuidePanel = new NVODServiceEventGuidePanel();
-        ComponentUtil.setTitledBorder(serviceEventGuidePanel, "NVOD");
+        ComponentUtil.setTitledBorder(serviceEventGuidePanel, getViewTitle());
 
         setLayout(new MigLayout("fill"));
         add(serviceEventGuidePanel, "center, grow");
@@ -53,6 +65,7 @@ public class NVODInfoView extends JPanel implements InfoView
     @Override
     public void setupApplication(Application application)
     {
+        this.application = application;
     }
 
     @Override
@@ -95,7 +108,7 @@ public class NVODInfoView extends JPanel implements InfoView
     @Override
     public Icon getViewIcon()
     {
-        return null;
+        return FontIcon.of(FluentUiRegularAL.CALENDAR_MONTH_24, 20, Color.decode("#00A4EF"));
     }
 
     @Subscribe
@@ -106,66 +119,27 @@ public class NVODInfoView extends JPanel implements InfoView
 
     private void queryServiceAndEvents()
     {
-//        long currentTransactionId = Math.max(transactionId, Global.getLatestTransactionId());
-//        if (currentTransactionId == -1)
-//            return;
-//
-//        Map<Long, SIService> serviceRegistry = new HashMap<>();
-//        Map<Long, SIEvent> eventRegistry = new HashMap<>();
-//
-//        Supplier<Void> query = () -> {
-//            DatabaseService databaseService = Global.getDatabaseService();
-//            List<SIServiceEntity> services = databaseService.listNVODServices(currentTransactionId);
-//            List<SIEventEntity> events = databaseService.listNVODEvents(currentTransactionId);
-//
-//            services.forEach(service -> {
-//                SIService nvodService = service.isNvodReferenceService() ? ofReference(service)
-//                                                                         : ofTimeShifted(service);
-//                serviceRegistry.put(nvodService.getRef(), nvodService);
-//            });
-//
-//            // 先筛查所有的引用事件
-//            for (SIEventEntity event : events)
-//            {
-//                if (event.isNvodReferenceEvent())
-//                {
-//                    SIEvent referenceEvent = ofReference(event);
-//                    eventRegistry.put(referenceEvent.getRef(), referenceEvent);
-//                }
-//            }
-//
-//            // 再筛出所有的时移事件，并更新事件描述
-//            for (SIEventEntity event : events)
-//            {
-////                if (event.isNvodTimeShiftedEvent())
-////                {
-////                    String refKey = NVODEvent.referenceId(event.getTransportStreamId(),
-////                                                          event.getOriginalNetworkId(),
-////                                                          event.getReferenceServiceId(),
-////                                                          event.getReferenceEventId());
-////                    SIEvent referenceEvent = eventRegistry.get(refKey);
-////                    SIEvent shiftedEvent = NVODEvent.ofTimeShifted(event.getTransportStreamId(),
-////                                                                   event.getOriginalNetworkId(),
-////                                                                   event.getServiceId(),
-////                                                                   event.getEventId(),
-////                                                                   event.getReferenceServiceId(), event.getReferenceEventId(),
-////                                                                   referenceEvent != null ? referenceEvent.getEventName() : String.format("事件%d", event.getReferenceEventId()),
-////                                                                   referenceEvent != null ? referenceEvent.getEventDescription() : "",
-////                                                                   referenceEvent != null ? referenceEvent.getLanguageCode() : "",
-////                                                                   event.getStartTime(), event.getDuration(),
-////                                                                   event.isPresentEvent());
-////                    eventRegistry.put(shiftedEvent.getRef(), shiftedEvent);
-////                }
-//            }
-//
-//            return null;
-//        };
-//
-////        Consumer<Void> consumer = nothing -> serviceEventGuidePanel.update(serviceRegistry, eventRegistry);
-////
-////        AsyncQueryTask<Void> task = new AsyncQueryTask<>(frameView.getApplication(),
-////                                                         query,
-////                                                         consumer);
-////        task.execute();
+        Supplier<Map<SIService, List<SIEvent>>> query = () ->
+        {
+            List<SIService> services = database.listNVODSIServices();
+            Map<SIService, List<SIEvent>> registry = new HashMap<>();
+
+            for (SIService service : services)
+            {
+                List<SIEvent> events = database.listNVODSIEvents(service.getTransportStreamId(),
+                                                                 service.getOriginalNetworkId(),
+                                                                 service.getServiceId(),
+                                                                 false, false,
+                                                                 null, null);
+                registry.put(service, events);
+            }
+
+            return registry;
+        };
+
+        Consumer<Map<SIService, List<SIEvent>>> consumer = events -> serviceEventGuidePanel.update(events);
+
+        AsyncQueryTask<Map<SIService, List<SIEvent>>> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
     }
 }

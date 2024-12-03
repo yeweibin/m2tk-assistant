@@ -41,5 +41,5 @@ public class DensityBulkEntity
     @TableField("min_density")
     private Long minDensity;
     @TableField("avg_density")
-    private Long avgDensity;
+    private Double avgDensity;
 }

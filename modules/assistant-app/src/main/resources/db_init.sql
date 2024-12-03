@@ -254,7 +254,7 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_density_bulk` (
   `start_position` BIGINT DEFAULT 0 NOT NULL,
   `max_density` BIGINT DEFAULT 0 NOT NULL,
   `min_density` BIGINT DEFAULT 0 NOT NULL,
-  `avg_density` BIGINT DEFAULT 0 NOT NULL
+  `avg_density` DOUBLE DEFAULT 0 NOT NULL
 );
 
 CREATE VIEW IF NOT EXISTS `PUBLIC`.`v_density_stat` AS

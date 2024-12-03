@@ -40,7 +40,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-@Extension(ordinal = 7)
+@Extension(ordinal = 8)
 public class DatagramView extends JPanel implements InfoView
 {
     private Application application;
@@ -95,7 +95,7 @@ public class DatagramView extends JPanel implements InfoView
     {
         JMenuItem item = new JMenuItem(getViewTitle());
         item.setIcon(getViewIcon());
-        item.setAccelerator(KeyStroke.getKeyStroke("alt 7"));
+        item.setAccelerator(KeyStroke.getKeyStroke("alt 8"));
         item.addActionListener(e -> {
             if (bus != null)
             {
