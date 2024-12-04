@@ -183,7 +183,7 @@ public class StreamInfoView extends JPanel
     public List<JMenuItem> getContextMenuItem(ElementaryStream stream)
     {
         if (stream.isScrambled() ||
-            StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_DATA, StreamTypes.CATEGORY_USER_PRIVATE))
+            !StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO))
             return List.of();
 
         JMenuItem item = new JMenuItem();

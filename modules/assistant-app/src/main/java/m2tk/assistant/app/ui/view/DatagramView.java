@@ -66,7 +66,7 @@ public class DatagramView extends JPanel implements InfoView, StreamObserver
     private void initUI()
     {
         sectionDatagramPanel = new SectionDatagramPanel();
-        ComponentUtil.setTitledBorder(sectionDatagramPanel, "数据段结构");
+        ComponentUtil.setTitledBorder(sectionDatagramPanel, getViewTitle());
 
         setLayout(new MigLayout("fill"));
         add(sectionDatagramPanel, "center, grow");
@@ -122,7 +122,7 @@ public class DatagramView extends JPanel implements InfoView, StreamObserver
     @Override
     public String getViewTitle()
     {
-        return "数据段结构";
+        return "数据结构";
     }
 
     @Override
@@ -136,7 +136,10 @@ public class DatagramView extends JPanel implements InfoView, StreamObserver
     {
         if (stream.isScrambled() ||
             StrUtil.contains(stream.getDescription(), "PES") ||
-            StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO))
+            StrUtil.equalsAny(stream.getCategory(),
+                              StreamTypes.CATEGORY_VIDEO,
+                              StreamTypes.CATEGORY_AUDIO,
+                              StreamTypes.CATEGORY_NULL_PACKET))
             return List.of();
 
         JMenuItem item = new JMenuItem();
