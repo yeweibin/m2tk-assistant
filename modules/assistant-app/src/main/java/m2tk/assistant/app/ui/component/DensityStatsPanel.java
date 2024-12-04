@@ -44,6 +44,7 @@ public class DensityStatsPanel extends JPanel
         table.setModel(tableModel);
         table.getTableHeader().setReorderingAllowed(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        table.setRowSelectionAllowed(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.getSelectionModel().addListSelectionListener(e -> {
             if (e.getValueIsAdjusting())
@@ -85,6 +86,6 @@ public class DensityStatsPanel extends JPanel
     {
         int row = tableModel.getStatRow(pid);
         if (row != -1)
-            table.getSelectionModel().setSelectionInterval(row, row);
+            table.setRowSelectionInterval(row, row);
     }
 }

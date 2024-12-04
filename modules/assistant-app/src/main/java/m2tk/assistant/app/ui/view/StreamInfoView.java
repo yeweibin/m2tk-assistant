@@ -21,6 +21,8 @@ import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.ProgramObserver;
+import m2tk.assistant.api.StreamObserver;
 import m2tk.assistant.api.domain.*;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
@@ -29,7 +31,6 @@ import m2tk.assistant.app.ui.AssistantApp;
 import m2tk.assistant.app.ui.component.CASystemInfoPanel;
 import m2tk.assistant.app.ui.component.ProgramInfoPanel;
 import m2tk.assistant.app.ui.component.StreamInfoPanel;
-import m2tk.assistant.app.ui.event.ShowStreamDensityEvent;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -43,10 +44,8 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -54,22 +53,18 @@ import static java.util.stream.Collectors.toMap;
 
 @Slf4j
 @Extension(ordinal = 1)
-public class StreamInfoView extends JPanel implements InfoView
+public class StreamInfoView extends JPanel
+    implements InfoView, StreamObserver, ProgramObserver
 {
     private Application application;
     private ProgramInfoPanel programInfoPanel;
     private StreamInfoPanel streamInfoPanel;
     private CASystemInfoPanel casInfoPanel;
-    private JPopupMenu streamContextMenu;
-    private JMenuItem streamContextMenuItem1;
-    private JMenuItem streamContextMenuItem2;
-    private JMenuItem streamContextMenuItem3;
-    private JPopupMenu programContextMenu;
-    private JMenuItem programContextMenuItem;
 
-    private transient StreamSource currentSource;
-    private transient ElementaryStream selectedStream;
-    private transient MPEGProgram selectedProgram;
+    private List<StreamObserver> streamObservers = new ArrayList<>();
+    private List<ProgramObserver> programObservers = new ArrayList<>();
+
+    private StreamSource currentSource;
     private EventBus bus;
     private M2TKDatabase database;
 
@@ -91,23 +86,8 @@ public class StreamInfoView extends JPanel implements InfoView
 
     private void initUI()
     {
-        streamContextMenuItem1 = new JMenuItem();
-        streamContextMenuItem1.addActionListener(e -> playStream());
-        streamContextMenuItem2 = new JMenuItem();
-        streamContextMenuItem2.addActionListener(e -> filterPrivateSection());
-        streamContextMenuItem3 = new JMenuItem();
-        streamContextMenuItem3.addActionListener(e -> showSectionDensity());
-        streamContextMenu = new JPopupMenu();
-        streamContextMenu.setLabel("播放");
-        streamContextMenu.add(streamContextMenuItem1);
-        streamContextMenu.add(streamContextMenuItem2);
-        streamContextMenu.add(streamContextMenuItem3);
-
-        programContextMenuItem = new JMenuItem();
-        programContextMenuItem.addActionListener(e -> playProgram());
-        programContextMenu = new JPopupMenu();
-        programContextMenu.setLabel("播放");
-        programContextMenu.add(programContextMenuItem);
+        streamObservers = new ArrayList<>();
+        programObservers = new ArrayList<>();
 
         streamInfoPanel = new StreamInfoPanel();
         programInfoPanel = new ProgramInfoPanel();
@@ -183,6 +163,35 @@ public class StreamInfoView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularAL.DATA_USAGE_20, 20, Color.decode("#F56040"));
     }
 
+    @Override
+    public List<JMenuItem> getContextMenuItem(MPEGProgram program)
+    {
+        if (program.isFreeAccess())
+        {
+            String text = (program.getName() == null)
+                          ? String.format("播放 节目%d", program.getProgramNumber())
+                          : String.format("播放 %s", program.getName());
+            JMenuItem item = new JMenuItem();
+            item.setText(text);
+            item.addActionListener(e -> playProgram(program));
+            return List.of(item);
+        }
+        return List.of();
+    }
+
+    @Override
+    public List<JMenuItem> getContextMenuItem(ElementaryStream stream)
+    {
+        if (stream.isScrambled() ||
+            StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_DATA, StreamTypes.CATEGORY_USER_PRIVATE))
+            return List.of();
+
+        JMenuItem item = new JMenuItem();
+        item.setText("播放 " + stream.getDescription());
+        item.addActionListener(e -> playStream(stream));
+        return List.of(item);
+    }
+
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
@@ -192,6 +201,18 @@ public class StreamInfoView extends JPanel implements InfoView
             queryStreamSnapshot();
             lastTimestamp = System.currentTimeMillis();
         }
+    }
+
+    public void setStreamObservers(List<StreamObserver> observers)
+    {
+        streamObservers.clear();
+        streamObservers.addAll(observers);
+    }
+
+    public void setProgramObservers(List<ProgramObserver> observers)
+    {
+        programObservers.clear();
+        programObservers.addAll(observers);
     }
 
     private void queryStreamSnapshot()
@@ -241,33 +262,25 @@ public class StreamInfoView extends JPanel implements InfoView
         task.execute();
     }
 
-    private void playStream()
+    private void playStream(ElementaryStream stream)
     {
         int videoPid = 0x1FFF;
         int audioPid = 0x1FFF;
-        if (selectedStream.isScrambled())
-        {
-            String text = String.format("流%d 被加扰，无法播放", selectedStream.getStreamPid());
-            JOptionPane.showMessageDialog(null, text);
-            log.info(text);
-            return;
-        }
+        if (StrUtil.equals(stream.getCategory(), StreamTypes.CATEGORY_VIDEO))
+            videoPid = stream.getStreamPid();
 
-        if (StreamTypes.CATEGORY_VIDEO.equals(selectedStream.getCategory()))
-            videoPid = selectedStream.getStreamPid();
-
-        if (StreamTypes.CATEGORY_AUDIO.equals(selectedStream.getCategory()))
-            audioPid = selectedStream.getStreamPid();
+        if (StrUtil.equals(stream.getCategory(), StreamTypes.CATEGORY_AUDIO))
+            audioPid = stream.getStreamPid();
 
         if (videoPid == 0x1FFF && audioPid == 0x1FFF)
         {
-            String text = String.format("不支持的流类型：%s", selectedStream.getDescription());
+            String text = String.format("不支持的流类型：%s", stream.getDescription());
             JOptionPane.showMessageDialog(null, text);
             log.info(text);
             return;
         }
 
-        log.info("播放'流{}'，类型：{}", selectedStream.getStreamPid(), selectedStream.getDescription());
+        log.info("播放'流{}'，类型：{}", stream.getStreamPid(), stream.getDescription());
 
         if (videoPid != 0x1FFF)
             AssistantApp.getInstance().playVideo(currentSource.getUri(), videoPid);
@@ -275,11 +288,11 @@ public class StreamInfoView extends JPanel implements InfoView
             AssistantApp.getInstance().playAudio(currentSource.getUri(), audioPid);
     }
 
-    private void playProgram()
+    private void playProgram(MPEGProgram program)
     {
         int videoPid = 0x1FFF;
         int audioPid = 0x1FFF;
-        for (ElementaryStream es : selectedProgram.getElementaryStreams())
+        for (ElementaryStream es : program.getElementaryStreams())
         {
             if (es.isScrambled())
                 continue;
@@ -291,13 +304,13 @@ public class StreamInfoView extends JPanel implements InfoView
                 audioPid = es.getStreamPid();
         }
 
-        String programName = (selectedProgram.getName() == null)
-                             ? "节目" + selectedProgram.getProgramNumber()
-                             : selectedProgram.getName();
+        String programName = (program.getName() == null)
+                             ? "节目" + program.getProgramNumber()
+                             : program.getName();
 
         if (videoPid == 0x1FFF && audioPid == 0x1FFF)
         {
-            String text = selectedProgram.isFreeAccess()
+            String text = program.isFreeAccess()
                           ? programName + "无可播放内容"
                           : programName + "完全加扰，无法播放";
             JOptionPane.showMessageDialog(null, text);
@@ -307,69 +320,30 @@ public class StreamInfoView extends JPanel implements InfoView
 
         log.info("播放'{}'，视频PID：{}，音频PID：{}", programName, videoPid, audioPid);
 
-        AssistantApp.getInstance().playProgram(currentSource.getUri(), selectedProgram.getProgramNumber());
-    }
-
-    private void filterPrivateSection()
-    {
-        if (selectedStream.isScrambled())
-        {
-            String text = String.format("流%d 被加扰，无法解码", selectedStream.getStreamPid());
-            JOptionPane.showMessageDialog(null, text);
-            log.info(text);
-            return;
-        }
-
-        int pid = selectedStream.getStreamPid();
-        if (pid == 0x1FFF)
-        {
-            String text = String.format("不支持的流类型：%s", selectedStream.getDescription());
-            JOptionPane.showMessageDialog(null, text);
-            log.info(text);
-            return;
-        }
-
-        log.info("添加私有段过滤器：'流{}'，类型：{}", selectedStream.getStreamPid(), selectedStream.getDescription());
-
-        FilteringHook hook = new FilteringHook();
-        hook.setSourceUri(currentSource.getUri());
-        hook.setSubjectType("section");
-        hook.setSubjectPid(selectedStream.getStreamPid());
-        hook.setSubjectTableId(-1);
-        database.addFilteringHook(hook);
-    }
-
-    private void showSectionDensity()
-    {
-        bus.post(new ShowStreamDensityEvent(selectedStream.getStreamPid()));
+        AssistantApp.getInstance().playProgram(currentSource.getUri(), program.getProgramNumber());
     }
 
     private void showStreamPopupMenu(MouseEvent event, ElementaryStream stream)
     {
-        selectedStream = stream;
-        streamContextMenuItem1.setText("播放 " + selectedStream.getDescription());
-        streamContextMenuItem2.setText("过滤私有段");
-        streamContextMenuItem3.setText("查看密度");
-
-        boolean playable = !stream.isScrambled() &&
-                           StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO);
-        boolean filterable = !stream.isScrambled() &&
-                             !StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO);
-        streamContextMenuItem1.setVisible(playable);
-        streamContextMenuItem2.setVisible(filterable);
-
-        streamContextMenu.show(event.getComponent(), event.getX(), event.getY());
+        JPopupMenu popupMenu = new JPopupMenu();
+        for (StreamObserver observer : streamObservers)
+        {
+            List<JMenuItem> menuItems = observer.getContextMenuItem(stream);
+            for (JMenuItem menuItem : menuItems)
+                popupMenu.add(menuItem);
+        }
+        popupMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 
     private void showProgramPopupMenu(MouseEvent event, MPEGProgram program)
     {
-        selectedProgram = program;
-        String text = (selectedProgram.getName() == null)
-                      ? String.format("播放 节目%d", selectedProgram.getProgramNumber())
-                      : String.format("播放 %s", selectedProgram.getName());
-        programContextMenuItem.setText(text);
-
-        if (program.isFreeAccess())
-            programContextMenu.show(event.getComponent(), event.getX(), event.getY());
+        JPopupMenu popupMenu = new JPopupMenu();
+        for (ProgramObserver observer : programObservers)
+        {
+            List<JMenuItem> menuItems = observer.getContextMenuItem(program);
+            for (JMenuItem menuItem : menuItems)
+                popupMenu.add(menuItem);
+        }
+        popupMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 }

@@ -23,9 +23,7 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
-import m2tk.assistant.api.InfoView;
-import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.Tracer;
+import m2tk.assistant.api.*;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
@@ -39,6 +37,7 @@ import m2tk.assistant.app.ui.util.ButtonBuilder;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.util.MenuItemBuilder;
 import m2tk.assistant.app.ui.view.LogsView;
+import m2tk.assistant.app.ui.view.StreamInfoView;
 import m2tk.multiplex.DemuxStatus;
 import org.jdesktop.application.Action;
 import org.jdesktop.application.FrameView;
@@ -149,7 +148,8 @@ public class MainViewController
             {
                 return new SingletonExtensionFactory(this,
                                                      Tracer.class.getName(),
-                                                     InfoView.class.getName());
+                                                     InfoView.class.getName(),
+                                                     StreamObserver.class.getName());
             }
         };
 
@@ -161,10 +161,23 @@ public class MainViewController
         coreInfoViews = new ArrayList<>();
         pluggedInfoViews = new ArrayList<>();
 
+        List<StreamObserver> streamObservers = new ArrayList<>();
+        List<ProgramObserver> programObservers = new ArrayList<>();
+
         // 加载classpath里的扩展
         List<?> internalExtensions = pluginManager.getExtensions((String) null);
         for (Object extension : internalExtensions)
         {
+            // 有可能一个extension实现了不同的扩展接口，所以用if逐个检查。
+
+            if (extension instanceof StreamObserver observer)
+            {
+                streamObservers.add(observer);
+            }
+            if (extension instanceof ProgramObserver observer)
+            {
+                programObservers.add(observer);
+            }
             if (extension instanceof Tracer tracer)
             {
                 tracers.add(tracer);
@@ -185,6 +198,12 @@ public class MainViewController
         for (PluginWrapper plugin : plugins)
         {
             String pluginId = plugin.getPluginId();
+            List<StreamObserver> pluginStreamObservers = pluginManager.getExtensions(StreamObserver.class, pluginId);
+            streamObservers.addAll(pluginStreamObservers);
+
+            List<ProgramObserver> pluginProgramObservers = pluginManager.getExtensions(ProgramObserver.class, pluginId);
+            programObservers.addAll(pluginProgramObservers);
+
             List<Tracer> pluginTracers = pluginManager.getExtensions(Tracer.class, pluginId);
             tracers.addAll(pluginTracers);
 
@@ -196,6 +215,14 @@ public class MainViewController
                 view.setupApplication(frameView.getApplication());
             }
         }
+
+        // 针对StreamInfoView做特别的设置
+        StreamInfoView view = (StreamInfoView) coreInfoViews.stream()
+                                                            .filter(v -> v instanceof StreamInfoView)
+                                                            .findFirst()
+                                                            .orElseThrow(() -> new IllegalStateException("模块加载错误"));
+        view.setStreamObservers(streamObservers);
+        view.setProgramObservers(programObservers);
     }
 
     private void createAndSetupMenu()

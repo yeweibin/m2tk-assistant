@@ -15,13 +15,19 @@
  */
 package m2tk.assistant.app.ui.view;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.StreamObserver;
+import m2tk.assistant.api.domain.ElementaryStream;
+import m2tk.assistant.api.domain.FilteringHook;
 import m2tk.assistant.api.domain.PrivateSection;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
+import m2tk.assistant.api.presets.StreamTypes;
 import m2tk.assistant.app.ui.component.SectionDatagramPanel;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -40,8 +46,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+@Slf4j
 @Extension(ordinal = 8)
-public class DatagramView extends JPanel implements InfoView
+public class DatagramView extends JPanel implements InfoView, StreamObserver
 {
     private Application application;
     private SectionDatagramPanel sectionDatagramPanel;
@@ -124,6 +131,20 @@ public class DatagramView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularMZ.TEXT_BULLET_LIST_TREE_20, 20, Color.decode("#89D3DF"));
     }
 
+    @Override
+    public List<JMenuItem> getContextMenuItem(ElementaryStream stream)
+    {
+        if (stream.isScrambled() ||
+            StrUtil.contains(stream.getDescription(), "PES") ||
+            StrUtil.equalsAny(stream.getCategory(), StreamTypes.CATEGORY_VIDEO, StreamTypes.CATEGORY_AUDIO))
+            return List.of();
+
+        JMenuItem item = new JMenuItem();
+        item.setText("过滤私有段");
+        item.addActionListener(e -> filterPrivateSection(stream));
+        return List.of(item);
+    }
+
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
@@ -142,5 +163,26 @@ public class DatagramView extends JPanel implements InfoView
 
         AsyncQueryTask<Map<String, List<PrivateSection>>> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
+    }
+
+    private void filterPrivateSection(ElementaryStream stream)
+    {
+        int pid = stream.getStreamPid();
+        if (pid == 0x1FFF)
+        {
+            String text = String.format("不支持的流类型：%s", stream.getDescription());
+            JOptionPane.showMessageDialog(null, text);
+            log.info(text);
+            return;
+        }
+
+        log.info("添加私有段过滤器：'流{}'，类型：{}", stream.getStreamPid(), stream.getDescription());
+
+        FilteringHook hook = new FilteringHook();
+        hook.setSourceUri(database.getCurrentStreamSource().getUri());
+        hook.setSubjectType("section");
+        hook.setSubjectPid(stream.getStreamPid());
+        hook.setSubjectTableId(-1);
+        database.addFilteringHook(hook);
     }
 }

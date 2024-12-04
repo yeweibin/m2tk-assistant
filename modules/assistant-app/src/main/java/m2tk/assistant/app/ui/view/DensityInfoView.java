@@ -19,6 +19,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.StreamObserver;
+import m2tk.assistant.api.domain.ElementaryStream;
 import m2tk.assistant.api.domain.StreamDensityBulk;
 import m2tk.assistant.api.domain.StreamDensityStats;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
@@ -43,7 +45,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 @Extension(ordinal = 5)
-public class DensityInfoView extends JPanel implements InfoView
+public class DensityInfoView extends JPanel implements InfoView, StreamObserver
 {
     private Application application;
     private DensityStatsPanel densityStatsPanel;
@@ -66,13 +68,9 @@ public class DensityInfoView extends JPanel implements InfoView
         densityStatsPanel = new DensityStatsPanel();
         densityStatsPanel.addDensityStatConsumer(stats -> {
             if (stats == null)
-            {
                 densityChartPanel.setVisible(false);
-                splitPane.setDividerLocation(0.3);
-            } else
-            {
+            else
                 queryDensityBulks(stats.getPid());
-            }
         });
 
         densityChartPanel = new DensityChartPanel();
@@ -94,7 +92,7 @@ public class DensityInfoView extends JPanel implements InfoView
             public void componentShown(ComponentEvent e)
             {
                 if (database != null)
-                    queryDensityStats();
+                    queryDensityStatsAndSelect();
             }
         });
     }
@@ -148,13 +146,24 @@ public class DensityInfoView extends JPanel implements InfoView
         return FontIcon.of(FluentUiRegularMZ.PULSE_24, 20, Color.decode("#FFDC80"));
     }
 
+    @Override
+    public List<JMenuItem> getContextMenuItem(ElementaryStream stream)
+    {
+        JMenuItem item = new JMenuItem("查看流密度");
+        item.addActionListener(e -> {
+            bus.post(new ShowInfoViewEvent(this));
+            bus.post(new ShowStreamDensityEvent(stream.getStreamPid()));
+        });
+        return List.of(item);
+    }
+
     @Subscribe
     public void onRefreshInfoViewEvent(RefreshInfoViewEvent event)
     {
         long t1 = System.currentTimeMillis();
         if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
         {
-            queryDensityStats();
+            queryDensityStatsAndSelect();
             lastTimestamp = System.currentTimeMillis();
         }
     }
@@ -162,14 +171,25 @@ public class DensityInfoView extends JPanel implements InfoView
     @Subscribe
     public void onShowStreamDensityEvent(ShowStreamDensityEvent event)
     {
-        bus.post(new ShowInfoViewEvent(this));
-        densityStatsPanel.selectStreamStats(event.getStream());
+        queryDensityStatsAndSelect(event.getStream());
     }
 
-    private void queryDensityStats()
+    private void queryDensityStatsAndSelect()
     {
         Supplier<List<StreamDensityStats>> query = () -> database.listStreamDensityStats();
         Consumer<List<StreamDensityStats>> consumer = densityStatsPanel::update;
+
+        AsyncQueryTask<List<StreamDensityStats>> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
+    }
+
+    private void queryDensityStatsAndSelect(int pid)
+    {
+        Supplier<List<StreamDensityStats>> query = () -> database.listStreamDensityStats();
+        Consumer<List<StreamDensityStats>> consumer = stats -> {
+            densityStatsPanel.update(stats);
+            densityStatsPanel.selectStreamStats(pid);
+        };
 
         AsyncQueryTask<List<StreamDensityStats>> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();

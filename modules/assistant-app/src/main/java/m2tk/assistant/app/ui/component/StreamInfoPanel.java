@@ -214,8 +214,8 @@ public class StreamInfoPanel extends JPanel
                         return;
                     if (rowAtPoint != selectedRow)
                     {
-                        table.getSelectionModel().setSelectionInterval(table.convertRowIndexToModel(rowAtPoint),
-                                                                       table.convertRowIndexToModel(rowAtPoint));
+                        table.setRowSelectionInterval(table.convertRowIndexToModel(rowAtPoint),
+                                                      table.convertRowIndexToModel(rowAtPoint));
                         selectedRow = rowAtPoint;
                     }
                     try

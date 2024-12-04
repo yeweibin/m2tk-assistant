@@ -67,14 +67,15 @@ public class ProgramInfoPanel extends JPanel
             @Override
             public void mouseReleased(MouseEvent e)
             {
-                if (e.isPopupTrigger())
+                if (e.isPopupTrigger() && popupListener != null)
                 {
-                    TreePath path = tree.getSelectionPath();
+                    TreePath path = tree.getPathForLocation(e.getX(), e.getY());
                     if (path == null)
                         return;
 
+                    tree.setSelectionPath(path);
                     Object[] nodes = path.getPath();
-                    if (nodes.length > 1 && popupListener != null)
+                    if (nodes.length > 1)
                     {
                         try
                         {
