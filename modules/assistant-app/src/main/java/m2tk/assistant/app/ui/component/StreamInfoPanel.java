@@ -39,9 +39,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -164,27 +162,24 @@ public class StreamInfoPanel extends JPanel
         btnShowDetails.setIcon(iconShowDetails);
         btnShowDetails.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
         btnShowDetails.addActionListener(event -> {
-            if (btnShowDetails.isSelected())
-            {
-                sourceDetailsPanel.setVisible(true);
-                btnShowDetails.setIcon(iconHideDetails);
-            } else
-            {
-                sourceDetailsPanel.setVisible(false);
-                btnShowDetails.setIcon(iconShowDetails);
-            }
+            sourceDetailsPanel.setVisible(btnShowDetails.isSelected());
+            btnShowDetails.setIcon(btnShowDetails.isSelected() ? iconHideDetails : iconShowDetails);
             revalidate();
         });
 
         JTextField fieldSearch = new JTextField();
+        fieldSearch.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "输入PID或基本流描述中的关键字进行搜索……");
         fieldSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, new FlatSearchIcon());
         fieldSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
+        fieldSearch.putClientProperty(FlatClientProperties.TEXT_FIELD_CLEAR_CALLBACK, (Runnable) () -> {
+            fieldSearch.setText("");
+            rowSorter.setRowFilter(null);
+        });
         fieldSearch.addActionListener(e -> {
             String keyword = fieldSearch.getText();
-            if (StrUtil.isEmpty(keyword))
-                rowSorter.setRowFilter(null);
-            else
-                rowSorter.setRowFilter(RowFilter.regexFilter(keyword));
+            rowSorter.setRowFilter(StrUtil.isNotEmpty(keyword)
+                                   ? RowFilter.regexFilter("(?i)" + keyword, 1, 2) // 忽略大小写搜索
+                                   : null);
         });
 
         Icon iconTableSearch = FontIcon.of(FluentUiRegularMZ.SEARCH_24, 20, UIManager.getColor("Label.foreground"));
