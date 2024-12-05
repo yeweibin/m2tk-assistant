@@ -68,8 +68,10 @@ public class DescriptorDecoder
         SyntaxField descriptor = SyntaxField.descriptor(template.getName(),
                                                         Optional.ofNullable(template.getDisplayName())
                                                                 .map(Label::getText)
-                                                                .orElse(displayName));
+                                                                .orElse(displayName),
+                                                        position);
 
+        int start = position;
         int bitOffset = 0;
         for (SyntaxFieldDefinition fieldDefinition : template.getDescriptorSyntax())
         {
@@ -79,6 +81,7 @@ public class DescriptorDecoder
             bitOffset = (bitOffset + decodedBits) % 8;
         }
 
+        descriptor.setBitLength((position - start) * 8);
         return descriptor;
     }
 }

@@ -37,70 +37,80 @@ public class SyntaxField
     private final String mappedValue;
     private final boolean visible;
 
+    private final int position;
+    private final int bitOffset;
+
     private final String prefixText;
     private final String prefixColor;
     private final String labelFormat;
     private final String labelColor;
     private final boolean bold;
 
+    private int bitLength;
     private SyntaxField parent;
     private SyntaxField sibling;
     private LinkedList<SyntaxField> children;
 
-    public static SyntaxField descriptor(String name, String label)
+    public static SyntaxField descriptor(String name, String label, int position)
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
         return new SyntaxField(Type.DESCRIPTOR, name, null, null, label, true,
+                               position, 0,
                                null, null,
                                null, null, false);
     }
 
-    public static SyntaxField section(String name, String label, String group)
+    public static SyntaxField section(String name, String label, String group, int position)
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
         return new SyntaxField(Type.SECTION, name, group, null, label, true,
+                               position, 0,
                                null, null,
                                null, null, false);
     }
 
-    public static SyntaxField loopHeader(String name, String label)
+    public static SyntaxField loopHeader(String name, String label, int position, int bitOffset)
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
         return new SyntaxField(Type.LOOP_HEADER, name, null, null, label, true,
+                               position, bitOffset,
                                null, null,
                                null, null, false);
     }
 
-    public static SyntaxField loopEntryHeader(String name, String label)
+    public static SyntaxField loopEntryHeader(String name, String label, int position, int bitOffset)
     {
         Objects.requireNonNull(name);
         Objects.requireNonNull(label);
 
         return new SyntaxField(Type.LOOP_ENTRY_HEADER, name, null, null, label, true,
+                               position, bitOffset,
                                null, null,
                                null, null, false);
     }
 
-    public static SyntaxField invisible(Type type, String name, Object rawValue)
+    public static SyntaxField invisible(Type type, String name, Object rawValue, int position, int bitOffset)
     {
         Objects.requireNonNull(type);
         Objects.requireNonNull(name);
         Objects.requireNonNull(rawValue);
 
         return new SyntaxField(type, name, null, rawValue, null, false,
+                               position, bitOffset,
                                null, null,
                                null, null, false);
     }
 
     public static SyntaxField visible(Type type, String name, Object rawValue, String mappedValue,
                                       String prefixText, String prefixColor,
-                                      String labelFormat, String labelColor, boolean bold)
+                                      String labelFormat, String labelColor, boolean bold,
+                                      int position, int bitOffset)
     {
         Objects.requireNonNull(type);
         Objects.requireNonNull(name);
@@ -112,6 +122,7 @@ public class SyntaxField
             throw new IllegalArgumentException("无效的颜色参数：" + labelColor);
 
         return new SyntaxField(type, name, null, rawValue, mappedValue, true,
+                               position, bitOffset,
                                prefixText, prefixColor,
                                labelFormat, labelColor, bold);
     }
@@ -122,6 +133,8 @@ public class SyntaxField
                         Object rawValue,
                         String mappedValue,
                         boolean visible,
+                        int position,
+                        int bitOffset,
                         String prefixText,
                         String prefixColor,
                         String labelFormat,
@@ -138,6 +151,9 @@ public class SyntaxField
         this.rawValue = rawValue;
         this.mappedValue = mappedValue;
         this.visible = visible;
+
+        this.position = position;
+        this.bitOffset = bitOffset;
 
         this.prefixText = prefixText;
         this.prefixColor = prefixColor;
@@ -174,6 +190,21 @@ public class SyntaxField
     public boolean isVisible()
     {
         return visible;
+    }
+
+    public int getPosition()
+    {
+        return position;
+    }
+
+    public int getBitOffset()
+    {
+        return bitOffset;
+    }
+
+    public int getBitLength()
+    {
+        return bitLength;
     }
 
     public String getPrefixText()
@@ -246,6 +277,11 @@ public class SyntaxField
         return !hasChild()
                ? Collections.emptyList()
                : Collections.unmodifiableList(children);
+    }
+
+    public void setBitLength(int bitLength)
+    {
+        this.bitLength = bitLength;
     }
 
     public void setParent(SyntaxField parent)

@@ -81,8 +81,9 @@ public class SectionDecoder
             }
         }
 
-        SyntaxField section = SyntaxField.section(template.getName(), displayName, template.getGroup());
+        SyntaxField section = SyntaxField.section(template.getName(), displayName, template.getGroup(), position);
 
+        int start = position;
         int bitOffset = 0;
         for (SyntaxFieldDefinition fieldDefinition : template.getTableSyntax())
         {
@@ -92,6 +93,7 @@ public class SectionDecoder
             bitOffset = (bitOffset + decodedBits) % 8;
         }
 
+        section.setBitLength((position - start) * 8);
         return section;
     }
 }

@@ -191,14 +191,16 @@ public class SyntaxDecoder
 
         FieldPresentation presentation = definition.getPresentation();
         SyntaxField field = (presentation == null)
-                            ? SyntaxField.invisible(SyntaxField.Type.BITS, definition.getName(), value)
+                            ? SyntaxField.invisible(SyntaxField.Type.BITS, definition.getName(), value, position, bitOffset)
                             : SyntaxField.visible(SyntaxField.Type.BITS, definition.getName(), value,
                                                   presentation.hasValueMappings() ? mapIntToString(value, presentation.getValueMappings()) : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getText() : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getColor() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getText() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getColor() : null,
-                                                  presentation.hasFormat() && presentation.getFormat().isBold());
+                                                  presentation.hasFormat() && presentation.getFormat().isBold(),
+                                                  position, bitOffset);
+        field.setBitLength(bitLength);
 
         if (parent != null)
             parent.appendChild(field);
@@ -242,14 +244,16 @@ public class SyntaxDecoder
 
         FieldPresentation presentation = definition.getPresentation();
         SyntaxField field = (presentation == null)
-                            ? SyntaxField.invisible(SyntaxField.Type.NUMBER, definition.getName(), value)
+                            ? SyntaxField.invisible(SyntaxField.Type.NUMBER, definition.getName(), value, position, bitOffset)
                             : SyntaxField.visible(SyntaxField.Type.NUMBER, definition.getName(), value,
                                                   presentation.hasValueMappings() ? mapIntToString(value, presentation.getValueMappings()) : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getText() : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getColor() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getText() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getColor() : null,
-                                                  presentation.hasFormat() && presentation.getFormat().isBold());
+                                                  presentation.hasFormat() && presentation.getFormat().isBold(),
+                                                  position, bitOffset);
+        field.setBitLength(bitLength);
 
         if (parent != null)
             parent.appendChild(field);
@@ -300,14 +304,16 @@ public class SyntaxDecoder
 
         FieldPresentation presentation = definition.getPresentation();
         SyntaxField field = (presentation == null)
-                            ? SyntaxField.invisible(SyntaxField.Type.CHECKSUM, definition.getName(), value)
+                            ? SyntaxField.invisible(SyntaxField.Type.CHECKSUM, definition.getName(), value, position, bitOffset)
                             : SyntaxField.visible(SyntaxField.Type.CHECKSUM, definition.getName(), value,
                                                   mapping,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getText() : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getColor() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getText() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getColor() : null,
-                                                  presentation.hasFormat() && presentation.getFormat().isBold());
+                                                  presentation.hasFormat() && presentation.getFormat().isBold(),
+                                                  position, bitOffset);
+        field.setBitLength(bitLength);
 
         if (parent != null)
             parent.appendChild(field);
@@ -378,14 +384,16 @@ public class SyntaxDecoder
 
         FieldPresentation presentation = definition.getPresentation();
         SyntaxField field = (presentation == null)
-                            ? SyntaxField.invisible(SyntaxField.Type.NIBBLES, definition.getName(), value)
+                            ? SyntaxField.invisible(SyntaxField.Type.NIBBLES, definition.getName(), value, position, bitOffset)
                             : SyntaxField.visible(SyntaxField.Type.NIBBLES, definition.getName(), value,
                                                   null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getText() : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getColor() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getText() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getColor() : null,
-                                                  presentation.hasFormat() && presentation.getFormat().isBold());
+                                                  presentation.hasFormat() && presentation.getFormat().isBold(),
+                                                  position, bitOffset);
+        field.setBitLength(bitLength);
 
         if (parent != null)
             parent.appendChild(field);
@@ -452,14 +460,16 @@ public class SyntaxDecoder
 
         FieldPresentation presentation = definition.getPresentation();
         SyntaxField field = (presentation == null)
-                            ? SyntaxField.invisible(SyntaxField.Type.OCTETS, definition.getName(), value)
+                            ? SyntaxField.invisible(SyntaxField.Type.OCTETS, definition.getName(), value, position, bitOffset)
                             : SyntaxField.visible(SyntaxField.Type.OCTETS, definition.getName(), value,
                                                   null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getText() : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getColor() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getText() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getColor() : null,
-                                                  presentation.hasFormat() && presentation.getFormat().isBold());
+                                                  presentation.hasFormat() && presentation.getFormat().isBold(),
+                                                  position, bitOffset);
+        field.setBitLength(bitLength);
 
         if (parent != null)
             parent.appendChild(field);
@@ -545,14 +555,16 @@ public class SyntaxDecoder
 
         FieldPresentation presentation = definition.getPresentation();
         SyntaxField field = (presentation == null)
-                            ? SyntaxField.invisible(SyntaxField.Type.TEXT, definition.getName(), value)
+                            ? SyntaxField.invisible(SyntaxField.Type.TEXT, definition.getName(), value, position, bitOffset)
                             : SyntaxField.visible(SyntaxField.Type.TEXT, definition.getName(), value,
                                                   null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getText() : null,
                                                   presentation.hasPrefix() ? presentation.getPrefix().getColor() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getText() : null,
                                                   presentation.hasFormat() ? presentation.getFormat().getColor() : null,
-                                                  presentation.hasFormat() && presentation.getFormat().isBold());
+                                                  presentation.hasFormat() && presentation.getFormat().isBold(),
+                                                  position, bitOffset);
+        field.setBitLength(bitLength);
 
         if (parent != null)
             parent.appendChild(field);
@@ -633,7 +645,8 @@ public class SyntaxDecoder
         else
         {
             loopRoot = SyntaxField.loopHeader(definition.getName(),
-                                              presentation.getLoopHeader().getText());
+                                              presentation.getLoopHeader().getText(),
+                                              position, bitOffset);
             parent.appendChild(loopRoot);
         }
 
@@ -649,7 +662,9 @@ public class SyntaxDecoder
         {
             if (parent != loopRoot)
                 parent.removeChild(loopRoot);
-            SyntaxField loopEntry = SyntaxField.loopEntryHeader("loop_entry", presentation.getLoopEmpty().getText());
+            SyntaxField loopEntry = SyntaxField.loopEntryHeader("loop_entry",
+                                                                presentation.getLoopEmpty().getText(),
+                                                                position, bitOffset);
             parent.appendChild(loopEntry);
             return 0;
         }
@@ -677,25 +692,29 @@ public class SyntaxDecoder
             {
                 SyntaxField entryRoot;
                 if (fixedEntryLabel != null)
-                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', fixedEntryLabel.getText());
+                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', fixedEntryLabel.getText(), position, bitOffset);
                 else if (indexEntryLabel != null)
-                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', indexEntryLabel.getText() + (i + 1));
+                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', indexEntryLabel.getText() + (i + 1), position, bitOffset);
                 else
-                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', "循环体" + (i + 1));
+                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', "循环体" + (i + 1), position, bitOffset);
 
                 loopRoot.appendChild(entryRoot);
 
+                int entryBitLength = 0;
                 for (SyntaxFieldDefinition entryFieldDefinition : definition.getBody())
                 {
                     int decodedBits = decode(entryFieldDefinition, encoding, position, bitOffset, limit, entryRoot);
 
+                    entryBitLength += decodedBits;
                     totalBits += decodedBits;
                     position = position + (bitOffset + decodedBits) / 8;
                     bitOffset = (bitOffset + decodedBits) % 8;
                 }
+                entryRoot.setBitLength(entryBitLength);
             }
         }
 
+        loopRoot.setBitLength(totalBits);
         return totalBits;
     }
 
@@ -718,7 +737,8 @@ public class SyntaxDecoder
         else
         {
             loopRoot = SyntaxField.loopHeader(definition.getName(),
-                                              presentation.getLoopHeader().getText());
+                                              presentation.getLoopHeader().getText(),
+                                              position, bitOffset);
             parent.appendChild(loopRoot);
         }
 
@@ -743,7 +763,9 @@ public class SyntaxDecoder
         {
             if (parent != loopRoot)
                 parent.removeChild(loopRoot);
-            SyntaxField loopEntry = SyntaxField.loopEntryHeader("loop_entry", presentation.getLoopEmpty().getText());
+            SyntaxField loopEntry = SyntaxField.loopEntryHeader("loop_entry",
+                                                                presentation.getLoopEmpty().getText(),
+                                                                position, bitOffset);
             parent.appendChild(loopEntry);
             return 0;
         }
@@ -774,26 +796,30 @@ public class SyntaxDecoder
             {
                 SyntaxField entryRoot;
                 if (fixedEntryLabel != null)
-                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', fixedEntryLabel.getText());
+                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', fixedEntryLabel.getText(), position, bitOffset);
                 else if (indexEntryLabel != null)
-                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', indexEntryLabel.getText() + (i + 1));
+                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', indexEntryLabel.getText() + (i + 1), position, bitOffset);
                 else
-                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', "循环体" + (i + 1));
+                    entryRoot = SyntaxField.loopEntryHeader("loop_entry[" + i + ']', "循环体" + (i + 1), position, bitOffset);
 
                 loopRoot.appendChild(entryRoot);
                 i++;
 
+                int entryBitLength = 0;
                 for (SyntaxFieldDefinition entryFieldDefinition : definition.getBody())
                 {
                     int decodedBits = decode(entryFieldDefinition, encoding, position, bitOffset, limit, entryRoot);
 
+                    entryBitLength += decodedBits;
                     totalBits += decodedBits;
                     position = position + (bitOffset + decodedBits) / 8;
                     bitOffset = (bitOffset + decodedBits) % 8;
                 }
+                entryRoot.setBitLength(entryBitLength);
             }
         }
 
+        loopRoot.setBitLength(totalBits);
         return totalBits;
     }
 }

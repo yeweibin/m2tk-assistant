@@ -17,12 +17,14 @@ package m2tk.assistant.app.ui.component;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.domain.PrivateSection;
-import m2tk.assistant.api.template.PlainTreeNodeSyntaxPresenter;
+import m2tk.assistant.api.template.RichTreeNodeSyntaxPresenter;
+import m2tk.assistant.api.template.RichTreeNodeSyntaxPresenter.NodeContext;
 import m2tk.assistant.api.template.SectionDecoder;
 import m2tk.assistant.api.template.SyntaxField;
 import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
 import org.exbin.auxiliary.binary_data.ByteArrayData;
+import org.exbin.bined.basic.BasicBackgroundPaintMode;
 import org.exbin.bined.swing.basic.CodeArea;
 import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
 import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
@@ -60,7 +62,7 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupTOT;
 
     private SectionDecoder decoder;
-    private PlainTreeNodeSyntaxPresenter presenter;
+    private RichTreeNodeSyntaxPresenter presenter;
     private Map<TreeNode, PrivateSection> nodeSectionMap;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -76,12 +78,13 @@ public class SectionDatagramPanel extends JPanel
         model = new DefaultTreeModel(root);
 
         decoder = new SectionDecoder();
-        presenter = new PlainTreeNodeSyntaxPresenter();
+        presenter = new RichTreeNodeSyntaxPresenter();
         nodeSectionMap = new HashMap<>();
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
         CodeArea codeArea = new CodeArea();
+        codeArea.setBackgroundPaintMode(BasicBackgroundPaintMode.PLAIN);
         codeArea.setVisible(false);
 
         JTree tree = new JTree(model);
@@ -97,16 +100,40 @@ public class SectionDatagramPanel extends JPanel
                 return;
             }
 
+            // 选中列表即显示HexView，但不一定有数据。
+            splitPane.setDividerLocation(0.45);
+            codeArea.setVisible(true);
+
+            PrivateSection section = null;
             Object[] nodes = path.getPath();
             for (int i = 2; i < nodes.length; i++)
             {
-                PrivateSection section = nodeSectionMap.get((TreeNode) nodes[i]);
+                section = nodeSectionMap.get((TreeNode) nodes[i]);
                 if (section != null)
+                    break;
+            }
+            if (section == null)
+            {
+                codeArea.setContentData(null);
+            } else
+            {
+                codeArea.setContentData(new ByteArrayData(section.getEncoding()));
+
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                if (node.getUserObject() instanceof NodeContext context)
                 {
-                    codeArea.setVisible(true);
-                    codeArea.setContentData(new ByteArrayData(section.getEncoding()));
-                    splitPane.setDividerLocation(0.45);
-                    return;
+                    SyntaxField syntax = context.getSyntax();
+                    if (syntax.getBitLength() == 0)
+                    {
+                        codeArea.clearSelection();
+                    } else
+                    {
+                        int start = syntax.getPosition();
+                        int end = syntax.getPosition() + (syntax.getBitOffset() + syntax.getBitLength()) / 8;
+                        if (end == start)
+                            end++;
+                        codeArea.setSelection(start, end);
+                    }
                 }
             }
         });
@@ -198,11 +225,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "transport_stream_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "transport_stream_id")));
             groupPAT.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -222,10 +250,11 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X]",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X]",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number")));
             groupCAT.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -245,11 +274,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 节目号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "program_number")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 节目号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "program_number")));
             groupPMT.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -269,11 +299,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务群号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "bouquet_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 业务群号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "bouquet_id")));
             groupBAT.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -293,11 +324,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 网络号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "network_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 网络号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "network_id")));
             groupNITActual.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -317,11 +349,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 网络号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "network_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 网络号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "network_id")));
             groupNITOther.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -341,12 +374,13 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d，原始网络号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "transport_stream_id"),
-                                             getFieldValue(syntax, "original_network_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d，原始网络号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "transport_stream_id"),
+                                           getFieldValue(syntax, "original_network_id")));
             groupSDTActual.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -366,12 +400,13 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d，原始网络号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "transport_stream_id"),
-                                             getFieldValue(syntax, "original_network_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 传输流号：%d，原始网络号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "transport_stream_id"),
+                                           getFieldValue(syntax, "original_network_id")));
             groupSDTOther.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -391,11 +426,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "service_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "service_id")));
             groupEITPFActual.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -415,11 +451,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "service_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "service_id")));
             groupEITPFOther.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -439,11 +476,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "service_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "service_id")));
             groupEITScheduleActual.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -463,11 +501,12 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
-                                             getFieldValue(syntax, "version_number"),
-                                             getFieldValue(syntax, "section_number"),
-                                             getFieldValue(syntax, "last_section_number"),
-                                             getFieldValue(syntax, "service_id")));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X] 业务号：%d",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number"),
+                                           getFieldValue(syntax, "service_id")));
             groupEITScheduleOther.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -487,8 +526,9 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("时间：%s",
-                                             translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("时间：%s",
+                                           translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
             groupTDT.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -508,8 +548,9 @@ public class SectionDatagramPanel extends JPanel
             if (node == null)
                 continue;
 
-            node.setUserObject(String.format("时间：%s",
-                                             translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("时间：%s",
+                                           translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
             groupTOT.add(node);
             nodeSectionMap.put(node, section);
         }
@@ -532,10 +573,11 @@ public class SectionDatagramPanel extends JPanel
                 if (node == null)
                     continue;
 
-                node.setUserObject(String.format("[PS]%s @ 0x%X:%d",
-                                                 node.getUserObject(),
-                                                 section.getPid(),
-                                                 section.getPosition()));
+                NodeContext context = (NodeContext) node.getUserObject();
+                context.setLabel(String.format("[PS]%s @ 0x%X:%d",
+                                               node.getUserObject(),
+                                               section.getPid(),
+                                               section.getPosition()));
 
                 DefaultMutableTreeNode group = (syntax.getGroup() == null)
                                                ? defaultGroup
@@ -597,13 +639,17 @@ public class SectionDatagramPanel extends JPanel
         {
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
+            boolean isPrivateSectionNode = false;
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-            String text = (String) node.getUserObject();
-            boolean isPrivateSectionNode = text.startsWith("[PS]");
-            if (isPrivateSectionNode)
-                text = text.substring("[PS]".length());
-            setText(text);
-            setToolTipText(text);
+            if (node.getUserObject() instanceof NodeContext context)
+            {
+                String text = context.getLabel();
+                isPrivateSectionNode = text.startsWith("[PS]");
+                if (isPrivateSectionNode)
+                    text = text.substring("[PS]".length());
+                setText(text);
+                setToolTipText(text);
+            }
 
             if (value == root)
                 return this;

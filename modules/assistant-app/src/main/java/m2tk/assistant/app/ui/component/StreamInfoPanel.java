@@ -191,6 +191,14 @@ public class StreamInfoPanel extends JPanel
                     doFiltering.run();
             }
         });
+        fieldSearch.addComponentListener(new ComponentAdapter()
+        {
+            @Override
+            public void componentShown(ComponentEvent e)
+            {
+                fieldSearch.requestFocusInWindow();
+            }
+        });
 
         Icon iconTableSearch = FontIcon.of(FluentUiRegularMZ.SEARCH_24, 20, UIManager.getColor("Label.foreground"));
         btnTableSearch = new JToggleButton();
