@@ -130,7 +130,7 @@ public class SectionDatagramPanel extends JPanel
                     {
                         int start = syntax.getPosition();
                         int end = syntax.getPosition() + (syntax.getBitOffset() + syntax.getBitLength()) / 8;
-                        if (end == start)
+                        if (end == start || (syntax.getBitOffset() + syntax.getBitLength()) % 8 != 0)
                             end++;
                         codeArea.setSelection(start, end);
                     }
