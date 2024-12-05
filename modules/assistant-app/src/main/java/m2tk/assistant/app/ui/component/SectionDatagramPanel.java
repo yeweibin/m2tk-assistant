@@ -22,14 +22,14 @@ import m2tk.assistant.api.template.SectionDecoder;
 import m2tk.assistant.api.template.SyntaxField;
 import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
+import org.exbin.auxiliary.binary_data.ByteArrayData;
+import org.exbin.bined.swing.basic.CodeArea;
 import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
 import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.*;
 import java.awt.*;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -61,6 +61,7 @@ public class SectionDatagramPanel extends JPanel
 
     private SectionDecoder decoder;
     private PlainTreeNodeSyntaxPresenter presenter;
+    private Map<TreeNode, PrivateSection> nodeSectionMap;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
@@ -76,16 +77,48 @@ public class SectionDatagramPanel extends JPanel
 
         decoder = new SectionDecoder();
         presenter = new PlainTreeNodeSyntaxPresenter();
+        nodeSectionMap = new HashMap<>();
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+        CodeArea codeArea = new CodeArea();
+        codeArea.setVisible(false);
 
         JTree tree = new JTree(model);
         tree.setRootVisible(false);
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(new SectionDatagramTreeCellRenderer());
+        tree.addTreeSelectionListener(e -> {
+            TreePath path = tree.getSelectionPath();
+            if (path == null)
+            {
+                codeArea.setVisible(false);
+                splitPane.setDividerLocation(1.0);
+                return;
+            }
+
+            Object[] nodes = path.getPath();
+            for (int i = 2; i < nodes.length; i++)
+            {
+                PrivateSection section = nodeSectionMap.get((TreeNode) nodes[i]);
+                if (section != null)
+                {
+                    codeArea.setVisible(true);
+                    codeArea.setContentData(new ByteArrayData(section.getEncoding()));
+                    splitPane.setDividerLocation(0.45);
+                    return;
+                }
+            }
+        });
 
         ToolTipManager.sharedInstance().registerComponent(tree);
 
+        splitPane.setLeftComponent(new JScrollPane(tree));
+        splitPane.setRightComponent(codeArea);
+        splitPane.setDividerLocation(1.0);
+
         setLayout(new BorderLayout());
-        add(new JScrollPane(tree), BorderLayout.CENTER);
+        add(splitPane, BorderLayout.CENTER);
 
         constructTreeSkeleton();
     }
@@ -134,6 +167,7 @@ public class SectionDatagramPanel extends JPanel
 
     public void update(Map<String, List<PrivateSection>> sectionGroups)
     {
+        nodeSectionMap.clear();
         addPATSectionNodes(sectionGroups.getOrDefault("PAT", Collections.emptyList()));
         addCATSectionNodes(sectionGroups.getOrDefault("CAT", Collections.emptyList()));
         addPMTSectionNodes(sectionGroups.getOrDefault("PMT", Collections.emptyList()));
@@ -170,6 +204,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "transport_stream_id")));
             groupPAT.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupPAT.setUserObject(String.format("PAT (%d)", groupPAT.getChildCount()));
@@ -192,6 +227,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "section_number"),
                                              getFieldValue(syntax, "last_section_number")));
             groupCAT.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupCAT.setUserObject(String.format("CAT (%d)", groupCAT.getChildCount()));
@@ -215,6 +251,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "program_number")));
             groupPMT.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupPMT.setUserObject(String.format("PMT (%d)", groupPMT.getChildCount()));
@@ -238,6 +275,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "bouquet_id")));
             groupBAT.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupBAT.setUserObject(String.format("BAT (%d)", groupBAT.getChildCount()));
@@ -261,6 +299,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "network_id")));
             groupNITActual.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupNITActual.setUserObject(String.format("NIT_Actual (%d)", groupNITActual.getChildCount()));
@@ -284,6 +323,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "network_id")));
             groupNITOther.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupNITOther.setUserObject(String.format("NIT_Other (%d)", groupNITOther.getChildCount()));
@@ -308,6 +348,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "transport_stream_id"),
                                              getFieldValue(syntax, "original_network_id")));
             groupSDTActual.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupSDTActual.setUserObject(String.format("SDT_Actual (%d)", groupSDTActual.getChildCount()));
@@ -332,6 +373,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "transport_stream_id"),
                                              getFieldValue(syntax, "original_network_id")));
             groupSDTOther.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupSDTOther.setUserObject(String.format("SDT_Other (%d)", groupSDTOther.getChildCount()));
@@ -355,6 +397,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "service_id")));
             groupEITPFActual.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupEITPFActual.setUserObject(String.format("EIT_PF_Actual (%d)", groupEITPFActual.getChildCount()));
@@ -378,6 +421,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "service_id")));
             groupEITPFOther.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupEITPFOther.setUserObject(String.format("EIT_PF_Other (%d)", groupEITPFOther.getChildCount()));
@@ -401,6 +445,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "service_id")));
             groupEITScheduleActual.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupEITScheduleActual.setUserObject(String.format("EIT_Schedule_Actual (%d)", groupEITScheduleActual.getChildCount()));
@@ -424,6 +469,7 @@ public class SectionDatagramPanel extends JPanel
                                              getFieldValue(syntax, "last_section_number"),
                                              getFieldValue(syntax, "service_id")));
             groupEITScheduleOther.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupEITScheduleOther.setUserObject(String.format("EIT_Schedule_Other (%d)", groupEITScheduleOther.getChildCount()));
@@ -444,6 +490,7 @@ public class SectionDatagramPanel extends JPanel
             node.setUserObject(String.format("时间：%s",
                                              translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
             groupTDT.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupTDT.setUserObject(String.format("TDT (%d)", groupTDT.getChildCount()));
@@ -464,6 +511,7 @@ public class SectionDatagramPanel extends JPanel
             node.setUserObject(String.format("时间：%s",
                                              translateTimepoint2Local(getFieldValue(syntax, "UTC_time"))));
             groupTOT.add(node);
+            nodeSectionMap.put(node, section);
         }
 
         groupTOT.setUserObject(String.format("TOT (%d)", groupTOT.getChildCount()));
@@ -494,6 +542,7 @@ public class SectionDatagramPanel extends JPanel
                                                : namedGroups.computeIfAbsent(syntax.getGroup(),
                                                                              any -> new DefaultMutableTreeNode(syntax.getGroup()));
                 group.add(node);
+                nodeSectionMap.put(node, section);
             } catch (Exception ex)
             {
                 log.error("解码私有段时出现异常：{}", ex.getMessage());

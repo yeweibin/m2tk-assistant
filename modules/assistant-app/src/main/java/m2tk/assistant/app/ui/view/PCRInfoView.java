@@ -74,9 +74,9 @@ public class PCRInfoView extends JPanel implements InfoView
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
-        splitPane.add(pcrStatsPanel, JSplitPane.TOP);
-        splitPane.add(pcrChartPanel, JSplitPane.BOTTOM);
-        ComponentUtil.setTitledBorder(splitPane, "PCR");
+        splitPane.setTopComponent(pcrStatsPanel);
+        splitPane.setBottomComponent(pcrChartPanel);
+        ComponentUtil.setTitledBorder(splitPane, getViewTitle());
 
         setLayout(new MigLayout("fill"));
         add(splitPane, "center, grow");

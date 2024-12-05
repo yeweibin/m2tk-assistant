@@ -175,11 +175,21 @@ public class StreamInfoPanel extends JPanel
             fieldSearch.setText("");
             rowSorter.setRowFilter(null);
         });
-        fieldSearch.addActionListener(e -> {
+        Runnable doFiltering = () -> {
             String keyword = fieldSearch.getText();
             rowSorter.setRowFilter(StrUtil.isNotEmpty(keyword)
                                    ? RowFilter.regexFilter("(?i)" + keyword, 1, 2) // 忽略大小写搜索
                                    : null);
+        };
+        fieldSearch.addActionListener(e -> doFiltering.run());
+        fieldSearch.addKeyListener(new KeyAdapter()
+        {
+            @Override
+            public void keyReleased(KeyEvent e)
+            {
+                if (!e.isActionKey())
+                    doFiltering.run();
+            }
         });
 
         Icon iconTableSearch = FontIcon.of(FluentUiRegularMZ.SEARCH_24, 20, UIManager.getColor("Label.foreground"));

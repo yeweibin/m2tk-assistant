@@ -32,7 +32,7 @@
         <jfreechart.version>1.5.4</jfreechart.version>
         <graphviz-java.version>0.18.1</graphviz-java.version>
         <image-viewer.version>1.2.3</image-viewer.version>
-        <eaxy.version>0.2.2</eaxy.version>
+        <bined.version>0.2.1</bined.version>
         <jaxp-api.version>1.4.5</jaxp-api.version>
         <jaffree.version>2023.09.10</jaffree.version>
         <maven.compiler.source>${jdk.version}</maven.compiler.source>
@@ -166,9 +166,14 @@
             <version>${image-viewer.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.eaxy</groupId>
-            <artifactId>eaxy</artifactId>
-            <version>${eaxy.version}</version>
+            <groupId>org.exbin.bined</groupId>
+            <artifactId>bined-swing</artifactId>
+            <version>${bined.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.exbin.auxiliary</groupId>
+            <artifactId>binary_data</artifactId>
+            <version>${bined.version}</version>
         </dependency>
         <dependency>
             <!--XML Schema校验-->

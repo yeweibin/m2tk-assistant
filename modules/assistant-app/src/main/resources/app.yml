@@ -17,8 +17,8 @@ solon:
 
 # 配置数据源
 m2tk.db: # 数据源对象的 bean 名称
-  jdbcUrl: jdbc:h2:~/m2tk/db/assistant;IGNORECASE=TRUE;AUTO_SERVER=TRUE  # 使用混合模式访问，方便外部监控和调试数据库
-#  jdbcUrl: jdbc:h2:mem:assistant;IGNORECASE=TRUE;  # 使用混合模式访问，方便外部监控和调试数据库
+#  jdbcUrl: jdbc:h2:~/m2tk/db/assistant;IGNORECASE=TRUE;AUTO_SERVER=TRUE  # 使用混合模式访问，方便外部监控和调试数据库
+  jdbcUrl: jdbc:h2:mem:assistant;IGNORECASE=TRUE;  # 使用混合模式访问，方便外部监控和调试数据库
   driverClassName: org.h2.Driver
 
 # 配置 mybatis-plus
