@@ -68,7 +68,6 @@ public class TR290InfoView extends JPanel implements InfoView
         tr290EventPanel = new TR290EventPanel();
 
         tr290StatsPanel.setPopupListener(this::showStatsPopupMenu);
-        ComponentUtil.setTitledBorder(tr290StatsPanel, getViewTitle());
 
         splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
@@ -167,7 +166,7 @@ public class TR290InfoView extends JPanel implements InfoView
         Consumer<List<TR290Event>> consumer = events -> {
             tr290EventPanel.update(events);
             tr290EventPanel.setVisible(true);
-            splitPane.setDividerLocation(0.55);
+            splitPane.setDividerLocation(0.6);
         };
 
         AsyncQueryTask<List<TR290Event>> task = new AsyncQueryTask<>(application, query, consumer);

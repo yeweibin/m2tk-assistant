@@ -285,7 +285,7 @@ public class TR290Tracer2 implements Tracer
     private long calculateInterval(long lastOccurPosition, long currOccurPosition,
                                    long lastOccurTime, long currOccurTime)
     {
-        if (avgBitrate != 0)
+        if (avgBitrate > 0)
             return (currOccurPosition - lastOccurPosition) * 188 * 8 * 1000 / avgBitrate;
         return (lastOccurTime > 0) ? currOccurTime - lastOccurTime : 0;
     }
@@ -522,7 +522,7 @@ public class TR290Tracer2 implements Tracer
             {
                 reportError(TR290ErrorTypes.UNREFERENCED_PID,
                             String.format("超过0.5s仍然存在未被PMT、CAT关联的流（pid = %d）", i),
-                            payload.getFinishPacketCounter(), payload.getStreamPID());
+                            payload.getFinishPacketCounter(), i);
 
                 streamCounts[i] = 0;
             }
