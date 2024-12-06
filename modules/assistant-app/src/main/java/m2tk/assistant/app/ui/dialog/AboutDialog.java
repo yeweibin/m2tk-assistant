@@ -52,7 +52,7 @@ public class AboutDialog extends JDialog
 
         JLabel appNameLabel = new JLabel(AssistantApp.APP_NAME);
         appNameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        appNameLabel.putClientProperty(FlatClientProperties.STYLE, "h2.regular");
+        appNameLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "h2.regular");
 
         JLabel appVersionLabel = new JLabel(AssistantApp.APP_VERSION);
         appVersionLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -85,7 +85,7 @@ public class AboutDialog extends JDialog
 
         root.add(logoLabel, "gapy 15, wrap");
         root.add(appNameLabel, "gapy 15, wrap");
-        root.add(appVersionLabel, "gapy 15, wrap");
+        root.add(appVersionLabel, "gapy 10, wrap");
         root.add(copyrightLabel, "gapy 10, wrap");
         root.add(linkLabel, "gapy 10, wrap");
         root.add(new JSeparator(SwingConstants.HORIZONTAL), "gapy 10, wrap");
