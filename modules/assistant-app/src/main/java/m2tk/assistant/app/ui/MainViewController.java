@@ -546,7 +546,7 @@ public class MainViewController
         if (JFileChooser.APPROVE_OPTION == fileChooser.showOpenDialog(frameView.getFrame()))
         {
             File file = fileChooser.getSelectedFile();
-            String input = file.getAbsolutePath();
+            String input = file.toURI().toASCIIString();
 
             log.info("开始分析 {}", file);
             boolean started = false;
