@@ -22,7 +22,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYDotRenderer;
+import org.jfree.chart.renderer.xy.SamplingXYLineRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -56,22 +56,19 @@ public class DensityChartPanel extends JPanel
         XYSeries series0 = new XYSeries("传输密度");
         XYSeries series1 = new XYSeries("平均密度");
         int[] densities = bulk.getDensities();
-        for (int i = 0; i < bulk.getBulkSize(); i++)
-        {
+        for (int i = 0; i < densities.length; i++)
             series0.add(i, densities[i]);
-            series1.add(i, bulk.getAvgDensity());
-        }
+        series1.add(0, bulk.getAvgDensity());
+        series1.add(densities.length + 5, bulk.getAvgDensity());
 
         XYSeriesCollection collection = new XYSeriesCollection();
         collection.addSeries(series0);
         collection.addSeries(series1);
 
-        XYDotRenderer renderer = new XYDotRenderer();
+        SamplingXYLineRenderer renderer = new SamplingXYLineRenderer();
         renderer.setSeriesPaint(0, Color.decode("#CCCC00"));
         renderer.setSeriesPaint(1, Color.decode("#F25022"));
         renderer.setDefaultItemLabelPaint(foreground);
-        renderer.setDotWidth(2);
-        renderer.setDotHeight(2);
 
         NumberAxis xAxis = new NumberAxis();
         xAxis.setAutoRange(true);
