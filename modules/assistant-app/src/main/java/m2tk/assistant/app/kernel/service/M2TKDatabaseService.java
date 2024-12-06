@@ -1005,6 +1005,12 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
+    public void removePrivateSections(String tag, int pid, int count)
+    {
+        sectionMapper.deleteOldestN(tag, pid, count);
+    }
+
+    @Override
     public void removePrivateSections(String tag, int pid)
     {
         LambdaQueryWrapper<PrivateSectionEntity> query = Wrappers.lambdaQuery(PrivateSectionEntity.class)

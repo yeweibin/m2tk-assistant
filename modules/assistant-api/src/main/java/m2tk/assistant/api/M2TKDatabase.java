@@ -146,6 +146,8 @@ public interface M2TKDatabase
 
     void addPrivateSection(String tag, int pid, long position, byte[] encoding);
 
+    void removePrivateSections(String tag, int pid, int count);
+
     void removePrivateSections(String tag, int pid);
 
     List<PrivateSection> getPrivateSections(int pid, int count);

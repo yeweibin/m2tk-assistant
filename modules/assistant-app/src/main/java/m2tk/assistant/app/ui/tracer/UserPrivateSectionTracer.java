@@ -72,7 +72,7 @@ public class UserPrivateSectionTracer implements Tracer
             demux.registerSectionChannel(pid, this::processSection);
 
         String limit = database.getPreference("filtering.section.limit-per-stream", "1000");
-        limitPerStream = Math.max(Math.min(Integer.parseInt(limit), 10000), 0);
+        limitPerStream = Math.max(Math.min(Integer.parseInt(limit), 1000), 0);
     }
 
     private void processSection(TSDemuxPayload payload)
@@ -100,9 +100,9 @@ public class UserPrivateSectionTracer implements Tracer
         {
             if (secCounts[pid] >= limitPerStream)
             {
-                databaseService.removePrivateSections("UserPrivate", pid);
+                databaseService.removePrivateSections("UserPrivate", pid, limitPerStream / 2);
                 secCounts[pid] = 0;
-                log.info("过滤记录达到上限，丢弃位于流 {} 上的私有分段记录", pid);
+                log.info("过滤记录达到上限，丢弃位于流 {} 上的私有分段记录：{} 条", pid, limitPerStream / 2);
             }
 
             databaseService.addPrivateSection("UserPrivate",

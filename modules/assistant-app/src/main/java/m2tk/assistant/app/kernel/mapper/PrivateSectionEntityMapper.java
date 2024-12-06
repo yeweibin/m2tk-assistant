@@ -17,7 +17,32 @@ package m2tk.assistant.app.kernel.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import m2tk.assistant.app.kernel.entity.PrivateSectionEntity;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 public interface PrivateSectionEntityMapper extends BaseMapper<PrivateSectionEntity>
 {
+    @Update("""
+            DELETE FROM `t_private_section`
+            WHERE `id` IN
+             (SELECT `tmp`.`id` FROM
+               (SELECT `id` FROM `t_private_section`
+                WHERE `tag` = #{tag} AND `pid` = #{pid}
+                ORDER BY `id` ASC
+                LIMIT #{count}) AS `tmp`
+             )
+            """)
+    void deleteOldestN(@Param("tag") String tag, @Param("pid") int pid, @Param("count") int count);
+
+    @Update("""
+            DELETE FROM `t_private_section`
+            WHERE `id` IN
+             (SELECT `tmp`.`id` FROM
+               (SELECT `id` FROM `t_private_section`
+                WHERE `tag` = #{tag} AND `pid` = #{pid}
+                ORDER BY `id` DESC
+                LIMIT #{count}) AS `tmp`
+             )
+            """)
+    void deleteRecentN(@Param("tag") String tag, @Param("pid") int pid, @Param("count") int count);
 }
