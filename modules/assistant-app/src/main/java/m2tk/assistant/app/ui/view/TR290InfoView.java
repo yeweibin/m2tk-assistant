@@ -15,13 +15,16 @@
  */
 package m2tk.assistant.app.ui.view;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
+import m2tk.assistant.api.domain.TR290Event;
 import m2tk.assistant.api.domain.TR290Stats;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
+import m2tk.assistant.app.ui.component.TR290EventPanel;
 import m2tk.assistant.app.ui.component.TR290StatsPanel;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
@@ -35,6 +38,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseEvent;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -43,6 +48,9 @@ public class TR290InfoView extends JPanel implements InfoView
 {
     private Application application;
     private TR290StatsPanel tr290StatsPanel;
+    private TR290EventPanel tr290EventPanel;
+    private JSplitPane splitPane;
+
     private EventBus bus;
     private M2TKDatabase database;
 
@@ -57,10 +65,21 @@ public class TR290InfoView extends JPanel implements InfoView
     private void initUI()
     {
         tr290StatsPanel = new TR290StatsPanel();
+        tr290EventPanel = new TR290EventPanel();
+
+        tr290StatsPanel.setPopupListener(this::showStatsPopupMenu);
         ComponentUtil.setTitledBorder(tr290StatsPanel, getViewTitle());
 
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setOneTouchExpandable(true);
+        splitPane.setTopComponent(tr290StatsPanel);
+        splitPane.setBottomComponent(tr290EventPanel);
+        ComponentUtil.setTitledBorder(splitPane, getViewTitle());
+
         setLayout(new MigLayout("fill"));
-        add(tr290StatsPanel, "center, grow");
+        add(splitPane, "center, grow");
+
+        tr290EventPanel.setVisible(false);
 
         addComponentListener(new ComponentAdapter()
         {
@@ -140,5 +159,40 @@ public class TR290InfoView extends JPanel implements InfoView
 
         AsyncQueryTask<TR290Stats> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
+    }
+
+    private void queryRecentTR290Events(String type)
+    {
+        Supplier<List<TR290Event>> query = () -> database.listTR290Events(type, 100);
+        Consumer<List<TR290Event>> consumer = events -> {
+            tr290EventPanel.update(events);
+            tr290EventPanel.setVisible(true);
+            splitPane.setDividerLocation(0.55);
+        };
+
+        AsyncQueryTask<List<TR290Event>> task = new AsyncQueryTask<>(application, query, consumer);
+        task.execute();
+    }
+
+    private void showStatsPopupMenu(MouseEvent event, String type)
+    {
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem item;
+
+        if (StrUtil.isNotEmpty(type))
+        {
+            item = new JMenuItem("查看最近记录");
+            item.addActionListener(e -> queryRecentTR290Events(type));
+            popupMenu.add(item);
+        }
+
+        item = new JMenuItem("清空记录");
+        item.addActionListener(e -> {
+            database.clearTR290Events();
+            tr290StatsPanel.reset();
+        });
+        popupMenu.add(item);
+
+        popupMenu.show(event.getComponent(), event.getX(), event.getY());
     }
 }

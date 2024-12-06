@@ -132,6 +132,10 @@ public interface M2TKDatabase
 
     void addTR290Event(TR290Event event);
 
+    void clearTR290Events();
+
+    List<TR290Event> listTR290Events(String type, int count);
+
     List<TR290Event> listTR290Events();
 
     TR290Stats getTR290Stats();

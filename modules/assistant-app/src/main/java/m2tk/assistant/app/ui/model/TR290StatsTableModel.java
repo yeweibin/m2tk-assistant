@@ -65,6 +65,8 @@ public class TR290StatsTableModel extends AbstractTableModel
     private static final Icon GOOD = FontIcon.of(FluentUiFilledAL.CHECKMARK_CIRCLE_24, 20, Color.decode("#7FBA00"));
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static final TR290Event PLACEHOLDER = new TR290Event();
+
     private static final int ROW_COUNT = 25;
     private static final String[] COLUMNS = {
         "", "错误类别", "错误总数", "最近一次时间", "错误描述"
@@ -107,6 +109,36 @@ public class TR290StatsTableModel extends AbstractTableModel
             data = stats;
             fireTableDataChanged();
         }
+    }
+
+    public String getTR290EventType(int row)
+    {
+        return switch (row)
+        {
+            case ROW_SYNC_LOSS -> TR290ErrorTypes.TS_SYNC_LOSS;
+            case ROW_SYNC_BYTE_ERROR -> TR290ErrorTypes.SYNC_BYTE_ERROR;
+            case ROW_PAT_ERROR_2 -> TR290ErrorTypes.PAT_ERROR_2;
+            case ROW_CONTINUITY_COUNT_ERROR -> TR290ErrorTypes.CONTINUITY_COUNT_ERROR;
+            case ROW_PMT_ERROR_2 -> TR290ErrorTypes.PMT_ERROR_2;
+            case ROW_PID_ERROR -> TR290ErrorTypes.PID_ERROR;
+            case ROW_TRANSPORT_ERROR -> TR290ErrorTypes.TRANSPORT_ERROR;
+            case ROW_CRC_ERROR -> TR290ErrorTypes.CRC_ERROR;
+            case ROW_PCR_REPETITION_ERROR -> TR290ErrorTypes.PCR_REPETITION_ERROR;
+            case ROW_PCR_DISCONTINUITY_INDICATOR_ERROR -> TR290ErrorTypes.PCR_DISCONTINUITY_INDICATOR_ERROR;
+            case ROW_PCR_ACCURACY_ERROR -> TR290ErrorTypes.PCR_ACCURACY_ERROR;
+            case ROW_CAT_ERROR -> TR290ErrorTypes.CAT_ERROR;
+            case ROW_NIT_ACTUAL_ERROR -> TR290ErrorTypes.NIT_ACTUAL_ERROR;
+            case ROW_NIT_OTHER_ERROR -> TR290ErrorTypes.NIT_OTHER_ERROR;
+            case ROW_SI_REPETITION_ERROR -> TR290ErrorTypes.SI_REPETITION_ERROR;
+            case ROW_UNREFERENCED_PID -> TR290ErrorTypes.UNREFERENCED_PID;
+            case ROW_SDT_ACTUAL_ERROR -> TR290ErrorTypes.SDT_ACTUAL_ERROR;
+            case ROW_SDT_OTHER_ERROR -> TR290ErrorTypes.SDT_OTHER_ERROR;
+            case ROW_EIT_ACTUAL_ERROR -> TR290ErrorTypes.EIT_ACTUAL_ERROR;
+            case ROW_EIT_OTHER_ERROR -> TR290ErrorTypes.EIT_OTHER_ERROR;
+            case ROW_RST_ERROR -> TR290ErrorTypes.RST_ERROR;
+            case ROW_TDT_ERROR -> TR290ErrorTypes.TDT_ERROR;
+            default -> "";
+        };
     }
 
     @Override
@@ -245,11 +277,17 @@ public class TR290StatsTableModel extends AbstractTableModel
                     case ROW_EIT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.EIT_OTHER_ERROR);
                     case ROW_RST_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.RST_ERROR);
                     case ROW_TDT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.TDT_ERROR);
+                    case ROW_PRIORITY_1, ROW_PRIORITY_2, ROW_PRIORITY_3 -> PLACEHOLDER;
                     default -> null;
                 };
-                yield (event == null) ? "-" : event.getTimestamp()
-                                                   .atZoneSameInstant(ZoneId.systemDefault())
-                                                   .format(TIME_FORMATTER);
+                if (event == PLACEHOLDER)
+                    yield "";
+                else if (event == null)
+                    yield "-";
+                else
+                    yield event.getTimestamp()
+                               .atZoneSameInstant(ZoneId.systemDefault())
+                               .format(TIME_FORMATTER);
             }
             case COLUMN_ERROR_MESSAGE ->
             {
@@ -277,9 +315,15 @@ public class TR290StatsTableModel extends AbstractTableModel
                     case ROW_EIT_OTHER_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.EIT_OTHER_ERROR);
                     case ROW_RST_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.RST_ERROR);
                     case ROW_TDT_ERROR -> data.getErrorLastEvent(TR290ErrorTypes.TDT_ERROR);
+                    case ROW_PRIORITY_1, ROW_PRIORITY_2, ROW_PRIORITY_3 -> PLACEHOLDER;
                     default -> null;
                 };
-                yield (event == null) ? "-" : event.getDescription();
+                if (event == PLACEHOLDER)
+                    yield "";
+                else if (event == null)
+                    yield "-";
+                else
+                    yield event.getDescription();
             }
             default -> null;
         };

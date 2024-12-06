@@ -915,6 +915,24 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
+    public void clearTR290Events()
+    {
+        tr290EventMapper.delete(Wrappers.emptyWrapper());
+    }
+
+    @Override
+    public List<TR290Event> listTR290Events(String type, int count)
+    {
+        return tr290EventMapper.selectList(Wrappers.lambdaQuery(TR290EventEntity.class)
+                                                   .eq(TR290EventEntity::getType, type)
+                                                   .orderByDesc(TR290EventEntity::getId)
+                                                   .last("limit " + Math.min(count, 100)))
+                               .stream()
+                               .map(this::convert)
+                               .collect(Collectors.toList());
+    }
+
+    @Override
     public List<TR290Event> listTR290Events()
     {
         return tr290EventMapper.selectList(Wrappers.emptyWrapper())

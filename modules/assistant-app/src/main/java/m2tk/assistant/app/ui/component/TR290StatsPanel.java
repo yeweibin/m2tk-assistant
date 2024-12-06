@@ -16,17 +16,22 @@
 package m2tk.assistant.app.ui.component;
 
 import m2tk.assistant.api.domain.TR290Stats;
-import m2tk.assistant.app.ui.util.ComponentUtil;
 import m2tk.assistant.app.ui.model.TR290StatsTableModel;
+import m2tk.assistant.app.ui.util.ComponentUtil;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.function.BiConsumer;
 
 public class TR290StatsPanel extends JPanel
 {
     private TR290StatsTableModel tableModel;
+
+    private transient BiConsumer<MouseEvent, String> popupListener;
 
     public TR290StatsPanel()
     {
@@ -40,6 +45,28 @@ public class TR290StatsPanel extends JPanel
         table.setModel(tableModel);
         table.getTableHeader().setReorderingAllowed(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
+        table.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseReleased(MouseEvent e)
+            {
+                if (e.isPopupTrigger() && popupListener != null)
+                {
+                    int rowAtPoint = table.rowAtPoint(e.getPoint());
+                    if (rowAtPoint != -1)
+                    {
+                        table.setRowSelectionInterval(table.convertRowIndexToModel(rowAtPoint),
+                                                      table.convertRowIndexToModel(rowAtPoint));
+                    }
+                    try
+                    {
+                        popupListener.accept(e, tableModel.getTR290EventType(table.convertRowIndexToModel(rowAtPoint)));
+                    } catch (Exception ignored)
+                    {
+                    }
+                }
+            }
+        });
 
         DefaultTableCellRenderer centeredRenderer = new DefaultTableCellRenderer();
         centeredRenderer.setHorizontalAlignment(SwingConstants.CENTER);
@@ -57,8 +84,18 @@ public class TR290StatsPanel extends JPanel
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
+    public void setPopupListener(BiConsumer<MouseEvent, String> listener)
+    {
+        popupListener = listener;
+    }
+
     public void update(TR290Stats stats)
     {
         tableModel.update(stats);
+    }
+
+    public void reset()
+    {
+        tableModel.update(new TR290Stats());
     }
 }
