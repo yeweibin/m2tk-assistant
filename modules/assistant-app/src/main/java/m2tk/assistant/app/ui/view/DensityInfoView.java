@@ -23,6 +23,7 @@ import m2tk.assistant.api.StreamObserver;
 import m2tk.assistant.api.domain.ElementaryStream;
 import m2tk.assistant.api.domain.StreamDensityBulk;
 import m2tk.assistant.api.domain.StreamDensityStats;
+import m2tk.assistant.api.domain.StreamSource;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.app.ui.component.DensityChartPanel;
@@ -41,6 +42,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -57,6 +59,12 @@ public class DensityInfoView extends JPanel implements InfoView, StreamObserver
 
     private volatile long lastTimestamp;
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
+
+    private static class DensityContext
+    {
+        private List<StreamDensityStats> stats;
+        private int bitrate;
+    }
 
     public DensityInfoView()
     {
@@ -92,7 +100,7 @@ public class DensityInfoView extends JPanel implements InfoView, StreamObserver
             public void componentShown(ComponentEvent e)
             {
                 if (database != null)
-                    queryDensityStatsAndSelect();
+                    queryDensityStats();
             }
         });
     }
@@ -163,7 +171,7 @@ public class DensityInfoView extends JPanel implements InfoView, StreamObserver
         long t1 = System.currentTimeMillis();
         if (t1 - lastTimestamp >= MIN_QUERY_INTERVAL_MILLIS && isShowing())
         {
-            queryDensityStatsAndSelect();
+            queryDensityStats();
             lastTimestamp = System.currentTimeMillis();
         }
     }
@@ -174,24 +182,38 @@ public class DensityInfoView extends JPanel implements InfoView, StreamObserver
         queryDensityStatsAndSelect(event.getStream());
     }
 
-    private void queryDensityStatsAndSelect()
+    private void queryDensityStats()
     {
-        Supplier<List<StreamDensityStats>> query = () -> database.listStreamDensityStats();
-        Consumer<List<StreamDensityStats>> consumer = densityStatsPanel::update;
+        Supplier<DensityContext> query = () -> {
+            DensityContext context = new DensityContext();
+            context.stats = database.listStreamDensityStats();
+            context.bitrate = Optional.ofNullable(database.getCurrentStreamSource())
+                                      .map(StreamSource::getBitrate)
+                                      .orElse(0);
+            return context;
+        };
+        Consumer<DensityContext> consumer = context -> densityStatsPanel.updateStats(context.bitrate, context.stats);
 
-        AsyncQueryTask<List<StreamDensityStats>> task = new AsyncQueryTask<>(application, query, consumer);
+        AsyncQueryTask<DensityContext> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 
     private void queryDensityStatsAndSelect(int pid)
     {
-        Supplier<List<StreamDensityStats>> query = () -> database.listStreamDensityStats();
-        Consumer<List<StreamDensityStats>> consumer = stats -> {
-            densityStatsPanel.update(stats);
+        Supplier<DensityContext> query = () -> {
+            DensityContext context = new DensityContext();
+            context.stats = database.listStreamDensityStats();
+            context.bitrate = Optional.ofNullable(database.getCurrentStreamSource())
+                                      .map(StreamSource::getBitrate)
+                                      .orElse(0);
+            return context;
+        };
+        Consumer<DensityContext> consumer = context -> {
+            densityStatsPanel.updateStats(context.bitrate, context.stats);
             densityStatsPanel.selectStreamStats(pid);
         };
 
-        AsyncQueryTask<List<StreamDensityStats>> task = new AsyncQueryTask<>(application, query, consumer);
+        AsyncQueryTask<DensityContext> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 

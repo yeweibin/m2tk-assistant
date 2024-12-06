@@ -23,17 +23,19 @@ import java.util.List;
 
 public class DensityStatsTableModel extends AbstractTableModel
 {
+    private int streamBitrate;
     private List<StreamDensityStats> data = Collections.emptyList();
 
     private static final String[] COLUMNS = {
-       "", "PID", "间隔采样", "平均间隔（四舍五入）", "最小间隔", "最大间隔", ""
+        "", "PID", "间隔采样", "平均间隔（四舍五入）", "最小间隔", "最大间隔", ""
     };
 
-    public void update(List<StreamDensityStats> stats)
+    public void update(int bitrate, List<StreamDensityStats> stats)
     {
         if (isSame(data, stats))
             return;
 
+        streamBitrate = bitrate;
         data = stats;
         fireTableDataChanged();
     }
@@ -94,9 +96,9 @@ public class DensityStatsTableModel extends AbstractTableModel
             case 0 -> rowIndex + 1;
             case 1 -> String.format("%d (0x%04X)", stats.getPid(), stats.getPid());
             case 2 -> String.format("%,d", stats.getCount());
-            case 3 -> String.format("%,d", Math.round(stats.getAvgDensity()));
-            case 4 -> String.format("%,d", stats.getMinDensity());
-            case 5 -> String.format("%,d", stats.getMaxDensity());
+            case 3 -> formatDensity((int) Math.round(stats.getAvgDensity()));
+            case 4 -> formatDensity(stats.getMinDensity());
+            case 5 -> formatDensity(stats.getMaxDensity());
             default -> null;
         };
     }
@@ -117,5 +119,14 @@ public class DensityStatsTableModel extends AbstractTableModel
         }
 
         return true;
+    }
+
+    private String formatDensity(long density)
+    {
+        if (streamBitrate <= 0)
+            return String.format("%,d", density);
+
+        double interval = 1000.0 * density * 188 * 8 / streamBitrate;
+        return String.format("%,d (%,d ms)", density, (long) (interval));
     }
 }

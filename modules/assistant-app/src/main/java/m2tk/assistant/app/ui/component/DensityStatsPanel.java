@@ -72,9 +72,9 @@ public class DensityStatsPanel extends JPanel
         add(new JScrollPane(table), BorderLayout.CENTER);
     }
 
-    public void update(List<StreamDensityStats> stats)
+    public void updateStats(int bitrate, List<StreamDensityStats> stats)
     {
-        tableModel.update(stats);
+        tableModel.update(bitrate, stats);
     }
 
     public void addDensityStatConsumer(Consumer<StreamDensityStats> consumer)
