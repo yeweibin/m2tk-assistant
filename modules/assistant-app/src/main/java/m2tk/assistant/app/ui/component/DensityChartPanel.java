@@ -54,10 +54,12 @@ public class DensityChartPanel extends JPanel
     private ChartPanel drawBulk(StreamDensityBulk bulk)
     {
         XYSeries series0 = new XYSeries("传输密度");
-        XYSeries series1 = new XYSeries("平均密度");
         int[] densities = bulk.getDensities();
         for (int i = 0; i < densities.length; i++)
             series0.add(i, densities[i]);
+
+        // 画上平均线（只需要连接一头一尾），+5只是为了让平均线略长于实际数据，便于观察，没有其他含义。
+        XYSeries series1 = new XYSeries("平均密度");
         series1.add(0, bulk.getAvgDensity());
         series1.add(densities.length + 5, bulk.getAvgDensity());
 
