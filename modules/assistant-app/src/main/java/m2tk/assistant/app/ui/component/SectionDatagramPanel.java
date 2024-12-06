@@ -133,6 +133,11 @@ public class SectionDatagramPanel extends JPanel
                         if (end == start || (syntax.getBitOffset() + syntax.getBitLength()) % 8 != 0)
                             end++;
                         codeArea.setSelection(start, end);
+
+                        int lastBitOffset = syntax.getBitOffset() + syntax.getBitLength();
+                        codeArea.setCaretPosition(end - 1,
+                                                  (lastBitOffset % 8 == 0 || lastBitOffset % 8 > 4) ? 1 : 0);
+                        codeArea.revealCursor(); // 注意：当codeArea获得焦点后才会显示Cursor。
                     }
                 }
             }
