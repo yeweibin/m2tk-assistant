@@ -132,7 +132,6 @@ public class SectionDatagramPanel extends JPanel
                         int end = syntax.getPosition() + (syntax.getBitOffset() + syntax.getBitLength()) / 8;
                         if (end == start || (syntax.getBitOffset() + syntax.getBitLength()) % 8 != 0)
                             end++;
-                        codeArea.setCaretPosition(start, end);
                         codeArea.setSelection(start, end);
                     }
                 }
