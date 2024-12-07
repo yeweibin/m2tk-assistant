@@ -276,7 +276,7 @@ public class MainViewController
                            .text("打开记事本")
                            .get());
         menuOps.addSeparator();
-        menuOps.add(builder.create(actionMap.get("drawNetworkDiagram"))
+        menuOps.add(builder.create(actionMap.get("drawNetworkGraph"))
                            .icon(diagramMenuIcon)
                            .text("绘制网络结构图")
                            .get());
