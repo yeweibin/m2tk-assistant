@@ -15,31 +15,20 @@
     </parent>
 
     <properties>
-        <jdk.version>21</jdk.version>
-        <m2tk.version>1.2.1</m2tk.version>
         <bsaf.version>1.9.2</bsaf.version>
         <flatlaf.version>3.5.2</flatlaf.version>
         <ikonli.version>12.3.1</ikonli.version>
         <miglayout-swing.version>11.0</miglayout-swing.version>
-        <guava.version>33.0.0-jre</guava.version>
-        <logback.version>1.5.12</logback.version>
         <jackson.version>2.18.1</jackson.version>
         <hutool.version>5.8.32</hutool.version>
         <h2.version>2.3.232</h2.version>
         <hikari.version>6.0.0</hikari.version>
         <caffeine.version>3.1.8</caffeine.version>
-        <lombok.version>1.18.34</lombok.version>
         <jfreechart.version>1.5.4</jfreechart.version>
         <graphviz-java.version>0.18.1</graphviz-java.version>
         <image-viewer.version>1.2.3</image-viewer.version>
         <bined.version>0.2.1</bined.version>
-        <jaxp-api.version>1.4.5</jaxp-api.version>
         <jaffree.version>2023.09.10</jaffree.version>
-        <maven.compiler.source>${jdk.version}</maven.compiler.source>
-        <maven.compiler.target>${jdk.version}</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.build.resourceEncoding>UTF-8</project.build.resourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <scm>
@@ -82,7 +71,7 @@
         <dependency>
             <groupId>org.pf4j</groupId>
             <artifactId>pf4j</artifactId>
-            <version>3.12.1</version>
+            <version>${pf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jdesktop.bsaf</groupId>
@@ -176,12 +165,6 @@
             <version>${bined.version}</version>
         </dependency>
         <dependency>
-            <!--XML Schema校验-->
-            <groupId>javax.xml.parsers</groupId>
-            <artifactId>jaxp-api</artifactId>
-            <version>${jaxp-api.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.kokorin.jaffree</groupId>
             <artifactId>jaffree</artifactId>
             <version>${jaffree.version}</version>
@@ -209,7 +192,6 @@
         <dependency>
             <groupId>org.noear</groupId>
             <artifactId>solon-data-sqlutils</artifactId>
-            <version>3.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.noear</groupId>
