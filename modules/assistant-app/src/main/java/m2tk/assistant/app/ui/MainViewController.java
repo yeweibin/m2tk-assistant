@@ -842,11 +842,10 @@ public class MainViewController
 
     private void onAnalyzerStopped(DemuxStatus status)
     {
-        if (status.isRunning())
+        if (status.isRunning() || willQuit)
             return;
 
-        if (!willQuit)
-            JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
+        JOptionPane.showMessageDialog(frameView.getFrame(), "分析过程结束");
 
         actionMap.get("openLocalFile").setEnabled(true);
         actionMap.get("openMulticast").setEnabled(true);

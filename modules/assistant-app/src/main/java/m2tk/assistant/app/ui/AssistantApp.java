@@ -129,9 +129,10 @@ public final class AssistantApp extends SingleFrameApplication
     @Override
     protected void shutdown()
     {
-        player.stop();
-        analyzer.shutdown();
         controller.setWillQuit();
+        analyzer.shutdown();
+        player.stop();
+
         super.shutdown();
     }
 
