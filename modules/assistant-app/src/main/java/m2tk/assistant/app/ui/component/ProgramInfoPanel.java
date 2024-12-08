@@ -246,13 +246,13 @@ public class ProgramInfoPanel extends JPanel
             if (text.startsWith("[P]"))
             {
                 text = text.substring("[P]".length());
-                setIcon(FontIcon.of(FluentUiFilledAL.EYE_SHOW_24, 20, GREEN));
+                setIcon(FontIcon.of(FluentUiFilledMZ.TV_24, 20, GREEN));
                 setText(text);
                 setToolTipText(text);
             } else if (text.startsWith("[P*]"))
             {
                 text = text.substring("[P*]".length());
-                setIcon(FontIcon.of(FluentUiFilledAL.EYE_HIDE_24, 20, RED));
+                setIcon(FontIcon.of(FluentUiFilledMZ.TV_24, 20, RED));
                 setText(text);
                 setToolTipText(text);
             } else if (text.startsWith("[BW]"))
