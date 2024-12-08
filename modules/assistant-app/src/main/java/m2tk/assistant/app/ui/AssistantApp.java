@@ -151,7 +151,7 @@ public final class AssistantApp extends SingleFrameApplication
         return database;
     }
 
-    public void playProgram(String url, int programNumber)
+    public void playProgram(String uri, int programNumber)
     {
         Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
                                                                "无法播放指定内容",
@@ -162,7 +162,7 @@ public final class AssistantApp extends SingleFrameApplication
             try
             {
                 player.stop();
-                player.playProgram(url, programNumber);
+                player.playProgram(uri, programNumber);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());
@@ -171,7 +171,7 @@ public final class AssistantApp extends SingleFrameApplication
         });
     }
 
-    public void playVideo(String url, int videoPid)
+    public void playVideo(String uri, int videoPid)
     {
         Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
                                                                "无法播放指定内容",
@@ -182,7 +182,7 @@ public final class AssistantApp extends SingleFrameApplication
             try
             {
                 player.stop();
-                player.playVideo(url, videoPid);
+                player.playVideo(uri, videoPid);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());
@@ -191,7 +191,7 @@ public final class AssistantApp extends SingleFrameApplication
         });
     }
 
-    public void playAudio(String url, int audioPid)
+    public void playAudio(String uri, int audioPid)
     {
         Runnable onError = () -> JOptionPane.showMessageDialog(getMainView().getFrame(),
                                                                "无法播放指定内容",
@@ -202,7 +202,7 @@ public final class AssistantApp extends SingleFrameApplication
             try
             {
                 player.stop();
-                player.playAudio(url, audioPid);
+                player.playAudio(uri, audioPid);
             } catch (Exception ex)
             {
                 log.warn("{}", ex.getMessage());

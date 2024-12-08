@@ -15,6 +15,7 @@
  */
 package m2tk.assistant.app.kernel.service;
 
+import cn.hutool.core.io.FileUtil;
 import com.github.kokorin.jaffree.ffmpeg.Frame;
 import com.github.kokorin.jaffree.ffmpeg.*;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -60,11 +62,12 @@ public class MPEGTSPlayer
         }
     }
 
-    public void playProgram(String url, int programNumber)
+    public void playProgram(String uri, int programNumber)
     {
         stop();
 
-        CanvasFrame canvasFrame = new CanvasFrame("播放" + url + "，节目号：" + programNumber);
+        URI input = URI.create(uri);
+        CanvasFrame canvasFrame = new CanvasFrame("播放" + input + "，节目号：" + programNumber);
         JRootPane rootPane = canvasFrame.getRootPane();
         rootPane.registerKeyboardAction(e ->
                                         {
@@ -82,9 +85,12 @@ public class MPEGTSPlayer
                                         JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         FFmpegResultFuture future = FFmpeg.atPath(Paths.get(System.getProperty("user.dir"), "ffmpeg"))
-                                          .addInput(UrlInput.fromUrl(url).setReadAtFrameRate(true))
+                                          .addInput(UrlInput.fromUrl("file".equals(input.getScheme())
+                                                                     ? FileUtil.file(input).toString()
+                                                                     : uri)
+                                                            .setReadAtFrameRate(true))
                                           .addOutput(new CustomFrameOutput(new NutFrameConsumer(canvasFrame))
-                                                             .addMap(0, "p:" + programNumber))
+                                                         .addMap(0, "p:" + programNumber))
                                           .setExecutorTimeoutMillis(10000)
                                           .executeAsync();
         future.toCompletableFuture()
@@ -116,7 +122,7 @@ public class MPEGTSPlayer
             public void windowClosed(WindowEvent e)
             {
                 future.graceStop();
-                log.debug("结束播放：{}", url);
+                log.debug("结束播放：{}", uri);
             }
         });
         canvasFrame.setAlwaysOnTop(true);
@@ -125,11 +131,12 @@ public class MPEGTSPlayer
         ffmpegTask = future;
     }
 
-    public void playVideo(String url, int videoPid)
+    public void playVideo(String uri, int videoPid)
     {
         stop();
 
-        CanvasFrame canvasFrame = new CanvasFrame("播放" + url + "，视频PID：" + videoPid);
+        URI input = URI.create(uri);
+        CanvasFrame canvasFrame = new CanvasFrame("播放" + input + "，视频PID：" + videoPid);
         JRootPane rootPane = canvasFrame.getRootPane();
         rootPane.registerKeyboardAction(e ->
                                         {
@@ -147,9 +154,12 @@ public class MPEGTSPlayer
                                         JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         FFmpegResultFuture future = FFmpeg.atPath(Paths.get(System.getProperty("user.dir"), "ffmpeg"))
-                                          .addInput(UrlInput.fromUrl(url).setReadAtFrameRate(true))
+                                          .addInput(UrlInput.fromUrl("file".equals(input.getScheme())
+                                                                     ? FileUtil.file(input).toString()
+                                                                     : uri)
+                                                            .setReadAtFrameRate(true))
                                           .addOutput(new CustomFrameOutput(new NutFrameConsumer(canvasFrame))
-                                                             .addMap(0, "i:" + videoPid))
+                                                         .addMap(0, "i:" + videoPid))
                                           .setExecutorTimeoutMillis(10000)
                                           .executeAsync();
         future.toCompletableFuture()
@@ -182,7 +192,7 @@ public class MPEGTSPlayer
             public void windowClosed(WindowEvent e)
             {
                 future.graceStop();
-                log.debug("结束播放：{}，video_pid = {}", url, videoPid);
+                log.debug("结束播放：{}，video_pid = {}", uri, videoPid);
             }
         });
         canvasFrame.setAlwaysOnTop(true);
@@ -191,11 +201,12 @@ public class MPEGTSPlayer
         ffmpegTask = future;
     }
 
-    public void playAudio(String url, int audioPid)
+    public void playAudio(String uri, int audioPid)
     {
         stop();
 
-        CanvasFrame canvasFrame = new CanvasFrame("播放" + url + "，音频PID：" + audioPid);
+        URI input = URI.create(uri);
+        CanvasFrame canvasFrame = new CanvasFrame("播放" + input + "，音频PID：" + audioPid);
         JRootPane rootPane = canvasFrame.getRootPane();
         rootPane.registerKeyboardAction(e ->
                                         {
@@ -213,9 +224,12 @@ public class MPEGTSPlayer
                                         JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         FFmpegResultFuture future = FFmpeg.atPath(Paths.get(System.getProperty("user.dir"), "ffmpeg"))
-                                          .addInput(UrlInput.fromUrl(url).setReadAtFrameRate(true))
+                                          .addInput(UrlInput.fromUrl("file".equals(input.getScheme())
+                                                                     ? FileUtil.file(input).toString()
+                                                                     : uri)
+                                                            .setReadAtFrameRate(true))
                                           .addOutput(new CustomFrameOutput(new NutFrameConsumer(canvasFrame))
-                                                             .addMap(0, "i:" + audioPid))
+                                                         .addMap(0, "i:" + audioPid))
                                           .setExecutorTimeoutMillis(10000)
                                           .executeAsync();
         future.toCompletableFuture()
@@ -247,7 +261,7 @@ public class MPEGTSPlayer
             public void windowClosed(WindowEvent e)
             {
                 future.graceStop();
-                log.debug("结束播放：{}，audio_pid = {}", url, audioPid);
+                log.debug("结束播放：{}，audio_pid = {}", uri, audioPid);
             }
         });
 
