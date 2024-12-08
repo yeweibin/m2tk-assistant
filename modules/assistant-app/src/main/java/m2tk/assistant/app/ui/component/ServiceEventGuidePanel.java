@@ -21,7 +21,6 @@ import m2tk.assistant.api.domain.SIService;
 import m2tk.assistant.app.ui.model.EventTableModel;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
-import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
 import org.kordamp.ikonli.fluentui.FluentUiFilledMZ;
 import org.kordamp.ikonli.swing.FontIcon;
 
@@ -166,8 +165,8 @@ public class ServiceEventGuidePanel extends JPanel
     class ServiceTreeCellRenderer extends DefaultTreeCellRenderer
     {
         final Icon TRANSMIT = FontIcon.of(FluentUiFilledMZ.SOUND_SOURCE_24, 20, Color.decode("#89D3DF"));
-        final Icon LOCK = FontIcon.of(FluentUiFilledAL.LOCK_24, 20, Color.decode("#F25022"));
-        final Icon UNLOCK = FontIcon.of(FluentUiFilledMZ.UNLOCK_24, 20, Color.decode("#7FBA00"));
+        final Icon CONDITIONAL_ACCESS = FontIcon.of(FluentUiFilledMZ.TV_24, 20, Color.decode("#F25022"));
+        final Icon FREE_ACCESS = FontIcon.of(FluentUiFilledMZ.TV_24, 20, Color.decode("#7FBA00"));
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus)
@@ -186,7 +185,7 @@ public class ServiceEventGuidePanel extends JPanel
                 if (userObject instanceof SIService service)
                 {
                     setText(service.getName());
-                    setIcon(service.isFreeAccess() ? UNLOCK : LOCK);
+                    setIcon(service.isFreeAccess() ? FREE_ACCESS : CONDITIONAL_ACCESS);
                 }
             }
 
