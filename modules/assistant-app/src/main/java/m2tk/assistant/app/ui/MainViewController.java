@@ -383,7 +383,7 @@ public class MainViewController
                                    JToggleButton toggle = (JToggleButton) e.getSource();
                                    if (toggle.isSelected())
                                        timer.stop();
-                                   else
+                                   else if (analyzer.isRunning())
                                        timer.start();
                                }
                            })

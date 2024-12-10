@@ -41,6 +41,7 @@ public class StreamAnalyzer
 {
     private final ExecutorService executor;
     private final TSDemux demux;
+    private volatile boolean running;
 
     @Inject
     private EventBus bus;
@@ -84,6 +85,7 @@ public class StreamAnalyzer
 
         demux.attach(input);
 
+        running = true;
         bus.post(new SourceStateEvent(SourceStateEvent.ATTACHED));
         log.info("开始分析");
 
@@ -101,6 +103,11 @@ public class StreamAnalyzer
         executor.shutdownNow();
     }
 
+    public boolean isRunning()
+    {
+        return running;
+    }
+
     private void closeChannelWhenDemuxStopped(DemuxStatus status)
     {
         if (!status.isRunning())
@@ -113,6 +120,7 @@ public class StreamAnalyzer
                 log.error("关闭通道时异常：{}", ex.getMessage());
             }
 
+            running = false;
             bus.post(new SourceStateEvent(SourceStateEvent.DETACHED));
             log.info("停止分析");
         }
