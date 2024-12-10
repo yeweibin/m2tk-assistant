@@ -23,7 +23,9 @@ import m2tk.assistant.api.template.SectionDecoder;
 import m2tk.assistant.api.template.SyntaxField;
 import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
+import net.miginfocom.swing.MigLayout;
 import org.exbin.auxiliary.binary_data.ByteArrayData;
+import org.exbin.bined.CodeType;
 import org.exbin.bined.basic.BasicBackgroundPaintMode;
 import org.exbin.bined.swing.basic.CodeArea;
 import org.kordamp.ikonli.fluentui.FluentUiFilledAL;
@@ -85,7 +87,16 @@ public class SectionDatagramPanel extends JPanel
         splitPane.setOneTouchExpandable(true);
         CodeArea codeArea = new CodeArea();
         codeArea.setBackgroundPaintMode(BasicBackgroundPaintMode.PLAIN);
-        codeArea.setVisible(false);
+        codeArea.setCodeType(CodeType.HEXADECIMAL);
+        codeArea.setVisible(true);
+        CodeArea fieldArea = new CodeArea();
+        fieldArea.setBackgroundPaintMode(BasicBackgroundPaintMode.PLAIN);
+        fieldArea.setCodeType(CodeType.BINARY);
+        fieldArea.setVisible(false);
+        JPanel dataPanel = new JPanel(new MigLayout("insets 0, width 450!", "[grow]", "[grow][]"));
+        dataPanel.add(codeArea, "grow, wrap");
+        dataPanel.add(fieldArea, "hidemode 3, grow, height 200!, wrap");
+        dataPanel.setVisible(false);
 
         JTree tree = new JTree(model);
         tree.setRootVisible(false);
@@ -95,14 +106,14 @@ public class SectionDatagramPanel extends JPanel
             TreePath path = tree.getSelectionPath();
             if (path == null)
             {
-                codeArea.setVisible(false);
+                dataPanel.setVisible(false);
                 splitPane.setDividerLocation(1.0);
                 return;
             }
 
             // 选中列表即显示HexView，但不一定有数据。
             splitPane.setDividerLocation(0.45);
-            codeArea.setVisible(true);
+            dataPanel.setVisible(true);
 
             PrivateSection section = null;
             Object[] nodes = path.getPath();
@@ -115,9 +126,11 @@ public class SectionDatagramPanel extends JPanel
             if (section == null)
             {
                 codeArea.setContentData(null);
+                fieldArea.setVisible(false);
             } else
             {
-                codeArea.setContentData(new ByteArrayData(section.getEncoding()));
+                byte[] encoding = section.getEncoding();
+                codeArea.setContentData(new ByteArrayData(encoding));
 
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                 if (node.getUserObject() instanceof NodeContext context)
@@ -138,6 +151,16 @@ public class SectionDatagramPanel extends JPanel
                         codeArea.setCaretPosition(end - 1,
                                                   (lastBitOffset % 8 == 0 || lastBitOffset % 8 > 4) ? 1 : 0);
                         codeArea.revealCursor(); // 注意：当codeArea获得焦点后才会显示Cursor。
+
+                        if (syntax.getType() == SyntaxField.Type.NUMBER ||
+                            syntax.getType() == SyntaxField.Type.BITS)
+                        {
+                            fieldArea.setContentData(new ByteArrayData(Arrays.copyOfRange(encoding, start, end)));
+                            fieldArea.setVisible(true);
+                        } else
+                        {
+                            fieldArea.setVisible(false);
+                        }
                     }
                 }
             }
@@ -146,7 +169,7 @@ public class SectionDatagramPanel extends JPanel
         ToolTipManager.sharedInstance().registerComponent(tree);
 
         splitPane.setLeftComponent(new JScrollPane(tree));
-        splitPane.setRightComponent(codeArea);
+        splitPane.setRightComponent(dataPanel);
         splitPane.setDividerLocation(1.0);
 
         setLayout(new BorderLayout());
