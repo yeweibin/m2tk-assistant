@@ -12,6 +12,7 @@
         <module>modules/assistant-app</module>
         <module>modules/assistant-api</module>
         <module>modules/assistant-ext</module>
+        <module>modules/assistant-ebs</module>
     </modules>
 
     <properties>

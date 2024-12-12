@@ -1076,15 +1076,15 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public Map<Integer, List<PrivateSection>> getPrivateSectionGroups(String tag)
+    public Map<String, List<PrivateSection>> getPrivateSectionGroups(String... tags)
     {
         LambdaQueryWrapper<PrivateSectionEntity> query = Wrappers.lambdaQuery(PrivateSectionEntity.class)
-                                                                 .eq(StrUtil.isNotEmpty(tag), PrivateSectionEntity::getTag, tag)
+                                                                 .in(tags.length > 0, PrivateSectionEntity::getTag, Arrays.asList(tags))
                                                                  .orderByAsc(PrivateSectionEntity::getPosition);
         return sectionMapper.selectList(query)
                             .stream()
                             .map(this::convert)
-                            .collect(Collectors.groupingBy(PrivateSection::getPid));
+                            .collect(Collectors.groupingBy(PrivateSection::getTag));
     }
 
     @Override

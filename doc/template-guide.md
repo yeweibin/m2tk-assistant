@@ -313,14 +313,12 @@
 &lt;Field&gt;标签描述具有完整含义的简单数据，例如数值、字符串或字节数组，其在含义上完整不可分割（不允许进行拆分解释）。
 &lt;Field&gt;标签包含以下属性：
 
-- name：字段名称
+- name：字段名称。
 - encoding：编码方式，包括：bslbf（比特流，最高位在前），uimsbf（无符号整数，最高位在前），checksum（校验码，高位在前），nibbles（半字节流），octets（字节流），text（文本）。
 - string_type：文本类型，包括：dvb_text（DVB方式编码的字符串），utf16/utf8，ascii，gb2312/gbk/gb18030（中文编码）。
 - length：字段长度，表示字段的编码长度（单位：比特）。通常用于描述数值，或较短的字节流、半字节流。有效范围：[1, 64]。
 - length_field：长度引用字段，表示当前字段的编码长度需要用被引用的字段的值间接表示（单位：字节）。当字段长度不固定，但会一直延续到编码末尾时，可以用length_field="implicit"表示。
 - length_correction：长度修正值（单位：字节），表示当前字段的实际长度需要进行额外的修正，仅在字段长度为【implicit】时有意义。修正值通常是负数，表示需要减去的字节数。
-
-【例子】PAT关联描述循环是不定长的（一直延续到分段末尾的CRC32字段之前），并且没有明确的长度字段，所以循环的间接长度（分段总长减去起始位置）需要额外减去CRC32字段长度（length_correction=-4）。
 
 【要求】name、encoding是必要属性，其他是可选属性。当字段类型为text时，必须提供合适的string_type描述。
 
@@ -510,6 +508,14 @@ const属性可以填写十进制数（非负整数）或以‘0x’开头的十�
 ```
 
 &lt;Loop&gt; 标签包含可选的 &lt;LoopPresentation&gt; 标签和强制的 &lt;Body&gt; 标签。&lt;Body&gt; 标签描述循环体的结构。当循环为描述符循环时，只需定义一个描述占位符（&lt;Descriptor&gt;）。
+&lt;Loop&gt;标签包含以下属性：
+
+- name：循环名称。
+- length_type：长度类型，有效值：count（循环次数），length_in_bytes（字节长度）。缺省时按字节长度处理。
+- length_field：长度引用字段，表示当前字段的编码长度需要用被引用的字段的值间接表示（单位：字节）。当字段长度不固定，但会一直延续到编码末尾时，可以用length_field="implicit"表示。
+- length_correction：长度修正值（单位：字节），表示当前循环的实际长度需要进行额外的修正，仅在字段长度为【implicit】时有意义。修正值通常是负数，表示需要减去的字节数。
+
+【例子】PAT关联描述循环是不定长的（一直延续到分段末尾的CRC32字段之前），并且没有明确的长度字段，所以循环的间接长度（分段总长减去起始位置）需要额外减去CRC32字段长度（length_correction=-4）。
 
 ##### 2.5.3.1 &lt;LoopPresentation&gt; 标签
 

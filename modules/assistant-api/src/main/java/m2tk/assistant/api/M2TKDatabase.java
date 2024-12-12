@@ -160,7 +160,7 @@ public interface M2TKDatabase
 
     Map<String, List<PrivateSection>> getPrivateSectionGroups();
 
-    Map<Integer, List<PrivateSection>> getPrivateSectionGroups(String tag);
+    Map<String, List<PrivateSection>> getPrivateSectionGroups(String... tags);
 
     void addTransportPacket(String tag, int pid, long position, byte[] encoding);
 

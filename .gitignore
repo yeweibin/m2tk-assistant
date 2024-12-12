@@ -2,6 +2,7 @@
 /modules/assistant-app/target/
 /modules/assistant-api/target/
 /modules/assistant-ext/target/
+/modules/assistant-ebs/target/
 /ffmpeg/
 /plugins/
 /recent.cfg

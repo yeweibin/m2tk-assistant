@@ -29,6 +29,10 @@
         <image-viewer.version>1.2.3</image-viewer.version>
         <bined.version>0.2.1</bined.version>
         <jaffree.version>2023.09.10</jaffree.version>
+
+        <ffmpeg.dir>${project.basedir}/../../ffmpeg</ffmpeg.dir>
+        <plugins.dir>${project.basedir}/../../plugins</plugins.dir>
+        <templates.dir>${project.basedir}/../../templates</templates.dir>
     </properties>
 
     <scm>
@@ -282,7 +286,7 @@
                     <mainClass>m2tk.assistant.app.AppLauncher</mainClass>
                     <icon>${project.basedir}/src/main/resources/images/app.ico</icon>
                     <appVersion>2.0.0</appVersion>
-                    <appContent>${project.basedir}/../../ffmpeg,${project.basedir}/../../plugins</appContent>
+                    <appContent>${ffmpeg.dir},${plugins.dir},${templates.dir}</appContent>
                     <winConsole>false</winConsole>
                     <winMenu>true</winMenu>
                     <winDirChooser>true</winDirChooser>
