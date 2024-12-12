@@ -51,6 +51,7 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupPAT;
     private DefaultMutableTreeNode groupCAT;
     private DefaultMutableTreeNode groupPMT;
+    private DefaultMutableTreeNode groupTSDT;
     private DefaultMutableTreeNode groupNITActual;
     private DefaultMutableTreeNode groupNITOther;
     private DefaultMutableTreeNode groupBAT;
@@ -187,6 +188,7 @@ public class SectionDatagramPanel extends JPanel
         groupPAT = new DefaultMutableTreeNode("PAT");
         groupCAT = new DefaultMutableTreeNode("CAT");
         groupPMT = new DefaultMutableTreeNode("PMT");
+        groupTSDT = new DefaultMutableTreeNode("TSDT");
         groupBAT = new DefaultMutableTreeNode("BAT");
         groupNITActual = new DefaultMutableTreeNode("NIT_Actual");
         groupNITOther = new DefaultMutableTreeNode("NIT_Other");
@@ -205,6 +207,7 @@ public class SectionDatagramPanel extends JPanel
         groupPSI.add(groupPAT);
         groupPSI.add(groupCAT);
         groupPSI.add(groupPMT);
+        groupPSI.add(groupTSDT);
         groupSI.add(groupBAT);
         groupSI.add(groupNITActual);
         groupSI.add(groupNITOther);
@@ -226,6 +229,7 @@ public class SectionDatagramPanel extends JPanel
         addPATSectionNodes(sectionGroups.getOrDefault("PAT", Collections.emptyList()));
         addCATSectionNodes(sectionGroups.getOrDefault("CAT", Collections.emptyList()));
         addPMTSectionNodes(sectionGroups.getOrDefault("PMT", Collections.emptyList()));
+        addTSDTSectionNodes(sectionGroups.getOrDefault("TSDT", Collections.emptyList()));
         addBATSectionNodes(sectionGroups.getOrDefault("BAT", Collections.emptyList()));
         addNITActualSectionNodes(sectionGroups.getOrDefault("NIT_Actual", Collections.emptyList()));
         addNITOtherSectionNodes(sectionGroups.getOrDefault("NIT_Other", Collections.emptyList()));
@@ -313,6 +317,30 @@ public class SectionDatagramPanel extends JPanel
         }
 
         groupPMT.setUserObject(String.format("PMT (%d)", groupPMT.getChildCount()));
+    }
+
+    private void addTSDTSectionNodes(List<PrivateSection> sections)
+    {
+        groupTSDT.removeAllChildren();
+
+        for (PrivateSection section : sections)
+        {
+            Encoding encoding = Encoding.wrap(section.getEncoding());
+            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+            if (node == null)
+                continue;
+
+            NodeContext context = (NodeContext) node.getUserObject();
+            context.setLabel(String.format("[V:%02X, S:%02X, L:%02X]",
+                                           getFieldValue(syntax, "version_number"),
+                                           getFieldValue(syntax, "section_number"),
+                                           getFieldValue(syntax, "last_section_number")));
+            groupTSDT.add(node);
+            nodeSectionMap.put(node, section);
+        }
+
+        groupTSDT.setUserObject(String.format("TSDT (%d)", groupTSDT.getChildCount()));
     }
 
     private void addBATSectionNodes(List<PrivateSection> sections)

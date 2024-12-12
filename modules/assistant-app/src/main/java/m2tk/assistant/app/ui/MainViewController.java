@@ -26,6 +26,10 @@ import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.*;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
+import m2tk.assistant.api.template.DescriptorDecoder;
+import m2tk.assistant.api.template.SectionDecoder;
+import m2tk.assistant.api.template.TemplateReader;
+import m2tk.assistant.api.template.definition.M2TKTemplate;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
 import m2tk.assistant.app.ui.dialog.AboutDialog;
 import m2tk.assistant.app.ui.dialog.SourceHistoryDialog;
@@ -112,6 +116,7 @@ public class MainViewController
     private void initUI()
     {
         initCustomIcons();
+        loadInternalTemplates();
         loadPluginsAndExtensions();
         createAndSetupMenu();
         createAndSetupToolBar();
@@ -136,6 +141,23 @@ public class MainViewController
         diagramToolbarIcon = diagramIcon.derive(29, 29);
 
         appIcon = new FlatSVGIcon("images/logo-a.svg", 20, 20);
+    }
+
+    private void loadInternalTemplates()
+    {
+        TemplateReader reader = new TemplateReader();
+        M2TKTemplate psiTemplate = reader.parse(getClass().getResource("/template/PSITemplate.xml"));
+        if (psiTemplate != null)
+        {
+            psiTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+            psiTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        }
+        M2TKTemplate siTemplate = reader.parse(getClass().getResource("/template/SITemplate.xml"));
+        if (siTemplate != null)
+        {
+            siTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+            siTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        }
     }
 
     private void loadPluginsAndExtensions()
@@ -815,7 +837,7 @@ public class MainViewController
             File[] files = fileChooser.getSelectedFiles();
             if (files.length > 0)
             {
-                int count = AssistantApp.getInstance().loadUserDefinedTemplates(files);
+                int count = loadUserDefinedTemplates(files);
                 if (count == files.length)
                 {
                     JOptionPane.showMessageDialog(frameView.getFrame(), "加载成功");
@@ -915,5 +937,34 @@ public class MainViewController
     private Icon getFontIcon(Ikon ikon, int size, Color color)
     {
         return FontIcon.of(ikon, size, color);
+    }
+
+    private int loadUserDefinedTemplates(File[] files)
+    {
+        TemplateReader reader = new TemplateReader();
+
+        int success = 0;
+        for (File file : files)
+        {
+            if (loadTemplate(reader, file))
+                success += 1;
+        }
+        return success;
+    }
+
+    private boolean loadTemplate(TemplateReader reader, File file)
+    {
+        if (file == null || !file.getName().endsWith(".xml"))
+            return false;
+
+        M2TKTemplate userTemplate = reader.parse(file);
+        if (userTemplate == null)
+            return false;
+
+        userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
+        userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        log.info("加载自定义模板：{}", file);
+
+        return true;
     }
 }

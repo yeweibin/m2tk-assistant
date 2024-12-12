@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package m2tk.assistant.app.ui.tracer;
+package m2tk.assistant.app.kernel.tracer;
 
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.Tracer;

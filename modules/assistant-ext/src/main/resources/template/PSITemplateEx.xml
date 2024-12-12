@@ -1,0 +1,33 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<M2TKTemplate>
+    <DescriptorTemplate tag="0x09" name="ca_descriptor">
+        <DisplayName str="条件接收描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf"/>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="ca_system_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="CA系统号"/>
+                    <Format str="%04X (%d)"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="3" encoding="bslbf"/>
+            <Field name="ca_pid" length="13" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="CA数据流"/>
+                    <Format str="pid = 0x%04X (%d)"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="private_data" encoding="octets" length_field="implicit">
+                <FieldPresentation>
+                    <Prefix str="私有数据"/>
+                    <Format str="lowercase"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+</M2TKTemplate>

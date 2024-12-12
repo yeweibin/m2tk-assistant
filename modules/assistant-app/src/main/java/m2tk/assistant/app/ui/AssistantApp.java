@@ -22,10 +22,6 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
-import m2tk.assistant.api.template.DescriptorDecoder;
-import m2tk.assistant.api.template.SectionDecoder;
-import m2tk.assistant.api.template.TemplateReader;
-import m2tk.assistant.api.template.definition.M2TKTemplate;
 import m2tk.assistant.app.kernel.KernelEntry;
 import m2tk.assistant.app.kernel.service.MPEGTSPlayer;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
@@ -38,7 +34,6 @@ import org.noear.solon.core.AppContext;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 import java.io.InputStream;
 import java.util.Objects;
 
@@ -97,7 +92,6 @@ public final class AssistantApp extends SingleFrameApplication
             @Override
             protected SolonApp doInBackground()
             {
-                loadInternalTemplates();
                 return Solon.start(KernelEntry.class, cmdArgs);
             }
 
@@ -221,51 +215,5 @@ public final class AssistantApp extends SingleFrameApplication
         {
             log.warn("无法加载字体：{}", file);
         }
-    }
-
-    private void loadInternalTemplates()
-    {
-        TemplateReader reader = new TemplateReader();
-        M2TKTemplate psiTemplate = reader.parse(getClass().getResource("/template/PSITemplate.xml"));
-        if (psiTemplate != null)
-        {
-            psiTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
-            psiTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
-        }
-        M2TKTemplate siTemplate = reader.parse(getClass().getResource("/template/SITemplate.xml"));
-        if (siTemplate != null)
-        {
-            siTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
-            siTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
-        }
-    }
-
-    public int loadUserDefinedTemplates(File[] files)
-    {
-        TemplateReader reader = new TemplateReader();
-
-        int success = 0;
-        for (File file : files)
-        {
-            if (loadTemplate(reader, file))
-                success += 1;
-        }
-        return success;
-    }
-
-    private boolean loadTemplate(TemplateReader reader, File file)
-    {
-        if (file == null || !file.getName().endsWith(".xml"))
-            return false;
-
-        M2TKTemplate userTemplate = reader.parse(file);
-        if (userTemplate == null)
-            return false;
-
-        userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
-        userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
-        log.info("加载自定义模板：{}", file);
-
-        return true;
     }
 }

@@ -1,0 +1,2335 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<M2TKTemplate>
+    <DescriptorTemplate tag="0x40" name="network_name_descriptor">
+        <DisplayName str="网络名称描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="network_name" length_field="descriptor_length" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="网络名称"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x41" name="service_list_descriptor">
+        <DisplayName str="业务列表描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="service_list" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无业务列表***"/>
+                    <LoopEntry>
+                        <Prefix str="业务"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="service_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="业务号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="service_type" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="业务类型"/>
+                            <Mapping>
+                                <Value value="0x00">
+                                    <ValString str="保留"/>
+                                </Value>
+                                <Value value="0x01">
+                                    <ValString str="数字电视业务"/>
+                                </Value>
+                                <Value value="0x02">
+                                    <ValString str="数字音频业务"/>
+                                </Value>
+                                <Value value="0x03">
+                                    <ValString str="图文业务"/>
+                                </Value>
+                                <Value value="0x04">
+                                    <ValString str="NVOD索引业务"/>
+                                </Value>
+                                <Value value="0x05">
+                                    <ValString str="NVOD时移业务"/>
+                                </Value>
+                                <Value value="0x06">
+                                    <ValString str="马赛克业务"/>
+                                </Value>
+                                <Value value="0x07">
+                                    <ValString str="调频广播业务"/>
+                                </Value>
+                                <Value value="0x08">
+                                    <ValString str="DVB SRM业务"/>
+                                </Value>
+                                <Value value="0x09">
+                                    <ValString str="保留"/>
+                                </Value>
+                                <Value value="0x0A">
+                                    <ValString str="高级编码数字音频业务"/>
+                                </Value>
+                                <Value value="0x0B">
+                                    <ValString str="高级编码马赛克业务"/>
+                                </Value>
+                                <Value value="0x0C">
+                                    <ValString str="数据广播业务"/>
+                                </Value>
+                                <Value value="0x0D">
+                                    <ValString str="通用接口服务保留"/>
+                                </Value>
+                                <Value value="0x0E">
+                                    <ValString str="RCS Map"/>
+                                </Value>
+                                <Value value="0x0F">
+                                    <ValString str="RCS FLS"/>
+                                </Value>
+                                <Value value="0x10">
+                                    <ValString str="DVB MHP业务"/>
+                                </Value>
+                                <Value value="0x11">
+                                    <ValString str="MPEG-2 高清数字电视业务"/>
+                                </Value>
+                                <ValueRange min="0x12" max="0x15">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x16">
+                                    <ValString str="高级编码标清数字电视业务"/>
+                                </Value>
+                                <Value value="0x17">
+                                    <ValString str="高级编码标清NVOD时移业务"/>
+                                </Value>
+                                <Value value="0x18">
+                                    <ValString str="高级编码标清NVOD索引业务"/>
+                                </Value>
+                                <Value value="0x19">
+                                    <ValString str="高级编码高清数字电视业务"/>
+                                </Value>
+                                <Value value="0x1A">
+                                    <ValString str="高级编码高清NVOD时移业务"/>
+                                </Value>
+                                <Value value="0x1B">
+                                    <ValString str="高级编码高清NVOD索引业务"/>
+                                </Value>
+                                <Value value="0x1C">
+                                    <ValString str="高级编码帧兼容平面立体高清数字电视业务"/>
+                                </Value>
+                                <Value value="0x1D">
+                                    <ValString str="高级编码帧兼容平面立体高清NVOD时移业务"/>
+                                </Value>
+                                <Value value="0x1E">
+                                    <ValString str="高级编码帧兼容平面立体高清NVOD索引业务"/>
+                                </Value>
+                                <ValueRange min="0x1F" max="0x7F">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <!-- 0x80~0xFE: 用户自定义，不做映射，按原值返回 -->
+                                <Value value="0xFF">
+                                    <ValString str="保留"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x42" name="stuffing_descriptor">
+        <DisplayName str="填充描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="stuffing_bytes" length_field="descriptor_length" encoding="octets">
+                <FieldPresentation>
+                    <Prefix str="填充字节"/>
+                    <Format str="compact, lowercase"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x43" name="satellite_delivery_system_descriptor">
+        <DisplayName str="卫星传输系统描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="frequency" length="8" encoding="nibbles">
+                <FieldPresentation>
+                    <Prefix str="频点"/>
+                    <Format str="###.##### GHz"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="orbital_position" length="4" encoding="nibbles">
+                <FieldPresentation>
+                    <Prefix str="轨道位置"/>
+                    <Format str="compact, lowercase"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="west_east_flag" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="东西轨道标志"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="西半轨"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="东半轨"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="polarization" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="极化方式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="水平极化"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="垂直极化"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="左旋圆极化"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="右旋圆极化"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="roll_off" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="滚降因数"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="α = 0.35"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="α = 0.25"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="α = 0.20"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="modulation_system" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="调制系统"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="DVB-S"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="DVB-S2"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="modulation_type" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="调制类型"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="自动"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="QPSK"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="8PSK"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="16-QAM"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="symbol_rate" length="7" encoding="nibbles">
+                <FieldPresentation>
+                    <Prefix str="符号率"/>
+                    <Format str="###.#### Msymbol/s"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="FEC_inner" length="4" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="FEC内码"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="未定义"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="1/2 卷积编码"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="2/3 卷积编码"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="3/4 卷积编码"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="5/6 卷积编码"/>
+                        </Value>
+                        <Value value="5">
+                            <ValString str="7/8 卷积编码"/>
+                        </Value>
+                        <Value value="6">
+                            <ValString str="8/9 卷积编码"/>
+                        </Value>
+                        <Value value="7">
+                            <ValString str="3/5 卷积编码"/>
+                        </Value>
+                        <Value value="8">
+                            <ValString str="4/5 卷积编码"/>
+                        </Value>
+                        <Value value="9">
+                            <ValString str="9/10 卷积编码"/>
+                        </Value>
+                        <ValueRange min="10" max="14">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                        <Value value="15">
+                            <ValString str="无卷积编码"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x44" name="cable_delivery_system_descriptor">
+        <DisplayName str="有线传输系统描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="frequency" length="8" encoding="nibbles">
+                <FieldPresentation>
+                    <Prefix str="频点"/>
+                    <Format str="####.#### MHz"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="12" encoding="bslbf"/>
+            <Field name="FEC_outer" length="4" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="FEC外码"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="未定义"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="无FEC外码"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="RS(204/188)"/>
+                        </Value>
+                        <ValueRange min="3" max="15">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="modulation" length="8" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="调制方式"/>
+                    <Mapping>
+                        <Value value="0x00">
+                            <ValString str="未定义"/>
+                        </Value>
+                        <Value value="0x01">
+                            <ValString str="16-QAM"/>
+                        </Value>
+                        <Value value="0x02">
+                            <ValString str="32-QAM"/>
+                        </Value>
+                        <Value value="0x03">
+                            <ValString str="64-QAM"/>
+                        </Value>
+                        <Value value="0x04">
+                            <ValString str="128-QAM"/>
+                        </Value>
+                        <Value value="0x05">
+                            <ValString str="256-QAM"/>
+                        </Value>
+                        <ValueRange min="0x06" max="0xFF">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="symbol_rate" length="7" encoding="nibbles">
+                <FieldPresentation>
+                    <Prefix str="符号率"/>
+                    <Format str="###.#### Msymbol/s"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="FEC_inner" length="4" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="FEC内码"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="未定义"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="1/2 卷积编码"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="2/3 卷积编码"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="3/4 卷积编码"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="5/6 卷积编码"/>
+                        </Value>
+                        <Value value="5">
+                            <ValString str="7/8 卷积编码"/>
+                        </Value>
+                        <Value value="6">
+                            <ValString str="8/9 卷积编码"/>
+                        </Value>
+                        <Value value="7">
+                            <ValString str="3/5 卷积编码"/>
+                        </Value>
+                        <Value value="8">
+                            <ValString str="4/5 卷积编码"/>
+                        </Value>
+                        <Value value="9">
+                            <ValString str="9/10 卷积编码"/>
+                        </Value>
+                        <ValueRange min="10" max="14">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                        <Value value="15">
+                            <ValString str="无卷积编码"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x47" name="bouquet_name_descriptor">
+        <DisplayName str="业务群名称描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="bouquet_name" length_field="descriptor_length" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="业务群名称"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x48" name="service_descriptor">
+        <DisplayName str="业务描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="service_type" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="业务类型"/>
+                    <Mapping>
+                        <Value value="0x00">
+                            <ValString str="保留"/>
+                        </Value>
+                        <Value value="0x01">
+                            <ValString str="数字电视业务"/>
+                        </Value>
+                        <Value value="0x02">
+                            <ValString str="数字音频业务"/>
+                        </Value>
+                        <Value value="0x03">
+                            <ValString str="图文业务"/>
+                        </Value>
+                        <Value value="0x04">
+                            <ValString str="NVOD索引业务"/>
+                        </Value>
+                        <Value value="0x05">
+                            <ValString str="NVOD时移业务"/>
+                        </Value>
+                        <Value value="0x06">
+                            <ValString str="马赛克业务"/>
+                        </Value>
+                        <Value value="0x07">
+                            <ValString str="调频广播业务"/>
+                        </Value>
+                        <Value value="0x08">
+                            <ValString str="DVB SRM业务"/>
+                        </Value>
+                        <Value value="0x09">
+                            <ValString str="保留"/>
+                        </Value>
+                        <Value value="0x0A">
+                            <ValString str="高级编码数字音频业务"/>
+                        </Value>
+                        <Value value="0x0B">
+                            <ValString str="高级编码马赛克业务"/>
+                        </Value>
+                        <Value value="0x0C">
+                            <ValString str="数据广播业务"/>
+                        </Value>
+                        <Value value="0x0D">
+                            <ValString str="通用接口服务保留"/>
+                        </Value>
+                        <Value value="0x0E">
+                            <ValString str="RCS Map"/>
+                        </Value>
+                        <Value value="0x0F">
+                            <ValString str="RCS FLS"/>
+                        </Value>
+                        <Value value="0x10">
+                            <ValString str="DVB MHP业务"/>
+                        </Value>
+                        <Value value="0x11">
+                            <ValString str="MPEG-2 高清数字电视业务"/>
+                        </Value>
+                        <ValueRange min="0x12" max="0x15">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                        <Value value="0x16">
+                            <ValString str="高级编码标清数字电视业务"/>
+                        </Value>
+                        <Value value="0x17">
+                            <ValString str="高级编码标清NVOD时移业务"/>
+                        </Value>
+                        <Value value="0x18">
+                            <ValString str="高级编码标清NVOD索引业务"/>
+                        </Value>
+                        <Value value="0x19">
+                            <ValString str="高级编码高清数字电视业务"/>
+                        </Value>
+                        <Value value="0x1A">
+                            <ValString str="高级编码高清NVOD时移业务"/>
+                        </Value>
+                        <Value value="0x1B">
+                            <ValString str="高级编码高清NVOD索引业务"/>
+                        </Value>
+                        <Value value="0x1C">
+                            <ValString str="高级编码帧兼容平面立体高清数字电视业务"/>
+                        </Value>
+                        <Value value="0x1D">
+                            <ValString str="高级编码帧兼容平面立体高清NVOD时移业务"/>
+                        </Value>
+                        <Value value="0x1E">
+                            <ValString str="高级编码帧兼容平面立体高清NVOD索引业务"/>
+                        </Value>
+                        <ValueRange min="0x1F" max="0x7F">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                        <!-- 0x80~0xFE: 用户自定义，不做映射，按原值返回 -->
+                        <Value value="0xFF">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="service_provider_name_length" length="8" encoding="uimsbf"/>
+            <Field name="service_provider_name" length_field="service_provider_name_length" encoding="text"
+                   string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="业务提供商"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="service_name_length" length="8" encoding="uimsbf"/>
+            <Field name="service_name" length_field="service_name_length" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="业务名称"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x49" name="country_availability_descriptor">
+        <DisplayName str="适用国家描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="country_availability_flag" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="国家适用条件"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="不适用"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="适用"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="7" encoding="bslbf"/>
+            <Loop name="country_loop" length_field="implicit">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无国家列表***"/>
+                    <LoopEntry>
+                        <Prefix str="国家"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="country_code" length="24" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="国家代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x4A" name="linkage_descriptor">
+        <DisplayName str="链接描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="传输流号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="original_network_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="原始网络号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="service_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="业务号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="linkage_type" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="链接类型"/>
+                    <Mapping>
+                        <Value value="0x00">
+                            <ValString str="保留"/>
+                        </Value>
+                        <Value value="0x01">
+                            <ValString str="信息业务"/>
+                        </Value>
+                        <Value value="0x02">
+                            <ValString str="EPG业务"/>
+                        </Value>
+                        <Value value="0x03">
+                            <ValString str="CA替换业务"/>
+                        </Value>
+                        <Value value="0x04">
+                            <ValString str="包含完整网络/业务群服务信息的传输流"/>
+                        </Value>
+                        <Value value="0x05">
+                            <ValString str="服务替换业务"/>
+                        </Value>
+                        <Value value="0x06">
+                            <ValString str="数据广播业务"/>
+                        </Value>
+                        <Value value="0x07">
+                            <ValString str="RCS Map"/>
+                        </Value>
+                        <Value value="0x08">
+                            <ValString str="移动终端"/>
+                        </Value>
+                        <Value value="0x09">
+                            <ValString str="系统软件升级业务（SSU）"/>
+                        </Value>
+                        <Value value="0x0A">
+                            <ValString str="包含系统软件升级BAT或NIT的传输流"/>
+                        </Value>
+                        <Value value="0x0B">
+                            <ValString str="IP/MAC通知服务"/>
+                        </Value>
+                        <Value value="0x0C">
+                            <ValString str="包含IP/MAC通知服务BAT或NIT的传输流"/>
+                        </Value>
+                        <Value value="0x0D">
+                            <ValString str="事件链接"/>
+                        </Value>
+                        <Value value="0x0E">
+                            <ValString str="扩展事件链接"/>
+                        </Value>
+                        <ValueRange min="0x0F" max="0x7F">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                        <!-- 0x80~0xFE: 用户自定义，不做映射，按原值返回 -->
+                        <Value value="0xFF">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <If>
+                <Condition>
+                    <CompareWithConst field="linkage_type" comp_op="equals" const="0x08"/>
+                </Condition>
+                <Then>
+                    <!-- mobile_hand-over_info() -->
+                    <Field name="hand-over_type" length="4" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="移动业务类型"/>
+                            <Mapping>
+                                <Value value="0x00">
+                                    <ValString str="保留"/>
+                                </Value>
+                                <Value value="0x01">
+                                    <ValString str="DVB hand-over to an identical service in a neighbouring country"/>
+                                </Value>
+                                <Value value="0x02">
+                                    <ValString str="DVB hand-over to a local variation of the same service"/>
+                                </Value>
+                                <Value value="0x03">
+                                    <ValString str="DVB hand-over to an associated service"/>
+                                </Value>
+                                <ValueRange min="0x04" max="0x0F">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved_future_use" length="3" encoding="bslbf"/>
+                    <Field name="origin_type" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="链接源"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="NIT"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="SDT"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <If>
+                        <Condition>
+                            <CompareWithConstMulti field="hand-over_type" comp_op="equals_any">
+                                <ConstValue const="0x01"/>
+                                <ConstValue const="0x02"/>
+                                <ConstValue const="0x03"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="network_id" length="16" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="网络号"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="origin_type" comp_op="equals" const="0x00"/>
+                        </Condition>
+                        <Then>
+                            <Field name="initial_service_id" length="16" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="初始业务号"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="linkage_type" comp_op="equals" const="0x0D"/>
+                </Condition>
+                <Then>
+                    <!-- event_linkage_info() -->
+                    <Field name="target_event_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="目标事件号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="target_listed" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="目标业务是否在册"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="不确定"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="是"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="event_simulcast" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="事件是否联播"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="否"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="是"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved" length="6" encoding="bslbf"/>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="linkage_type" comp_op="equals" const="0x0E"/>
+                </Condition>
+                <Then>
+                    <!-- extended_event_linkage_info() -->
+                    <Field name="loop_length" length="8" encoding="uimsbf"/>
+                    <Loop name="linkage_loop" length_field="loop_length">
+                        <LoopPresentation>
+                            <NoLoopHeader/>
+                            <LoopEmpty str="***无事件链接***"/>
+                            <LoopEntry>
+                                <Prefix str="事件链接"/>
+                            </LoopEntry>
+                        </LoopPresentation>
+                        <Body>
+                            <Field name="target_event_id" length="16" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="目标事件号"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="target_listed" length="1" encoding="bslbf">
+                                <FieldPresentation>
+                                    <Prefix str="目标业务是否在册"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="不确定"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="是"/>
+                                        </Value>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="event_simulcast" length="1" encoding="bslbf">
+                                <FieldPresentation>
+                                    <Prefix str="事件是否联播"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="否"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="是"/>
+                                        </Value>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="link_type" length="2" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="链接类型"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="标清视频业务"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="高清视频业务"/>
+                                        </Value>
+                                        <Value value="2">
+                                            <ValString str="帧兼容平面立体视频业务"/>
+                                        </Value>
+                                        <Value value="3">
+                                            <ValString str="业务层兼容平面立体MVC"/>
+                                        </Value>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="target_id_type" length="2" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="目标ID类型"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="使用传输流号"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="使用目标传输流号"/>
+                                        </Value>
+                                        <Value value="2">
+                                            <ValString str="任意传输流号"/>
+                                        </Value>
+                                        <Value value="3">
+                                            <ValString str="自定义ID"/>
+                                        </Value>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="original_network_id_flag" length="1" encoding="bslbf">
+                                <FieldPresentation>
+                                    <Prefix str="“原始网络号应用”标志"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="使用本源原始网络号"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="使用目标原始网络号"/>
+                                        </Value>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="service_id_flag" length="1" encoding="bslbf">
+                                <FieldPresentation>
+                                    <Prefix str="“业务号应用”标志"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="使用本源业务号"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="使用目标业务号"/>
+                                        </Value>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <If>
+                                <Condition>
+                                    <CompareWithConst field="target_id_type" comp_op="equals" const="3"/>
+                                </Condition>
+                                <Then>
+                                    <Field name="user_defined_id" length="16" encoding="uimsbf">
+                                        <FieldPresentation>
+                                            <Prefix str="自定义ID"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Then>
+                                <Else>
+                                    <If>
+                                        <Condition>
+                                            <CompareWithConst field="target_id_type" comp_op="equals" const="1"/>
+                                        </Condition>
+                                        <Then>
+                                            <Field name="target_transport_stream_id" length="16" encoding="uimsbf">
+                                                <FieldPresentation>
+                                                    <Prefix str="目标传输流号"/>
+                                                </FieldPresentation>
+                                            </Field>
+                                        </Then>
+                                    </If>
+                                    <If>
+                                        <Condition>
+                                            <CompareWithConst field="original_network_id_flag" comp_op="equals"
+                                                              const="1"/>
+                                        </Condition>
+                                        <Then>
+                                            <Field name="target_original_network_id" length="16" encoding="uimsbf">
+                                                <FieldPresentation>
+                                                    <Prefix str="目标原始网络号"/>
+                                                </FieldPresentation>
+                                            </Field>
+                                        </Then>
+                                    </If>
+                                    <If>
+                                        <Condition>
+                                            <CompareWithConst field="service_id_flag" comp_op="equals" const="1"/>
+                                        </Condition>
+                                        <Then>
+                                            <Field name="target_service_id" length="16" encoding="uimsbf">
+                                                <FieldPresentation>
+                                                    <Prefix str="目标业务号"/>
+                                                </FieldPresentation>
+                                            </Field>
+                                        </Then>
+                                    </If>
+                                </Else>
+                            </If>
+                        </Body>
+                    </Loop>
+                </Then>
+            </If>
+            <Field name="private_bytes" length_field="implicit" encoding="octets">
+                <FieldPresentation>
+                    <Prefix str="私有字节"/>
+                    <Format str="lowercase"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x4B" name="NVOD_reference_descriptor">
+        <DisplayName str="NVOD索引描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="service_list" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无引用业务***"/>
+                    <LoopEntry>
+                        <Prefix str="引用业务"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="transport_stream_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="传输流号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="original_network_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="原始网络号"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="service_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="业务号"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x4C" name="time_shifted_service_descriptor">
+        <DisplayName str="时移业务描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reference_service_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="索引业务号"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x4D" name="short_event_descriptor">
+        <DisplayName str="短事件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="语言代码"/>
+                    <Mapping>
+                        <ThreeLetterCode/>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="event_name_length" length="8" encoding="uimsbf"/>
+            <Field name="event_name" length_field="event_name_length" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="事件名称"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="text_length" length="8" encoding="uimsbf"/>
+            <Field name="text" length_field="text_length" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="事件描述"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x4E" name="extended_event_descriptor">
+        <DisplayName str="扩展事件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_number" length="4" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="当前描述符编号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_descriptor_number" length="4" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="最后描述符编号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="语言代码"/>
+                    <Mapping>
+                        <ThreeLetterCode/>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="length_of_items" length="8" encoding="uimsbf"/>
+            <Loop name="item_loop" length_field="length_of_items">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无事件元素***"/>
+                    <LoopEntry>
+                        <Prefix str="事件元素"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="item_description_length" length="8" encoding="uimsbf"/>
+                    <Field name="item_description" length_field="item_description_length" encoding="text"
+                           string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="元素描述"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="item_length" length="8" encoding="uimsbf"/>
+                    <Field name="item" length_field="item_length" encoding="text" string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="元素名称"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+            <Field name="text_length" length="8" encoding="uimsbf"/>
+            <Field name="text" length_field="text_length" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="附加描述"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x4F" name="time_shifted_event_descriptor">
+        <DisplayName str="时移事件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reference_service_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="索引业务号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reference_event_id" length="16" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="索引事件号"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x50" name="component_descriptor">
+        <DisplayName str="组件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="4" encoding="bslbf"/>
+            <Field name="stream_content" length="4" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="流内容类型"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_type" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件类型"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件标签"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="语言代码"/>
+                    <Mapping>
+                        <ThreeLetterCode/>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="text" length_field="implicit" encoding="text" string_type="dvb_text">
+                <FieldPresentation>
+                    <Prefix str="组件描述"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x52" name="stream_identifier_descriptor">
+        <DisplayName str="流标识符描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件标签"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x53" name="ca_identifier_descriptor">
+        <DisplayName str="条件接收标识符描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="identifier_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无条件接收标识符***"/>
+                    <LoopEntry>
+                        <Prefix str="标识符"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ca_system_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="CA系统号"/>
+                            <Format str="%04X"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x54" name="content_descriptor">
+        <DisplayName str="内容描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="description_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无内容描述***"/>
+                    <LoopEntry>
+                        <Prefix str="描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="content_nibble" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="内容类型"/>
+                            <Mapping>
+                                <ValueRange min="0x00" max="0x0F">
+                                    <ValString str="未定义内容"/>
+                                </ValueRange>
+                                <Value value="0x10">
+                                    <ValString str="电影/电视剧/戏剧（普通）"/>
+                                </Value>
+                                <Value value="0x11">
+                                    <ValString str="侦探/恐怖"/>
+                                </Value>
+                                <Value value="0x12">
+                                    <ValString str="冒险/战争"/>
+                                </Value>
+                                <Value value="0x13">
+                                    <ValString str="科幻"/>
+                                </Value>
+                                <Value value="0x14">
+                                    <ValString str="喜剧"/>
+                                </Value>
+                                <Value value="0x15">
+                                    <ValString str="肥皂剧"/>
+                                </Value>
+                                <Value value="0x16">
+                                    <ValString str="言情"/>
+                                </Value>
+                                <Value value="0x17">
+                                    <ValString str="古典/历史/正剧"/>
+                                </Value>
+                                <Value value="0x18">
+                                    <ValString str="成人电影/戏剧"/>
+                                </Value>
+                                <ValueRange min="0x19" max="0x1E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x1F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x20">
+                                    <ValString str="新闻时事（普通）"/>
+                                </Value>
+                                <Value value="0x21">
+                                    <ValString str="新闻/天气预报"/>
+                                </Value>
+                                <Value value="0x22">
+                                    <ValString str="新闻杂志"/>
+                                </Value>
+                                <Value value="0x23">
+                                    <ValString str="资料"/>
+                                </Value>
+                                <Value value="0x24">
+                                    <ValString str="讨论/访谈/辩论"/>
+                                </Value>
+                                <ValueRange min="0x25" max="0x2E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x2F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x30">
+                                    <ValString str="表演/游戏（普通）"/>
+                                </Value>
+                                <Value value="0x31">
+                                    <ValString str="智力游戏/智力竞赛"/>
+                                </Value>
+                                <Value value="0x32">
+                                    <ValString str="杂技"/>
+                                </Value>
+                                <Value value="0x33">
+                                    <ValString str="脱口秀"/>
+                                </Value>
+                                <ValueRange min="0x34" max="0x3E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x3F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x40">
+                                    <ValString str="综合体育"/>
+                                </Value>
+                                <Value value="0x41">
+                                    <ValString str="特别节目（奥运会、世界杯……）"/>
+                                </Value>
+                                <Value value="0x42">
+                                    <ValString str="体育杂志"/>
+                                </Value>
+                                <Value value="0x43">
+                                    <ValString str="足球/篮球/排球"/>
+                                </Value>
+                                <Value value="0x44">
+                                    <ValString str="乒乓球/羽毛球/网球"/>
+                                </Value>
+                                <Value value="0x45">
+                                    <ValString str="团体性运动"/>
+                                </Value>
+                                <Value value="0x46">
+                                    <ValString str="田径"/>
+                                </Value>
+                                <Value value="0x47">
+                                    <ValString str="自行车/赛车"/>
+                                </Value>
+                                <Value value="0x48">
+                                    <ValString str="水上运动"/>
+                                </Value>
+                                <Value value="0x49">
+                                    <ValString str="冬季运动"/>
+                                </Value>
+                                <Value value="0x4A">
+                                    <ValString str="马术"/>
+                                </Value>
+                                <Value value="0x4B">
+                                    <ValString str="武术/拳击/摔跤"/>
+                                </Value>
+                                <Value value="0x4C">
+                                    <ValString str="棋牌"/>
+                                </Value>
+                                <ValueRange min="0x4D" max="0x4E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x4F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x50">
+                                    <ValString str=""/>
+                                </Value>
+                                <Value value="0x50">
+                                    <ValString str="青少儿节目（综合）"/>
+                                </Value>
+                                <Value value="0x51">
+                                    <ValString str="幼儿节目"/>
+                                </Value>
+                                <Value value="0x52">
+                                    <ValString str="少儿节目"/>
+                                </Value>
+                                <Value value="0x53">
+                                    <ValString str="青年节目"/>
+                                </Value>
+                                <Value value="0x54">
+                                    <ValString str="信息/教育"/>
+                                </Value>
+                                <Value value="0x55">
+                                    <ValString str="卡通/木偶戏"/>
+                                </Value>
+                                <ValueRange min="0x56" max="0x5E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x5F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x60">
+                                    <ValString str="音乐/芭蕾/舞蹈（综合）"/>
+                                </Value>
+                                <Value value="0x61">
+                                    <ValString str="摇滚/流行乐"/>
+                                </Value>
+                                <Value value="0x62">
+                                    <ValString str="古典音乐/严肃音乐"/>
+                                </Value>
+                                <Value value="0x63">
+                                    <ValString str="民俗音乐/民族音乐"/>
+                                </Value>
+                                <Value value="0x64">
+                                    <ValString str="爵士乐"/>
+                                </Value>
+                                <Value value="0x65">
+                                    <ValString str="音乐剧/歌剧"/>
+                                </Value>
+                                <Value value="0x66">
+                                    <ValString str="芭蕾舞"/>
+                                </Value>
+                                <Value value="0x67">
+                                    <ValString str="戏曲/曲艺"/>
+                                </Value>
+                                <ValueRange min="0x68" max="0x6E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x6F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x70">
+                                    <ValString str="文化艺术（综合）"/>
+                                </Value>
+                                <Value value="0x71">
+                                    <ValString str="表演艺术"/>
+                                </Value>
+                                <Value value="0x72">
+                                    <ValString str="高雅艺术"/>
+                                </Value>
+                                <Value value="0x73">
+                                    <ValString str="宗教文化"/>
+                                </Value>
+                                <Value value="0x74">
+                                    <ValString str="大众文化/传统艺术"/>
+                                </Value>
+                                <Value value="0x75">
+                                    <ValString str="文学"/>
+                                </Value>
+                                <Value value="0x76">
+                                    <ValString str="电影/电视文化"/>
+                                </Value>
+                                <Value value="0x77">
+                                    <ValString str="实验电影"/>
+                                </Value>
+                                <Value value="0x78">
+                                    <ValString str="广播/出版物"/>
+                                </Value>
+                                <Value value="0x79">
+                                    <ValString str="新媒体"/>
+                                </Value>
+                                <Value value="0x7A">
+                                    <ValString str="艺术/文化杂志"/>
+                                </Value>
+                                <Value value="0x7B">
+                                    <ValString str="时尚"/>
+                                </Value>
+                                <ValueRange min="0x7C" max="0x7E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x7F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x80">
+                                    <ValString str="社会/政治/经济（普通）"/>
+                                </Value>
+                                <Value value="0x81">
+                                    <ValString str="杂志/报道/资讯/证券"/>
+                                </Value>
+                                <Value value="0x82">
+                                    <ValString str="经济/社会咨询"/>
+                                </Value>
+                                <Value value="0x83">
+                                    <ValString str="名人专访"/>
+                                </Value>
+                                <ValueRange min="0x84" max="0x8E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x8F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0x90">
+                                    <ValString str="教育/科学/专题（普通）"/>
+                                </Value>
+                                <Value value="0x91">
+                                    <ValString str="自然/动物/环境"/>
+                                </Value>
+                                <Value value="0x92">
+                                    <ValString str="技术/自然科学"/>
+                                </Value>
+                                <Value value="0x93">
+                                    <ValString str="医疗/生理/心理"/>
+                                </Value>
+                                <Value value="0x94">
+                                    <ValString str="探险"/>
+                                </Value>
+                                <Value value="0x95">
+                                    <ValString str="社会科学"/>
+                                </Value>
+                                <Value value="0x96">
+                                    <ValString str="继续教育"/>
+                                </Value>
+                                <Value value="0x97">
+                                    <ValString str="语言"/>
+                                </Value>
+                                <ValueRange min="0x98" max="0x9E">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0x9F">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0xA0">
+                                    <ValString str="休闲/业余爱好（普通）"/>
+                                </Value>
+                                <Value value="0xA1">
+                                    <ValString str="旅游"/>
+                                </Value>
+                                <Value value="0xA2">
+                                    <ValString str="手工"/>
+                                </Value>
+                                <Value value="0xA3">
+                                    <ValString str="车趣"/>
+                                </Value>
+                                <Value value="0xA4">
+                                    <ValString str="健身"/>
+                                </Value>
+                                <Value value="0xA5">
+                                    <ValString str="烹饪"/>
+                                </Value>
+                                <Value value="0xA6">
+                                    <ValString str="广告/购物"/>
+                                </Value>
+                                <Value value="0xA7">
+                                    <ValString str="园艺"/>
+                                </Value>
+                                <ValueRange min="0xA8" max="0xAE">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0xAF">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <Value value="0xB0">
+                                    <ValString str="原声资料"/>
+                                </Value>
+                                <Value value="0xB1">
+                                    <ValString str="黑白片"/>
+                                </Value>
+                                <Value value="0xB2">
+                                    <ValString str="未公映"/>
+                                </Value>
+                                <Value value="0xB3">
+                                    <ValString str="现场直播"/>
+                                </Value>
+                                <Value value="0xB4">
+                                    <ValString str="平面立体"/>
+                                </Value>
+                                <ValueRange min="0xB5" max="0xBE">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <Value value="0xBF">
+                                    <ValString str="用户定义"/>
+                                </Value>
+                                <ValueRange min="0xC0" max="0xEF">
+                                    <ValString str="保留"/>
+                                </ValueRange>
+                                <ValueRange min="0xF0" max="0xFF">
+                                    <ValString str="用户定义"/>
+                                </ValueRange>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="user_byte" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="用户定义"/>
+                            <Format str="0x%02X"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x55" name="parental_rating_descriptor">
+        <DisplayName str="成人级描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="rating_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无成人级描述***"/>
+                    <LoopEntry>
+                        <Prefix str="描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="country_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="国家代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="rating" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="成人级"/>
+                            <Mapping>
+                                <Value value="0x00">
+                                    <ValString str="未定义"/>
+                                </Value>
+                                <Value value="0x01">
+                                    <ValString str="4岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x02">
+                                    <ValString str="5岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x03">
+                                    <ValString str="6岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x04">
+                                    <ValString str="7岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x05">
+                                    <ValString str="8岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x06">
+                                    <ValString str="9岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x07">
+                                    <ValString str="10岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x08">
+                                    <ValString str="11岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x09">
+                                    <ValString str="12岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0A">
+                                    <ValString str="13岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0B">
+                                    <ValString str="14岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0C">
+                                    <ValString str="15岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0D">
+                                    <ValString str="16岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0E">
+                                    <ValString str="17岁及以上允许观看"/>
+                                </Value>
+                                <Value value="0x0F">
+                                    <ValString str="18岁及以上允许观看"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x58" name="local_time_offset_descriptor">
+        <DisplayName str="本地时间偏移描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="offset_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无本地时间偏移描述***"/>
+                    <LoopEntry>
+                        <Prefix str="本地时间偏移描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="country_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="国家代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="country_region_id" length="6" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="国家区域编号"/>
+                            <Format str="%d"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved" length="1" encoding="bslbf"/>
+                    <Field name="local_time_offset_polarity" length="1" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="本地时间偏移极性"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="正"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="负"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="local_time_offset" length="4" encoding="nibbles">
+                        <FieldPresentation>
+                            <Prefix str="本地时间偏移量"/>
+                            <Format str="compact,lowercase"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="time_of_change" length="40" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="变更时间"/>
+                            <Mapping>
+                                <DVBTime/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="next_time_offset" length="4" encoding="nibbles">
+                        <FieldPresentation>
+                            <Prefix str="下一时间偏移"/>
+                            <Format str="compact,lowercase"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x59" name="subtitling_descriptor">
+        <DisplayName str="字幕描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="subtitling_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无字幕描述***"/>
+                    <LoopEntry>
+                        <Prefix str="字幕"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="subtitling_type" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="字幕类型"/>
+                            <Format str="0x%02X"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="composition_page_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="组合页标识"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="ancillary_page_id" length="16" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="辅助页标识"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5A" name="terrestrial_delivery_system_descriptor">
+        <DisplayName str="地面传输系统描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="centre_frequency" length="32" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="中心频点"/>
+                    <Format str="%d0 Hz"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="bandwidth" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="带宽"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="8 MHz"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="7 MHz"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="6 MHz"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="5 MHz"/>
+                        </Value>
+                        <ValueRange min="4" max="7">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="priority" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="优先级"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="低优先级（LP）"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="高优先级（HP）"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="Time_Slicing_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="TimeSlicing标志"/>
+                    <Mapping>
+                        <Value value="1">
+                            <ValString str="未使用"/>
+                        </Value>
+                        <Value value="0">
+                            <ValString str="使用"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="MPE-FEC_indicator" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="MPE-FEC标志"/>
+                    <Mapping>
+                        <Value value="1">
+                            <ValString str="未使用"/>
+                        </Value>
+                        <Value value="0">
+                            <ValString str="使用"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="2" encoding="bslbf"/>
+            <Field name="constellation" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="星座特性"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="QPSK"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="16-QAM"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="64-QAM"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="hierarchy_information" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="层次信息"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="非层次化，原始交织"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="α = 1，原始交织"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="α = 2，原始交织"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="α = 4，原始交织"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="非层次化，深度交织"/>
+                        </Value>
+                        <Value value="5">
+                            <ValString str="α = 1，深度交织"/>
+                        </Value>
+                        <Value value="6">
+                            <ValString str="α = 2，深度交织"/>
+                        </Value>
+                        <Value value="7">
+                            <ValString str="α = 4，深度交织"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="code_rate-HP_stream" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="高优先级流编码率模式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="1/2"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="2/3"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="3/4"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="5/6"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="7/8"/>
+                        </Value>
+                        <ValueRange min="5" max="7">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="code_rate-LP_stream" length="3" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="低优先级流编码率模式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="1/2"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="2/3"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="3/4"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="5/6"/>
+                        </Value>
+                        <Value value="4">
+                            <ValString str="7/8"/>
+                        </Value>
+                        <ValueRange min="5" max="7">
+                            <ValString str="保留"/>
+                        </ValueRange>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="guard_interval" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="保护间隙"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="1/32"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="1/16"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="1/8"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="1/4"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="transmission_mode" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="传输模式"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="2k模式"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="8k模式"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="4k模式"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="保留"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="other_frequency_flag" length="1" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="其他频率标志"/>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="不使用其他频率"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="使用其他频率"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved_future_use" length="32" encoding="bslbf"/>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5B" name="multilingual_network_name_descriptor">
+        <DisplayName str="多语言网络名称描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="multilingual_name_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无多语言网络名称***"/>
+                    <LoopEntry>
+                        <Prefix str="多语言名称"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="network_name_length" length="8" encoding="uimsbf"/>
+                    <Field name="network_name" length_field="network_name_length" encoding="text"
+                           string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="网络名称"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5C" name="multilingual_bouquet_name_descriptor">
+        <DisplayName str="多语言业务群名称描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="multilingual_name_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无多语言业务群名称***"/>
+                    <LoopEntry>
+                        <Prefix str="多语言名称"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="bouquet_name_length" length="8" encoding="uimsbf"/>
+                    <Field name="bouquet_name" length_field="bouquet_name_length" encoding="text"
+                           string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="业务群名称"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5D" name="multilingual_bouquet_name_descriptor">
+        <DisplayName str="多语言业务名称描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="multilingual_name_loop" length_field="descriptor_length">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无多语言业务名称***"/>
+                    <LoopEntry>
+                        <Prefix str="多语言名称"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="service_provider_name_length" length="8" encoding="uimsbf"/>
+                    <Field name="service_provider_name" length_field="service_provider_name_length" encoding="text"
+                           string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="业务提供商"/>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="service_name_length" length="8" encoding="uimsbf"/>
+                    <Field name="service_name" length_field="service_name_length" encoding="text"
+                           string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="业务名称"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5E" name="multilingual_component_descriptor">
+        <DisplayName str="多语言组件描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="component_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="组件标签"/>
+                </FieldPresentation>
+            </Field>
+            <Loop name="component_loop" length_field="implicit">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无多语言组件描述***"/>
+                    <LoopEntry>
+                        <Prefix str="多语言组件描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="ISO_639_language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="text_description_length" length="8" encoding="uimsbf"/>
+                    <Field name="text" length_field="text_description_length" encoding="text" string_type="dvb_text">
+                        <FieldPresentation>
+                            <Prefix str="组件描述"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+        </DescriptorBody>
+    </DescriptorTemplate>
+    <DescriptorTemplate tag="0x5F" name="private_data_specifier_descriptor">
+        <DisplayName str="私有数据标识符描述符"/>
+        <DescriptorBody>
+            <Field name="descriptor_tag" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符标签"/>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="descriptor_length" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="描述符长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="private_data_specifier" length="32" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="私有数据标识符"/>
+                </FieldPresentation>
+            </Field>
+        </DescriptorBody>
+    </DescriptorTemplate>
+</M2TKTemplate>

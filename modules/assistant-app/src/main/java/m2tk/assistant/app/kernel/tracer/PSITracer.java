@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.app.ui.tracer;
+package m2tk.assistant.app.kernel.tracer;
 
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
@@ -29,6 +29,7 @@ import m2tk.mpeg2.decoder.element.ProgramElementDecoder;
 import m2tk.mpeg2.decoder.section.CATSectionDecoder;
 import m2tk.mpeg2.decoder.section.PATSectionDecoder;
 import m2tk.mpeg2.decoder.section.PMTSectionDecoder;
+import m2tk.mpeg2.decoder.section.TSDTSectionDecoder;
 import m2tk.multiplex.DemuxStatus;
 import m2tk.multiplex.TSDemux;
 import m2tk.multiplex.TSDemuxEvent;
@@ -46,6 +47,7 @@ public class PSITracer implements Tracer
     private final PATSectionDecoder pat;
     private final CATSectionDecoder cat;
     private final PMTSectionDecoder pmt;
+    private final TSDTSectionDecoder tsdt;
     private final CADescriptorDecoder cad;
     private final DescriptorLoopDecoder descloop;
     private final ProgramElementDecoder element;
@@ -56,6 +58,7 @@ public class PSITracer implements Tracer
     private int sourceId;
     private int[] patSections;
     private int[] catSections;
+    private int[] tsdtSections;
     private int tsid;
 
     static class ProgramContext
@@ -69,6 +72,7 @@ public class PSITracer implements Tracer
         pat = new PATSectionDecoder();
         cat = new CATSectionDecoder();
         pmt = new PMTSectionDecoder();
+        tsdt = new TSDTSectionDecoder();
         cad = new CADescriptorDecoder();
         descloop = new DescriptorLoopDecoder();
         element = new ProgramElementDecoder();
@@ -85,6 +89,7 @@ public class PSITracer implements Tracer
         demux.registerEventListener(this::processDemuxStatus);
         demux.registerSectionChannel(0x0000, this::processPAT);
         demux.registerSectionChannel(0x0001, this::processCAT);
+        demux.registerSectionChannel(0x0002, this::processTSDT);
     }
 
     private void processDemuxStatus(TSDemuxEvent event)
@@ -97,6 +102,7 @@ public class PSITracer implements Tracer
                 programs.clear();
                 patSections = new int[0];
                 catSections = new int[0];
+                tsdtSections = new int[0];
                 tsid = -1;
             }
         }
@@ -209,6 +215,41 @@ public class PSITracer implements Tracer
         databaseService.updateStreamSourceComponentPresence(sourceId, "CAT", true);
         databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "CAT");
         databaseService.addPrivateSection("CAT",
+                                          payload.getStreamPID(),
+                                          payload.getFinishPacketCounter(),
+                                          payload.getEncoding().getBytes());
+    }
+
+    private void processTSDT(TSDemuxPayload payload)
+    {
+        if (payload.getType() != TSDemuxPayload.Type.SECTION ||
+            payload.getStreamPID() != 0x0002 ||
+            !tsdt.isAttachable(payload.getEncoding()))
+            return;
+
+        tsdt.attach(payload.getEncoding());
+        if (!tsdt.isChecksumCorrect())
+        {
+            log.warn("TSDT校验错误。");
+            return;
+        }
+
+        int version = tsdt.getVersionNumber();
+        int secnum = tsdt.getSectionNumber();
+        int total = tsdt.getLastSectionNumber() + 1;
+        if (total == tsdtSections.length && tsdtSections[secnum] == version)
+            return; // 已经处理过了。
+
+        if (total != tsdtSections.length)
+        {
+            tsdtSections = new int[total];
+            Arrays.fill(tsdtSections, -1);
+        }
+
+        tsdtSections[secnum] = version;
+        databaseService.updateStreamSourceComponentPresence(sourceId, "TSDT", true);
+        databaseService.updateElementaryStreamUsage(payload.getStreamPID(), StreamTypes.CATEGORY_DATA, "TSDT");
+        databaseService.addPrivateSection("TSDT",
                                           payload.getStreamPID(),
                                           payload.getFinishPacketCounter(),
                                           payload.getEncoding().getBytes());
