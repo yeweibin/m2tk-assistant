@@ -15,6 +15,7 @@
  */
 package m2tk.assistant.app.kernel.service;
 
+import cn.hutool.core.util.StrUtil;
 import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.M2TKDatabase;
@@ -77,7 +78,13 @@ public class StreamAnalyzer
 
         demux.reset();
 
-        StreamSource source = database.beginDiagnosis((String) input.query("source name"), uri);
+        // 增加途径网口信息，用于调试。
+        String sourceName = (String) input.query("source name");
+        String nifName = (String) input.query("nif");
+        if (StrUtil.isNotEmpty(nifName))
+            sourceName = String.format("%s (%s)", sourceName, nifName);
+
+        StreamSource source = database.beginDiagnosis(sourceName, uri);
         tracers.forEach(tracer -> tracer.configure(source, demux, database));
 
         demux.registerEventListener(new EventFilter<>(DemuxStatus.class, consumer));
