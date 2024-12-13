@@ -331,6 +331,7 @@ public final class TemplateReader
                           case "DVBTime" -> ValueMapping.dvbTime();
                           case "Duration" -> ValueMapping.duration();
                           case "ThreeLetterCode" -> ValueMapping.threeLetterCode();
+                          case "IPv4" -> ValueMapping.ipv4();
                           default -> null;
                       })
                       .filter(Objects::nonNull)

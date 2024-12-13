@@ -308,6 +308,12 @@
                     </xsd:annotation>
                     <xsd:complexType/>
                 </xsd:element>
+                <xsd:element name="IPV4Address">
+                    <xsd:annotation>
+                        <xsd:documentation>按照BigEndian编码转义IPv4地址。</xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:complexType/>
+                </xsd:element>
             </xsd:choice>
         </xsd:sequence>
     </xsd:complexType>

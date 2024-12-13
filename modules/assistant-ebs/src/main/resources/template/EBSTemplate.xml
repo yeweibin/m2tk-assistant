@@ -36,10 +36,10 @@
             <Field name="EBM_number" length="8" encoding="uimsbf"/>
             <Loop name="ebm_loop" length_field="EBM_number" length_type="count">
                 <LoopPresentation>
-                    <LoopHeader str="EBM描述"/>
+                    <NoLoopHeader/>
                     <LoopEmpty str="***无EBM描述***"/>
                     <LoopEntry>
-                        <Prefix str="消息描述"/>
+                        <Prefix str="EBM描述"/>
                     </LoopEntry>
                 </LoopPresentation>
                 <Body>
@@ -72,16 +72,18 @@
                             </Mapping>
                         </FieldPresentation>
                     </Field>
-                    <Field name="EBM_type" length="10" encoding="nibbles">
+                    <Field name="EBM_type" length="5" encoding="text" string_type="ascii">
                         <FieldPresentation>
                             <Prefix str="EBM类别"/>
-                            <Format str="compact, lowercase"/>
                         </FieldPresentation>
                     </Field>
                     <Field name="EBM_class" length="4" encoding="bslbf">
                         <FieldPresentation>
                             <Prefix str="EBM分类"/>
                             <Mapping>
+                                <Value value="0">
+                                    <ValString str="保留"/>
+                                </Value>
                                 <Value value="1">
                                     <ValString str="发布系统演练"/>
                                 </Value>
@@ -94,6 +96,9 @@
                                 <Value value="4">
                                     <ValString str="应急广播"/>
                                 </Value>
+                                <ValueRange min="5" max="15">
+                                    <ValString str="保留"/>
+                                </ValueRange>
                             </Mapping>
                         </FieldPresentation>
                     </Field>
@@ -101,6 +106,9 @@
                         <FieldPresentation>
                             <Prefix str="EBM级别"/>
                             <Mapping>
+                                <Value value="0">
+                                    <ValString str="保留"/>
+                                </Value>
                                 <Value value="1">
                                     <ValString str="1级（特别重大）"/>
                                 </Value>
@@ -113,16 +121,19 @@
                                 <Value value="4">
                                     <ValString str="4级（一般）"/>
                                 </Value>
+                                <ValueRange min="5" max="15">
+                                    <ValString str="保留"/>
+                                </ValueRange>
                             </Mapping>
                         </FieldPresentation>
                     </Field>
                     <Field name="EB_resource_number" length="8" encoding="uimsbf"/>
                     <Loop name="EB_resource_loop" length_field="EB_resource_number" length_type="count">
                         <LoopPresentation>
-                            <LoopHeader str="EBR描述"/>
+                            <NoLoopHeader/>
                             <LoopEmpty str="***无EBR描述***"/>
                             <LoopEntry>
-                                <Prefix str="资源描述"/>
+                                <Prefix str="EBR描述"/>
                             </LoopEntry>
                         </LoopPresentation>
                         <Body>
@@ -166,7 +177,8 @@
                             </Field>
                             <Field name="reserved" length="4" encoding="bslbf"/>
                             <Field name="details_channel_program_info_length" length="12" encoding="uimsbf"/>
-                            <Loop name="details_channel_program_info_loop" length_field="details_channel_program_info_length">
+                            <Loop name="details_channel_program_info_loop"
+                                  length_field="details_channel_program_info_length">
                                 <LoopPresentation>
                                     <LoopHeader str="节目信息描述"/>
                                     <LoopEmpty str="***无节目信息描述***"/>
@@ -239,7 +251,789 @@
             <Field name="signature_data_bytes" length_field="signature_length" encoding="octets">
                 <FieldPresentation>
                     <Prefix str="数字签名"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="table_id_ext"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="eb_content_section" group="EB-T/EBContent">
+        <TableId id="0xFE">
+            <DisplayName str="应急广播内容表"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="1" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="table_id_ext" length="16" encoding="uimsbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="4" encoding="bslbf"/>
+            <Field name="EBM_id" length="35" encoding="nibbles">
+                <FieldPresentation>
+                    <Prefix str="EBM_id"/>
                     <Format str="compact, lowercase"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="reserved" length="4" encoding="bslbf"/>
+            <Field name="multilingual_content_number" length="4" encoding="uimsbf"/>
+            <Loop name="multilingual_content_loop" length_field="multilingual_content_number" length_type="count">
+                <LoopPresentation>
+                    <LoopHeader str="多语言内容描述"/>
+                    <LoopEmpty str="***无多语言内容描述***"/>
+                    <LoopEntry>
+                        <Prefix str="内容描述"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="multilingual_content_length" length="32" encoding="uimsbf"/>
+                    <Field name="language_code" length="24" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="语言代码"/>
+                            <Mapping>
+                                <ThreeLetterCode/>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="reserved" length="5" encoding="bslbf"/>
+                    <Field name="message_character_set" length="3" encoding="bslbf">
+                        <FieldPresentation>
+                            <Prefix str="编码字符集"/>
+                            <Mapping>
+                                <Value value="0">
+                                    <ValString str="GB/T 2312-1980"/>
+                                </Value>
+                                <Value value="1">
+                                    <ValString str="GB/T 18030-2005"/>
+                                </Value>
+                                <Value value="2">
+                                    <ValString str="GB/T 13000-2010"/>
+                                </Value>
+                                <Value value="3">
+                                    <ValString str="GB/T 21669-2008"/>
+                                </Value>
+                                <Value value="4">
+                                    <ValString str="GB 16959-1998"/>
+                                </Value>
+                                <ValueRange min="5" max="7">
+                                    <ValString str="预留"/>
+                                </ValueRange>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="message_character_set" comp_op="equals" const="0"/>
+                        </Condition>
+                        <Then>
+                            <Field name="message_text_length" length="16" encoding="uimsbf"/>
+                            <Field name="message_text" length_field="message_text_length" encoding="text"
+                                   string_type="gb2312">
+                                <FieldPresentation>
+                                    <Prefix str="消息内容"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="agency_name_length" length="8" encoding="uimsbf"/>
+                            <Field name="agency_name" length_field="agency_name_length" encoding="text"
+                                   string_type="gb2312">
+                                <FieldPresentation>
+                                    <Prefix str="发布机构"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="message_character_set" comp_op="equals" const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="message_text_length" length="16" encoding="uimsbf"/>
+                            <Field name="message_text" length_field="message_text_length" encoding="text"
+                                   string_type="gb18030">
+                                <FieldPresentation>
+                                    <Prefix str="消息内容"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="agency_name_length" length="8" encoding="uimsbf"/>
+                            <Field name="agency_name" length_field="agency_name_length" encoding="text"
+                                   string_type="gb18030">
+                                <FieldPresentation>
+                                    <Prefix str="发布机构"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConstMulti field="message_character_set" comp_op="equals_any">
+                                <ConstValue const="2"/>
+                                <ConstValue const="3"/>
+                                <ConstValue const="4"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="message_text_length" length="16" encoding="uimsbf"/>
+                            <Field name="message_text" length_field="message_text_length" encoding="text"
+                                   string_type="gbk">
+                                <FieldPresentation>
+                                    <Prefix str="消息内容"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="agency_name_length" length="8" encoding="uimsbf"/>
+                            <Field name="agency_name" length_field="agency_name_length" encoding="text"
+                                   string_type="gbk">
+                                <FieldPresentation>
+                                    <Prefix str="发布机构"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConstMulti field="message_character_set" comp_op="not_equal_all">
+                                <ConstValue const="0"/>
+                                <ConstValue const="1"/>
+                                <ConstValue const="2"/>
+                                <ConstValue const="3"/>
+                                <ConstValue const="4"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="message_text_length" length="16" encoding="uimsbf"/>
+                            <Field name="message_text" length_field="message_text_length" encoding="octets">
+                                <FieldPresentation>
+                                    <Prefix str="消息内容（原始编码）"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="agency_name_length" length="8" encoding="uimsbf"/>
+                            <Field name="agency_name" length_field="agency_name_length" encoding="octets">
+                                <FieldPresentation>
+                                    <Prefix str="发布机构（原始编码）"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                    <Field name="reserved" length="4" encoding="bslbf"/>
+                    <Field name="auxiliary_data_number" length="4" encoding="uimsbf"/>
+                    <Loop name="auxiliary_data_loop" length_field="auxiliary_data_number">
+                        <LoopPresentation>
+                            <LoopHeader str="辅助数据描述"/>
+                            <LoopEmpty str="无辅助数据描述"/>
+                            <LoopEntry>
+                                <Prefix str="辅助数据"/>
+                            </LoopEntry>
+                        </LoopPresentation>
+                        <Body>
+                            <Field name="auxiliary_data_type" length="8" encoding="bslbf">
+                                <FieldPresentation>
+                                    <Prefix str="辅助数据类型"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="保留"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="MPEG-1 LayerI/II 音频文件"/>
+                                        </Value>
+                                        <Value value="2">
+                                            <ValString str="MPEG-1 LayerIII 音频文件"/>
+                                        </Value>
+                                        <Value value="3">
+                                            <ValString str="DRA 音频文件"/>
+                                        </Value>
+                                        <Value value="4">
+                                            <ValString str="DRA+ 音频文件"/>
+                                        </Value>
+                                        <ValueRange min="5" max="40">
+                                            <ValString str="预留"/>
+                                        </ValueRange>
+                                        <Value value="41">
+                                            <ValString str="PNG 图片文件"/>
+                                        </Value>
+                                        <Value value="42">
+                                            <ValString str="JPEG 图片文件"/>
+                                        </Value>
+                                        <Value value="43">
+                                            <ValString str="GIF 图片文件"/>
+                                        </Value>
+                                        <ValueRange min="44" max="60">
+                                            <ValString str="预留"/>
+                                        </ValueRange>
+                                        <Value value="61">
+                                            <ValString str="音视频流"/>
+                                        </Value>
+                                        <ValueRange min="62" max="255">
+                                            <ValString str="预留"/>
+                                        </ValueRange>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="auxiliary_data_length" length="24" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="辅助数据长度"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="auxiliary_data" length_field="auxiliary_data_length" encoding="octets">
+                                <FieldPresentation>
+                                    <Prefix str="辅助数据内容"/>
+                                    <Format str="compact, lowercase"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Body>
+                    </Loop>
+                </Body>
+            </Loop>
+            <Field name="signature_length" length="16" encoding="uimsbf"/>
+            <Field name="signature_data_bytes" length_field="signature_length" encoding="octets">
+                <FieldPresentation>
+                    <Prefix str="数字签名"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="table_id_ext"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="eb_cert_auth_section" group="EB-T/EBCertAuth">
+        <TableId id="0xFC">
+            <DisplayName str="应急广播证书授权表"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="1" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="table_id_ext" length="16" encoding="uimsbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="CertAuth_number" length="8" encoding="uimsbf"/>
+            <Loop name="CertAuth_loop" length_field="CertAuth_number" length_type="count">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无证书授权列表描述***"/>
+                    <LoopEntry>
+                        <Prefix str="证书授权列表"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="CertAuth_length" length="16" encoding="uimsbf"/>
+                    <Field name="CertAuth_data" length_field="CertAuth_length" encoding="octets">
+                        <FieldPresentation>
+                            <Prefix str="授权列表"/>
+                            <Format str="compact, lowercase"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+            <Field name="Cert_number" length="8" encoding="uimsbf"/>
+            <Loop name="Cert_loop" length_field="Cert_number" length_type="count">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无证书描述***"/>
+                    <LoopEntry>
+                        <Prefix str="证书"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="Cert_length" length="8" encoding="uimsbf"/>
+                    <Field name="Cert_data" length_field="Cert_length" encoding="octets">
+                        <FieldPresentation>
+                            <Prefix str="证书编码"/>
+                            <Format str="compact, lowercase"/>
+                        </FieldPresentation>
+                    </Field>
+                </Body>
+            </Loop>
+            <Field name="signature_length" length="16" encoding="uimsbf"/>
+            <Field name="signature_data_bytes" length_field="signature_length" encoding="octets">
+                <FieldPresentation>
+                    <Prefix str="数字签名"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="CRC_32" length="32" encoding="checksum">
+                <FieldPresentation>
+                    <Format str="%08X"/>
+                </FieldPresentation>
+            </Field>
+        </TableBody>
+        <UniqueKey>
+            <FieldRef field="table_id"/>
+            <FieldRef field="table_id_ext"/>
+            <FieldRef field="version_number"/>
+            <FieldRef field="section_number"/>
+        </UniqueKey>
+    </TableTemplate>
+    <TableTemplate name="eb_configure_section" group="EB-T/EBConfigure">
+        <TableId id="0xFB">
+            <DisplayName str="应急广播管理配置表"/>
+        </TableId>
+        <TableBody>
+            <Field name="table_id" length="8" encoding="uimsbf"/>
+            <Field name="section_syntax_indicator" length="1" encoding="bslbf"/>
+            <Field name="1" length="1" encoding="bslbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="section_length" length="12" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="段长度"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="table_id_ext" length="16" encoding="uimsbf"/>
+            <Field name="reserved" length="2" encoding="bslbf"/>
+            <Field name="version_number" length="5" encoding="bslbf">
+                <FieldPresentation>
+                    <Prefix str="版本号"/>
+                    <Format str="%d"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="current_next_indicator" length="1" encoding="bslbf"/>
+            <Field name="section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="当前分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="last_section_number" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Prefix str="最后分段号"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="configure_cmd_number" length="8" encoding="uimsbf"/>
+            <Loop name="configure_loop" length_field="configure_cmd_number" length_type="count">
+                <LoopPresentation>
+                    <NoLoopHeader/>
+                    <LoopEmpty str="***无管理配置描述***"/>
+                    <LoopEntry>
+                        <Prefix str="管理配置"/>
+                    </LoopEntry>
+                </LoopPresentation>
+                <Body>
+                    <Field name="configure_cmd_tag" length="8" encoding="uimsbf">
+                        <FieldPresentation>
+                            <Prefix str="指令"/>
+                            <Mapping>
+                                <Value value="1">
+                                    <ValString str="时钟校准指令"/>
+                                </Value>
+                                <Value value="2">
+                                    <ValString str="资源编码设置指令"/>
+                                </Value>
+                                <Value value="3">
+                                    <ValString str="锁定频率设置指令"/>
+                                </Value>
+                                <Value value="4">
+                                    <ValString str="设置回传方式/回传地址指令"/>
+                                </Value>
+                                <Value value="5">
+                                    <ValString str="设置回传周期指令"/>
+                                </Value>
+                                <Value value="6">
+                                    <ValString str="设置默认音量指令"/>
+                                </Value>
+                                <Value value="7">
+                                    <ValString str="状态/参数查询指令"/>
+                                </Value>
+                            </Mapping>
+                        </FieldPresentation>
+                    </Field>
+                    <Field name="configure_cmd_length" length="16" encoding="uimsbf"/>
+                    <!-- 目前仅定义了七种指令 -->
+                    <If>
+                        <!-- 时钟校准指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="wYear" length="16" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="iMonth" length="8" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="iDay" length="8" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="iHour" length="8" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="iMinute" length="8" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="iSecond" length="8" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 资源编码设置指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="2"/>
+                        </Condition>
+                        <Then>
+                            <Field name="terminal_address_length" length="8" encoding="uimsbf"/>
+                            <Field name="terminal_address" length_field="terminal_address_length" encoding="octets">
+                                <FieldPresentation>
+                                    <Prefix str="物理地址"/>
+                                    <Format str="compact, lowercase"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="reserved" length="4" encoding="bslbf"/>
+                            <Field name="resource_code" length="23" encoding="nibbles">
+                                <FieldPresentation>
+                                    <Prefix str="资源编码"/>
+                                    <Format str="compact, lowercase"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 锁定频率设置指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="3"/>
+                        </Condition>
+                        <Then>
+                            <Field name="freq" length="32" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="主频频率"/>
+                                    <Format str="%,d kHz"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="symbol_rate" length="32" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="符号率"/>
+                                    <Format str="%,d kBPS"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="constellation_mapping" length="8" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="星座映射"/>
+                                    <Mapping>
+                                        <Value value="0">
+                                            <ValString str="未定义"/>
+                                        </Value>
+                                        <Value value="1">
+                                            <ValString str="QAM16"/>
+                                        </Value>
+                                        <Value value="2">
+                                            <ValString str="QAM32"/>
+                                        </Value>
+                                        <Value value="3">
+                                            <ValString str="QAM64"/>
+                                        </Value>
+                                        <Value value="4">
+                                            <ValString str="QAM128"/>
+                                        </Value>
+                                        <Value value="5">
+                                            <ValString str="QAM256"/>
+                                        </Value>
+                                        <ValueRange min="6" max="255">
+                                            <ValString str="预留"/>
+                                        </ValueRange>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="terminal_number" length="8" encoding="uimsbf"/>
+                            <Loop name="terminal_loop" length_field="terminal_number" length_type="count">
+                                <LoopPresentation>
+                                    <LoopHeader str="需要设置锁定频率的终端资源编码"/>
+                                    <LoopEmpty str="***无需要设置锁定频率的终端资源编码描述***"/>
+                                    <LoopEntry>
+                                        <Prefix str="终端资源编码"/>
+                                    </LoopEntry>
+                                </LoopPresentation>
+                                <Body>
+                                    <Field name="reserved" length="4" encoding="bslbf"/>
+                                    <Field name="resource_address" length="23" encoding="nibbles">
+                                        <FieldPresentation>
+                                            <Prefix str="资源编码"/>
+                                            <Format str="compact, lowercase"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Body>
+                            </Loop>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 设置回传方式/回传地址指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="4"/>
+                        </Condition>
+                        <Then>
+                            <Field name="reback_type" length="8" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="回传方式"/>
+                                    <Mapping>
+                                        <Value value="1">
+                                            <ValString str="短信"/>
+                                        </Value>
+                                        <Value value="2">
+                                            <ValString str="IP地址和端口"/>
+                                        </Value>
+                                        <Value value="3">
+                                            <ValString str="域名和端口号"/>
+                                        </Value>
+                                        <ValueRange min="4" max="9">
+                                            <ValString str="预留"/>
+                                        </ValueRange>
+                                    </Mapping>
+                                </FieldPresentation>
+                            </Field>
+                            <If>
+                                <Condition>
+                                    <CompareWithConst field="reback_type" comp_op="equals" const="1"/>
+                                </Condition>
+                                <Then>
+                                    <Field name="reback_address_length" length="8" encoding="uimsbf"/>
+                                    <Field name="reback_address" length_field="reback_address_length" encoding="text"
+                                           string_type="ascii">
+                                        <FieldPresentation>
+                                            <Prefix str="短信号码"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Then>
+                            </If>
+                            <If>
+                                <Condition>
+                                    <CompareWithConst field="reback_type" comp_op="equals" const="2"/>
+                                </Condition>
+                                <Then>
+                                    <Field name="reback_address_length" length="8" encoding="uimsbf"/>
+                                    <Field name="reback_address_ip" length="32" encoding="uimsbf">
+                                        <FieldPresentation>
+                                            <Prefix str="回传地址"/>
+                                            <Mapping>
+                                                <IPV4Address/>
+                                            </Mapping>
+                                        </FieldPresentation>
+                                    </Field>
+                                    <Field name="reback_address_port" length="16" encoding="uimsbf">
+                                        <FieldPresentation>
+                                            <Prefix str="端口号"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Then>
+                            </If>
+                            <If>
+                                <Condition>
+                                    <CompareWithConst field="reback_type" comp_op="equals" const="3"/>
+                                </Condition>
+                                <Then>
+                                    <Field name="reback_address_length" length="8" encoding="uimsbf"/>
+                                    <Field name="reback_address" length_field="reback_address_length" encoding="text"
+                                           string_type="ascii">
+                                        <FieldPresentation>
+                                            <Prefix str="回传地址"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Then>
+                            </If>
+                            <If>
+                                <Condition>
+                                    <CompareWithConstMulti field="reback_type" comp_op="not_equal_all">
+                                        <ConstValue const="1"/>
+                                        <ConstValue const="2"/>
+                                        <ConstValue const="3"/>
+                                    </CompareWithConstMulti>
+                                </Condition>
+                                <Then>
+                                    <Field name="reback_address_length" length="8" encoding="uimsbf"/>
+                                    <Field name="reback_address" length_field="reback_address_length" encoding="octets">
+                                        <FieldPresentation>
+                                            <Prefix str="回传地址（编码）"/>
+                                            <Format str="compact, lowercase"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Then>
+                            </If>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 设置回传周期指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="5"/>
+                        </Condition>
+                        <Then>
+                            <Field name="reback_period" length="32" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="回传周期"/>
+                                    <Format str="%,d 秒"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="terminal_number" length="8" encoding="uimsbf"/>
+                            <Loop name="terminal_loop" length_field="terminal_number" length_type="count">
+                                <LoopPresentation>
+                                    <NoLoopHeader/>
+                                    <LoopEmpty str="***无需要配置的终端***"/>
+                                    <LoopEntry>
+                                        <Prefix str="终端"/>
+                                    </LoopEntry>
+                                </LoopPresentation>
+                                <Body>
+                                    <Field name="reserved" length="4" encoding="bslbf"/>
+                                    <Field name="resource_code" length="23" encoding="nibbles">
+                                        <FieldPresentation>
+                                            <Prefix str="资源编码"/>
+                                            <Format str="compact, lowercase"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Body>
+                            </Loop>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 设置默认音量指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="6"/>
+                        </Condition>
+                        <Then>
+                            <Field name="volume" length="8" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="音量"/>
+                                    <Format str="%d%%"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="terminal_number" length="8" encoding="uimsbf"/>
+                            <Loop name="terminal_loop" length_field="terminal_number" length_type="count">
+                                <LoopPresentation>
+                                    <NoLoopHeader/>
+                                    <LoopEmpty str="***无需要配置的终端***"/>
+                                    <LoopEntry>
+                                        <Prefix str="终端"/>
+                                    </LoopEntry>
+                                </LoopPresentation>
+                                <Body>
+                                    <Field name="reserved" length="4" encoding="bslbf"/>
+                                    <Field name="resource_code" length="23" encoding="nibbles">
+                                        <FieldPresentation>
+                                            <Prefix str="资源编码"/>
+                                            <Format str="compact, lowercase"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Body>
+                            </Loop>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 状态/参数查询指令 -->
+                        <Condition>
+                            <CompareWithConst field="configure_cmd_tag" comp_op="equals" const="7"/>
+                        </Condition>
+                        <Then>
+                            <Field name="parameter_number" length="8" encoding="uimsbf">
+                                <FieldPresentation>
+                                    <Prefix str="查询参数个数"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="parameter_tag" length_field="parameter_number" encoding="octets">
+                                <FieldPresentation>
+                                    <Prefix str="参数标识"/>
+                                </FieldPresentation>
+                            </Field>
+                            <Field name="terminal_number" length="8" encoding="uimsbf"/>
+                            <Loop name="terminal_loop" length_field="terminal_number" length_type="count">
+                                <LoopPresentation>
+                                    <NoLoopHeader/>
+                                    <LoopEmpty str="***无需要配置的终端***"/>
+                                    <LoopEntry>
+                                        <Prefix str="终端"/>
+                                    </LoopEntry>
+                                </LoopPresentation>
+                                <Body>
+                                    <Field name="reserved" length="4" encoding="bslbf"/>
+                                    <Field name="resource_code" length="23" encoding="nibbles">
+                                        <FieldPresentation>
+                                            <Prefix str="资源编码"/>
+                                            <Format str="compact, lowercase"/>
+                                        </FieldPresentation>
+                                    </Field>
+                                </Body>
+                            </Loop>
+                        </Then>
+                    </If>
+                    <If>
+                        <!-- 对于没有未定义的指令，以原始字节方式展示 -->
+                        <Condition>
+                            <CompareWithConstMulti field="configure_cmd_tag" comp_op="not_equal_all">
+                                <ConstValue const="1"/>
+                                <ConstValue const="2"/>
+                                <ConstValue const="3"/>
+                                <ConstValue const="4"/>
+                                <ConstValue const="5"/>
+                                <ConstValue const="6"/>
+                                <ConstValue const="7"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="configure_cmd_data" length_field="configure_cmd_length" encoding="octets">
+                                <FieldPresentation>
+                                    <Prefix str="指令编码"/>
+                                </FieldPresentation>
+                            </Field>
+                        </Then>
+                    </If>
+                </Body>
+            </Loop>
+            <Field name="signature_length" length="16" encoding="uimsbf"/>
+            <Field name="signature_data_bytes" length_field="signature_length" encoding="octets">
+                <FieldPresentation>
+                    <Prefix str="数字签名"/>
                 </FieldPresentation>
             </Field>
             <Field name="CRC_32" length="32" encoding="checksum">

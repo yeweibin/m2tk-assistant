@@ -57,4 +57,13 @@ public interface ValueMapping
     {
         return value -> DVB.decodeThreeLetterCode((int) value);
     }
+
+    static ValueMapping ipv4()
+    {
+        return value -> String.format("%d.%d.%d.%d",
+                                      (value >>> 24) & 0xFF,
+                                      (value >>> 16) & 0xFF,
+                                      (value >>>  8) & 0xFF,
+                                      (value         & 0xFF));
+    }
 }
