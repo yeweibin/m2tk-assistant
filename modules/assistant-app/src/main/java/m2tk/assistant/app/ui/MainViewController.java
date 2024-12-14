@@ -94,7 +94,6 @@ public class MainViewController
     private Timer timer;
 
     private Icon consoleMenuIcon, consoleToolbarIcon;
-    private Icon diagramMenuIcon, diagramToolbarIcon;
     private Icon appIcon;
 
     private static final Color DISABLED = UIManager.getColor("Label.disabledForeground");
@@ -134,11 +133,6 @@ public class MainViewController
         consoleIcon.setColorFilter(colorFilter);
         consoleMenuIcon = consoleIcon.derive(16, 16);
         consoleToolbarIcon = consoleIcon.derive(26, 26);
-
-        FlatSVGIcon diagramIcon = new FlatSVGIcon("images/diagram.svg");
-        diagramIcon.setColorFilter(colorFilter);
-        diagramMenuIcon = diagramIcon.derive(16, 16);
-        diagramToolbarIcon = diagramIcon.derive(29, 29);
 
         appIcon = new FlatSVGIcon("images/logo-a.svg", 20, 20);
     }
@@ -299,7 +293,7 @@ public class MainViewController
                            .get());
         menuOps.addSeparator();
         menuOps.add(builder.create(actionMap.get("drawNetworkGraph"))
-                           .icon(diagramMenuIcon)
+                           .icon(getFontIcon(FluentUiRegularAL.GRID_20, 20, HP_BLUE))
                            .text("绘制网络结构图")
                            .get());
         menuOps.addSeparator();
@@ -436,7 +430,7 @@ public class MainViewController
                            .get());
         toolBar.addSeparator();
         toolBar.add(builder.create(actionMap.get("drawNetworkGraph"))
-                           .icon(diagramToolbarIcon)
+                           .icon(getFontIcon(FluentUiRegularAL.GRID_28, 28, HP_BLUE))
                            .text(null)
                            .tooltip("绘制网络结构图")
                            .get());
