@@ -7,10 +7,20 @@
         <xsd:complexType>
             <xsd:sequence>
                 <xsd:choice maxOccurs="unbounded">
+                    <xsd:element ref="SelectorTemplate"/>
                     <xsd:element ref="TableTemplate"/>
                     <xsd:element ref="DescriptorTemplate"/>
                 </xsd:choice>
             </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+    <xsd:element name="SelectorTemplate">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="DisplayName" type="Label"/>
+                <xsd:element name="SelectorBody" type="Syntax"/>
+            </xsd:sequence>
+            <xsd:attribute name="name" use="required" type="xsd:string"/>
         </xsd:complexType>
     </xsd:element>
     <xsd:element name="TableTemplate">
@@ -121,6 +131,14 @@
                             </xsd:documentation>
                         </xsd:annotation>
                     </xsd:attribute>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="Selector">
+                <xsd:annotation>
+                    <xsd:documentation>可以在任意位置出现，用来索引预定义的复杂结构体。Selector必须按字节对齐。</xsd:documentation>
+                </xsd:annotation>
+                <xsd:complexType>
+                    <xsd:attribute name="name" use="required" type="xsd:string"/>
                 </xsd:complexType>
             </xsd:element>
             <xsd:element name="If">

@@ -26,7 +26,8 @@ public class SyntaxField
         NUMBER, CHECKSUM, TEXT, BITS, NIBBLES, OCTETS,
         LOOP_HEADER, LOOP_ENTRY_HEADER,
         DESCRIPTOR,
-        SECTION
+        SECTION,
+        SELECTOR
     }
 
     private final Type type;
@@ -50,6 +51,17 @@ public class SyntaxField
     private SyntaxField parent;
     private SyntaxField sibling;
     private LinkedList<SyntaxField> children;
+
+    public static SyntaxField selector(String name, String label, int position)
+    {
+        Objects.requireNonNull(name);
+        Objects.requireNonNull(label);
+
+        return new SyntaxField(Type.SELECTOR, name, null, null, label, true,
+                               position, 0,
+                               null, null,
+                               null, null, false);
+    }
 
     public static SyntaxField descriptor(String name, String label, int position)
     {

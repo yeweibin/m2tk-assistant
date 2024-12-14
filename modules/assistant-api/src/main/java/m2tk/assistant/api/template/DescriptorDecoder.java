@@ -42,9 +42,9 @@ public class DescriptorDecoder
 
     public static void registerTemplate(DescriptorTemplate template)
     {
+        Objects.requireNonNull(template);
         synchronized (TEMPLATE_MAP)
         {
-            Objects.requireNonNull(template);
             String key = (template.getTag() == 0x7F)
                          ? String.format("%02x.%02x", template.getTag(), template.getTagExtension())
                          : String.format("%02x", template.getTag());

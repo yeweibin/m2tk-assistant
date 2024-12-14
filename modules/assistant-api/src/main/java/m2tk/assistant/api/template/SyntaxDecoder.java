@@ -30,6 +30,7 @@ import java.util.stream.LongStream;
 @Slf4j
 public class SyntaxDecoder
 {
+    private static final SelectorDecoder SELECTOR_DECODER = new SelectorDecoder();
     private static final DescriptorDecoder DESCRIPTOR_DECODER = new DescriptorDecoder();
 
     /**
@@ -135,6 +136,20 @@ public class SyntaxDecoder
                     parent.appendChild(field);
 
                 return (len + 2) * 8;
+            }
+            case SelectorFieldDefinition selector ->
+            {
+                if (bitOffset != 0)
+                {
+                    log.error("Selector字段未对齐：bitOffset={}", bitOffset);
+                    throw new IllegalStateException("错误的Selector字段起始位置（未对齐）");
+                }
+
+                SyntaxField field = SELECTOR_DECODER.decode(selector.getName(), encoding, position, limit);
+                if (parent != null)
+                    parent.appendChild(field);
+
+                return field.getBitLength();
             }
             default ->
             {

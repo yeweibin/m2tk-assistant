@@ -45,9 +45,9 @@ public class SectionDecoder
 
     public static void registerTemplate(TableTemplate template)
     {
+        Objects.requireNonNull(template);
         synchronized (TEMPLATE_MAP)
         {
-            Objects.requireNonNull(template);
             for (TableId tableId : template.getTableIds())
             {
                 String key = String.format("%02x", tableId.getId());

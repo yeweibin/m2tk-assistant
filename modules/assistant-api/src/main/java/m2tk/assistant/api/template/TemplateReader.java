@@ -71,6 +71,7 @@ public final class TemplateReader
                         {
                             case "TableTemplate" -> interpretTableTemplate(element);
                             case "DescriptorTemplate" -> interpretDescriptorTemplate(element);
+                            case "SelectorTemplate" -> interpretSelectorTemplate(element);
                             default -> (TemplateDefinition) null;
                         })
                         .filter(Objects::nonNull)
@@ -167,6 +168,27 @@ public final class TemplateReader
         return template;
     }
 
+    private static SelectorTemplate interpretSelectorTemplate(Element element)
+    {
+        SelectorTemplate template = new SelectorTemplate();
+        template.setName(element.attr("name"));
+        template.setDisplayName(interpretLabel(element.select("DisplayName")));
+        template.setSelectorSyntax(element.select("SelectorBody")
+                                            .elements()
+                                            .stream()
+                                            .map(TemplateReader::interpretSyntaxFieldDefinition)
+                                            .filter(Objects::nonNull)
+                                            .toList());
+
+        if (template.getSelectorSyntax().isEmpty())
+        {
+            log.error("缺少有效的SelectorBody定义");
+            return null;
+        }
+
+        return template;
+    }
+
     private static Label interpretLabel(Element element)
     {
         Label label = new Label();
@@ -181,6 +203,7 @@ public final class TemplateReader
         return switch (element.tagName())
         {
             case "Field" -> interpretField(element);
+            case "Selector" -> interpretSelector(element);
             case "If" -> interpretIf(element);
             case "Loop" -> interpretLoop(element);
             case "Descriptor" -> DescriptorFieldDefinition.INSTANCE;
@@ -203,6 +226,20 @@ public final class TemplateReader
         if (!definition.verify())
         {
             log.error("DataField定义不符合要求");
+            return null;
+        }
+
+        return definition;
+    }
+
+    private static SelectorFieldDefinition interpretSelector(Element element)
+    {
+        SelectorFieldDefinition definition = new SelectorFieldDefinition();
+        definition.setName(element.attr("name"));
+
+        if (!definition.verify())
+        {
+            log.error("Selector定义不符合要求");
             return null;
         }
 
