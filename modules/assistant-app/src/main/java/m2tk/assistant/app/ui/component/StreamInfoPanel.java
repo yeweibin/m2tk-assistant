@@ -87,12 +87,10 @@ public class StreamInfoPanel extends JPanel
         JRadioButton[] packetSizeOptions = readonlySingleChoices("188 字节", "204 字节");
         radio188Bytes = packetSizeOptions[0];
         radio204Bytes = packetSizeOptions[1];
-        radio188Bytes.setSelected(true);
 
         JRadioButton[] scrambleStateOptions = readonlySingleChoices("清流", "加扰");
         radioClear = scrambleStateOptions[0];
         radioScrambled = scrambleStateOptions[1];
-        radioClear.setSelected(true);
 
         JCheckBox[] caStreamOptions = readonlyOptionalChoices("ECM", "EMM");
         checkECMPresent = caStreamOptions[0];
@@ -313,8 +311,14 @@ public class StreamInfoPanel extends JPanel
         fieldProgramCount.setText(String.format("%,d", source.getProgramCount()));
         fieldTransportStreamId.setText("" + source.getTransportStreamId());
 
-        radio188Bytes.setSelected(source.getFrameSize() == 188);
-        radioScrambled.setSelected(source.isScrambled());
+        if (source.getFrameSize() == 188)
+            radio188Bytes.setSelected(true);
+        else
+            radio204Bytes.setSelected(true);
+        if (source.isScrambled())
+            radioScrambled.setSelected(true);
+        else
+            radioClear.setSelected(true);
         checkECMPresent.setSelected(source.isEcmPresent());
         checkEMMPresent.setSelected(source.isEmmPresent());
         checkPATPresent.setSelected(source.isPatPresent());
