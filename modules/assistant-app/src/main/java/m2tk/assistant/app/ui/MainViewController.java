@@ -28,6 +28,7 @@ import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.api.template.DescriptorDecoder;
 import m2tk.assistant.api.template.SectionDecoder;
+import m2tk.assistant.api.template.SelectorDecoder;
 import m2tk.assistant.api.template.TemplateReader;
 import m2tk.assistant.api.template.definition.M2TKTemplate;
 import m2tk.assistant.app.kernel.service.StreamAnalyzer;
@@ -145,12 +146,14 @@ public class MainViewController
         {
             psiTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
             psiTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+            psiTemplate.getSelectorTemplates().forEach(SelectorDecoder::registerTemplate);
         }
         M2TKTemplate siTemplate = reader.parse(getClass().getResource("/template/SITemplate.xml"));
         if (siTemplate != null)
         {
             siTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
             siTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+            siTemplate.getSelectorTemplates().forEach(SelectorDecoder::registerTemplate);
         }
     }
 
@@ -957,6 +960,7 @@ public class MainViewController
 
         userTemplate.getTableTemplates().forEach(SectionDecoder::registerTemplate);
         userTemplate.getDescriptorTemplates().forEach(DescriptorDecoder::registerTemplate);
+        userTemplate.getSelectorTemplates().forEach(SelectorDecoder::registerTemplate);
         log.info("加载自定义模板：{}", file);
 
         return true;

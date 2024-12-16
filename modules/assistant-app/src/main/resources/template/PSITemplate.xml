@@ -1,5 +1,695 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 <M2TKTemplate>
+    <SelectorTemplate name="transport_packet">
+        <DisplayName str="传输包"/>
+        <SelectorBody>
+            <Field name="sync_byte" length="8" encoding="bslbf">
+                <FieldPresentation>
+                    <Format str="0x%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="transport_error_indicator" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="payload_unit_start_indicator" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="transport_priority" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="PID" length="13" encoding="uimsbf">
+                <FieldPresentation>
+                    <Format str="0x%04X (%d)"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="transport_scrambling_control" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="'00' - Not scrambled"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="'01' - User-defined"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="'10' - User-defined"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="'11' - User-defined"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="adaptation_field_control" length="2" encoding="bslbf">
+                <FieldPresentation>
+                    <Mapping>
+                        <Value value="0">
+                            <ValString str="'00' - Reserved for future use by ISO/IEC"/>
+                        </Value>
+                        <Value value="1">
+                            <ValString str="'01' - No adaptation_field, payload only"/>
+                        </Value>
+                        <Value value="2">
+                            <ValString str="'10' - Adaptation_field only, no payload"/>
+                        </Value>
+                        <Value value="3">
+                            <ValString str="'11' - Adaptation_field followed by payload"/>
+                        </Value>
+                    </Mapping>
+                </FieldPresentation>
+            </Field>
+            <Field name="continuity_counter" length="4" encoding="bslbf">
+                <FieldPresentation>
+                    <Format str="%X (%d)"/>
+                </FieldPresentation>
+            </Field>
+            <If>
+                <Condition>
+                    <CompareWithConstMulti field="adaptation_field_control" comp_op="equals_any">
+                        <ConstValue const="2"/>
+                        <ConstValue const="3"/>
+                    </CompareWithConstMulti>
+                </Condition>
+                <Then>
+                    <Field name="adaptation_field_length" length="8" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="adaptation_field_length" comp_op="larger_than" const="0"/>
+                        </Condition>
+                        <Then>
+                            <Selector name="adaptation_field" length_field="adaptation_field_length"/>
+                        </Then>
+                    </If>
+                </Then>
+            </If>
+            <Field name="payload_byte" length_field="implicit" encoding="octets">
+                <FieldPresentation/>
+            </Field>
+        </SelectorBody>
+    </SelectorTemplate>
+    <SelectorTemplate name="adaptation_field">
+        <DisplayName str="适配域"/>
+        <SelectorBody>
+            <Field name="discontinuity_indicator" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="random_access_indicator" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="elementary_stream_priority_indicator" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="PCR_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="OPCR_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="splicing_point_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="transport_private_data_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="adaptation_field_extension_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <If>
+                <Condition>
+                    <CompareWithConst field="PCR_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="program_clock_reference_base" length="33" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="reserved" length="6" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="program_clock_reference_extension" length="9" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="OPCR_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="original_program_clock_reference_base" length="33" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="reserved" length="6" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="original_program_clock_reference_extension" length="9" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="splicing_point_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="splice_countdown" length="8" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="transport_private_data_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="transport_private_data_length" length="8" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="private_data" length_field="transport_private_data_length" encoding="octets">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="adaptation_field_extension_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="adaptation_field_extension_length" length="8" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Selector name="adaptation_field_extension" length_field="adaptation_field_extension_length"/>
+                </Then>
+            </If>
+            <Field name="stuffing_bytes" length_field="implicit" encoding="octets">
+                <FieldPresentation/>
+            </Field>
+        </SelectorBody>
+    </SelectorTemplate>
+    <SelectorTemplate name="adaptation_field_extension">
+        <DisplayName str="适配域扩展"/>
+        <SelectorBody>
+            <Field name="ltw_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="piecewise_rate_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="seamless_splice_flag" length="1" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="reserved" length="5" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <If>
+                <Condition>
+                    <CompareWithConst field="ltw_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="ltw_valid_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ltw_offset" length="15" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="piecewise_rate_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="reserved" length="2" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="piecewise_rate" length="22" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="seamless_splice_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="splice_type" length="4" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DTS_next_AU[32..30]" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DTS_next_AU[29..15]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DTS_next_AU[14..0]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <Field name="reserved" length_field="implicit" encoding="octets">
+                <FieldPresentation/>
+            </Field>
+        </SelectorBody>
+    </SelectorTemplate>
+    <SelectorTemplate name="pes_packet">
+        <DisplayName str="PES包"/>
+        <SelectorBody>
+            <Field name="packet_start_code_prefix" length="24" encoding="bslbf">
+                <FieldPresentation/>
+            </Field>
+            <Field name="stream_id" length="8" encoding="uimsbf">
+                <FieldPresentation>
+                    <Format str="%02X"/>
+                </FieldPresentation>
+            </Field>
+            <Field name="PES_packet_length" length="16" encoding="uimsbf">
+                <FieldPresentation/>
+            </Field>
+            <If>
+                <Condition>
+                    <CompareWithConst field="stream_id" comp_op="equals" const="0xBE"/>
+                </Condition>
+                <Then>
+                    <Field name="padding_bytes" length_field="PES_packet_length" encoding="octets">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConstMulti field="stream_id" comp_op="equals_any">
+                        <ConstValue const="0xBC"/> <!-- program_stream_map -->
+                        <ConstValue const="0xBF"/> <!-- private_stream_2 -->
+                        <ConstValue const="0xF0"/> <!-- ECM -->
+                        <ConstValue const="0xF1"/> <!-- EMM -->
+                        <ConstValue const="0xF2"/> <!-- DSMCC_stream -->
+                        <ConstValue const="0xF8"/> <!-- ITU-T Rec.H.222.1 type E stream -->
+                        <ConstValue const="0xFF"/> <!-- program_stream_directory -->
+                    </CompareWithConstMulti>
+                </Condition>
+                <Then>
+                    <Field name="PES_packet_data_bytes" length_field="PES_packet_length" encoding="octets">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+                <Else>
+                    <Field name="'10'" length="2" encoding="bslbf"/>
+                    <Field name="PES_scrambling_control" length="2" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PES_priority" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="data_alignment_indicator" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="copyright" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="original_or_copy" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS_DTS_flags" length="2" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ESCR_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ES_rate_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DSM_trick_mode_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="additional_copy_info_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PES_CRC_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PES_extension_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PES_header_data_length" length="8" encoding="uimsbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Selector name="pes_header" length_field="PES_header_data_length"/>
+                    <Field name="PES_packet_data_bytes" length_field="implicit" encoding="octets">
+                        <FieldPresentation/>
+                    </Field>
+                </Else>
+            </If>
+        </SelectorBody>
+    </SelectorTemplate>
+    <SelectorTemplate name="pes_header">
+        <DisplayName str="PES头"/>
+        <SelectorBody>
+            <If>
+                <Condition>
+                    <CompareWithConst field="PTS_DTS_flags" comp_op="equals" const="2"/>
+                </Condition>
+                <Then>
+                    <Field name="'0010'" length="4" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS[32..30]" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS[29..15]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS[14..0]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="PTS_DTS_flags" comp_op="equals" const="3"/>
+                </Condition>
+                <Then>
+                    <Field name="'0011'" length="4" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS[32..30]" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS[29..15]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PTS[14..0]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="'0001'" length="4" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DTS[32..30]" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DTS[29..15]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="DTS[14..0]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="ESCR_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="reserved" length="2" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ESCR_base[32..30]" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ESCR_base[29..15]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ESCR_base[14..0]" length="15" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ESCR_extension" length="9" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="ES_rate_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="ES_rate" length="22" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="DSM_trick_mode_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="trick_mode_control" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <If>
+                        <Condition>
+                            <!-- Fast Forward '000' -->
+                            <!-- Fast Reverse '011' -->
+                            <CompareWithConstMulti field="trick_mode_control" comp_op="equals_any">
+                                <ConstValue const="0"/>
+                                <ConstValue const="3"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="field_id" length="2" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="intra_slice_refresh" length="1" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="frequency_truncation" length="2" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <!-- Slow Motion '001' -->
+                            <!-- Slow Reverse '100' -->
+                            <CompareWithConstMulti field="trick_mode_control" comp_op="equals_any">
+                                <ConstValue const="1"/>
+                                <ConstValue const="4"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="rep_cntrl" length="5" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <!-- Freeze Frame '010' -->
+                            <CompareWithConst field="trick_mode_control" comp_op="equals" const="2"/>
+                        </Condition>
+                        <Then>
+                            <Field name="field_id" length="2" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="reserved" length="3" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <!-- Reserved '101'~'111' -->
+                            <CompareWithConstMulti field="trick_mode_control" comp_op="equals_any">
+                                <ConstValue const="5"/>
+                                <ConstValue const="6"/>
+                                <ConstValue const="7"/>
+                            </CompareWithConstMulti>
+                        </Condition>
+                        <Then>
+                            <Field name="reserved" length="5" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="additional_copy_info_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="marker_bit" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="additional_copy_info" length="7" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="PES_CRC_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="previous_PES_packet_CRC" length="16" encoding="checksum">
+                        <FieldPresentation/>
+                    </Field>
+                </Then>
+            </If>
+            <If>
+                <Condition>
+                    <CompareWithConst field="PES_extension_flag" comp_op="equals" const="1"/>
+                </Condition>
+                <Then>
+                    <Field name="PES_private_data_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="pack_header_field_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="program_packet_sequence_counter_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="P-STD_buffer_flag" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="reserved" length="3" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <Field name="PES_extension_flag_2" length="1" encoding="bslbf">
+                        <FieldPresentation/>
+                    </Field>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="PES_private_data_flag" comp_op="equals" const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="PES_private_data" length="16" encoding="octets">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="pack_header_field_flag" comp_op="equals"
+                                              const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="pack_field_length" length="8" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="pack_header" length_field="pack_field_length"
+                                   encoding="octets">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="program_packet_sequence_counter_flag"
+                                              comp_op="equals" const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="marker_bit" length="1" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="program_packet_sequence_counter" length="7" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="marker_bit" length="1" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="MPEG1_MPEG2_identifier" length="1" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="original_stuff_length" length="6" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="P-STD_buffer_flag" comp_op="equals" const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="'01'" length="2" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="P-STD_buffer_scale" length="1" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="P-STD_buffer_size" length="13" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                    <If>
+                        <Condition>
+                            <CompareWithConst field="PES_extension_flag_2" comp_op="equals" const="1"/>
+                        </Condition>
+                        <Then>
+                            <Field name="marker_bit" length="1" encoding="bslbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="PES_extension_field_length" length="7" encoding="uimsbf">
+                                <FieldPresentation/>
+                            </Field>
+                            <Field name="reserved" length_field="PES_extension_field_length"
+                                   encoding="octets">
+                                <FieldPresentation/>
+                            </Field>
+                        </Then>
+                    </If>
+                </Then>
+            </If>
+            <Field name="stuffing_bytes" length_field="implicit" encoding="octets">
+                <FieldPresentation/>
+            </Field>
+        </SelectorBody>
+    </SelectorTemplate>
     <TableTemplate name="program_association_section" group="PSI/PAT">
         <TableId id="0x00">
             <DisplayName str="节目关联表 (PAT)"/>

@@ -13,14 +13,26 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package m2tk.assistant.api.domain;
+package m2tk.assistant.app.kernel.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 @Data
-public class TransportPacket
+@TableName("t_pes_packet")
+public class PESPacketEntity
 {
-    private int pid;
-    private long position;
+    @TableId(type = IdType.AUTO)
+    private Integer id;
+    @TableField("pid")
+    private Integer stream;
+    @TableField("pct")
+    private Long position;
+    @TableField("size")
+    private Integer size;
+    @TableField("encoding")
     private byte[] encoding;
 }

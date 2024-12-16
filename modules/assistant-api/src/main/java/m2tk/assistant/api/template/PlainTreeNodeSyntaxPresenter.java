@@ -89,7 +89,7 @@ public class PlainTreeNodeSyntaxPresenter
             String mappedValue = field.getMappedValue();
             return (mappedValue != null)
                    ? prefix + ": " + mappedValue
-                   : prefix + ": " + String.format("b'%s", Long.toBinaryString(field.getValueAsLong()));
+                   : prefix + ": " + printBits(field.getValueAsLong(), field.getBitLength());
         }
 
         List<Object> args = new ArrayList<>();
@@ -104,6 +104,18 @@ public class PlainTreeNodeSyntaxPresenter
         if (mappedValue != null)
             text += String.format(" (%s)", mappedValue);
         return text;
+    }
+
+    private String printBits(long value, int length)
+    {
+        StringBuilder sbuf = new StringBuilder();
+        for (int i = 0; i < length; i ++)
+        {
+            int lastBit = (int) (value & 0b1);
+            sbuf.append(lastBit);
+            value = value >> 1;
+        }
+        return "b'" + sbuf.reverse();
     }
 
     private String renderNumber(SyntaxField field)

@@ -236,6 +236,9 @@ public final class TemplateReader
     {
         SelectorFieldDefinition definition = new SelectorFieldDefinition();
         definition.setName(element.attr("name"));
+        definition.setLength(element.attr("length"));
+        definition.setLengthField(element.attr("length_field"));
+        definition.setLengthCorrection(element.attr("length_correction"));
 
         if (!definition.verify())
         {

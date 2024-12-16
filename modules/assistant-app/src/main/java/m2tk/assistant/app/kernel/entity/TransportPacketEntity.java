@@ -27,8 +27,6 @@ public class TransportPacketEntity
 {
     @TableId(type = IdType.AUTO)
     private Integer id;
-    @TableField("tag")
-    private String tag;
     @TableField("pid")
     private Integer stream;
     @TableField("pct")

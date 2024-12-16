@@ -22,13 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 import m2tk.assistant.api.InfoView;
 import m2tk.assistant.api.M2TKDatabase;
 import m2tk.assistant.api.StreamObserver;
-import m2tk.assistant.api.domain.ElementaryStream;
-import m2tk.assistant.api.domain.FilteringHook;
-import m2tk.assistant.api.domain.PrivateSection;
+import m2tk.assistant.api.domain.*;
 import m2tk.assistant.api.event.RefreshInfoViewEvent;
 import m2tk.assistant.api.event.ShowInfoViewEvent;
 import m2tk.assistant.api.presets.StreamTypes;
-import m2tk.assistant.app.ui.component.SectionDatagramPanel;
+import m2tk.assistant.app.ui.component.DatagramPanel;
 import m2tk.assistant.app.ui.task.AsyncQueryTask;
 import m2tk.assistant.app.ui.util.ComponentUtil;
 import net.miginfocom.swing.MigLayout;
@@ -51,12 +49,19 @@ import java.util.function.Supplier;
 public class DatagramView extends JPanel implements InfoView, StreamObserver
 {
     private Application application;
-    private SectionDatagramPanel sectionDatagramPanel;
+    private DatagramPanel datagramPanel;
     private EventBus bus;
     private M2TKDatabase database;
 
     private volatile long lastTimestamp;
     private final long MIN_QUERY_INTERVAL_MILLIS = 500;
+
+    private static class DatagramContext
+    {
+        private Map<String, List<PrivateSection>> sections;
+        private Map<Integer, List<TransportPacket>> transportPackets;
+        private Map<Integer, List<PESPacket>> pesPackets;
+    }
 
     public DatagramView()
     {
@@ -65,11 +70,11 @@ public class DatagramView extends JPanel implements InfoView, StreamObserver
 
     private void initUI()
     {
-        sectionDatagramPanel = new SectionDatagramPanel();
-        ComponentUtil.setTitledBorder(sectionDatagramPanel, getViewTitle());
+        datagramPanel = new DatagramPanel();
+        ComponentUtil.setTitledBorder(datagramPanel, getViewTitle());
 
         setLayout(new MigLayout("fill"));
-        add(sectionDatagramPanel, "center, grow");
+        add(datagramPanel, "center, grow");
 
         addComponentListener(new ComponentAdapter()
         {
@@ -161,10 +166,17 @@ public class DatagramView extends JPanel implements InfoView, StreamObserver
 
     private void queryDatagrams()
     {
-        Supplier<Map<String, List<PrivateSection>>> query = database::getPrivateSectionGroups;
-        Consumer<Map<String, List<PrivateSection>>> consumer = sectionDatagramPanel::update;
+        Supplier<DatagramContext> query = () -> {
+            DatagramContext context = new DatagramContext();
+            context.sections = database.getPrivateSectionGroups();
+            context.transportPackets = database.getTransportPacketGroups();
+            context.pesPackets = database.getPESPacketGroups();
+            return context;
+        };
+        Consumer<DatagramContext> consumer = context ->
+            datagramPanel.update(context.sections, context.transportPackets, context.pesPackets);
 
-        AsyncQueryTask<Map<String, List<PrivateSection>>> task = new AsyncQueryTask<>(application, query, consumer);
+        AsyncQueryTask<DatagramContext> task = new AsyncQueryTask<>(application, query, consumer);
         task.execute();
     }
 

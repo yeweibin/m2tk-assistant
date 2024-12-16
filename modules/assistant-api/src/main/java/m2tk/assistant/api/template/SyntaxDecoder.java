@@ -145,9 +145,45 @@ public class SyntaxDecoder
                     throw new IllegalStateException("错误的Selector字段起始位置（未对齐）");
                 }
 
-                SyntaxField field = SELECTOR_DECODER.decode(selector.getName(), encoding, position, limit);
-                if (parent != null)
-                    parent.appendChild(field);
+                int octetCount = selector.getLengthValue();
+                if (selector.isIndirectLength())
+                {
+                    if (!selector.isImplicitLength() && parent == null)
+                    {
+                        log.error("[{}] 无法确定selector字段长度", selector.getName());
+                        throw new IllegalArgumentException("无法确定selector字段长度");
+                    }
+
+                    if (selector.isImplicitLength())
+                    {
+                        octetCount = limit - position;
+                    } else
+                    {
+                        SyntaxField refNode = findPrerequisiteField(parent, selector.getLengthField());
+                        if (refNode == null)
+                        {
+                            log.error("[{}] 找不到selector引用的长度字段", selector.getName());
+                            throw new IllegalArgumentException("无法确定selector字段长度");
+                        }
+                        octetCount = Math.toIntExact(refNode.getValueAsLong());
+                    }
+
+                    // 当使用引用长度时，有时候需要做额外的调整（删除前导或后续内容）
+                    octetCount += selector.getLengthCorrectionValue();
+                }
+
+                int bitLength = octetCount * 8;
+
+                int bytes = octetCount;
+                if (position + bytes > limit)
+                {
+                    log.error("[{}] selector字段超限：start={}, limit={}, field_size={}", selector.getName(), position, limit, bytes);
+                    throw new IndexOutOfBoundsException("selector字段超出可解码范围");
+                }
+
+                SyntaxField field = SELECTOR_DECODER.decode(selector.getName(), encoding, position, position + bytes, parent);
+//                if (parent != null)
+//                    parent.appendChild(field);
 
                 return field.getBitLength();
             }
@@ -603,8 +639,8 @@ public class SyntaxDecoder
         SyntaxField refNode = findPrerequisiteField(parent, condition.getField());
         if (refNode == null)
         {
-            log.error("无法获取条件引用字段");
-            throw new IllegalStateException("无法获取条件引用字段");
+            log.error("无法获取条件引用字段：{}", condition.getField());
+            throw new IllegalStateException("无法获取条件引用字段：" + condition.getField());
         }
 
         boolean matches = false;

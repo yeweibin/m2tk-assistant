@@ -19,6 +19,7 @@ DROP TABLE IF EXISTS `PUBLIC`.`t_pcr_check`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_tr290_event`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_private_section`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_transport_packet`;
+DROP TABLE IF EXISTS `PUBLIC`.`t_pes_packet`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_program_elementary_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_bouquet_service_mapping`;
 DROP TABLE IF EXISTS `PUBLIC`.`t_multiplex_service_mapping`;
@@ -211,10 +212,17 @@ CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_private_section` (
 
 CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_transport_packet` (
   `id` INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  `tag` VARCHAR(100) NOT NULL,
   `pid` INT NOT NULL,
   `pct` BIGINT NOT NULL,
   `encoding` BINARY(188) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_pes_packet` (
+  `id` INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  `pid` INT NOT NULL,
+  `pct` BIGINT NOT NULL,
+  `size` INT NOT NULL,
+  `encoding` VARBINARY NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS `PUBLIC`.`t_program_elementary_mapping` (

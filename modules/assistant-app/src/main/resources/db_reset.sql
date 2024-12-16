@@ -13,6 +13,7 @@ TRUNCATE TABLE `PUBLIC`.`t_pcr_check`;
 TRUNCATE TABLE `PUBLIC`.`t_tr290_event`;
 TRUNCATE TABLE `PUBLIC`.`t_private_section`;
 TRUNCATE TABLE `PUBLIC`.`t_transport_packet`;
+TRUNCATE TABLE `PUBLIC`.`t_pes_packet`;
 TRUNCATE TABLE `PUBLIC`.`t_program_elementary_mapping`;
 TRUNCATE TABLE `PUBLIC`.`t_bouquet_service_mapping`;
 TRUNCATE TABLE `PUBLIC`.`t_multiplex_service_mapping`;

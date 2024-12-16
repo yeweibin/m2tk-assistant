@@ -16,10 +16,13 @@
 package m2tk.assistant.app.ui.component;
 
 import lombok.extern.slf4j.Slf4j;
+import m2tk.assistant.api.domain.PESPacket;
 import m2tk.assistant.api.domain.PrivateSection;
+import m2tk.assistant.api.domain.TransportPacket;
 import m2tk.assistant.api.template.RichTreeNodeSyntaxPresenter;
 import m2tk.assistant.api.template.RichTreeNodeSyntaxPresenter.NodeContext;
 import m2tk.assistant.api.template.SectionDecoder;
+import m2tk.assistant.api.template.SelectorDecoder;
 import m2tk.assistant.api.template.SyntaxField;
 import m2tk.dvb.DVB;
 import m2tk.encoding.Encoding;
@@ -41,12 +44,14 @@ import java.util.List;
 import java.util.*;
 
 @Slf4j
-public class SectionDatagramPanel extends JPanel
+public class DatagramPanel extends JPanel
 {
     private DefaultTreeModel model;
     private DefaultMutableTreeNode root;
     private DefaultMutableTreeNode groupPSI;
     private DefaultMutableTreeNode groupSI;
+    private DefaultMutableTreeNode groupTSPacket;
+    private DefaultMutableTreeNode groupESPacket;
     private DefaultMutableTreeNode groupPrivate;
     private DefaultMutableTreeNode groupPAT;
     private DefaultMutableTreeNode groupCAT;
@@ -64,13 +69,16 @@ public class SectionDatagramPanel extends JPanel
     private DefaultMutableTreeNode groupTDT;
     private DefaultMutableTreeNode groupTOT;
 
-    private SectionDecoder decoder;
+    private SectionDecoder sectionDecoder;
+    private SelectorDecoder selectorDecoder;
     private RichTreeNodeSyntaxPresenter presenter;
     private Map<TreeNode, PrivateSection> nodeSectionMap;
+    private Map<TreeNode, TransportPacket> nodeTSPacketMap;
+    private Map<TreeNode, PESPacket> nodeESPacketMap;
 
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
-    public SectionDatagramPanel()
+    public DatagramPanel()
     {
         initUI();
     }
@@ -80,9 +88,12 @@ public class SectionDatagramPanel extends JPanel
         root = new DefaultMutableTreeNode("/");
         model = new DefaultTreeModel(root);
 
-        decoder = new SectionDecoder();
+        sectionDecoder = new SectionDecoder();
+        selectorDecoder = new SelectorDecoder();
         presenter = new RichTreeNodeSyntaxPresenter();
         nodeSectionMap = new HashMap<>();
+        nodeTSPacketMap = new HashMap<>();
+        nodeESPacketMap = new HashMap<>();
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
@@ -117,53 +128,40 @@ public class SectionDatagramPanel extends JPanel
             dataPanel.setVisible(true);
 
             PrivateSection section = null;
+            TransportPacket tsPacket = null;
+            PESPacket pesPacket = null;
             Object[] nodes = path.getPath();
             for (int i = 2; i < nodes.length; i++)
             {
                 section = nodeSectionMap.get((TreeNode) nodes[i]);
                 if (section != null)
                     break;
+                tsPacket = nodeTSPacketMap.get((TreeNode) nodes[i]);
+                if (tsPacket != null)
+                    break;
+                pesPacket = nodeESPacketMap.get((TreeNode) nodes[i]);
+                if (pesPacket != null)
+                    break;
             }
-            if (section == null)
+
+            if (section == null && tsPacket == null && pesPacket == null)
             {
                 codeArea.setContentData(null);
                 fieldArea.setVisible(false);
             } else
             {
-                byte[] encoding = section.getEncoding();
+                byte[] encoding = null;
+                if (section != null)
+                    encoding = section.getEncoding();
+                if (tsPacket != null)
+                    encoding = tsPacket.getEncoding();
+                if (pesPacket != null)
+                    encoding = pesPacket.getEncoding();
+
                 codeArea.setContentData(new ByteArrayData(encoding));
 
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                if (node.getUserObject() instanceof NodeContext context)
-                {
-                    SyntaxField syntax = context.getSyntax();
-                    if (syntax.getBitLength() == 0)
-                    {
-                        codeArea.clearSelection();
-                    } else
-                    {
-                        int start = syntax.getPosition();
-                        int end = syntax.getPosition() + (syntax.getBitOffset() + syntax.getBitLength()) / 8;
-                        if (end == start || (syntax.getBitOffset() + syntax.getBitLength()) % 8 != 0)
-                            end++;
-                        codeArea.setSelection(start, end);
-
-                        int lastBitOffset = syntax.getBitOffset() + syntax.getBitLength();
-                        codeArea.setCaretPosition(end - 1,
-                                                  (lastBitOffset % 8 == 0 || lastBitOffset % 8 > 4) ? 1 : 0);
-                        codeArea.revealCursor(); // 注意：当codeArea获得焦点后才会显示Cursor。
-
-                        if (syntax.getType() == SyntaxField.Type.NUMBER ||
-                            syntax.getType() == SyntaxField.Type.BITS)
-                        {
-                            fieldArea.setContentData(new ByteArrayData(Arrays.copyOfRange(encoding, start, end)));
-                            fieldArea.setVisible(true);
-                        } else
-                        {
-                            fieldArea.setVisible(false);
-                        }
-                    }
-                }
+                updateHexView((NodeContext) node.getUserObject(), encoding, codeArea, fieldArea);
             }
         });
 
@@ -179,10 +177,43 @@ public class SectionDatagramPanel extends JPanel
         constructTreeSkeleton();
     }
 
+    private void updateHexView(NodeContext context, byte[] encoding, CodeArea codeArea, CodeArea fieldArea)
+    {
+        SyntaxField syntax = context.getSyntax();
+        if (syntax.getBitLength() == 0)
+        {
+            codeArea.clearSelection();
+        } else
+        {
+            int start = syntax.getPosition();
+            int end = syntax.getPosition() + (syntax.getBitOffset() + syntax.getBitLength()) / 8;
+            if (end == start || (syntax.getBitOffset() + syntax.getBitLength()) % 8 != 0)
+                end++;
+            codeArea.setSelection(start, end);
+
+            int lastBitOffset = syntax.getBitOffset() + syntax.getBitLength();
+            codeArea.setCaretPosition(end - 1,
+                                      (lastBitOffset % 8 == 0 || lastBitOffset % 8 > 4) ? 1 : 0);
+            codeArea.revealCursor(); // 注意：当codeArea获得焦点后才会显示Cursor。
+
+            if (syntax.getType() == SyntaxField.Type.NUMBER ||
+                syntax.getType() == SyntaxField.Type.BITS)
+            {
+                fieldArea.setContentData(new ByteArrayData(Arrays.copyOfRange(encoding, start, end)));
+                fieldArea.setVisible(true);
+            } else
+            {
+                fieldArea.setVisible(false);
+            }
+        }
+    }
+
     private void constructTreeSkeleton()
     {
         groupPSI = new DefaultMutableTreeNode("MPEG标准段");
         groupSI = new DefaultMutableTreeNode("DVB标准段");
+        groupTSPacket = new DefaultMutableTreeNode("传输包");
+        groupESPacket = new DefaultMutableTreeNode("PES包");
         groupPrivate = new DefaultMutableTreeNode("自定义私有段");
 
         groupPAT = new DefaultMutableTreeNode("PAT");
@@ -203,6 +234,8 @@ public class SectionDatagramPanel extends JPanel
 
         root.add(groupPSI);
         root.add(groupSI);
+        root.add(groupTSPacket);
+        root.add(groupESPacket);
         root.add(groupPrivate);
         groupPSI.add(groupPAT);
         groupPSI.add(groupCAT);
@@ -223,9 +256,13 @@ public class SectionDatagramPanel extends JPanel
         model.reload();
     }
 
-    public void update(Map<String, List<PrivateSection>> sectionGroups)
+    public void update(Map<String, List<PrivateSection>> sectionGroups,
+                       Map<Integer, List<TransportPacket>> transportPacketGroups,
+                       Map<Integer, List<PESPacket>> pesPacketGroups)
     {
         nodeSectionMap.clear();
+        nodeTSPacketMap.clear();
+        nodeESPacketMap.clear();
         addPATSectionNodes(sectionGroups.getOrDefault("PAT", Collections.emptyList()));
         addCATSectionNodes(sectionGroups.getOrDefault("CAT", Collections.emptyList()));
         addPMTSectionNodes(sectionGroups.getOrDefault("PMT", Collections.emptyList()));
@@ -242,6 +279,8 @@ public class SectionDatagramPanel extends JPanel
         addTDTSectionNodes(sectionGroups.getOrDefault("TDT", Collections.emptyList()));
         addTOTSectionNodes(sectionGroups.getOrDefault("TOT", Collections.emptyList()));
         addUserPrivateSectionNodes(sectionGroups.getOrDefault("UserPrivate", Collections.emptyList()));
+        addTransportPacketNodes(transportPacketGroups);
+        addPESPacketNodes(pesPacketGroups);
         model.reload();
     }
 
@@ -252,7 +291,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -277,7 +316,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -301,7 +340,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -326,7 +365,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -350,7 +389,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -375,7 +414,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -400,7 +439,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -425,7 +464,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -451,7 +490,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -477,7 +516,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -502,7 +541,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -527,7 +566,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -552,7 +591,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -577,7 +616,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -599,7 +638,7 @@ public class SectionDatagramPanel extends JPanel
         for (PrivateSection section : sections)
         {
             Encoding encoding = Encoding.wrap(section.getEncoding());
-            SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+            SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
             if (node == null)
                 continue;
@@ -624,7 +663,7 @@ public class SectionDatagramPanel extends JPanel
             try
             {
                 Encoding encoding = Encoding.wrap(section.getEncoding());
-                SyntaxField syntax = decoder.decode(encoding, 0, encoding.size());
+                SyntaxField syntax = sectionDecoder.decode(encoding, 0, encoding.size());
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
                 if (node == null)
                     continue;
@@ -665,6 +704,78 @@ public class SectionDatagramPanel extends JPanel
         }
     }
 
+    private void addTransportPacketNodes(Map<Integer, List<TransportPacket>> packetGroups)
+    {
+        groupTSPacket.removeAllChildren();
+
+        List<Integer> pids = new ArrayList<>(packetGroups.keySet());
+        pids.sort(Comparator.naturalOrder());
+        for (Integer pid : pids)
+        {
+            List<TransportPacket> packets = packetGroups.get(pid);
+
+            DefaultMutableTreeNode groupNode = new DefaultMutableTreeNode(String.format("PID：0x%04X (%d)，数量：%,d", pid, pid, packets.size()));
+            groupTSPacket.add(groupNode);
+
+            for (TransportPacket packet : packets)
+            {
+                try
+                {
+                    Encoding encoding = Encoding.wrap(packet.getEncoding());
+                    SyntaxField syntax = selectorDecoder.decode("transport_packet", encoding, 0, encoding.size(), null);
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+                    if (node == null)
+                        continue;
+
+                    NodeContext context = (NodeContext) node.getUserObject();
+                    context.setLabel(String.format("[TS]位置：%,d", packet.getPosition()));
+
+                    groupNode.add(node);
+                    nodeTSPacketMap.put(node, packet);
+                } catch (Exception ex)
+                {
+                    log.error("解码传输包时出现异常：{}", ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private void addPESPacketNodes(Map<Integer, List<PESPacket>> packetGroups)
+    {
+        groupESPacket.removeAllChildren();
+
+        List<Integer> pids = new ArrayList<>(packetGroups.keySet());
+        pids.sort(Comparator.naturalOrder());
+        for (Integer pid : pids)
+        {
+            List<PESPacket> packets = packetGroups.get(pid);
+
+            DefaultMutableTreeNode groupNode = new DefaultMutableTreeNode(String.format("PID：0x%04X (%d)，数量：%,d", pid, pid, packets.size()));
+            groupESPacket.add(groupNode);
+
+            for (PESPacket packet : packets)
+            {
+                try
+                {
+                    Encoding encoding = Encoding.wrap(packet.getEncoding());
+                    SyntaxField syntax = selectorDecoder.decode("pes_packet", encoding, 0, encoding.size(), null);
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) presenter.render(syntax);
+                    if (node == null)
+                        continue;
+
+                    NodeContext context = (NodeContext) node.getUserObject();
+                    context.setLabel(String.format("[ES]位置：%,d，长度：%,d", packet.getPosition(), encoding.size()));
+
+                    groupNode.add(node);
+                    nodeESPacketMap.put(node, packet);
+                } catch (Exception ex)
+                {
+                    log.error("解码PES包时出现异常：{}", ex.getMessage(), ex);
+                }
+            }
+        }
+    }
+
     private long getFieldValue(SyntaxField syntax, String name)
     {
         SyntaxField field = syntax.findLastChild(name);
@@ -696,13 +807,21 @@ public class SectionDatagramPanel extends JPanel
             super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
 
             boolean isPrivateSectionNode = false;
+            boolean isTransportPacketNode = false;
+            boolean isPESPacketNode = false;
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             if (node.getUserObject() instanceof NodeContext context)
             {
                 String text = context.getLabel();
                 isPrivateSectionNode = text.startsWith("[PS]");
+                isTransportPacketNode = text.startsWith("[TS]");
+                isPESPacketNode = text.startsWith("[ES]");
                 if (isPrivateSectionNode)
                     text = text.substring("[PS]".length());
+                if (isTransportPacketNode)
+                    text = text.substring("[TS]".length());
+                if (isPESPacketNode)
+                    text = text.substring("[ES]".length());
                 setText(text);
                 setToolTipText(text);
             }
@@ -714,7 +833,9 @@ public class SectionDatagramPanel extends JPanel
                 setIcon(GROUP);
             else if (groupPSI.isNodeChild(node) ||
                      groupSI.isNodeChild(node) ||
-                     groupPrivate.isNodeChild(node))
+                     groupPrivate.isNodeChild(node) ||
+                     groupTSPacket.isNodeChild(node) ||
+                     groupESPacket.isNodeChild(node))
                 setIcon(TABLE);
             else if (groupPAT.isNodeChild(node) ||
                      groupCAT.isNodeChild(node) ||
@@ -726,7 +847,7 @@ public class SectionDatagramPanel extends JPanel
                      groupEITScheduleActual.isNodeChild(node) || groupEITScheduleOther.isNodeChild(node) ||
                      groupTDT.isNodeChild(node) ||
                      groupTOT.isNodeChild(node) ||
-                     isPrivateSectionNode)
+                     isPrivateSectionNode || isTransportPacketNode || isPESPacketNode)
                 setIcon(DATA);
             else
                 setIcon(DOT);

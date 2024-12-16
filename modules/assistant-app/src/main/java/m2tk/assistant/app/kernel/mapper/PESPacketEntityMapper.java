@@ -16,17 +16,17 @@
 package m2tk.assistant.app.kernel.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import m2tk.assistant.app.kernel.entity.TransportPacketEntity;
+import m2tk.assistant.app.kernel.entity.PESPacketEntity;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-public interface TransportPacketEntityMapper extends BaseMapper<TransportPacketEntity>
+public interface PESPacketEntityMapper extends BaseMapper<PESPacketEntity>
 {
     @Update("""
-            DELETE FROM `t_transport_packet`
+            DELETE FROM `t_pes_packet`
             WHERE `id` IN
              (SELECT `tmp`.`id` FROM
-               (SELECT `id` FROM `t_transport_packet`
+               (SELECT `id` FROM `t_pes_packet`
                 WHERE `pid` = #{pid}
                 ORDER BY `id` ASC
                 LIMIT #{count}) AS `tmp`
@@ -35,10 +35,10 @@ public interface TransportPacketEntityMapper extends BaseMapper<TransportPacketE
     void deleteOldestN(@Param("pid") int pid, @Param("count") int count);
 
     @Update("""
-            DELETE FROM `t_transport_packet`
+            DELETE FROM `t_pes_packet`
             WHERE `id` IN
              (SELECT `tmp`.`id` FROM
-               (SELECT `id` FROM `t_transport_packet`
+               (SELECT `id` FROM `t_pes_packet`
                 WHERE `pid` = #{pid}
                 ORDER BY `id` DESC
                 LIMIT #{count}) AS `tmp`

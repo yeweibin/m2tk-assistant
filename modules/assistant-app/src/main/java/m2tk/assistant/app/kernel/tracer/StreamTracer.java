@@ -25,7 +25,10 @@ import m2tk.mpeg2.ProgramClockReference;
 import m2tk.mpeg2.decoder.TransportPacketDecoder;
 import m2tk.mpeg2.decoder.element.AdaptationFieldDecoder;
 import m2tk.mpeg2.decoder.element.ProgramClockReferenceDecoder;
-import m2tk.multiplex.*;
+import m2tk.multiplex.DemuxStatus;
+import m2tk.multiplex.TSDemux;
+import m2tk.multiplex.TSDemuxEvent;
+import m2tk.multiplex.TSDemuxPayload;
 import org.pf4j.Extension;
 
 import java.util.Arrays;
@@ -44,6 +47,8 @@ public class StreamTracer implements Tracer
     private int avgBitrate;
     private int frameSize;
     private long t0;
+
+    private TSDemuxPayload currPacket;
 
     private M2TKDatabase databaseService;
     private int sourceId;
@@ -94,7 +99,8 @@ public class StreamTracer implements Tracer
         if (frameSize == -1)
             frameSize = payload.getEncoding().size();
 
-        pkt.attach(payload.getEncoding());
+        currPacket = payload;
+        pkt.attach(currPacket.getEncoding());
         int pid = pkt.getPID();
 
         ElementaryStream stream = streams[pid];
@@ -134,12 +140,20 @@ public class StreamTracer implements Tracer
 
         lastPct = currPct;
 
+        if (pkt.containsUsefulAdaptationField())
+        {
+            databaseService.addTransportPacket(pid, currPct, currPacket.getEncoding().getBytes());
+            currPacket = null;
+        }
+
         long t1 = System.currentTimeMillis();
         if ((t1 - t0) >= 200) // 超过200ms才更新数据库，避免频繁操作数据库而造成的IO阻塞。
         {
             saveToDatabase();
             t0 = System.currentTimeMillis();
         }
+
+        currPacket = null;
     }
 
     private void saveToDatabase()
@@ -165,6 +179,13 @@ public class StreamTracer implements Tracer
         }
 
         databaseService.updateStreamSourceStats(sourceId, avgBitrate, frameSize, scrambled, lastPcrPct, streamCount);
+
+        if (currPacket != null)
+        {
+            databaseService.addTransportPacket(currPacket.getStreamPID(),
+                                               currPacket.getStartPacketCounter(),
+                                               currPacket.getEncoding().getBytes());
+        }
     }
 
     private long readPCR()

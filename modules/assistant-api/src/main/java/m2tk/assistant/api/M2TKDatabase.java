@@ -162,9 +162,21 @@ public interface M2TKDatabase
 
     Map<String, List<PrivateSection>> getPrivateSectionGroups(String... tags);
 
-    void addTransportPacket(String tag, int pid, long position, byte[] encoding);
+    void addTransportPacket(int pid, long position, byte[] encoding);
 
-    List<TransportPacket> getTransportPackets(String tag, int pid, int count);
+    void removeTransportPackets(int pid, int count);
+
+    List<TransportPacket> getTransportPackets(int pid, int count);
+
+    Map<Integer, List<TransportPacket>> getTransportPacketGroups();
+
+    void addPESPacket(int pid, long position, byte[] encoding);
+
+    void removePESPackets(int pid, int count);
+
+    List<PESPacket> getPESPackets(int pid, int count);
+
+    Map<Integer, List<PESPacket>> getPESPacketGroups();
 
     void addTableVersion(TableVersion version);
 

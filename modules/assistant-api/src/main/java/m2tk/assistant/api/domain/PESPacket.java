@@ -18,7 +18,7 @@ package m2tk.assistant.api.domain;
 import lombok.Data;
 
 @Data
-public class TransportPacket
+public class PESPacket
 {
     private int pid;
     private long position;

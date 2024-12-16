@@ -23,17 +23,21 @@ public class M2TKTemplate
 {
     private final List<TableTemplate> tableTemplates;
     private final List<DescriptorTemplate> descriptorTemplates;
+    private final List<SelectorTemplate> selectorTemplates;
 
     public M2TKTemplate(List<TemplateDefinition> templates)
     {
         tableTemplates = new ArrayList<>();
         descriptorTemplates = new ArrayList<>();
+        selectorTemplates = new ArrayList<>();
         for (TemplateDefinition template : templates)
         {
             if (template instanceof TableTemplate tableTemplate)
                 tableTemplates.add(tableTemplate);
             if (template instanceof DescriptorTemplate descriptorTemplate)
                 descriptorTemplates.add(descriptorTemplate);
+            if (template instanceof SelectorTemplate selectorTemplate)
+                selectorTemplates.add(selectorTemplate);
         }
     }
 
@@ -45,5 +49,10 @@ public class M2TKTemplate
     public List<DescriptorTemplate> getDescriptorTemplates()
     {
         return Collections.unmodifiableList(descriptorTemplates);
+    }
+
+    public List<SelectorTemplate> getSelectorTemplates()
+    {
+        return Collections.unmodifiableList(selectorTemplates);
     }
 }

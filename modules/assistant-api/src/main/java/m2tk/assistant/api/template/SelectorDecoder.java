@@ -39,7 +39,36 @@ public class SelectorDecoder
         }
     }
 
-    public SyntaxField decode(String name, Encoding encoding, int position, int limit)
+//    public SyntaxField decode(String name, Encoding encoding, int position, int limit)
+//    {
+//        SelectorTemplate template = TEMPLATE_MAP.get(name);
+//        if (template == null)
+//            throw new IllegalArgumentException("无效的选择器名称");
+//
+//        if (position > Math.min(limit, encoding.size()))
+//            throw new IndexOutOfBoundsException("字段超出可解码范围");
+//
+//        SyntaxField selector = SyntaxField.selector(template.getName(),
+//                                                    Optional.ofNullable(template.getDisplayName())
+//                                                            .map(Label::getText)
+//                                                            .orElse(template.getName()),
+//                                                    position);
+//
+//        int start = position;
+//        int bitOffset = 0;
+//        for (SyntaxFieldDefinition fieldDefinition : template.getSelectorSyntax())
+//        {
+//            int decodedBits = SYNTAX_DECODER.decode(fieldDefinition, encoding, position, bitOffset, limit, selector);
+//
+//            position = position + (bitOffset + decodedBits) / 8;
+//            bitOffset = (bitOffset + decodedBits) % 8;
+//        }
+//
+//        selector.setBitLength((position - start) * 8);
+//        return selector;
+//    }
+
+    public SyntaxField decode(String name, Encoding encoding, int position, int limit, SyntaxField parent)
     {
         SelectorTemplate template = TEMPLATE_MAP.get(name);
         if (template == null)
@@ -53,6 +82,8 @@ public class SelectorDecoder
                                                             .map(Label::getText)
                                                             .orElse(template.getName()),
                                                     position);
+        if (parent != null)
+            parent.appendChild(selector);
 
         int start = position;
         int bitOffset = 0;

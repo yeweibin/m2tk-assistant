@@ -88,7 +88,9 @@ public class M2TKDatabaseService implements M2TKDatabase
     @Db("m2tk")
     private PrivateSectionEntityMapper sectionMapper;
     @Db("m2tk")
-    private TransportPacketEntityMapper packetMapper;
+    private TransportPacketEntityMapper tsPacketMapper;
+    @Db("m2tk")
+    private PESPacketEntityMapper pesPacketMapper;
     @Db("m2tk")
     private ProgramElementaryMappingEntityMapper programMappingMapper;
     @Db("m2tk")
@@ -1088,26 +1090,84 @@ public class M2TKDatabaseService implements M2TKDatabase
     }
 
     @Override
-    public void addTransportPacket(String tag, int pid, long position, byte[] encoding)
+    public void addTransportPacket(int pid, long position, byte[] encoding)
     {
         TransportPacketEntity entity = new TransportPacketEntity();
-        entity.setTag(tag);
         entity.setStream(pid);
         entity.setPosition(position);
         entity.setEncoding(encoding);
-        packetMapper.insert(entity);
+        tsPacketMapper.insert(entity);
     }
 
     @Override
-    public List<TransportPacket> getTransportPackets(String tag, int pid, int count)
+    public void removeTransportPackets(int pid, int count)
+    {
+        tsPacketMapper.deleteOldestN(pid, count);
+    }
+
+    @Override
+    public List<TransportPacket> getTransportPackets(int pid, int count)
     {
         LambdaQueryWrapper<TransportPacketEntity> query = Wrappers.lambdaQuery(TransportPacketEntity.class)
                                                                   .eq(TransportPacketEntity::getStream, pid)
+                                                                  .orderByDesc(TransportPacketEntity::getId)
                                                                   .last("limit " + count);
-        return packetMapper.selectList(query)
-                           .stream()
-                           .map(this::convert)
-                           .collect(Collectors.toList());
+        return tsPacketMapper.selectList(query)
+                             .stream()
+                             .map(this::convert)
+                             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<Integer, List<TransportPacket>> getTransportPacketGroups()
+    {
+        return tsPacketMapper.selectList(Wrappers.lambdaQuery(TransportPacketEntity.class)
+                                                 .orderByDesc(TransportPacketEntity::getId)
+                                                 .last("limit 1000"))
+                             .stream()
+                             .map(this::convert)
+                             .collect(Collectors.groupingBy(TransportPacket::getPid));
+    }
+
+    @Override
+    public void addPESPacket(int pid, long position, byte[] encoding)
+    {
+        PESPacketEntity entity = new PESPacketEntity();
+        entity.setStream(pid);
+        entity.setPosition(position);
+        entity.setSize(encoding.length);
+        entity.setEncoding(encoding);
+        pesPacketMapper.insert(entity);
+    }
+
+    @Override
+    public void removePESPackets(int pid, int count)
+    {
+        pesPacketMapper.deleteOldestN(pid, count);
+    }
+
+    @Override
+    public List<PESPacket> getPESPackets(int pid, int count)
+    {
+        LambdaQueryWrapper<PESPacketEntity> query = Wrappers.lambdaQuery(PESPacketEntity.class)
+                                                            .eq(PESPacketEntity::getStream, pid)
+                                                            .orderByDesc(PESPacketEntity::getId)
+                                                            .last("limit " + count);
+        return pesPacketMapper.selectList(query)
+                              .stream()
+                              .map(this::convert)
+                              .collect(Collectors.toList());
+    }
+
+    @Override
+    public Map<Integer, List<PESPacket>> getPESPacketGroups()
+    {
+        return pesPacketMapper.selectList(Wrappers.lambdaQuery(PESPacketEntity.class)
+                                                  .orderByDesc(PESPacketEntity::getId)
+                                                  .last("limit 100"))
+                              .stream()
+                              .map(this::convert)
+                              .collect(Collectors.groupingBy(PESPacket::getPid));
     }
 
     @Override
@@ -1476,7 +1536,15 @@ public class M2TKDatabaseService implements M2TKDatabase
     private TransportPacket convert(TransportPacketEntity entity)
     {
         TransportPacket packet = new TransportPacket();
-        packet.setTag(entity.getTag());
+        packet.setPid(entity.getStream());
+        packet.setPosition(entity.getPosition());
+        packet.setEncoding(entity.getEncoding());
+        return packet;
+    }
+
+    private PESPacket convert(PESPacketEntity entity)
+    {
+        PESPacket packet = new PESPacket();
         packet.setPid(entity.getStream());
         packet.setPosition(entity.getPosition());
         packet.setEncoding(entity.getEncoding());

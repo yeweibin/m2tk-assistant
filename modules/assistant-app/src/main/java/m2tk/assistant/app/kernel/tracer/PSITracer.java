@@ -315,6 +315,8 @@ public class PSITracer implements Tracer
                                                         String.format("（节目号：%d）", program.getProgramNumber()));
             databaseService.addProgramElementaryMapping(program.getId(), esPid, esType);
 
+            filterPESStream(payload.getChannel().getHost(), esPid, esType);
+
             descloop.attach(element.getDescriptorLoop());
             descloop.forEach(cad::isAttachable, descriptor -> {
                 program.setFreeAccess(false);
@@ -351,5 +353,16 @@ public class PSITracer implements Tracer
                                           payload.getStreamPID(),
                                           payload.getFinishPacketCounter(),
                                           payload.getEncoding().getBytes());
+    }
+
+    private void filterPESStream(TSDemux demux, int pid, int type)
+    {
+        if (0x01 <= type && type <= 0x14 && type != 0x05)
+        {
+            demux.registerPESChannel(pid, payload ->
+                databaseService.addPESPacket(payload.getStreamPID(),
+                                             payload.getFinishPacketCounter(),
+                                             payload.getEncoding().getBytes()));
+        }
     }
 }

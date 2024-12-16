@@ -139,6 +139,29 @@
                 </xsd:annotation>
                 <xsd:complexType>
                     <xsd:attribute name="name" use="required" type="xsd:string"/>
+                    <xsd:attribute name="length" type="unsigned_int_or_escaped_type">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段为直接长度时，length为非负整数；当字段为间接长度时，length应置空，或设置为“n/a”。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="length_field" type="xsd:string">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段长度为剩余可用长度时，length_field应设置为“implicit”。
+                                非间接长度时，length_field应置空，或设置为“n/a”。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
+                    <xsd:attribute name="length_correction" type="int_or_escaped_type">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                当字段长度需要修正时，最终length等于${length_field} + length_correction。
+                                仅在使用引用长度时生效，其余情况应置空。
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:attribute>
                 </xsd:complexType>
             </xsd:element>
             <xsd:element name="If">
