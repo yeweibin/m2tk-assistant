@@ -212,7 +212,7 @@ public class DatagramPanel extends JPanel
     {
         groupPSI = new DefaultMutableTreeNode("MPEG标准段");
         groupSI = new DefaultMutableTreeNode("DVB标准段");
-        groupTSPacket = new DefaultMutableTreeNode("传输包");
+        groupTSPacket = new DefaultMutableTreeNode("TS包");
         groupESPacket = new DefaultMutableTreeNode("PES包");
         groupPrivate = new DefaultMutableTreeNode("自定义私有段");
 
