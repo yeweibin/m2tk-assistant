@@ -448,7 +448,6 @@ public class MainViewController
 
         for (InfoView view : coreInfoViews)
         {
-            tabbedPane.add(view.getViewTitle(), view.getViewComponent());
             tabbedPane.addTab(view.getViewTitle(), view.getViewIcon(), view.getViewComponent());
         }
 
